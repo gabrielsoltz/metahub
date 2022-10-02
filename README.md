@@ -6,13 +6,13 @@
 
 MetaHub is a command line program for AWS Security Hub that let you work with findings in a more practical way.
 
-MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication.
+MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation) 
 
-MetaHub adds extra custom functionality on top of findings, MetaChecks.
+MetaHub adds extra custom functionality and checks on top of findings, MetaChecks. See [MetaChecks](#MetaChecks)
 
-MetaHub let you excecute bulk actions like changing Workflow states using the command line.
+MetaHub supports filtering the same way you would work with `--sh-filters` CLI utility, and in adittion fitering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
 
-MetaHub supports filtering the same way you would work with `--sh-filters` CLI utility, and also fitering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. 
+MetaHub let you excecute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
 
 ## Findings Aggregation
 
@@ -141,27 +141,6 @@ Use cases examples:
 - Change severity for a finding that is related with port 3389/TCP from Critical to High when is NOT attached to a public resource.
 
 
-# Update Findings
-
-You can use MetaHub to update your AWS Security Findings in bulk. 
-
-Think again in the first example, we have 1 MetaHub resource non-comnpliant, based on 4 AWS Security Hub findings. 
-
-You can udpate those 4 AWS Security Findings in one single-command with Meta Hub: `--update-findings`
-
-For example, you can update the Worflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED`
-
-MetaHub supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would do it using AWS CLI. 
-
-Filters are defined as key=value, if a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value"
-
-Use case examples:
-
-- Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
-
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW --update Workflow=RESOLVED`
-
-
 # Filtering
 
 ## Security Hub Filtering
@@ -214,6 +193,25 @@ From the rerources with findings found by your Security Hub filters, you will on
 
 You can list all MetaChecks by resources using `--list-metachecks`
 
+# Updating Findings
+
+You can use MetaHub to update your AWS Security Findings in bulk. 
+
+Think again in the first example, we have 1 MetaHub resource non-comnpliant, based on 4 AWS Security Hub findings. 
+
+You can udpate those 4 AWS Security Findings in one single-command with Meta Hub: `--update-findings`
+
+For example, you can update the Worflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED`
+
+MetaHub supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would do it using AWS CLI. 
+
+Filters are defined as key=value, if a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value"
+
+Use case examples:
+
+- Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
+
+`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW --update Workflow=RESOLVED`
 
 # Running the program
 
