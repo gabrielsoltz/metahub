@@ -163,35 +163,39 @@ Use cases examples:
 
 ## Security Hub Filtering
 
-MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS cli. 
+MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS CLI.
 
-- `./metahub --list-findings --sh-filters <KEY=VALUE>` 
+`./metahub --list-findings --sh-filters <KEY=VALUE>` 
 
-The default filters (without passing any filter): `RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`
+Default Filters (without passing any): `RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`
 
-Passing filters using this option resets the default filters, so if you want to add filters to the default one you need to add them as well to your filter. 
+Passing filters using this option resets the default filters, so if you want to add filters to the defaults one, you need to add them to your filter. 
 
-Filters are defined as key=value, if a value contains spaces, you should define it with double quotes: KeyToFilter="this is a value"
+For example, adding SeverityLabel to the defaults filters:
+
+`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL` 
+
+Filters are defined as key=value. If a value contains spaces, you should use it with double quotes: KeyToFilter="this is a value."
 
 Use cases examples:
 
-- Severity:
+- Filter by Severity:
 
 `./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL`
 
-- Account:
+- Filter by AWS Account:
 
 `./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL AwsAccountId=1234567890`
 
-- Check Title:
+- Filter by Check Title:
 
 `./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" Title="EC2.22 Unused EC2 security groups should be removed"`
 
-- Resource Type:
+- Filter by AWS Resource Type:
 
 `./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceType=AwsEc2SecurityGroup`
 
-- Resource Id:
+- Filter by Resource Id:
 
 `./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"`
 
@@ -199,45 +203,51 @@ You can check available filters in [AWS Documentation](https://boto3.amazonaws.c
 
 ## MetaChecks Filtering
 
-MetaHub supports filtering for MetaChecks in the form of list. You speficy each metacheck separeten them using spaces. If you speficy more than one check, you will get all resources that matches at least one of the checks. 
+MetaHub supports filtering for MetaChecks in the form of a list. You can use how many filters you want and separate them using spaces. If you specify more than one check, you will get all resources that match at least one of the checks. 
 
-When you pass a filter for MetaCheck, you will only get resources that matchs the filter you speficied.
+The MetaCheck filters are applied to the output of the MetaCheck that executes over your AWS Resources. 
+
+This is the workflow:
+
+1. MetaHub fetches AWS Security Findings based on the filters you specifi using `--sh-filters` (or the default ones).
+2. MetaHub executes MetaChecks for the AWS affected resources based on the previous list of findings
+3. MetaHub only shows you the resources that matches your `--mh-filters`, so it's a subset of the resources from point 1.
 
 Use cases examples:
 
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces`
+- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) affected by AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces`)
 
-From the rerources with findings found by your Security Hub filters, you will only get resources that also matchs your MetaHub filters. If the resource matchs the Security Hub filters but it doesn't match the MetaHub filter, you will not get it as a finding. 
+`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces`
 
-You can list all MetaChecks by resources using `--list-metachecks`
+You can list all available MetaChecks using `--list-metachecks`
 
 # Updating Findings
 
 You can use MetaHub to update your AWS Security Findings in bulk. 
 
-Think again in the first example, we have 1 MetaHub resource non-comnpliant, based on 4 AWS Security Hub findings. 
+Think again in the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
 
-You can udpate those 4 AWS Security Findings in one single-command with Meta Hub: `--update-findings`
+You can update those 4 AWS Security Findings in one single command with Meta Hub: `--update-findings.`
 
-For example, you can update the Worflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED`
+For example, you can update the Workflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED.`
 
-MetaHub supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would do it using AWS CLI. 
+MetaHub supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
-Filters are defined as key=value, if a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value"
+Filters are defined as key=value. If a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value."
 
 Use case examples:
 
 - Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
 
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW --update Workflow=RESOLVED`
+`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ----update-findings Workflow=RESOLVED`
 
 # Running the program
 
 ## Python Virtual Environment
 
-This is a python program, requirements are defined in the file `requirements.txt`, you can install those requirements in your system or use a Python virtual environment.
+This is a python program. Requirements are defined in the file `requirements.txt`; you can install those requirements in your system or use a Python virtual environment.
 
-Python virtual environment:
+Using a Python virtual environment:
 
 ```
 cd metahub
@@ -248,13 +258,13 @@ pip3 install -r requirements.txt
 
 ## Run and list findings
 
-List all AWS Security Findings using the default filters:
+List all AWS Security Findings using the default filters. See [Filtering](#Filtering)
 
 - `./metahub --list-findings`
 
 ## Run and list findings with MetaChecks enabled
 
-List all AWS Security Findings using the default filters and running MetaChecks:
+List all AWS Security Findings using the default filters and running MetaChecks. See [Filtering](#Filtering)
 
 - `./metahub --list-findings --meta-checks`
 
