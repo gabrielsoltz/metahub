@@ -4,42 +4,46 @@
   <img src="metahub.png" alt="MetaHub"/>
 </p>
 
-MetaHub is a command line program for AWS Security Hub that let you work with findings in a more practical way.
+MetaHub is a command line program for AWS Security Hub that lets you work with findings more practically.
 
-MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation) 
+MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation)
 
 MetaHub adds extra custom functionality and checks on top of findings, MetaChecks. See [MetaChecks](#MetaChecks)
 
-MetaHub supports filtering the same way you would work with `--sh-filters` CLI utility, and in adittion fitering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
+MetaHub supports filtering the same way you would work with `--sh-filters` CLI utility. In addition, filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
 
-MetaHub let you excecute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
+MetaHub lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
 
 ## Findings Aggregation
 
-When I started working with AWS Security Hub, one of the issues I found that I didn't like, was what I called findings Shadowing and Duplication. You work with a bunch of checks, but there is no logic behind to combine those findings.
+Working with AWS Security Hub findings sometimes introduces the problem of Shadowing and Duplication.
 
-Shadowing is when two checks are referring to the same issue but one in a more generic way than the other one.
+Shadowing is when two checks refer to the same issue, but one in a more generic way than the other one.
 
-Duplication is when you are using multiple standards and you are getting the same problem from different standards.
+Duplication is when you use more than one standard and get the same problem from more than one.
 
 Think of a Security Group with port 3389/TCP open to 0.0.0.0/0.
 
-If you are using one of the default Security Standards like `AWS-Foundational-Security-Best-Practices`, you will get two findings for the same issue:
+If you are using one of the default Security Standards like `AWS-Foundational-Security-Best-Practices,` you will get two findings for the same issue:
 
   - `EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports`
   - `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
 
-If you are also using standard CIS AWS Foundations Benchmark, you will also get an extra finding:
+If you are also using the standard CIS AWS Foundations Benchmark, you will also get an extra finding:
 
   - `4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389`
 
-Now imagine that SG is not in-use. In that case, Security Hub will show an additional 4th finding for your resource!
+Now imagine that SG is not in use. In that case, Security Hub will show an additional fourth finding for your resource!
 
   - `EC2.22 Unused EC2 security groups should be removed`
 
-So now you have in your dashboard four findings for one resource !
+So now you have in your dashboard four findings for one resource!
 
-If you are working with multi-account setups and many resources, this could result in many findings that refer to the same thing without adding any extra value to your analyze. 
+Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
+
+### MetaHub Aggregation by Resource
+
+MetaHub aggregates all findings under the affected resource. You have 2 possible outputs, the `short` one and the default one:
 
 This is how MetaHub shows the previous example using the `--short` output:
 
@@ -88,15 +92,15 @@ And this is how MetaHub shows you the output using the default output:
 }
 ```
 
-Your findings are now combined under the ARN of the resource affected ending in only 1 finding, or 1 non-compliant resource. Much better?
+Your findings are combined under the ARN of the resource affected, ending in only one result or one non-compliant resource.
 
-You can now work in MetaHub with all these four findings together as if they were only one. 
+You can now work in MetaHub with all these four findings together as if they were only one. For example you can update these four findings using only one command, See [Updating Findings](#Updating-Findings)
 
 ## MetaChecks
 
-On top of Security Hub findings, MetaHub can run additional checks. We call these, MetaChecks. 
+On top of the AWS Security Hub findings, MetaHub can run additional checks. We call these, MetaChecks. 
 
-Think again on that SG. Let's assume it's attached to something, so we will have 3 findings, instead of 4. 
+Think again about that SG. Let's assume it's attached to something, so we have three AWS Security Hub findings combined in one MetaHub result:
 
 ```
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -108,38 +112,52 @@ Think again on that SG. Let's assume it's attached to something, so we will have
 }
 ```
 
-The check `EC2.19` it's classified as Critical severity by the Security Standard. Is it really a Critical finding?
+The check `EC2.19` it's classified as `Critical` severity by the Security Standard.
 
-What if we can go further based on the findings and get more information, for example, check what is this SG attached to, if it's public or not, for how long, who did it, and getting all this information in the same simple output that MetaHub provides and even filtering on top of that information. 
+What if we can go further based on the findings and get more information? For example, check what this SG is attached to, if it's public or not, for how long, and who did it, and get all this information in the same simple output that MetaHub provides and even filter on top of that information.
 
-MetaChecks are defined by ResourceType. For the previous example, the resource type is AwsEc2SecurityGroup.
-
-Let's run MetaHub again for the previous finding:
+Let's run MetaHub again for the previous finding with MetaChecks enabled:
 
 ```
-{
-  "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-    "findings": [
-    ...
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
+  "findings": [
+  ...
+  ],
+  "AwsAccountId": "01234567890",
+  "metachecks": {
+    "is_attached_to_network_interfaces": [
+      "eni-01234567890",
+      "eni-01234567891",
+      "eni-01234567892",
+      "eni-01234567893",
+      "eni-01234567894"
     ],
-    "AwsAccountId": "01234567890",
-    "metachecks": {
-      "is_attached_to_ec2_instance": "['i-01234567890', 'i-01234567891', 'i-01234567892', 'i-01234567893', 'i-01234567894']",
-      "is_attached_to_ec2_instance_with_public_ip": "False",
-      "is_attached_to_network_interfaces": "['eni-01234567890', 'eni-01234567891', 'eni-01234567892', 'eni-01234567892']",
-      "GroupName": "SGGRroupName",
-      "tags_owner": null
-    }
+    "is_attached_to_ec2_instances": [
+      "i-01234567899",
+      "i-01234567898",
+      "i-01234567897",
+      "i-01234567896",
+      "i-01234567895",
+      "i-01234567894"
+    ],
+    "is_attached_to_public_ips": [
+      "200.200.200.200"
+    ],
+    "is_attached_to_managed_services": false,
+    "tag_Owner": "Gabriel"
   }
 }
 ```
 
-Now you have in addition to the findings, extra information that you can programtically combine to make decistions. 
+So now, in addition to the `findings` section we have an extra section `metachecks.`
+
+MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`.
+
+You can use MetaChecks for your filters or for updating resources. See [Filtering](#Filtering)
 
 Use cases examples:
 - Trigger an alert when you find a SG open for port 3389/TCP and it's attached to a Public resource. 
 - Change severity for a finding that is related with port 3389/TCP from Critical to High when is NOT attached to a public resource.
-
 
 # Filtering
 
