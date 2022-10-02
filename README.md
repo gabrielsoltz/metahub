@@ -10,7 +10,7 @@ MetaHub introduces a better way to organize the findings for the Security Analys
 
 MetaHub adds extra custom functionality and checks on top of findings, MetaChecks. See [MetaChecks](#MetaChecks)
 
-MetaHub supports filtering the same way you would work with `--sh-filters` CLI utility. In addition, filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
+MetaHub supports AWS Security Hub findings filtering the same way you would work with CLI utility using the option `--sh-filters`. In addition, it supports filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
 
 MetaHub lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
 
@@ -48,7 +48,7 @@ MetaHub aggregates all findings under the affected resource. You have 2 possible
 This is how MetaHub shows the previous example using the `--short` output:
 
 ```
-"<ARN>>": {
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
     "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
@@ -61,7 +61,7 @@ This is how MetaHub shows the previous example using the `--short` output:
 And this is how MetaHub shows you the output using the default output:
 
 ```
-"<ARN>>": {
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     {
       "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
