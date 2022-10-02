@@ -1,5 +1,9 @@
 # MetaHub
 
+<p align="center">
+  <img src="metahub.png" alt="MetaHub"/>
+</p>
+
 MetaHub is a command line program for AWS Security Hub that let you work with findings in a more practical way.
 
 MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication.
