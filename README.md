@@ -158,7 +158,7 @@ Suppose you are working with multi-account setups and many resources. In that ca
 
 This is how MetaHub shows the previous example using the `--short` output:
 
-```
+```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
@@ -171,7 +171,7 @@ This is how MetaHub shows the previous example using the `--short` output:
 
 And this is how MetaHub shows you the output using the default output:
 
-```
+```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     {
@@ -213,7 +213,7 @@ On top of the AWS Security Hub findings, **MetaHub** can run additional checks. 
 
 Think again about that SG. Let's assume it's attached to something, so we have three AWS Security Hub findings combined in one MetaHub result:
 
-```
+```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
@@ -229,7 +229,7 @@ What if we can go further based on the findings and get more information? For ex
 
 Let's run MetaHub again for the previous finding with MetaChecks enabled:
 
-```
+```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
   ...
@@ -276,40 +276,42 @@ Use cases examples:
 
 MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS CLI.
 
-`./metahub --list-findings --sh-filters <KEY=VALUE>` 
-
+```sh
+./metahub --list-findings --sh-filters <KEY=VALUE>
+```
 Default Filters (without passing any): `RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`
 
 Passing filters using this option resets the default filters, so if you want to add filters to the defaults one, you need to add them to your filter. 
 
 For example, adding SeverityLabel to the defaults filters:
 
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL` 
-
+```sh
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL
+```
 Filters are defined as key=value. If a value contains spaces, you should use it with double quotes: KeyToFilter="this is a value."
 
 Use cases examples:
 
 - Filter by Severity:
-
-`./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL`
-
+```sh
+./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL
+```
 - Filter by AWS Account:
-
-`./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL AwsAccountId=1234567890`
-
+```sh
+./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL AwsAccountId=1234567890
+```
 - Filter by Check Title:
-
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" Title="EC2.22 Unused EC2 security groups should be removed"`
-
+```sh
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" Title="EC2.22 Unused EC2 security groups should be removed"
+```
 - Filter by AWS Resource Type:
-
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceType=AwsEc2SecurityGroup`
-
+```sh
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceType=AwsEc2SecurityGroup
+```
 - Filter by Resource Id:
-
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"`
-
+```sh
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"
+```
 You can check available filters in [AWS Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub.html#SecurityHub.Client.get_findings)
 
 ## MetaChecks Filtering
@@ -327,6 +329,8 @@ This is the workflow:
 Use cases examples:
 
 - Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) affected by AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces`)
+
+
 
 `./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces`
 
