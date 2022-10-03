@@ -94,13 +94,19 @@ class Metacheck:
                     continue
             if PublicIPs: return PublicIPs
         return False
+    
+    def is_public(self):
+        if self.is_attached_to_public_ips():
+            return True
+        return False
 
     def checks(self):
         checks = [
             'is_attached_to_network_interfaces',
             'is_attached_to_ec2_instances',
             'is_attached_to_public_ips',
-            'is_attached_to_managed_services'
+            'is_attached_to_managed_services',
+            'is_public'
             ]
         return checks
 

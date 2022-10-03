@@ -119,10 +119,16 @@ class Metacheck:
         if public_policy: return public_policy
         return False
 
+    def is_public(self):
+        if self.is_bucket_policy_public() or self.is_bucket_acl_public():
+            return True
+        return False
+
     def checks(self):
         checks = [
             'is_bucket_acl_public',
-            'is_bucket_policy_public'
+            'is_bucket_policy_public',
+            'is_public'
             ]
         return checks
 
