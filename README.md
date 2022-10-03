@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is the definetly command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). 
+  <b>MetaHub</b> is the definetly command line utility for [AWS Security Hub](#https://aws.amazon.com/security-hub). 
 </p>
 
 ## Table of Contents
@@ -13,7 +13,7 @@
 - [Description](#description)
 - [Features](#features)
 - [Requirements](#requirements)
-- [AWS Authentication]#(#aws-authentication)
+- [AWS Authentication](#aws-authentication)
 - [Usage](#usage)
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks)
@@ -22,7 +22,7 @@
 
 ## Description
 
-**MetaHub** is a command line utility for AWS Security Hub](https://aws.amazon.com/security-hub) that let you work with multiple standards, multiple checks and thousands of findings in a very simple and advances way by sorting, aggregating, filtering and updating your data. In addition, MetaHub adds MetaChecks, an extremely simple and flexible way to do any type of tests on top of your resources to improve the level of confidence of your findings.
+**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that let you work with multiple standards, multiple checks and thousands of findings in a very simple and advances way by sorting, aggregating, filtering and updating your data. In addition, MetaHub adds MetaChecks, an extremely simple and flexible way to do any type of tests on top of your resources to improve the level of confidence of your findings.
 
 ## Features
 
