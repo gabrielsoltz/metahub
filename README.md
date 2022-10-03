@@ -118,6 +118,12 @@ See more about [filtering](#Filtering)
   ./metahub --list-metachecks
   ```
 
+### Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
+
+  ```sh
+  ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW ----update-findings Workflow=RESOLVED
+  ```
+
 ### Show help
 
   ```sh
@@ -348,22 +354,14 @@ You can list all available MetaChecks using `--list-metachecks`
 
 # Updating Findings
 
-You can use MetaHub to update your AWS Security Findings in bulk. 
+You can use **MetaHub** to update your AWS Security Findings in bulk. 
 
 Think again in the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
 
-You can update those 4 AWS Security Findings in one single command with Meta Hub: `--update-findings.`
+You can update those 4 AWS Security Findings in one single command with **MetaHub**: `--update-findings.`
 
 For example, you can update the Workflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED.`
 
-MetaHub supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
+**MetaHub** supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
 Filters are defined as key=value. If a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value."
-
-Use case examples:
-
-- Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
-
-```sh
-./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ----update-findings Workflow=RESOLVE
-```
