@@ -49,7 +49,7 @@ Alternatively you can run this tool using Docker.
 1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 2. Change to repostiory dir: `cd metahub`
 3. Create virtual environment for this project: `python3 -m venv venv/metahub`
-4. Activate the virtual environment you just created: `source venv/ess-gitlab/bin/activate`
+4. Activate the virtual environment you just created: `source venv/metahub/bin/activate`
 5. Install metahub requirements: `pip3 install -r requirements.txt`
 6. Run: `./metahub -h`
 7. Deactivate your virtaul environment after you finish with: `deactivate`
