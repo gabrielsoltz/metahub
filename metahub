@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+
+import logging
+import argparse
+import json
+from sys import argv, exit
+
+from securityhub import SecurityHub
+from metachecks.metachecks import run_metachecks, list_metachecks
+
+class KeyValue(argparse.Action):
+    ''' Parser keyvalue Action'''
+    def __call__( self , parser, namespace,
+                 values, option_string = None):
+        setattr(namespace, self.dest, dict())
+        logger = get_logger('ERROR')
+        for value in values:
+            # split it into key and value
+            try:
+                key, value = value.split('=')
+            except ValueError:
+                logger.error('ERROR: Incorrect Key=Value format: ' + value)
+                exit(1)
+            # Dictionary:
+            getattr(namespace, self.dest)[key] = value
+
+color = {
+    "PURPLE": '\033[95m',
+    "CYAN": '\033[96m',
+    "DARKCYAN": '\033[36m',
+    "BLUE": '\033[94m',
+    "GREEN": '\033[92m',
+    "YELLOW": '\033[93m',
+    "RED": '\033[91m',
+    "BOLD": '\033[1m',
+    "UNDERLINE": '\033[4m',
+    "END": '\033[0m',
+    "CRITICAL": '\033[91m',
+    "HIGH": '\033[91m',
+    "MEDIUM": '\033[93m',
+    "LOW": '\033[94m',
+}
+
+def get_logger(log_level):
+    """Configure Logger"""
+    logger = logging.getLogger()
+    for handler in logger.handlers:
+        logger.removeHandler(handler)
+    if log_level in ("INFO" "ERROR" "WARNING" "DEBUG"):
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s'
+        )
+        return logger
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s'
+    )
+    logger.info('--log-level incorrect value, using DEBUG...')
+    return logger
+
+def get_parser():
+    """Configure Parser"""
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,description=
+    '''
+    MetaHub for AWS Security Hub
+    '''
+    )
+    parser.add_argument('--list-findings', help='Use this option to list Security Hub findings (based on filters)', required=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--sh-filters', default=None,
+        help='Security Hub Filters: Use this option to filter the result from Security Hub. \
+            Set a number of key-value pairs (do not put spaces before or after the = sign). \
+            If a value contains spaces, you should define it with double quotes: Filter="This is a value  \
+            Example: ./metahub --list-findings --sh-filters ResourceType=AwsEc2SecurityGroup\
+            Default: RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"',
+        required=False, nargs='*', action=KeyValue)
+    parser.add_argument('--list-metachecks', help='Use this option to list all available Meta Checks', required=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--meta-checks', help='Use this option to enable Meta Checks', required=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--mh-filters', default=[],
+        help='MetaHub Filters: Use this option to filter the resources based on Meta Checks results. \
+            You can list available Meta Checks using --list-metachecks \
+            Example: ./metahub --list-findings  --meta-checks --mh-filters is_attached_to_ec2_instance_with_public_ip \
+            Default: None',
+        required=False, nargs='*')
+    parser.add_argument('--update-findings', default=None,
+        help='Security Hub Update Fields: Use this option to update your findings. You need to speficy wich field to update and with wich value. \
+            Set a number of key-value pairs (do not put spaces before or after the = sign). \
+            If a value contains spaces, you should define it with double quotes: Key="This is a value  \
+            Example: ./metahub --list-findings --update-findings Workflow=RESOLVED \
+            Default: None',
+        required=False, nargs='*', action=KeyValue)
+    parser.add_argument('--sh-assume-role', default=None, help="The AWS IAM role name to be assumed where SH is running. \
+        Needs to be uses with --sh-account." , required=False)
+    parser.add_argument('--sh-account', default=None, help="The AWS Account ID where your SH is running. \
+        Needs to be uses with --sh-assume-role." , required=False)
+    parser.add_argument('--mh-assume-role', default=None, help="The AWS IAM role name to be assumed where resources ares running." , required=False)
+    parser.add_argument('--output-json', default=False, help='Use this option to save json output as a file', required=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--output-short', help='Use this option to show a reduced output. Only show the resource and the Title of failed checks', required=False, action=argparse.BooleanOptionalAction)
+    parser.add_argument('--log-level', default="ERROR", help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)" , required=False)
+    return parser
+
+def list_findings(logger, sh_filters, mh_filters, metachecks, short, sh_account, sh_role, mh_role):
+    mh_findings = {}
+    mh_findings_not_matched_findings = {}
+    sh = SecurityHub(logger, sh_account, sh_role)
+    sh_findings = sh.get_findings(sh_filters)
+    for finding in sh_findings:
+        resource_arn, finding_parsed = sh.parse_finding(finding)
+
+        # MetaChecks:
+        if metachecks:
+            # We run metachecks only once:
+            if not resource_arn in mh_findings and not resource_arn in mh_findings_not_matched_findings:
+                mh_values, mh_matched = run_metachecks(logger, finding, mh_filters, mh_role)
+        else:
+            # If no metachecks, we enforce to True the match so we show the resource:
+            mh_matched = True
+
+         # We keep a dict with no matched resources so we don't run MetaChecks again
+        if not mh_matched:
+
+            # We add the resource in our output only once:
+            if not resource_arn in mh_findings_not_matched_findings:
+                mh_findings_not_matched_findings[resource_arn] = {'findings': []}
+
+        # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
+        if mh_matched:
+
+            # We add the resource in our output only once:
+            if not resource_arn in mh_findings:
+                mh_findings[resource_arn] = {'findings': []}
+
+            # We add MetaChecks if they are enabled:
+            if metachecks:
+                if not 'metachecks' in mh_findings[resource_arn]:
+                    mh_findings[resource_arn]['metachecks'] = mh_values
+
+            # We add the findings:
+
+            # Short output, after adding findings we continue.
+            if short:
+                mh_findings[resource_arn]['findings'].append(list(finding_parsed.keys())[0])
+                continue
+
+            # Normal Output:
+            mh_findings[resource_arn]['findings'].append(finding_parsed)
+            mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+
+    return mh_findings, sh_findings
+
+def update_findings(logger, mh_findings, update):
+    UpdateFilters = {}
+    for key, value in update.items():
+        if key in ('Workflow'):
+            if key == 'Workflow':
+                WorkflowValues = ('NEW', 'NOTIFIED', 'RESOLVED', 'SUPPRESSED')
+                if value not in WorkflowValues:
+                    logger.error('Workflow values: ' + str(WorkflowValues))
+                    exit(1)
+                Workflow = {'Workflow': {'Status': value}}
+                UpdateFilters.update(Workflow)
+            continue
+        logger.error('Unsuported update finding key: ' + str(key) + ' - Supported Keys: Workflow')
+        exit (1)
+
+    # Run Update
+    sh = SecurityHub(logger)
+    if confirm_choice('Are you sure you want to update all findings?'):
+        update = sh.update_findings(mh_findings, UpdateFilters)
+        return update['ProcessedFindings'], update['UnprocessedFindings']
+    
+    return [], []
+
+
+def banner():
+    print (color['BLUE'] + color['BOLD'] + '\n * * * MetaHub * * *\n' + color['END'])
+
+def confirm_choice(message):
+    """Simple function to confirm the action, returns True or False based on user entry"""
+    confirm = input(message + " [c]Confirm or [v]Void: ")
+    if confirm != 'c' and confirm != 'v':
+        print("\n Invalid Option. Please Enter a Valid Option.")
+        return confirm_choice(message) 
+    if confirm == 'c':
+        return True
+    return False
+
+def main(args):
+    banner()
+    parser = get_parser()
+    args = parser.parse_args(args)
+    logger = get_logger(args.log_level)
+
+    default_sh_filters = {"RecordState":"ACTIVE", "WorkflowStatus":"NEW", "ProductName":"Security Hub"}
+    if not args.sh_filters:
+        sh_filters = default_sh_filters
+    else:
+        sh_filters = args.sh_filters
+    
+    if args.list_metachecks:
+        list_metachecks(logger)
+        exit(0)
+
+    if args.list_findings:
+        print (color['BOLD'] + '------------------------------------' + color['END'])
+        print (color['BLUE'] + 'MetaHub Listing Findings' + color['END'])
+        print (color['BOLD'] + 'AWS Security Hub filters: ' + str(sh_filters) + color['END'])
+        print (color['BOLD'] + 'MetaHub filters: ' + str(args.mh_filters) + color['END'])
+        print (color['BOLD'] + '------------------------------------\n' + color['END'])
+        mh_findings, sh_findings = list_findings(
+            logger,
+            sh_filters,
+            mh_filters=args.mh_filters,
+            metachecks=args.meta_checks,
+            short=args.output_short,
+            sh_account=args.sh_account,
+            sh_role=args.sh_assume_role,
+            mh_role=args.mh_assume_role
+            )
+        if mh_findings:
+            print (json.dumps(mh_findings, indent=2))
+            if args.output_json:
+                with open('output.json', 'w', encoding='utf-8') as f:
+                    json.dump(mh_findings, f, indent=2)
+        print (color['BOLD'] + '\n------------------------------------' + color['END'])
+        print (color['BLUE'] + 'MetaHub Listing Findings Results' + color['END'])
+        print (color['BOLD'] + 'AWS Security Hub filters: ' + str(sh_filters) + color['END'])
+        print (color['BOLD'] + 'MetaHub filters: ' + str(args.mh_filters) + color['END'])
+        print (color['BOLD'] + 'Total Non-Compliant Resources: ' + str(len(mh_findings)) + color['END'])
+        print (color['BOLD'] + 'Total AWS Security Hub Findings: ' + str(len(sh_findings)) + color['END'])
+        print (color['BOLD'] + '------------------------------------\n' + color['END'])
+
+
+        if args.update_findings:
+            print (color['BOLD'] + '------------------------------------' + color['END'])
+            print (color['BLUE'] + 'MetaHub Update Findings: ' + str(args.update_findings) + color['END'])
+            print (color['BLUE'] + 'Findings to update: ' + str(len(sh_findings)) + color['END'])
+            print (color['BOLD'] + '------------------------------------\n' + color['END'])
+            if args.output_short:
+                print (color['BOLD'] + 'Please remove --output-short paramter...' + color['END'])
+                exit (1)
+            if not mh_findings:
+                print (color['BOLD'] + 'Nothing to update...' + color['END'])
+                exit (1)
+            ProcessedFindings, UnprocessedFindings = update_findings(logger, mh_findings, args.update_findings)
+            print (color['BOLD'] + '------------------------------------' + color['END'])
+            print (color['BLUE'] + 'MetaHub Update Findings Results: ' + str(args.update_findings) + color['END'])
+            print (color['BOLD'] + 'ProcessedFindings: ' + str(len(ProcessedFindings)) + color['END'])
+            print (color['BOLD'] + 'UnprocessedFindings: ' + str(len(UnprocessedFindings)) + color['END'])
+            print (color['BOLD'] + '------------------------------------\n' + color['END'])
+        
+        exit (0)
+
+    parser.print_help()
+
+if __name__ == '__main__':
+    main(argv[1:])
+
+
+
+
