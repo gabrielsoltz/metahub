@@ -36,11 +36,13 @@
 
 ## Requirements
 
-**MetaHub** is a Python3 program. You need to have Python3 installed in your system and same python modules described in the file `requirements.txt`.
+**MetaHub** is a Python3 program. You need to have Python3 installed in your system and the required python modules described in the file `requirements.txt`.
 
-Requirements can be installed in your system manually (using pip3) or using a Python virtual environment (suggedted method).
+Requirements can be installed in your system manually (using pip3) or using a Python virtual environment (suggested method).
 
-## Run it using Python Virtual Environment
+Alternatively you can run this tool using Docker. 
+
+### Run it using Python Virtual Environment
 
 1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 2. Change to repostiory dir: `cd metahub`
@@ -84,39 +86,39 @@ TBD
 
 ## Usage
 
-## Run and list findings
+### Run and list findings
 
   ```sh
   ./metahub --list-findings
   ```
 
-## Run and list findings only CRITICAL and Resource Type AwsEc2SecurityGroup
+### Run and list findings only CRITICAL and Resource Type AwsEc2SecurityGroup
 
   ```sh
-  ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourcType=AwsEc2SecurityGroup
+  ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
   ```
 
 See more about [filtering](#Filtering)
 
-## Run and list findings with MetaChecks enabled
+### Run and list findings with MetaChecks enabled
 
   ```sh
   ./metahub --list-findings --meta-checks
   ```
 
-## Run and list findings with MetaChecks enabled, filtering only CRITICAL and Resource Type AwsEc2SecurityGroup and filtering MetaCheck is_attached_to_public_ips
+### Run and list findings with MetaChecks enabled, filtering only CRITICAL and Resource Type AwsEc2SecurityGroup and filtering MetaCheck is_attached_to_public_ips
 
   ```sh
   ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_attached_to_public_ips
   ```
 
-## List Metachecks available
+### List Metachecks available
 
   ```sh
   ./metahub --list-metachecks
   ```
 
-## Show help
+### Show help
 
   ```sh
   ./metahub --help
