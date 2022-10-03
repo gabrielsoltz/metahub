@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is the definetly command line utility for AWS Security Hub 
+  <b>MetaHub</b> is the command line utility for AWS Security Hub.
 </p>
 
 ## Table of Contents
