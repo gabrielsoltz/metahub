@@ -4,7 +4,27 @@
   <img src="metahub.png" alt="MetaHub"/>
 </p>
 
-MetaHub is a command line program for AWS Security Hub that lets you work with findings more practically.
+<p align="center">
+  <b>MetaHub</b> is the definetly command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). 
+</p>
+
+## Table of Contents
+
+- [Description](#description)
+- [Features](#features)
+- [Requirements](#requirements)
+- [AWS Authentication]#(#aws-authentication)
+- [Usage](#usage)
+- [Findings Aggregation](#findings-aggregation)
+- [MetaChecks](#MetaChecks)
+- [Filtering](#Filtering)
+- [Updating Findings](#Updating-Findings)
+
+## Description
+
+**MetaHub** is a command line utility for AWS Security Hub](https://aws.amazon.com/security-hub) that let you work with multiple standards, multiple checks and thousands of findings in a very simple and advances way by sorting, aggregating, filtering and updating your data. In addition, MetaHub adds MetaChecks, an extremely simple and flexible way to do any type of tests on top of your resources to improve the level of confidence of your findings.
+
+## Features
 
 MetaHub introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation)
 
@@ -13,6 +33,95 @@ MetaHub adds extra custom functionality and checks on top of findings, MetaCheck
 MetaHub supports AWS Security Hub findings filtering the same way you would work with CLI utility using the option `--sh-filters`. In addition, it supports filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
 
 MetaHub lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
+
+## Requirements
+
+**MetaHub** is a Python3 program. You need to have Python3 installed in your system and same python modules described in the file `requirements.txt`.
+
+Requirements can be installed in your system manually (using pip3) or using a Python virtual environment (suggedted method).
+
+## Run it using Python Virtual Environment
+
+1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
+2. Change to repostiory dir: `cd metahub`
+3. Create virtual environment for this project: `python3 -m venv venv/metahub`
+4. Activate the virtual environment you just created: `source venv/ess-gitlab/bin/activate`
+5. Install metahub requirements: `pip3 install -r requirements.txt`
+6. Run: `./metahub -h`
+7. Deactivate your virtaul environment after you finish with: `deactivate`
+
+Next time you only need steps 4 and 6 to use the program. 
+
+### Run it using Docker
+
+1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
+3. Change to repostiory dir: `cd metahub`
+4. Build docker image: `docker build -t metahub .`
+5. Run: `docker run --rm -ti metahub ./metahub -h`
+
+## AWS Authentication
+
+- You need to be authenticated to AWS be able to connect with AWS Security Hub to fetch findings. 
+- You need to be authenticated to AWS to be able to connect to resources and run MetaChecks.
+
+    ```sh
+    aws configure
+    ```
+
+    or
+
+    ```sh
+    export AWS_ACCESS_KEY_ID="ASXXXXXXX"
+    export AWS_SECRET_ACCESS_KEY="XXXXXXXXX"
+    export AWS_SESSION_TOKEN="XXXXXXXXX"
+    ```
+
+- Those credentials must be associated to a user or role with proper permissions to do all checks. You can use managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
+
+## Assuming sessions
+
+TBD
+
+## Usage
+
+## Run and list findings
+
+  ```sh
+  ./metahub --list-findings
+  ```
+
+## Run and list findings only CRITICAL and Resource Type AwsEc2SecurityGroup
+
+  ```sh
+  ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourcType=AwsEc2SecurityGroup
+  ```
+
+See more about [filtering](#Filtering)
+
+## Run and list findings with MetaChecks enabled
+
+  ```sh
+  ./metahub --list-findings --meta-checks
+  ```
+
+## Run and list findings with MetaChecks enabled, filtering only CRITICAL and Resource Type AwsEc2SecurityGroup and filtering MetaCheck is_attached_to_public_ips
+
+  ```sh
+  ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_attached_to_public_ips
+  ```
+
+## List Metachecks available
+
+  ```sh
+  ./metahub --list-metachecks
+  ```
+
+## Show help
+
+  ```sh
+  ./metahub --help
+  ```
+
 
 ## Findings Aggregation
 
@@ -240,36 +349,3 @@ Use case examples:
 - Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
 
 `./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ----update-findings Workflow=RESOLVED`
-
-# Running the program
-
-## Python Virtual Environment
-
-This is a python program. Requirements are defined in the file `requirements.txt`; you can install those requirements in your system or use a Python virtual environment.
-
-Using a Python virtual environment:
-
-```
-cd metahub
-python3 -m venv venv/metahub
-source venv/metahub/bin/activate
-pip3 install -r requirements.txt
-```
-
-## Run and list findings
-
-List all AWS Security Findings using the default filters. See [Filtering](#Filtering)
-
-- `./metahub --list-findings`
-
-## Run and list findings with MetaChecks enabled
-
-List all AWS Security Findings using the default filters and running MetaChecks. See [Filtering](#Filtering)
-
-- `./metahub --list-findings --meta-checks`
-
-## Run using help
-
-You can list all available commands using `--help`
-
-- `./metahub --help`
