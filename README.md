@@ -61,11 +61,11 @@ Next time you only need steps 4 and 6 to use the program.
 1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 3. Change to repostiory dir: `cd metahub`
 4. Build docker image: `docker build -t metahub .`
-5. Run: `docker run --rm -ti metahub ./metahub -h`
+5. Run: `docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN --rm -ti metahub ./metahub -h`
 
 ## AWS Authentication
 
-- You need to be authenticated to AWS be able to connect with AWS Security Hub to fetch findings. 
+- You need to be authenticated to AWS to be able to connect with AWS Security Hub to fetch findings.
 - You need to be authenticated to AWS to be able to connect to resources and run MetaChecks.
 
     ```sh
@@ -75,6 +75,7 @@ Next time you only need steps 4 and 6 to use the program.
     or
 
     ```sh
+    export AWS_DEFAULT_REGION="region"
     export AWS_ACCESS_KEY_ID="ASXXXXXXX"
     export AWS_SECRET_ACCESS_KEY="XXXXXXXXX"
     export AWS_SESSION_TOKEN="XXXXXXXXX"
@@ -82,7 +83,7 @@ Next time you only need steps 4 and 6 to use the program.
 
 - Those credentials must be associated to a user or role with proper permissions to do all checks. You can use managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
 
-If you are using a Master/Child setup for AWS Security Hub see [Advanced Usage](#advanced-usage)
+If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
