@@ -175,7 +175,13 @@ Combine all options
 
 ## Outputs
 
-TBD
+### Json
+
+You can use `--output-json` to save your data to a file. **MetaHub** will save the file to the directory you are running it with the name of `output.json`
+
+### Short
+
+You can use `--output-short` to reduce the findings section to show only the Title.
 
 
 ## Findings Aggregation
@@ -207,9 +213,9 @@ Suppose you are working with multi-account setups and many resources. In that ca
 
 ### MetaHub Aggregation by Resource
 
-**MetaHub** aggregates all findings under the affected resource. You have 2 possible outputs, the `short` one and the default one:
+**MetaHub** aggregates all findings under the affected resource. You have 2 possible outputs, the short one and the default one:
 
-This is how MetaHub shows the previous example using the `--short` output:
+This is how MetaHub shows the previous example using the `--output-short` output:
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
