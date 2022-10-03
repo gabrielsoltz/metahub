@@ -332,13 +332,17 @@ This is the workflow:
 2. MetaHub executes MetaChecks for the AWS affected resources based on the previous list of findings
 3. MetaHub only shows you the resources that matches your `--mh-filters`, so it's a subset of the resources from point 1.
 
-Use cases examples:
+Examples:
 
-- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) affected by AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces`)
+- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces`):
+```sh
+./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces
+```
 
-
-
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces`
+- Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public:
+```sh
+./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public
+```
 
 You can list all available MetaChecks using `--list-metachecks`
 
@@ -360,4 +364,6 @@ Use case examples:
 
 - Update Workflow Status to `RESOLVED` for all findings with `RecordState=ARCHIVED` and `WorkflowStatus=NEW`: 
 
-`./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ----update-findings Workflow=RESOLVED`
+```sh
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ----update-findings Workflow=RESOLVE
+```
