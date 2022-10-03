@@ -181,28 +181,53 @@ And this is how MetaHub shows you the output using the default output:
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
   "findings": [
     {
-      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
-        "SeverityLabel": "HIGH",
-        "Security Standard": "Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"
+      "EC2.19 Security groups should not allow unrestricted access to ports with high risk": {
+        "SeverityLabel": "CRITICAL",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+        "Type": "AwsEc2SecurityGroup"
       }
     },
     {
-      "EC2.19 Security groups should not allow unrestricted access to ports with high risk": {
-        "SeverityLabel": "CRITICAL",
-        "Security Standard": "Software and Configuration Checks/Industry and Regulatory Standards/AWS-Foundational-Security-Best-Practices"
+      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+        "Type": "AwsEc2SecurityGroup"
       }
     },
     {
       "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389": {
         "SeverityLabel": "HIGH",
-        "Security Standard": "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+        "Type": "AwsEc2SecurityGroup"
       }
     },
     {
-      "4.1 Ensure no security groups allow ingress from 0.0.0.0/0 to port 22": {
-        "SeverityLabel": "HIGH",
-        "Security Standard": "Software and Configuration Checks/Industry and Regulatory Standards/CIS AWS Foundations Benchmark"
+      "EC2.22 Unused EC2 security groups should be removed": {
+        "SeverityLabel": "MEDIUM",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
+        "Type": "AwsEc2SecurityGroup"
       }
+    }
     }
   ],
   "AwsAccountId": "01234567890"
