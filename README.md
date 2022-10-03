@@ -366,6 +366,8 @@ For example, you can update the Workflow Status of those findings in one shot: `
 
 Filters are defined as key=value. If a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value."
 
+Examples:
+
 - Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
 ```sh
 ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW ----update-findings Workflow=RESOLVED
