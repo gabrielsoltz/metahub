@@ -15,6 +15,8 @@
 - [Requirements](#requirements)
 - [AWS Authentication](#aws-authentication)
 - [Usage](#usage)
+- [Advanced Usage](#advanced-usage)
+- [Outputs](#Outputs)
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks)
 - [Filtering](#Filtering)
@@ -80,9 +82,7 @@ Next time you only need steps 4 and 6 to use the program.
 
 - Those credentials must be associated to a user or role with proper permissions to do all checks. You can use managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
 
-## Assuming sessions
-
-TBD
+If you are using a Master/Child setup for AWS Security Hub see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
@@ -129,6 +129,53 @@ See more about [filtering](#Filtering)
   ```sh
   ./metahub --help
   ```
+
+## Advanced Usage
+
+### Multi Accounts Setups
+
+If you are running AWS Security Hub in the same account as your resources, you can skip this part. 
+
+**MetaHub** supports 3 different Multi Accounts setups in addition to the single account setup.
+
+- Running MetaHub where AWS Security Hub master is running, but your resources are running in different AWS Accounts. See [Assuming a role for your Child Accounts](#Assuming-a-role-for-your-Child-AWS-Accounts)
+- Running MetaHub in a different AWS Account than the one where AWS Security Hub is running. Your resources are in this account. See [Assuming a role for Security Hub](#Assuming-a-role-for-AWS-Security-Hub)
+- Running MetaHub in a different AWS Account than the one where AWS Security Hub is running, and your resources are running. See [Assuming a role for Security Hub and your Child AWS Accounts](#Assuming-a-role-for-Security-Hub-and-your-Child-AWS-Accounts)
+
+### Assuming a role for your Child AWS Accounts
+
+In this scenario, you are running **MetaHub** in a different AWS Account than the one your resources are running.
+You need to assume a role to connect to your resources to execute MetaChecks. 
+
+Use `--mh-assume-role` to specify the AWS IAM Role to be assumed in that AWS Account.
+
+```sh
+./metahub --list-findings --mh-assume-role SecurityRole
+```
+
+### Assuming a role for AWS Security Hub
+
+In this scenario, you are running **MetaHub** in a different AWS Account than the one where AWS Security Hub runs as Master. 
+You need to assume a role to connect with AWS Security Hub and fetch all security findings.
+
+Use `--sh-account` to specify the AWS Account ID where AWS Security Hub is running.
+Use `--sh-assume-role` to specify the AWS IAM Role to be assumed in that AWS Account.
+
+```sh
+./metahub --list-findings --sh-account 01234567890 --sh-assume-role SecurityRole
+```
+
+### Assuming a role for Security Hub and your Child AWS Accounts
+
+Combine all options
+
+```sh
+./metahub --list-findings --sh-account 01234567890 --sh-assume-role SecurityRole --mh-assume-role SecurityRole
+```
+
+## Outputs
+
+TBD
 
 
 ## Findings Aggregation
