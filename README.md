@@ -290,27 +290,33 @@ For example, adding SeverityLabel to the defaults filters:
 ```
 Filters are defined as key=value. If a value contains spaces, you should use it with double quotes: KeyToFilter="this is a value."
 
-Use cases examples:
+You can add how many filters you need to your query.
+
+Examples:
 
 - Filter by Severity:
 ```sh
-./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL
+./metaHub --list-findings --sh-filters SeverityLabel=CRITICAL
 ```
-- Filter by AWS Account:
+- Filter by Severity and AWS Account:
 ```sh
-./metaHub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL AwsAccountId=1234567890
+./metaHub --list-findings --sh-filters SeverityLabel=CRITICAL AwsAccountId=1234567890
 ```
 - Filter by Check Title:
 ```sh
-./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" Title="EC2.22 Unused EC2 security groups should be removed"
+./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed"
 ```
 - Filter by AWS Resource Type:
 ```sh
-./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceType=AwsEc2SecurityGroup
+./metahub --list-findings --sh-filters ResourceType=AwsEc2SecurityGroup
 ```
 - Filter by Resource Id:
 ```sh
-./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"
+./metahub --list-findings --sh-filters ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"
+```
+- Filter by Finding Id:
+```sh
+./metahub --list-findings --sh-filters Id="arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.19/finding/01234567890-1234-1234-1234-01234567890"
 ```
 You can check available filters in [AWS Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub.html#SecurityHub.Client.get_findings)
 
