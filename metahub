@@ -105,6 +105,7 @@ def list_findings(logger, sh_filters, mh_filters, metachecks, short, sh_account,
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
     for finding in sh_findings:
+        mh_matched = False
         resource_arn, finding_parsed = sh.parse_finding(finding)
 
         # MetaChecks:
@@ -116,20 +117,17 @@ def list_findings(logger, sh_filters, mh_filters, metachecks, short, sh_account,
             # If no metachecks, we enforce to True the match so we show the resource:
             mh_matched = True
 
-         # We keep a dict with no matched resources so we don't run MetaChecks again
+        # We keep a dict with no matched resources so we don't run MetaChecks again
         if not mh_matched:
-
             # We add the resource in our output only once:
             if not resource_arn in mh_findings_not_matched_findings:
                 mh_findings_not_matched_findings[resource_arn] = {'findings': []}
 
         # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
         if mh_matched:
-
             # We add the resource in our output only once:
             if not resource_arn in mh_findings:
                 mh_findings[resource_arn] = {'findings': []}
-
             # We add MetaChecks if they are enabled:
             if metachecks:
                 if not 'metachecks' in mh_findings[resource_arn]:
@@ -150,8 +148,9 @@ def list_findings(logger, sh_filters, mh_filters, metachecks, short, sh_account,
 
 def update_findings(logger, mh_findings, update):
     UpdateFilters = {}
+    IsNnoteProvided = False
     for key, value in update.items():
-        if key in ('Workflow'):
+        if key in ('Workflow', 'Note'):
             if key == 'Workflow':
                 WorkflowValues = ('NEW', 'NOTIFIED', 'RESOLVED', 'SUPPRESSED')
                 if value not in WorkflowValues:
@@ -159,16 +158,25 @@ def update_findings(logger, mh_findings, update):
                     exit(1)
                 Workflow = {'Workflow': {'Status': value}}
                 UpdateFilters.update(Workflow)
+            if key == 'Note':
+                Note = {'Note': {'Text': value, 'UpdatedBy': "MetaHub"}}
+                UpdateFilters.update(Note)
+                IsNnoteProvided = True
             continue
         logger.error('Unsuported update finding key: ' + str(key) + ' - Supported Keys: Workflow')
         exit (1)
-
+    if not IsNnoteProvided:
+        logger.error('Missing Note in update findings command. Please add Note="This is an example Note"')
+        exit (1)
     # Run Update
     sh = SecurityHub(logger)
     if confirm_choice('Are you sure you want to update all findings?'):
         update = sh.update_findings(mh_findings, UpdateFilters)
+        for ProcessedFinding in update['ProcessedFindings']:
+            logger.info('Updated Finding : ' + ProcessedFinding['Id'])
+        for UnprocessedFinding in update['UnprocessedFindings']:
+            logger.error('Error Updating Finding: ' + UnprocessedFinding['FindingIdentifier']['Id'] + ' Error: ' + UnprocessedFinding['ErrorMessage'])
         return update['ProcessedFindings'], update['UnprocessedFindings']
-    
     return [], []
 
 
@@ -229,7 +237,6 @@ def main(args):
         print (color['BOLD'] + 'Total Non-Compliant Resources: ' + str(len(mh_findings)) + color['END'])
         print (color['BOLD'] + 'Total AWS Security Hub Findings: ' + str(len(sh_findings)) + color['END'])
         print (color['BOLD'] + '------------------------------------\n' + color['END'])
-
 
         if args.update_findings:
             print (color['BOLD'] + '------------------------------------' + color['END'])

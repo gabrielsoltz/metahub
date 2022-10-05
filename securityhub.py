@@ -62,11 +62,16 @@ class SecurityHub:
 
     def parse_finding(self, finding):
         """ Returns resurce ARN and finding parsed for it """
+        try:
+            compliance = finding['Compliance']
+        except KeyError:
+            compliance = None
         findings = {
             finding['Title']: {
                 'SeverityLabel': finding["Severity"]["Label"],
                 'Workflow': finding['Workflow'],
                 'RecordState': finding['RecordState'],
+                'Compliance': compliance,
                 'Id': finding["Id"],
                 'ProductArn': finding['ProductArn'],
                 'Type': finding["Resources"][0]['Type']
@@ -81,11 +86,9 @@ class SecurityHub:
                 for f, v in finding.items():
                     FindingIdentifier = {'Id': v['Id'], 'ProductArn':  v['ProductArn']}
                     update['FindingIdentifiers'].append(FindingIdentifier)
-
         response = self.sh_client.batch_update_findings(
             FindingIdentifiers = update['FindingIdentifiers'],
             Workflow = update['Workflow'],
-            Note = {'Text': "MetaHub", 'UpdatedBy': "MetaHub"}
+            Note = update['Note'],
         )
-
         return response

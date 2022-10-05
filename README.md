@@ -30,7 +30,7 @@
 
 **MetaHub** introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** adds extra custom functionality and checks on top of findings, MetaChecks. See [MetaChecks](#MetaChecks)
+**MetaHub** adds extra custom functionality and checks on top of findings, **MetaChecks**. See [MetaChecks](#MetaChecks)
 
 **MetaHub** supports AWS Security Hub findings filtering the same way you would work with CLI utility using the option `--sh-filters`. In addition, it supports filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
 
@@ -122,7 +122,7 @@ See more about [filtering](#Filtering)
 ### Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
 
   ```sh
-  ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW ----update-findings Workflow=RESOLVED
+  ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
   ```
 
 ### Show help
@@ -403,6 +403,11 @@ Examples:
 ```sh
 ./metahub --list-findings --sh-filters Id="arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.19/finding/01234567890-1234-1234-1234-01234567890"
 ```
+- Filter by Compliance Status:
+```sh
+./metahub --list-findings --sh-filters ComplianceStatus=FAILED
+```
+
 You can check available filters in [AWS Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub.html#SecurityHub.Client.get_findings)
 
 ## MetaChecks Filtering
@@ -449,5 +454,5 @@ Examples:
 
 - Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
 ```sh
-./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW ----update-findings Workflow=RESOLVED
+./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
 ```
