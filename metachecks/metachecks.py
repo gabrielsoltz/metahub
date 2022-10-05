@@ -1,6 +1,7 @@
 import metachecks.checks
 from AwsHelpers import assume_role, get_boto3_session
 
+
 def run_metachecks(logger, finding, mh_filters, mh_role):
     """
     Executes MetaChecks for the AWS Resource Type
@@ -24,20 +25,13 @@ def run_metachecks(logger, finding, mh_filters, mh_role):
     else:
         sess = None
 
-    AWSResourceType = finding["Resources"][0]['Type']
+    AWSResourceType = finding["Resources"][0]["Type"]
     try:
         hndl = getattr(metachecks.checks, AWSResourceType).Metacheck(
-            logger,
-            finding,
-            mh_filters,
-            sess
+            logger, finding, mh_filters, sess
         )
     except AttributeError as err:
-        logger.debug(
-            "No MetaChecks for AWSResourceType: %s (%s)",
-            AWSResourceType,
-            err
-        )
+        logger.debug("No MetaChecks for AWSResourceType: %s (%s)", AWSResourceType, err)
         if mh_filters:
             return False, False
         return False, True
@@ -45,50 +39,42 @@ def run_metachecks(logger, finding, mh_filters, mh_role):
     logger.info(
         "Running MetaCheck AWSResourceType: %s (%s)",
         AWSResourceType,
-        finding["Resources"][0]["Id"]
+        finding["Resources"][0]["Id"],
     )
     execute = hndl.output()
     logger.info(
         "MetaCheck Result AWSResourceType: %s (%s): \nExecute: %s",
         AWSResourceType,
         finding["Resources"][0]["Id"],
-        execute
+        execute,
     )
 
     if execute is not False:
         return execute
     else:
         logger.error(
-            "Error running MetaCheck output() for AWSResourceType: %s",
-            AWSResourceType
+            "Error running MetaCheck output() for AWSResourceType: %s", AWSResourceType
         )
 
+
 def list_metachecks(logger, finding=False, mh_filters=False, sess=None):
-    ''' List Meatachecks checks'''
+    """List Meatachecks checks"""
 
     import inspect
 
     for name, obj in inspect.getmembers(metachecks.checks, inspect.ismodule):
         try:
             hndl = getattr(metachecks.checks, name).Metacheck(
-                logger,
-                finding,
-                mh_filters,
-                sess
+                logger, finding, mh_filters, sess
             )
         except AttributeError as err:
-            logger.debug(
-                "No MetaChecks for AWSResourceType: %s (%s)",
-                name,
-                err
-            )
+            logger.debug("No MetaChecks for AWSResourceType: %s (%s)", name, err)
 
         execute = hndl.checks()
 
         if execute is not False:
-            print (name + ': ' + ' '.join(execute))
+            print(name + ": " + " ".join(execute))
         else:
             logger.error(
-                "Error running MetaCheck checks() for AWSResourceType: %s",
-                name
+                "Error running MetaCheck checks() for AWSResourceType: %s", name
             )

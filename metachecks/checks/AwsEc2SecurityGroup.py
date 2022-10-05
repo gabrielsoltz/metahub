@@ -1,17 +1,17 @@
-'''MetaCheck: AwsEc2SecurityGroup'''
+"""MetaCheck: AwsEc2SecurityGroup"""
 
 import boto3
 
-class Metacheck:
 
+class Metacheck:
     def __init__(self, logger, finding, mh_filters, sess):
         self.logger = logger
         if not sess:
-            self.client = boto3.client('ec2')
+            self.client = boto3.client("ec2")
         else:
-            self.client = sess.client(service_name='ec2')
+            self.client = sess.client(service_name="ec2")
         if finding:
-            self.resource_id = finding["Resources"][0]["Id"].split('/')[1]
+            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.network_interfaces = self._describle_network_interfaces()
             self.mh_filters = mh_filters
             self.tags = self._tags()
@@ -21,23 +21,23 @@ class Metacheck:
         response = self.client.describe_network_interfaces(
             Filters=[
                 {
-                    'Name': 'group-id',
-                    'Values': [
+                    "Name": "group-id",
+                    "Values": [
                         self.resource_id,
-                    ]
+                    ],
                 },
             ],
         )
-        return response['NetworkInterfaces']
+        return response["NetworkInterfaces"]
 
     def _tags(self):
         response = self.client.describe_tags(
             Filters=[
                 {
-                    'Name': 'resource-id',
-                    'Values': [
+                    "Name": "resource-id",
+                    "Values": [
                         self.resource_id,
-                    ]
+                    ],
                 },
             ],
         )
@@ -46,34 +46,35 @@ class Metacheck:
     def _find_tag(self, tag):
         if self.tags:
             for _tag in self.tags:
-                if _tag['Key'] == tag:
-                    return _tag['Value']
+                if _tag["Key"] == tag:
+                    return _tag["Value"]
         return False
 
     def _parse_tags(self):
         _tags = {}
         if self.tags:
             for tag in self.tags:
-                _tags.update({tag['Key']: tag['Value']})
+                _tags.update({tag["Key"]: tag["Value"]})
         return _tags
-    
+
     def is_attached_to_network_interfaces(self):
         NetworkInterfaces = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
-                NetworkInterfaces.append(NetworkInterface['NetworkInterfaceId'])
+                NetworkInterfaces.append(NetworkInterface["NetworkInterfaceId"])
             return NetworkInterfaces
         return False
-    
+
     def is_attached_to_ec2_instances(self):
         Ec2Instances = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
                 try:
-                    Ec2Instances.append(NetworkInterface['Attachment']['InstanceId'])
+                    Ec2Instances.append(NetworkInterface["Attachment"]["InstanceId"])
                 except KeyError:
                     continue
-            if Ec2Instances: return Ec2Instances
+            if Ec2Instances:
+                return Ec2Instances
         return False
 
     def is_attached_to_managed_services(self):
@@ -81,12 +82,13 @@ class Metacheck:
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
                 try:
-                    RequesterId = NetworkInterface['RequesterManaged']
+                    RequesterId = NetworkInterface["RequesterManaged"]
                     if RequesterId == True:
-                        ManagedServices.append(NetworkInterface['Description'])
+                        ManagedServices.append(NetworkInterface["Description"])
                 except KeyError:
                     continue
-            if ManagedServices: return ManagedServices
+            if ManagedServices:
+                return ManagedServices
         return False
 
     def is_attached_to_public_ips(self):
@@ -94,12 +96,13 @@ class Metacheck:
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
                 try:
-                    PublicIPs.append(NetworkInterface['Association']['PublicIp'])
+                    PublicIPs.append(NetworkInterface["Association"]["PublicIp"])
                 except KeyError:
                     continue
-            if PublicIPs: return PublicIPs
+            if PublicIPs:
+                return PublicIPs
         return False
-    
+
     def is_public(self):
         if self.is_attached_to_public_ips():
             return True
@@ -107,12 +110,12 @@ class Metacheck:
 
     def checks(self):
         checks = [
-            'is_attached_to_network_interfaces',
-            'is_attached_to_ec2_instances',
-            'is_attached_to_public_ips',
-            'is_attached_to_managed_services',
-            'is_public'
-            ]
+            "is_attached_to_network_interfaces",
+            "is_attached_to_ec2_instances",
+            "is_attached_to_public_ips",
+            "is_attached_to_managed_services",
+            "is_public",
+        ]
         return checks
 
     def output(self):
@@ -124,8 +127,8 @@ class Metacheck:
             mh_values.update({check: hndl})
             if check in self.mh_filters and hndl:
                 mh_matched = True
-        
+
         # Tags
-        mh_values.update({'tags': self.tags_all})
-                
+        mh_values.update({"tags": self.tags_all})
+
         return mh_values, mh_matched
