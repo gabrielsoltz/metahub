@@ -18,9 +18,7 @@ class Metacheck:
             self.bucket_acl = self._get_bucket_acl()
             self.bucket_policy = self._get_bucket_policy()
             self.tags = self._tags()
-            self.tag_Owner = self._find_tag('Owner')
-            self.tag_Name = self._find_tag('Name')
-            self.tag_Environment = self._find_tag('Environment')
+            self.tags_all = self._parse_tags()
 
 
     def _get_bucket_acl(self):
@@ -78,6 +76,13 @@ class Metacheck:
                 if _tag['Key'] == tag:
                     return _tag['Value']
         return False
+
+    def _parse_tags(self):
+        _tags = {}
+        if self.tags:
+            for tag in self.tags:
+                _tags.update({tag['Key']: tag['Value']})
+        return _tags
 
     def is_bucket_acl_public(self):
         public_acls = []
@@ -144,8 +149,6 @@ class Metacheck:
                 mh_matched = True
 
         # Tags
-        mh_values.update({'tag_Name': self.tag_Name})
-        mh_values.update({'tag_Owner': self.tag_Owner})
-        mh_values.update({'tag_Environment': self.tag_Environment})
+        mh_values.update({'tags': self.tags_all})
                 
         return mh_values, mh_matched
