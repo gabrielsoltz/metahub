@@ -123,18 +123,18 @@ See more about [filtering](#Filtering)
   ./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_public_ips=True
   ```
 
-### List findings with filters ResourceType=AwsS3Bucket with and MetaChecks filters is_public=True
+### List findings with filters ResourceType=AwsS3Bucket and MetaChecks filters is_public=True
 ### Meaning: list all public buckets
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
   ```
 
-### List findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED with and MetaChecks filters is_not_referenced_by_another_sg=False
+### List findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED and MetaChecks filters is_referenced_by_another_sg=False
 ### Meaning: list all security groups unused and not referenced at all
 
   ```sh
-  ./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_not_referenced_by_another_sg=False
+  ./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_referenced_by_another_sg=False
   ```
 
 ### List Metachecks available
@@ -480,9 +480,9 @@ Examples:
 ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
 ```
 
-- Get all Security Groups that are unused (`Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED`) and are not referenced by other security groups (`is_not_referenced_by_another_sg=False`) (ready to be removed):
+- Get all Security Groups that are unused (`Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED`) and are not referenced by other security groups (`is_referenced_by_another_sg=True`) (ready to be removed):
 ```sh
-./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_not_referenced_by_another_sg=False
+./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_referenced_by_another_sg=False
 ```
 
 You can list all available MetaChecks using `--list-metachecks`
