@@ -89,13 +89,13 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
-### List SH findings with default filters 
+### List findings with default filters 
 
   ```sh
   ./metahub --list-findings
   ```
 
-### List SH findings with filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
+### List findings with filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
 
   ```sh
   ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
@@ -103,34 +103,34 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 See more about [filtering](#Filtering)
 
-### List SH findings with default filters and MetaChecks enabled
+### List findings with default filters and MetaChecks enabled
 
   ```sh
   ./metahub --list-findings --meta-checks
   ```
 
-### List SH findings with filters SeverityLabel=CRITICAL and MetaChecks with filters is_public=True
+### List findings with filters SeverityLabel=CRITICAL and MetaChecks filters is_public=True
 #### Meaning: list everything with critical findings that is public
 
   ```sh
   ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_public=True
   ```
 
-### List SH findings with filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup and MetaChecks with filters is_attached_to_public_ips=True
+### List findings with filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup and MetaChecks filters is_attached_to_public_ips=True
 #### Meaning: list all security groups attached to resources with public ips
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_public_ips=True
   ```
 
-### List SH findings with filters ResourceType=AwsS3Bucket with and MetaChecks with filters is_public=True
+### List findings with filters ResourceType=AwsS3Bucket with and MetaChecks filters is_public=True
 ### Meaning: list all public buckets
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
   ```
 
-### List SH findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED with and MetaChecks with filters is_not_referenced_by_another_sg=False
+### List findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED with and MetaChecks filters is_not_referenced_by_another_sg=False
 ### Meaning: list all security groups unused and not referenced at all
 
   ```sh
