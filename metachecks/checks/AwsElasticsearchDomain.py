@@ -137,8 +137,19 @@ class Metacheck:
         for check in self.checks():
             hndl = getattr(self, check)()
             mh_values.update({check: hndl})
-            if check in self.mh_filters and hndl:
-                mh_matched = True
+            if check in self.mh_filters:
+                self.logger.info(
+                    "Evaluating MetaCheck filter ("
+                    + check
+                    + "). Expected: "
+                    + str(self.mh_filters[check])
+                    + " Found: "
+                    + str(bool(hndl))
+                )
+                if self.mh_filters[check] and bool(hndl):
+                    mh_matched = True
+                if not self.mh_filters[check] and not hndl:
+                    mh_matched = True
 
         # Tags
         mh_values.update({"tags": self.tags_all})

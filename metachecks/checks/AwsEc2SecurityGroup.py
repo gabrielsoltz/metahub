@@ -1,6 +1,7 @@
 """MetaCheck: AwsEc2SecurityGroup"""
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 
 class Metacheck:
@@ -13,6 +14,7 @@ class Metacheck:
         if finding:
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.network_interfaces = self._describle_network_interfaces()
+            self.security_groups = self._describe_security_group()
             self.mh_filters = mh_filters
             self.tags = self._tags()
             self.tags_all = self._parse_tags()
@@ -29,6 +31,42 @@ class Metacheck:
             ],
         )
         return response["NetworkInterfaces"]
+
+    def _describe_security_group_rules(self):
+        response = self.client.describe_security_group_rules(
+            Filters=[
+                {
+                    "Name": "group-id",
+                    "Values": [
+                        self.resource_id,
+                    ],
+                },
+            ],
+        )
+        return response["SecurityGroupRules"]
+
+    def _describe_security_group(self):
+        response = self.client.describe_security_groups()
+        return response["SecurityGroups"]
+
+    def is_referenced_by_another_sg(self):
+        references = []
+        if self.security_groups:
+            for sg in self.security_groups:
+                GroupId = sg["GroupId"]
+                IpPermissions = sg["IpPermissions"]
+                IpPermissionsEgress = sg["IpPermissionsEgress"]
+                for rule in IpPermissions:
+                    for sub_rule in rule["UserIdGroupPairs"]:
+                        if self.resource_id in sub_rule["GroupId"]:
+                            references.append(GroupId)
+                for rule in IpPermissionsEgress:
+                    for sub_rule in rule["UserIdGroupPairs"]:
+                        if self.resource_id in sub_rule["GroupId"]:
+                            references.append(GroupId)
+        if references:
+            return references
+        return False
 
     def _tags(self):
         response = self.client.describe_tags(
@@ -115,6 +153,7 @@ class Metacheck:
             "is_attached_to_public_ips",
             "is_attached_to_managed_services",
             "is_public",
+            "is_referenced_by_another_sg",
         ]
         return checks
 
@@ -125,8 +164,19 @@ class Metacheck:
         for check in self.checks():
             hndl = getattr(self, check)()
             mh_values.update({check: hndl})
-            if check in self.mh_filters and hndl:
-                mh_matched = True
+            if check in self.mh_filters:
+                self.logger.info(
+                    "Evaluating MetaCheck filter ("
+                    + check
+                    + "). Expected: "
+                    + str(self.mh_filters[check])
+                    + " Found: "
+                    + str(bool(hndl))
+                )
+                if self.mh_filters[check] and bool(hndl):
+                    mh_matched = True
+                if not self.mh_filters[check] and not hndl:
+                    mh_matched = True
 
         # Tags
         mh_values.update({"tags": self.tags_all})

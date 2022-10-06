@@ -103,13 +103,16 @@ def get_parser():
     )
     parser.add_argument(
         "--mh-filters",
-        default=[],
+        default=None,
         help="MetaHub Filters: Use this option to filter the resources based on Meta Checks results. \
             You can list available Meta Checks using --list-metachecks \
-            Example: ./metahub --list-findings  --meta-checks --mh-filters is_attached_to_ec2_instance_with_public_ip \
+            Set a number of key-value pairs (do not put spaces before or after the = sign). \
+            Only True or False valid values. \
+            Example: ./metahub --list-findings  --meta-checks --mh-filters is_attached_to_ec2_instance_with_public_ip=True is_public=False \
             Default: None",
         required=False,
         nargs="*",
+        action=KeyValue,
     )
     parser.add_argument(
         "--update-findings",
@@ -144,17 +147,10 @@ def get_parser():
         required=False,
     )
     parser.add_argument(
-        "--output-json",
-        default=False,
-        help="Use this option to save json output as a file",
+        "--output",
+        default=None,
+        help="Output. Default is full. Options: short, json, inventory, statistics",
         required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--output-short",
-        help="Use this option to show a reduced output. Only show the resource and the Title of failed checks",
-        required=False,
-        action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
         "--log-level",
@@ -166,10 +162,23 @@ def get_parser():
 
 
 def list_findings(
-    logger, sh_filters, mh_filters, metachecks, short, sh_account, sh_role, mh_role
+    logger, sh_filters, mh_filters, metachecks, sh_account, sh_role, mh_role
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
+    mh_findings_short = {}
+    mh_inventory = []
+    mh_statistics = {
+        'Title': {},
+        'SeverityLabel': {},
+        'Workflow': {},
+        'RecordState': {},
+        'Compliance': {},
+        'Id': {},
+        'ProductArn': {},
+        'Type': {},
+        'AwsAccountId': {}
+    }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
     for finding in sh_findings:
@@ -194,32 +203,53 @@ def list_findings(
         if not mh_matched:
             # We add the resource in our output only once:
             if not resource_arn in mh_findings_not_matched_findings:
-                mh_findings_not_matched_findings[resource_arn] = {"findings": []}
+                mh_findings_not_matched_findings[resource_arn] = {}
 
         # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
         if mh_matched:
-            # We add the resource in our output only once:
+            # RESOURCE:
             if not resource_arn in mh_findings:
                 mh_findings[resource_arn] = {"findings": []}
-            # We add MetaChecks if they are enabled:
-            if metachecks:
-                if not "metachecks" in mh_findings[resource_arn]:
+                mh_findings_short[resource_arn] = {"findings": []}
+                mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+
+                # INVENTORY
+                mh_inventory.append(resource_arn)
+
+                # STATISTICS
+                for key, value in finding_parsed.items():
+                    # Title
+                    if not key in mh_statistics['Title']: 
+                        mh_statistics['Title'][key] = 0
+                    mh_statistics['Title'][key] += 1
+                    # Values
+                    for v in value:
+                        if v == 'Workflow' or v == 'Compliance':
+                            if not value[v]['Status'] in mh_statistics[v]:
+                                mh_statistics[v][value[v]['Status']] = 0
+                            mh_statistics[v][value[v]['Status']] += 1
+                            continue
+                        if not value[v] in mh_statistics[v]:
+                            mh_statistics[v][value[v]] = 0
+                        mh_statistics[v][value[v]] += 1
+                    # AwsAccountId
+                    if not finding["AwsAccountId"] in mh_statistics['AwsAccountId']: 
+                        mh_statistics['AwsAccountId'][finding["AwsAccountId"]] = 0
+                    mh_statistics['AwsAccountId'][finding["AwsAccountId"]] += 1
+
+                # METACHECKS:
+                if metachecks:
                     mh_findings[resource_arn]["metachecks"] = mh_values
+                    mh_findings_short[resource_arn]["metachecks"] = mh_values
 
-            # We add the findings:
-
-            # Short output, after adding findings we continue.
-            if short:
-                mh_findings[resource_arn]["findings"].append(
-                    list(finding_parsed.keys())[0]
-                )
-                continue
-
-            # Normal Output:
+            # FINDINGS
+            mh_findings_short[resource_arn]["findings"].append(
+                list(finding_parsed.keys())[0]
+            )
             mh_findings[resource_arn]["findings"].append(finding_parsed)
-            mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
 
-    return mh_findings, sh_findings
+    return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
 
 
 def update_findings(logger, mh_findings, update):
@@ -296,6 +326,24 @@ def main(args):
     else:
         sh_filters = args.sh_filters
 
+    if not args.mh_filters:
+        mh_filters = {}
+    else:
+        mh_filters = args.mh_filters
+    for mh_filer_key, mh_filer_value in mh_filters.items():
+        if mh_filters[mh_filer_key].lower() == 'true':
+            mh_filters[mh_filer_key] = bool(True)
+        elif mh_filters[mh_filer_key].lower() == 'false':
+            mh_filters[mh_filer_key] = bool(False)
+        else:
+            logger.error('MetaHub Filter Only True/False Supported: ' + str(mh_filters))
+            exit(1)
+    # Output
+    if args.output:
+        if not args.output in ('short', 'json', 'inventory', 'statistics'):
+            logger.error('Wrong Output: ' + str(args.output))
+            exit(1)
+
     if args.list_metachecks:
         list_metachecks(logger)
         exit(0)
@@ -309,23 +357,30 @@ def main(args):
             + str(sh_filters)
             + color["END"]
         )
-        print(color["BOLD"] + "MetaHub filters: " + str(args.mh_filters) + color["END"])
+        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
         print(color["BOLD"] + "------------------------------------\n" + color["END"])
-        mh_findings, sh_findings = list_findings(
+        mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics = list_findings(
             logger,
             sh_filters,
-            mh_filters=args.mh_filters,
+            mh_filters=mh_filters,
             metachecks=args.meta_checks,
-            short=args.output_short,
             sh_account=args.sh_account,
             sh_role=args.sh_assume_role,
             mh_role=args.mh_assume_role,
         )
         if mh_findings:
-            print(json.dumps(mh_findings, indent=2))
-            if args.output_json:
+            if args.output == 'json':
                 with open("output.json", "w", encoding="utf-8") as f:
                     json.dump(mh_findings, f, indent=2)
+                print ('Output written to output.txt')
+            elif args.output == 'short':
+                print(json.dumps(mh_findings_short, indent=2))
+            elif args.output == 'inventory':
+                print(json.dumps(mh_inventory, indent=2))
+            elif args.output == 'statistics':
+                print(json.dumps(mh_statistics, indent=2))
+            else:
+                print(json.dumps(mh_findings, indent=2))
         print(color["BOLD"] + "\n------------------------------------" + color["END"])
         print(color["BLUE"] + "MetaHub Listing Findings Results" + color["END"])
         print(
@@ -334,7 +389,7 @@ def main(args):
             + str(sh_filters)
             + color["END"]
         )
-        print(color["BOLD"] + "MetaHub filters: " + str(args.mh_filters) + color["END"])
+        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
         print(
             color["BOLD"]
             + "Total Non-Compliant Resources: "
@@ -366,13 +421,6 @@ def main(args):
             print(
                 color["BOLD"] + "------------------------------------\n" + color["END"]
             )
-            if args.output_short:
-                print(
-                    color["BOLD"]
-                    + "Please remove --output-short paramter..."
-                    + color["END"]
-                )
-                exit(1)
             if not mh_findings:
                 print(color["BOLD"] + "Nothing to update..." + color["END"])
                 exit(1)

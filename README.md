@@ -36,6 +36,8 @@
 
 **MetaHub** lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
 
+**MetaHub** supports different output options like `json`, `inventory`, `statistics` and `short`. All of them are programatically usable ready to be integrated with your favorite tools. 
+
 ## Requirements
 
 **MetaHub** is a Python3 program. You need to have Python3 installed in your system and the required python modules described in the file `requirements.txt`.
@@ -87,13 +89,13 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
-### Run and list findings
+### List SH findings with default filters 
 
   ```sh
   ./metahub --list-findings
   ```
 
-### Run and list findings only CRITICAL and Resource Type AwsEc2SecurityGroup
+### List SH findings with filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
 
   ```sh
   ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
@@ -101,16 +103,38 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 See more about [filtering](#Filtering)
 
-### Run and list findings with MetaChecks enabled
+### List SH findings with default filters and MetaChecks enabled
 
   ```sh
   ./metahub --list-findings --meta-checks
   ```
 
-### Run and list findings with MetaChecks enabled, filtering only CRITICAL and Resource Type AwsEc2SecurityGroup and filtering MetaCheck is_attached_to_public_ips
+### List SH findings with filters SeverityLabel=CRITICAL and MetaChecks with filters is_public=True
+#### Meaning: list everything with critical findings that is public
 
   ```sh
-  ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_attached_to_public_ips
+  ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_public=True
+  ```
+
+### List SH findings with filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup and MetaChecks with filters is_attached_to_public_ips=True
+#### Meaning: list all security groups attached to resources with public ips
+
+  ```sh
+  ./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_public_ips=True
+  ```
+
+### List SH findings with filters ResourceType=AwsS3Bucket with and MetaChecks with filters is_public=True
+### Meaning: list all public buckets
+
+  ```sh
+  ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
+  ```
+
+### List SH findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED with and MetaChecks with filters is_not_referenced_by_another_sg=False
+### Meaning: list all security groups unused and not referenced at all
+
+  ```sh
+  ./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_not_referenced_by_another_sg=False
   ```
 
 ### List Metachecks available
@@ -119,7 +143,7 @@ See more about [filtering](#Filtering)
   ./metahub --list-metachecks
   ```
 
-### Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
+### Update all SH findings with filters RecordState=ARCHIVED WorkflowStatus=NEW to Worflow Status to RESOLVED and Note "Resolving Findings that are ARCHIVED"
 
   ```sh
   ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
@@ -176,14 +200,23 @@ Combine all options
 
 ## Outputs
 
+**MetaHub** supports different type of outputs format and data by using the option `--output`
+
 ### Json
 
-You can use `--output-json` to save your data to a file. **MetaHub** will save the file to the directory you are running it with the name of `output.json`
+You can use `--output json` to save your data to a file. **MetaHub** will save the file to the directory you are running it with the name of `output.json`
 
 ### Short
 
-You can use `--output-short` to reduce the findings section to show only the Title.
+You can use `--output short` to reduce the findings section to show only the Title.
 
+### Inventory
+
+You can use `--output inventory` to get only the list of resource's ARNs.
+
+### Statistics
+
+You can use `--output statistics` to get statistics about your search. 
 
 ## Findings Aggregation
 
@@ -412,7 +445,11 @@ You can check available filters in [AWS Documentation](https://boto3.amazonaws.c
 
 ## MetaChecks Filtering
 
-MetaHub supports filtering for MetaChecks in the form of a list. You can use how many filters you want and separate them using spaces. If you specify more than one check, you will get all resources that match at least one of the checks. 
+MetaHub supports filtering for MetaChecks in the form of a Key=Value. You can use how many filters you want and separate them using spaces. If you specify more than one check, you will get all resources that match at least one of the checks. 
+
+MetaChecks filters only supports True or False value:
+- A MetaChecks filter set to **True** means `True` or with data.
+- A MetaChecks filter set to **False** means `False` or without data.
 
 The MetaCheck filters are applied to the output of the MetaCheck that executes over your AWS Resources. 
 
@@ -424,14 +461,19 @@ This is the workflow:
 
 Examples:
 
-- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces`):
+- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are attached to Network Interfaces (`is_attached_to_network_interfaces=True`):
 ```sh
-./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces
+./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_network_interfaces=True
 ```
 
-- Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public:
+- Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public (`is_public=True`):
 ```sh
-./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public
+./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
+```
+
+- Get all Security Groups that are unused (`Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED`) and are not referenced by other security groups (`is_not_referenced_by_another_sg=False`) (ready to be removed):
+```sh
+./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_not_referenced_by_another_sg=False
 ```
 
 You can list all available MetaChecks using `--list-metachecks`
