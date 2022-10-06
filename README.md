@@ -373,7 +373,16 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
       "200.200.200.200"
     ],
     "is_attached_to_managed_services": false,
-    "tag_Owner": "Gabriel"
+    "is_public": true,
+    "is_referenced_by_another_sg": [
+      "sg-02222222222",
+      "sg-03333333333"
+    ]
+    "tags": {
+      "Environment": "Production",
+      "Name": "MyGroupName",
+      "Owner": "Blameless",
+    }
   }
 }
 ```
