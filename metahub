@@ -184,7 +184,6 @@ def list_findings(
     for finding in sh_findings:
         mh_matched = False
         resource_arn, finding_parsed = sh.parse_finding(finding)
-
         # MetaChecks:
         if metachecks:
             # We run metachecks only once:
@@ -195,6 +194,11 @@ def list_findings(
                 mh_values, mh_matched = run_metachecks(
                     logger, finding, mh_filters, mh_role
                 )
+            else:
+                if resource_arn in mh_findings:
+                    mh_matched = True
+                else:
+                    mh_matched = False
         else:
             # If no metachecks, we enforce to True the match so we show the resource:
             mh_matched = True
