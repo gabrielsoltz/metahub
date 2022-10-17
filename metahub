@@ -194,11 +194,9 @@ def list_findings(
                 mh_values, mh_matched = run_metachecks(
                     logger, finding, mh_filters, mh_role
                 )
-            else:
-                if resource_arn in mh_findings:
-                    mh_matched = True
-                else:
-                    mh_matched = False
+            # If the resource was already matched, we don't run metachecks again but we show others findings
+            if resource_arn in mh_findings:
+                mh_matched = True
         else:
             # If no metachecks, we enforce to True the match so we show the resource:
             mh_matched = True
