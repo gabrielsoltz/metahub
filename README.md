@@ -182,6 +182,11 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ./metahub --help
   ```
 
+### Change Log Level (INFO, WARNING, ERROR or DEBUG. Default: ERROR)
+
+  ```sh
+  ./metahub --log-level INFO
+  ```
 
 
 ## Advanced Usage
