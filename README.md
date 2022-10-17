@@ -141,13 +141,13 @@ See more about [filtering](#Filtering)
 
 ### Usage :: Updating Findings
 
-### Supress all findings related to AWSS3Bucket resource type for the ones that are not public
+#### Supress all findings related to AWSS3Bucket resource type for the ones that are not public
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False --update-findings Note="SUPRESSING non-public S3 buckets" Workflow=SUPRESSED
   ```
 
-### Supress all findings related to AwsEc2SecurityGroup resource type for the ones that are not public
+#### Supress all findings related to AwsEc2SecurityGroup resource type for the ones that are not public
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsEc2SecurityGroup --mh-filters is_public=False --update-findings Note="SUPRESSING non-public AwsEc2SecurityGroup" Workflow=SUPRESSED
