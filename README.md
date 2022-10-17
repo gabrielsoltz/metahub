@@ -163,6 +163,12 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --output statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
   ```
 
+##### Move NOT_AVAILABLE findings to RESOLVED
+
+  ```sh
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE --output statistics --update-findings Note="House Keeping - Move NOT_AVAILABLE findings to RESOLVED" Workflow=RESOLVED
+  ```
+
 ##### Move ARCHIVED findings to RESOLVED
 
   ```sh
