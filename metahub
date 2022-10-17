@@ -259,6 +259,7 @@ def list_findings(
 def update_findings(logger, mh_findings, update):
     UpdateFilters = {}
     IsNnoteProvided = False
+    IsAllowedKeyProvided = False
     for key, value in update.items():
         if key in ("Workflow", "Note"):
             if key == "Workflow":
@@ -268,6 +269,7 @@ def update_findings(logger, mh_findings, update):
                     exit(1)
                 Workflow = {"Workflow": {"Status": value}}
                 UpdateFilters.update(Workflow)
+                IsAllowedKeyProvided = True
             if key == "Note":
                 Note = {"Note": {"Text": value, "UpdatedBy": "MetaHub"}}
                 UpdateFilters.update(Note)
@@ -275,6 +277,11 @@ def update_findings(logger, mh_findings, update):
             continue
         logger.error(
             "Unsuported update finding key: " + str(key) + " - Supported Keys: Workflow"
+        )
+        exit(1)
+    if not IsAllowedKeyProvided:
+        logger.error(
+            'Missing Key to Update in update findings command. Please add Key="This is a value"'
         )
         exit(1)
     if not IsNnoteProvided:
@@ -285,17 +292,22 @@ def update_findings(logger, mh_findings, update):
     # Run Update
     sh = SecurityHub(logger)
     if confirm_choice("Are you sure you want to update all findings?"):
-        update = sh.update_findings(mh_findings, UpdateFilters)
-        for ProcessedFinding in update["ProcessedFindings"]:
-            logger.info("Updated Finding : " + ProcessedFinding["Id"])
-        for UnprocessedFinding in update["UnprocessedFindings"]:
-            logger.error(
-                "Error Updating Finding: "
-                + UnprocessedFinding["FindingIdentifier"]["Id"]
-                + " Error: "
-                + UnprocessedFinding["ErrorMessage"]
-            )
-        return update["ProcessedFindings"], update["UnprocessedFindings"]
+        update_multiple = sh.update_findings(mh_findings, UpdateFilters)
+        update_multiple_ProcessedFinding = []
+        update_multiple_UnprocessedFindings = []
+        for update in update_multiple:
+            for ProcessedFinding in update["ProcessedFindings"]:
+                logger.info("Updated Finding : " + ProcessedFinding["Id"])
+                update_multiple_ProcessedFinding.append(ProcessedFinding)
+            for UnprocessedFinding in update["UnprocessedFindings"]:
+                logger.error(
+                    "Error Updating Finding: "
+                    + UnprocessedFinding["FindingIdentifier"]["Id"]
+                    + " Error: "
+                    + UnprocessedFinding["ErrorMessage"]
+                )
+                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
+        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
     return [], []
 
 

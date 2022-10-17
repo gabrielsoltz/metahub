@@ -91,16 +91,28 @@ class SecurityHub:
         }
         return finding["Resources"][0]["Id"], findings
 
+    def _spit_list(self, lst, n):
+        """split a list into multipe lists from n items"""
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]
+
     def update_findings(self, mh_findings, update):
         update["FindingIdentifiers"] = []
+        response_multiple = []
         for mh_finding in mh_findings:
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
                     update["FindingIdentifiers"].append(FindingIdentifier)
-        response = self.sh_client.batch_update_findings(
-            FindingIdentifiers=update["FindingIdentifiers"],
-            Workflow=update["Workflow"],
-            Note=update["Note"],
-        )
-        return response
+        self.logger.info("Splitting findings into 100 items batches...")
+        sub_list_count = 0
+        for FindingIdentifiers_sub_list in list(self._spit_list(update["FindingIdentifiers"], 100)):
+            sub_list_count += 1
+            self.logger.info("Updating Batch %s (items: %s)", sub_list_count, len(FindingIdentifiers_sub_list))
+            response = self.sh_client.batch_update_findings(
+                FindingIdentifiers=FindingIdentifiers_sub_list,
+                Workflow=update["Workflow"],
+                Note=update["Note"],
+            )
+            response_multiple.append(response)
+        return response_multiple

@@ -89,13 +89,15 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
-### List findings with default filters 
+### Usage :: Listing and Filtering
+
+#### List findings with default filters 
 
   ```sh
   ./metahub --list-findings
   ```
 
-### List findings with filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
+#### List findings with filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
 
   ```sh
   ./metahub --list-findings --sh-filters SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
@@ -103,39 +105,70 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 See more about [filtering](#Filtering)
 
-### List findings with default filters and MetaChecks enabled
+#### List findings with default filters and MetaChecks enabled
 
   ```sh
   ./metahub --list-findings --meta-checks
   ```
 
-### List findings with filters SeverityLabel=CRITICAL and MetaChecks filters is_public=True
-#### Meaning: list everything with critical findings that is public
+#### List findings with filters SeverityLabel=CRITICAL and MetaChecks filters is_public=True
+##### Meaning: list everything with critical findings that is public
 
   ```sh
   ./metahub --list-findings --meta-checks -sh-filters SeverityLabel=CRITICAL --mh-filters is_public=True
   ```
 
-### List findings with filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup and MetaChecks filters is_attached_to_public_ips=True
-#### Meaning: list all security groups attached to resources with public ips
+#### List findings with filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup and MetaChecks filters is_attached_to_public_ips=True
+##### Meaning: list all security groups attached to resources with public ips
 
   ```sh
   ./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters is_attached_to_public_ips=True
   ```
 
-### List findings with filters ResourceType=AwsS3Bucket and MetaChecks filters is_public=True
-### Meaning: list all public buckets
+#### List findings with filters ResourceType=AwsS3Bucket and MetaChecks filters is_public=True
+##### Meaning: list all public buckets
 
   ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False
+  ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=True
   ```
 
-### List findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED and MetaChecks filters is_referenced_by_another_sg=False
-### Meaning: list all security groups unused and not referenced at all
+#### List findings with filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED and MetaChecks filters is_referenced_by_another_sg=False
+##### Meaning: list all security groups unused and not referenced at all
 
   ```sh
   ./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_referenced_by_another_sg=False
   ```
+
+### Usage :: Updating Findings
+
+### Supress all findings related to AWSS3Bucket resource type for the ones that are not public
+
+  ```sh
+  ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters is_public=False --update-findings Note="SUPRESSING non-public S3 buckets" Workflow=SUPRESSED
+  ```
+
+### Supress all findings related to AwsEc2SecurityGroup resource type for the ones that are not public
+
+  ```sh
+  ./metahub --list-findings --meta-checks --sh-filters ResourceType=AwsEc2SecurityGroup --mh-filters is_public=False --update-findings Note="SUPRESSING non-public AwsEc2SecurityGroup" Workflow=SUPRESSED
+  ```
+
+#### House Keeping
+
+You can use MetaHub to automate some House Keeping tasks that AWS Security Hub in some cases is not handling correctly, like Resolving findings in an automated way. 
+
+##### Move PASSED findings to RESOLVED
+
+  ```sh
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --output statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
+  ```
+
+##### Move ARCHIVED findings to RESOLVED
+
+  ```sh
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --output statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
+  ```
+
 
 ### List Metachecks available
 
@@ -143,17 +176,13 @@ See more about [filtering](#Filtering)
   ./metahub --list-metachecks
   ```
 
-### Update all SH findings with filters RecordState=ARCHIVED WorkflowStatus=NEW to Worflow Status to RESOLVED and Note "Resolving Findings that are ARCHIVED"
-
-  ```sh
-  ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
-  ```
-
 ### Show help
 
   ```sh
   ./metahub --help
   ```
+
+
 
 ## Advanced Usage
 
@@ -500,6 +529,8 @@ For example, you can update the Workflow Status of those findings in one shot: `
 **MetaHub** supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
 Filters are defined as key=value. If a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value."
+
+AWS Security Hub API is limited to 100 findings per update, Metahub will split your findings into 100 items chucks to avoid this limitation and update your findings all together besides the amount of them.
 
 Examples:
 
