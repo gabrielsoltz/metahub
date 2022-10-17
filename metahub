@@ -211,7 +211,29 @@ def list_findings(
 
         # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
         if mh_matched:
-            # RESOURCE:
+
+            # STATISTICS (we count by matched finding)
+            for key, value in finding_parsed.items():
+                # Title
+                if not key in mh_statistics['Title']: 
+                    mh_statistics['Title'][key] = 0
+                mh_statistics['Title'][key] += 1
+                # Values
+                for v in value:
+                    if v == 'Workflow' or v == 'Compliance':
+                        if not value[v]['Status'] in mh_statistics[v]:
+                            mh_statistics[v][value[v]['Status']] = 0
+                        mh_statistics[v][value[v]['Status']] += 1
+                        continue
+                    if not value[v] in mh_statistics[v]:
+                        mh_statistics[v][value[v]] = 0
+                    mh_statistics[v][value[v]] += 1
+                # AwsAccountId
+                if not finding["AwsAccountId"] in mh_statistics['AwsAccountId']: 
+                    mh_statistics['AwsAccountId'][finding["AwsAccountId"]] = 0
+                mh_statistics['AwsAccountId'][finding["AwsAccountId"]] += 1
+
+            # RESOURCE (we add the resource only once)
             if not resource_arn in mh_findings:
                 mh_findings[resource_arn] = {"findings": []}
                 mh_findings_short[resource_arn] = {"findings": []}
@@ -220,27 +242,6 @@ def list_findings(
 
                 # INVENTORY
                 mh_inventory.append(resource_arn)
-
-                # STATISTICS
-                for key, value in finding_parsed.items():
-                    # Title
-                    if not key in mh_statistics['Title']: 
-                        mh_statistics['Title'][key] = 0
-                    mh_statistics['Title'][key] += 1
-                    # Values
-                    for v in value:
-                        if v == 'Workflow' or v == 'Compliance':
-                            if not value[v]['Status'] in mh_statistics[v]:
-                                mh_statistics[v][value[v]['Status']] = 0
-                            mh_statistics[v][value[v]['Status']] += 1
-                            continue
-                        if not value[v] in mh_statistics[v]:
-                            mh_statistics[v][value[v]] = 0
-                        mh_statistics[v][value[v]] += 1
-                    # AwsAccountId
-                    if not finding["AwsAccountId"] in mh_statistics['AwsAccountId']: 
-                        mh_statistics['AwsAccountId'][finding["AwsAccountId"]] = 0
-                    mh_statistics['AwsAccountId'][finding["AwsAccountId"]] += 1
 
                 # METACHECKS:
                 if metachecks:
