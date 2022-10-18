@@ -13,41 +13,52 @@ class Metacheck:
             self.client = sess.client(service_name="ec2")
         if finding:
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
-            self.network_interfaces = self._describle_network_interfaces()
             self.security_groups = self._describe_security_group()
+            self.network_interfaces = self._describe_network_interfaces()
             self.mh_filters = mh_filters
             self.tags = self._tags()
             self.tags_all = self._parse_tags()
 
-    def _describle_network_interfaces(self):
-        response = self.client.describe_network_interfaces(
-            Filters=[
-                {
-                    "Name": "group-id",
-                    "Values": [
-                        self.resource_id,
-                    ],
-                },
-            ],
-        )
-        return response["NetworkInterfaces"]
-
-    def _describe_security_group_rules(self):
-        response = self.client.describe_security_group_rules(
-            Filters=[
-                {
-                    "Name": "group-id",
-                    "Values": [
-                        self.resource_id,
-                    ],
-                },
-            ],
-        )
-        return response["SecurityGroupRules"]
-
     def _describe_security_group(self):
         response = self.client.describe_security_groups()
         return response["SecurityGroups"]
+
+    def _check_security_group_exists_in_account(self):
+        for sg in self.security_groups:
+            if self.resource_id == sg['GroupId']:
+                return True
+        self.logger.error("We couldn't find SG %s in AWS account. Try using --mh-assume-role...", self.resource_id)
+        return False
+
+    def _describe_network_interfaces(self):
+        if self._check_security_group_exists_in_account():
+            response = self.client.describe_network_interfaces(
+                Filters=[
+                    {
+                        "Name": "group-id",
+                        "Values": [
+                            self.resource_id,
+                        ],
+                    },
+                ],
+            )
+            return response["NetworkInterfaces"]
+        return False
+
+    def _describe_security_group_rules(self):
+        if self._check_security_group_exists_in_account():
+            response = self.client.describe_security_group_rules(
+                Filters=[
+                    {
+                        "Name": "group-id",
+                        "Values": [
+                            self.resource_id,
+                        ],
+                    },
+                ],
+            )
+            return response["SecurityGroupRules"]
+        return False
 
     def is_referenced_by_another_sg(self):
         references = []
