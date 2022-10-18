@@ -25,9 +25,12 @@ class SecurityHub:
     def set_filters(self, sh_filters):
         """Return filters for AWS Security Hub get_findings Call"""
         filters = {}
-        for key, value in sh_filters.items():
-            if key != "self" and value is not None:
-                filters.update({key: [{"Comparison": "EQUALS", "Value": value}]})
+        for key, values in sh_filters.items():
+            if key != "self" and values is not None:
+                filters[key] = []
+                for value in values:
+                    value_to_append = {"Comparison": "EQUALS", "Value": value}
+                    filters[key].append(value_to_append)
         return filters
 
     def get_findings(self, sh_filters):
