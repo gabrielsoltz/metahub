@@ -255,7 +255,7 @@ def list_findings(
     return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
 
 
-def update_findings(logger, mh_findings, update):
+def update_findings(logger, mh_findings, update, sh_account, sh_role):
     UpdateFilters = {}
     IsNnoteProvided = False
     IsAllowedKeyProvided = False
@@ -289,7 +289,7 @@ def update_findings(logger, mh_findings, update):
         )
         exit(1)
     # Run Update
-    sh = SecurityHub(logger)
+    sh = SecurityHub(logger, sh_account, sh_role)
     if confirm_choice("Are you sure you want to update all findings?"):
         update_multiple = sh.update_findings(mh_findings, UpdateFilters)
         update_multiple_ProcessedFinding = []
@@ -440,7 +440,11 @@ def main(args):
                 print(color["BOLD"] + "Nothing to update..." + color["END"])
                 exit(1)
             ProcessedFindings, UnprocessedFindings = update_findings(
-                logger, mh_findings, args.update_findings
+                logger, 
+                mh_findings, 
+                args.update_findings,
+                args.sh_account,
+                args.sh_assume_role,
             )
             print(color["BOLD"] + "------------------------------------" + color["END"])
             print(
