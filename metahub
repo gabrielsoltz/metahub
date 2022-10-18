@@ -179,9 +179,9 @@ def main(args):
     logger = get_logger(args.log_level)
 
     default_sh_filters = {
-        "RecordState": "ACTIVE",
-        "WorkflowStatus": "NEW",
-        "ProductName": "Security Hub",
+        "RecordState": ["ACTIVE"],
+        "WorkflowStatus": ["NEW"],
+        "ProductName": ["Security Hub"],
     }
     if not args.sh_filters:
         sh_filters = default_sh_filters
