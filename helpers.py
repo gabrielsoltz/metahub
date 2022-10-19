@@ -58,7 +58,7 @@ def get_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-    MetaHub for AWS Security Hub
+    Metahub: the command line utility for AWS Security Hub.
     """,
     )
     parser.add_argument(
@@ -223,7 +223,7 @@ def print_banner():
         + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ "
         + color["END"]
     )
-    print(r"  " + color["DARKCYAN"] + "the AWS Security Hub CLI" + color["END"])
+    print(r"  " + color["DARKCYAN"] + "the command line utility for AWS Security Hub" + color["END"])
 
 
 def print_table(key, value, keycolor=color["DARKCYAN"]):
