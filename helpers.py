@@ -1,11 +1,12 @@
 import argparse
 import logging
 
+
 class KeyValueWithList(argparse.Action):
     """Parser keyvalue with list Action"""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        #setattr(namespace, self.dest, dict())
+        # setattr(namespace, self.dest, dict())
         setattr(namespace, self.dest, Dictlist())
         logger = get_logger("ERROR")
         for value in values:
@@ -17,6 +18,7 @@ class KeyValueWithList(argparse.Action):
                 exit(1)
             # Dictionary:
             getattr(namespace, self.dest)[key] = value
+
 
 class KeyValue(argparse.Action):
     """Parser keyvalue Action"""
@@ -33,6 +35,7 @@ class KeyValue(argparse.Action):
                 exit(1)
             # Dictionary:
             getattr(namespace, self.dest)[key] = value
+
 
 class Dictlist(dict):
     def __setitem__(self, key, value):
@@ -133,18 +136,19 @@ def get_parser():
         help="The AWS IAM role name to be assumed where resources ares running.",
         required=False,
     )
-    parser.add_argument('--output', 
-        choices=['standard', 'short', 'inventory', 'satistics'], 
-        default=['standard'],
+    parser.add_argument(
+        "--output",
+        choices=["standard", "short", "inventory", "satistics"],
+        default=["standard"],
         nargs="+",
         help="Output. Default is standard. Options: standard, short, inventory, statistics. \
             You can speficy more than one separating them with spaces.",
         required=False,
-        )
+    )
     parser.add_argument(
         "--log-level",
-        choices=['ERROR', 'WARNING', 'INFO', 'DEBUG'], 
-        default='ERROR',
+        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
+        default="ERROR",
         help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)",
         required=False,
     )
@@ -156,6 +160,7 @@ def get_parser():
     )
     return parser
 
+
 def get_logger(log_level):
     """Configure Logger"""
     logger = logging.getLogger()
@@ -166,6 +171,7 @@ def get_logger(log_level):
         format="%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s",
     )
     return logger
+
 
 color = {
     "PURPLE": "\033[95m",
@@ -184,23 +190,51 @@ color = {
     "LOW": "\033[94m",
 }
 
+
 def print_banner():
     print_title_line("")
-    print(r" " + color['BOLD'] + "______  ___    _____       ______  __      ______  " + color['END'])
-    print(r" " + color['BOLD'] + "___   |/  /______  /______ ___  / / /___  ____  /_ " + color['END'])
-    print(r" " + color['BOLD'] + "__  /|_/ /_  _ \  __/  __ `/_  /_/ /_  / / /_  __ \\" + color['END'])
-    print(r" " + color['BOLD'] + "_  /  / / /  __/ /_ / /_/ /_  __  / / /_/ /_  /_/ /" + color['END'])
-    print(r" " + color['BOLD'] + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ " + color['END'])
-    print(r"  " + color['DARKCYAN'] + "the AWS Security Hub CLI" + color['END'])
+    print(
+        r" "
+        + color["BOLD"]
+        + "______  ___    _____       ______  __      ______  "
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "___   |/  /______  /______ ___  / / /___  ____  /_ "
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "__  /|_/ /_  _ \  __/  __ `/_  /_/ /_  / / /_  __ \\"
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "_  /  / / /  __/ /_ / /_/ /_  __  / / /_/ /_  /_/ /"
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ "
+        + color["END"]
+    )
+    print(r"  " + color["DARKCYAN"] + "the AWS Security Hub CLI" + color["END"])
+
 
 def print_table(key, value, keycolor=color["DARKCYAN"]):
-    print(keycolor + key + color["END"],' \t',value)
+    print(keycolor + key + color["END"], " \t", value)
 
-def print_title_line(text, ch='-', length=78):
-    if text: 
-        spaced_text = ' %s ' % text 
+
+def print_title_line(text, ch="-", length=78):
+    if text:
+        spaced_text = " %s " % text
     else:
         spaced_text = text
-    colored_text = color['BOLD'] + spaced_text + color['END']
+    colored_text = color["BOLD"] + spaced_text + color["END"]
     banner = colored_text.center(length, ch)
     print(banner)

@@ -25,9 +25,12 @@ class Metacheck:
 
     def _check_security_group_exists_in_account(self):
         for sg in self.security_groups:
-            if self.resource_id == sg['GroupId']:
+            if self.resource_id == sg["GroupId"]:
                 return True
-        self.logger.error("We couldn't find SG %s in AWS account. Try using --mh-assume-role...", self.resource_id)
+        self.logger.error(
+            "We couldn't find SG %s in AWS account. Try using --mh-assume-role...",
+            self.resource_id,
+        )
         return False
 
     def _describe_network_interfaces(self):
