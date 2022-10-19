@@ -215,6 +215,7 @@ def main(args):
     print_table(color["DARKCYAN"] + "Update: " + color["END"], str(args.update_findings))
 
     if args.list_metachecks:
+        print_title_line("List MetaChecks")
         list_metachecks(logger)
         exit(0)
 
