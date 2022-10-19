@@ -9,6 +9,7 @@ To add a new MetaCheck for a new ResourceType, start by using this template and 
 
 import boto3
 
+
 class Metacheck:
 
     def __init__(self, logger, finding, mh_filters, sess):

@@ -3,16 +3,10 @@
 import json
 from sys import argv, exit
 
+from helpers import (color, get_logger, get_parser, print_banner, print_table,
+                     print_title_line)
 from metachecks.metachecks import list_metachecks, run_metachecks
 from securityhub import SecurityHub
-from helpers import (
-    get_parser,
-    get_logger,
-    color,
-    print_banner,
-    print_title_line,
-    print_table,
-)
 
 
 def generate_findings(
