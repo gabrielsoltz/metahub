@@ -182,6 +182,12 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ./metahub --list-metachecks
   ```
 
+### Write json to a file
+
+  ```sh
+  ./metahub --write-json
+  ```
+
 ### Show help
 
   ```sh
@@ -240,11 +246,11 @@ Combine all options
 
 ## Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`
+**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`
 
-### Json
+### Standard
 
-You can use `--output json` to save your data to a file. **MetaHub** will save the file to the directory you are running it with the name of `output.json`
+The default output. Show all findings with all data.
 
 ### Short
 
