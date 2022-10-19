@@ -36,7 +36,7 @@
 
 **MetaHub** lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
 
-**MetaHub** supports different output options like `json`, `inventory`, `statistics` and `short`. All of them are programatically usable ready to be integrated with your favorite tools. See [Outputs](#Outputs)
+**MetaHub** supports different output options like `inventory`, `statistics`, `short` or `standard`. All of them are programatically usable ready to be integrated with your favorite tools. See [Outputs](#Outputs)
 
 ## Requirements
 
