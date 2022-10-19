@@ -5,7 +5,7 @@ from sys import argv, exit
 
 from metachecks.metachecks import list_metachecks, run_metachecks
 from securityhub import SecurityHub
-from helpers import get_parser, get_logger, color
+from helpers import get_parser, get_logger, color, print_banner, print_title_line, print_table
 
 def list_findings(
     logger, sh_filters, mh_filters, metachecks, sh_account, sh_role, mh_role
@@ -157,10 +157,6 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     return [], []
 
 
-def banner():
-    print(color["BLUE"] + color["BOLD"] + "\n * * * MetaHub * * *\n" + color["END"])
-
-
 def confirm_choice(message):
     """Simple function to confirm the action, returns True or False based on user entry"""
     confirm = input(message + " [c]Confirm or [v]Void: ")
@@ -173,7 +169,7 @@ def confirm_choice(message):
 
 
 def main(args):
-    banner()
+    print_banner()
     parser = get_parser()
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)
@@ -207,21 +203,24 @@ def main(args):
             logger.error('Wrong Output: ' + str(args.output))
             exit(1)
 
+    print_title_line("")
+    print_table(color["DARKCYAN"] + "SH filters: " + color["END"], str(sh_filters))
+    print_table(color["DARKCYAN"] + "MH filters: " + color["END"], str(mh_filters))
+    print_table(color["DARKCYAN"] + "MetaChecks: " + color["END"], str(args.meta_checks))
+    print_table(color["DARKCYAN"] + "SH Account: " + color["END"], str(args.sh_account))
+    print_table(color["DARKCYAN"] + "SH Role: " + color["END"], str(args.sh_assume_role))
+    print_table(color["DARKCYAN"] + "MH Role: " + color["END"], str(args.mh_assume_role))
+    print_table(color["DARKCYAN"] + "Output: " + color["END"], str(args.output))
+    print_table(color["DARKCYAN"] + "Log Level: " + color["END"], str(args.log_level))
+    print_table(color["DARKCYAN"] + "Update: " + color["END"], str(args.update_findings))
+
     if args.list_metachecks:
+        print_title_line("List MetaChecks")
         list_metachecks(logger)
         exit(0)
 
     if args.list_findings:
-        print(color["BOLD"] + "------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
+        print_title_line("List Findings")
         mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics = list_findings(
             logger,
             sh_filters,
@@ -244,46 +243,14 @@ def main(args):
                 print(json.dumps(mh_statistics, indent=2))
             else:
                 print(json.dumps(mh_findings, indent=2))
-        print(color["BOLD"] + "\n------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings Results" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
-        print(
-            color["BOLD"]
-            + "Total Non-Compliant Resources: "
-            + str(len(mh_findings))
-            + color["END"]
-        )
-        print(
-            color["BOLD"]
-            + "Total AWS Security Hub Findings: "
-            + str(len(sh_findings))
-            + color["END"]
-        )
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
+        print_title_line("Results")
+        print_table(color["DARKCYAN"] + "Non-Compliant Resources: " + color["END"], str(len(mh_findings)))
+        print_table(color["DARKCYAN"] + "AWS Security Hub Findings: " + color["END"], str(len(sh_findings)))
 
         if args.update_findings:
-            print(color["BOLD"] + "------------------------------------" + color["END"])
-            print(
-                color["BLUE"]
-                + "MetaHub Update Findings: "
-                + str(args.update_findings)
-                + color["END"]
-            )
-            print(
-                color["BLUE"]
-                + "Findings to update: "
-                + str(len(sh_findings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
+            print_title_line("Update Findings")
+            print_table(color["DARKCYAN"] + "Findings: "+ color["END"], str(len(sh_findings)))
+            print_table(color["DARKCYAN"] + "Update: "+ color["END"], str(args.update_findings))
             if not mh_findings:
                 print(color["BOLD"] + "Nothing to update..." + color["END"])
                 exit(1)
@@ -294,33 +261,12 @@ def main(args):
                 args.sh_account,
                 args.sh_assume_role,
             )
-            print(color["BOLD"] + "------------------------------------" + color["END"])
-            print(
-                color["BLUE"]
-                + "MetaHub Update Findings Results: "
-                + str(args.update_findings)
-                + color["END"]
-            )
-            print(
-                color["BOLD"]
-                + "ProcessedFindings: "
-                + str(len(ProcessedFindings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"]
-                + "UnprocessedFindings: "
-                + str(len(UnprocessedFindings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
-
+            print_title_line("Results")
+            print_table(color["DARKCYAN"] + "ProcessedFindings: " + color["END"], str(len(ProcessedFindings)))
+            print_table(color["DARKCYAN"] + "UnprocessedFindings: " + color["END"], str(len(UnprocessedFindings)))
         exit(0)
 
     parser.print_help()
-
 
 if __name__ == "__main__":
     main(argv[1:])
