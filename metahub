@@ -199,15 +199,15 @@ def main(args):
             exit(1)
 
     print_title_line("")
-    print_table(color["DARKCYAN"] + "SH filters: " + color["END"], str(sh_filters))
-    print_table(color["DARKCYAN"] + "MH filters: " + color["END"], str(mh_filters))
-    print_table(color["DARKCYAN"] + "MetaChecks: " + color["END"], str(args.meta_checks))
-    print_table(color["DARKCYAN"] + "SH Account: " + color["END"], str(args.sh_account))
-    print_table(color["DARKCYAN"] + "SH Role: " + color["END"], str(args.sh_assume_role))
-    print_table(color["DARKCYAN"] + "MH Role: " + color["END"], str(args.mh_assume_role))
-    print_table(color["DARKCYAN"] + "Output: " + color["END"], str(args.output))
-    print_table(color["DARKCYAN"] + "Log Level: " + color["END"], str(args.log_level))
-    print_table(color["DARKCYAN"] + "Update: " + color["END"], str(args.update_findings))
+    print_table("SH filters: ", str(sh_filters))
+    print_table("MH filters: ", str(mh_filters))
+    print_table("MetaChecks: ", str(args.meta_checks))
+    print_table("SH Account: ", str(args.sh_account))
+    print_table("SH Role: ", str(args.sh_assume_role))
+    print_table("MH Role: ", str(args.mh_assume_role))
+    print_table("Output: ", str(args.output))
+    print_table("Log Level: ", str(args.log_level))
+    print_table("Update: ", str(args.update_findings))
 
     if args.list_metachecks:
         print_title_line("List MetaChecks")
@@ -245,28 +245,28 @@ def main(args):
                 if out == 'short':
                     with open(out + ".json", "w", encoding="utf-8") as f:
                         json.dump(mh_findings_short, f, indent=2)
-                        print_table(color["DARKCYAN"] + "File: " + color["END"], out + ".json")
+                        print_table("File: ", out + ".json")
                 if out == 'inventory':
                     with open(out + ".json", "w", encoding="utf-8") as f:
                         json.dump(mh_inventory, f, indent=2)
-                        print_table(color["DARKCYAN"] + "File: " + color["END"], out + ".json")
+                        print_table("File: ", out + ".json")
                 if out == 'statistics':
                     with open(out + ".json", "w", encoding="utf-8") as f:
                         json.dump(mh_statistics, f, indent=2)
-                        print_table(color["DARKCYAN"] + "File: " + color["END"], out + ".json")
+                        print_table("File: ", out + ".json")
                 if out == 'standard':
                     with open(out + ".json", "w", encoding="utf-8") as f:
                         json.dump(mh_findings, f, indent=2)
-                        print_table(color["DARKCYAN"] + "File: " + color["END"], out + ".json")
+                        print_table("File: ", out + ".json")
     
     print_title_line("Results")
-    print_table(color["DARKCYAN"] + "Non-Compliant Resources: " + color["END"], str(len(mh_findings)))
-    print_table(color["DARKCYAN"] + "AWS Security Hub Findings: " + color["END"], str(len(sh_findings)))
+    print_table("Non-Compliant Resources: ", str(len(mh_findings)))
+    print_table("AWS Security Hub Findings: ", str(len(sh_findings)))
 
     if args.update_findings:
         print_title_line("Update Findings")
-        print_table(color["DARKCYAN"] + "Findings: "+ color["END"], str(len(sh_findings)))
-        print_table(color["DARKCYAN"] + "Update: "+ color["END"], str(args.update_findings))
+        print_table("Findings: ", str(len(sh_findings)))
+        print_table("Update: ", str(args.update_findings))
         if not mh_findings:
             print(color["BOLD"] + "Nothing to update..." + color["END"])
             exit(1)
@@ -278,8 +278,8 @@ def main(args):
             args.sh_assume_role,
         )
         print_title_line("Results")
-        print_table(color["DARKCYAN"] + "ProcessedFindings: " + color["END"], str(len(ProcessedFindings)))
-        print_table(color["DARKCYAN"] + "UnprocessedFindings: " + color["END"], str(len(UnprocessedFindings)))
+        print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
+        print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)))
 
 if __name__ == "__main__":
     main(argv[1:])
