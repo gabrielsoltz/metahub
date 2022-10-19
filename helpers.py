@@ -133,17 +133,26 @@ def get_parser():
         help="The AWS IAM role name to be assumed where resources ares running.",
         required=False,
     )
+    parser.add_argument('--output', 
+        choices=['standard', 'short', 'inventory', 'satistics'], 
+        default=['standard'],
+        nargs="+",
+        help="Output. Default is standard. Options: standard, short, inventory, statistics. \
+            You can speficy more than one separating them with spaces.",
+        required=False,
+        )
     parser.add_argument(
-        "--output",
-        default=None,
-        help="Output. Default is full. Options: short, json, inventory, statistics",
+        "--log-level",
+        choices=['ERROR', 'WARNING', 'INFO', 'DEBUG'], 
+        default='ERROR',
+        help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)",
         required=False,
     )
     parser.add_argument(
-        "--log-level",
-        default="ERROR",
-        help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)",
+        "--write-json",
+        help="Write Json to File",
         required=False,
+        action=argparse.BooleanOptionalAction,
     )
     return parser
 
@@ -152,17 +161,10 @@ def get_logger(log_level):
     logger = logging.getLogger()
     for handler in logger.handlers:
         logger.removeHandler(handler)
-    if log_level in ("INFO" "ERROR" "WARNING" "DEBUG"):
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s",
-        )
-        return logger
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         format="%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s",
     )
-    logger.info("--log-level incorrect value, using DEBUG...")
     return logger
 
 color = {
