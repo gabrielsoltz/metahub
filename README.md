@@ -24,19 +24,21 @@
 
 ## Description
 
-**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that lets you work with multiple standards, multiple checks, and thousands of findings in a very simple and advanced way by sorting, aggregating, filtering, and updating your data. In addition, **MetaHub** adds **MetaChecks**, an effortless and flexible way to do any tests on top of your resources to improve the level of confidence in your findings.
+**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that lets you work with multiple product sources, standards, checks, and thousands of findings simply using the command line aggregating, filtering, and updating your data. In addition, **MetaHub** adds **MetaChecks**, an effortless and flexible way to do any extra tests on top of your resources to improve confidence in your findings. 
 
 ## Features
 
-**MetaHub** introduces a better way to organize the findings for the Security Analyst by avoiding Shadowing and Duplication. See [Findings Aggregation](#findings-aggregation)
+**MetaHub** introduces different **ways of listing Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. Metahub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
 **MetaHub** adds extra custom functionality and checks on top of findings, **MetaChecks**. See [MetaChecks](#MetaChecks)
 
-**MetaHub** supports AWS Security Hub findings filtering the same way you would work with CLI utility using the option `--sh-filters`. In addition, it supports filtering on top of MetaChecks `--mh-filters` to get a much better valuable output based on your search. See [Filtering](#Filtering)
+**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters`. In addition and in combination, it supports **MetaChecks filtering** using the option `--mh-filters`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
-**MetaHub** lets you execute bulk updates to AWS Security Hub findings, like changing Workflow states. See [Updating Findings](#Updating-Findings)
+**MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow states. You can update findings based on your filters and search all together instead of one by one. See [Updating Findings](#Updating-Findings)
 
-**MetaHub** supports different output options like `inventory`, `statistics`, `short` or `standard`. All of them are programatically usable ready to be integrated with your favorite tools. See [Outputs](#Outputs)
+**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs)
+
+**MetaHub** supports **multi-account setups**, letting you run the tool from any environment and assume a role in your AWS Security Hub master account and your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Advanced Usage](#advanced-usage)
 
 ## Requirements
 
@@ -537,7 +539,7 @@ You can list all available MetaChecks using `--list-metachecks`
 
 You can use **MetaHub** to update your AWS Security Findings in bulk. 
 
-Think again in the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
+Think again at the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
 
 You can update those 4 AWS Security Findings in one single command with **MetaHub**: `--update-findings.`
 
@@ -545,13 +547,13 @@ For example, you can update the Workflow Status of those findings in one shot: `
 
 **MetaHub** supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
-Filters are defined as key=value. If a value contains spaces, you should define it with double quotes: KeyToUpdate="this is a value."
+Filters are defined as key=value. If a value contains spaces, you should use double quotes: KeyToUpdate="this is a value."
 
-AWS Security Hub API is limited to 100 findings per update, Metahub will split your findings into 100 items chucks to avoid this limitation and update your findings all together besides the amount of them.
+AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings besides the amount.
 
 Examples:
 
-- Update all Worflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
+- Update all Workflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
 ```sh
 ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
 ```
