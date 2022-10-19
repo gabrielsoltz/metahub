@@ -5,7 +5,7 @@ from sys import argv, exit
 
 from metachecks.metachecks import list_metachecks, run_metachecks
 from securityhub import SecurityHub
-from helpers import get_parser, get_logger, color
+from helpers import get_parser, get_logger, color, print_banner, print_title_line
 
 def list_findings(
     logger, sh_filters, mh_filters, metachecks, sh_account, sh_role, mh_role
@@ -157,10 +157,6 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     return [], []
 
 
-def banner():
-    print(color["BLUE"] + color["BOLD"] + "\n * * * MetaHub * * *\n" + color["END"])
-
-
 def confirm_choice(message):
     """Simple function to confirm the action, returns True or False based on user entry"""
     confirm = input(message + " [c]Confirm or [v]Void: ")
@@ -173,7 +169,7 @@ def confirm_choice(message):
 
 
 def main(args):
-    banner()
+    print_banner()
     parser = get_parser()
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)
@@ -207,21 +203,26 @@ def main(args):
             logger.error('Wrong Output: ' + str(args.output))
             exit(1)
 
+    print_title_line("Options")
+    print(
+        color["BOLD"]
+        + "AWS Security Hub filters: "
+        + color["END"]
+        + str(sh_filters)
+    )
+    print(color["BOLD"] + "MetaHub filters: " + color["END"] + str(mh_filters))
+    print(color["BOLD"] + "Output: " + color["END"] + str(args.output))
+    print(color["BOLD"] + "MetaChecks: " + color["END"] + str(args.meta_checks))
+    print(color["BOLD"] + "sh_account: " + color["END"] + str(args.sh_account))
+    print(color["BOLD"] + "sh_role: " + color["END"] + str(args.sh_assume_role))
+    print(color["BOLD"] + "mh_role: " + color["END"] + str(args.mh_assume_role))
+
     if args.list_metachecks:
         list_metachecks(logger)
         exit(0)
 
     if args.list_findings:
-        print(color["BOLD"] + "------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
+        print_title_line("List Findings")
         mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics = list_findings(
             logger,
             sh_filters,
@@ -244,15 +245,7 @@ def main(args):
                 print(json.dumps(mh_statistics, indent=2))
             else:
                 print(json.dumps(mh_findings, indent=2))
-        print(color["BOLD"] + "\n------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings Results" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
+        print_title_line("List Findings Results")
         print(
             color["BOLD"]
             + "Total Non-Compliant Resources: "
@@ -265,10 +258,9 @@ def main(args):
             + str(len(sh_findings))
             + color["END"]
         )
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
 
         if args.update_findings:
-            print(color["BOLD"] + "------------------------------------" + color["END"])
+            print_title_line("Update Findings")
             print(
                 color["BLUE"]
                 + "MetaHub Update Findings: "
@@ -281,9 +273,6 @@ def main(args):
                 + str(len(sh_findings))
                 + color["END"]
             )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
             if not mh_findings:
                 print(color["BOLD"] + "Nothing to update..." + color["END"])
                 exit(1)
@@ -294,7 +283,7 @@ def main(args):
                 args.sh_account,
                 args.sh_assume_role,
             )
-            print(color["BOLD"] + "------------------------------------" + color["END"])
+            print_title_line("Update Findings Results")
             print(
                 color["BLUE"]
                 + "MetaHub Update Findings Results: "
@@ -313,10 +302,6 @@ def main(args):
                 + str(len(UnprocessedFindings))
                 + color["END"]
             )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
-
         exit(0)
 
     parser.print_help()

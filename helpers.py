@@ -181,3 +181,21 @@ color = {
     "MEDIUM": "\033[93m",
     "LOW": "\033[94m",
 }
+
+def print_banner():
+    print_title_line("")
+    print(r" " + color['BOLD'] + "______  ___    _____       ______  __      ______  " + color['END'])
+    print(r" " + color['BOLD'] + "___   |/  /______  /______ ___  / / /___  ____  /_ " + color['END'])
+    print(r" " + color['BOLD'] + "__  /|_/ /_  _ \  __/  __ `/_  /_/ /_  / / /_  __ \\" + color['END'])
+    print(r" " + color['BOLD'] + "_  /  / / /  __/ /_ / /_/ /_  __  / / /_/ /_  /_/ /" + color['END'])
+    print(r" " + color['BOLD'] + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ " + color['END'])
+    print(r"  " + color['BLUE'] + "the AWS Security Hub CLI" + color['END'])
+
+def print_title_line(text, ch='-', length=78):
+    if text: 
+        spaced_text = ' %s ' % text 
+    else:
+        spaced_text = text
+    colored_text = color['BOLD'] + spaced_text + color['END']
+    banner = colored_text.center(length, ch)
+    print(banner)
