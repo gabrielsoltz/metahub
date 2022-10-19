@@ -193,8 +193,8 @@ def print_banner():
     print(r" " + color['BOLD'] + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ " + color['END'])
     print(r"  " + color['DARKCYAN'] + "the AWS Security Hub CLI" + color['END'])
 
-def print_table(key, value):
-    print(key,' \t',value)
+def print_table(key, value, keycolor=color["DARKCYAN"]):
+    print(keycolor + key + color["END"],' \t',value)
 
 def print_title_line(text, ch='-', length=78):
     if text: 
