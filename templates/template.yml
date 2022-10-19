@@ -1,0 +1,12 @@
+SecurityHubFilters:
+  WorkflowStatus:
+    - Value: 'NEW'
+      Comparison: EQUALS
+  RecordState:
+    - Value: 'ACTIVE'
+      Comparison: EQUALS
+  SeverityLabel:
+    - Value: 'CRITICAL'
+      Comparison: EQUALS
+    - Value: 'HIGH'
+      Comparison: EQUALS
