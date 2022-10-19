@@ -138,7 +138,7 @@ def get_parser():
     )
     parser.add_argument(
         "--output",
-        choices=["standard", "short", "inventory", "satistics"],
+        choices=["standard", "short", "inventory", "statistics"],
         default=["standard"],
         nargs="+",
         help="Output. Default is standard. Options: standard, short, inventory, statistics. \
