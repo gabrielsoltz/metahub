@@ -32,7 +32,7 @@
 
 **MetaHub** adds extra custom functionality and checks on top of findings, **MetaChecks**. See [MetaChecks](#MetaChecks)
 
-**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and re-use them when you need them for any type of integration. In addition and in combination, it supports **MetaChecks filtering** using the option `--mh-filters`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
+**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. In addition and combination, it supports **MetaChecks filtering** using the option `--mh-filters`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow states. You can update findings based on your filters and search all together instead of one by one. See [Updating Findings](#Updating-Findings)
 
