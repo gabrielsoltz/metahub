@@ -22,17 +22,6 @@ class SecurityHub:
             self.logger.error("Missing data for assuming a Session to SH")
             exit(1)
 
-    def set_filters(self, sh_filters):
-        """Return filters for AWS Security Hub get_findings Call"""
-        filters = {}
-        for key, values in sh_filters.items():
-            if key != "self" and values is not None:
-                filters[key] = []
-                for value in values:
-                    value_to_append = {"Comparison": "EQUALS", "Value": value}
-                    filters[key].append(value_to_append)
-        return filters
-
     def get_findings(self, sh_filters):
         """Get Security Findings from Security Hub with Filters applied"""
         findings = []
@@ -40,7 +29,7 @@ class SecurityHub:
         while True:
             try:
                 response = self.sh_client.get_findings(
-                    Filters=self.set_filters(sh_filters),
+                    Filters=sh_filters,
                     NextToken=next_token,
                     # The maximum value is 100 as per AWS documentation
                     MaxResults=100,

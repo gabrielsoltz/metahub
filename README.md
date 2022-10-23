@@ -32,7 +32,7 @@
 
 **MetaHub** adds extra custom functionality and checks on top of findings, **MetaChecks**. See [MetaChecks](#MetaChecks)
 
-**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters`. In addition and in combination, it supports **MetaChecks filtering** using the option `--mh-filters`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
+**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and re-use them when you need them for any type of integration. In addition and in combination, it supports **MetaChecks filtering** using the option `--mh-filters`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow states. You can update findings based on your filters and search all together instead of one by one. See [Updating Findings](#Updating-Findings)
 
@@ -91,7 +91,7 @@ If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
 
 ## Usage
 
-### Usage :: Listing and Filtering
+### Listing and Filtering
 
 #### List findings with default filters 
 
@@ -141,7 +141,7 @@ See more about [filtering](#Filtering)
   ./metahub --list-findings --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-new is_referenced_by_another_sg=False
   ```
 
-### Usage :: Updating Findings
+### Updating Findings
 
 #### Supress all findings related to AWSS3Bucket resource type for the ones that are not public
 
@@ -447,9 +447,15 @@ Use cases examples:
 
 # Filtering
 
+## Security Hub Filtering using YAML templates
+
+**MetaHub** let you create complex filters using YAML that you can then re-use when you need them. YAML templates let you write using any comparison supported by AWS Security Hub like `'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'`. You can call your YAML file using the option `--sh-template <<FILE>>`.
+
+You can find examples under the folder templates.
+
 ## Security Hub Filtering
 
-MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS CLI.
+MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS CLI but limited to `EQUALS` comparison. If you want to use other comparison use the option `--sh-template`.
 
 ```sh
 ./metahub --list-findings --sh-filters <KEY=VALUE>

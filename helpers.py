@@ -80,6 +80,13 @@ def get_parser():
         action=KeyValueWithList,
     )
     parser.add_argument(
+        "--sh-template",
+        default=None,
+        help="Use YAML templates as filter. \
+        You need to specify the template file: --sh-template templates/default.yml",
+        required=False,
+    )
+    parser.add_argument(
         "--list-metachecks",
         help="Use this option to list all available Meta Checks",
         required=False,

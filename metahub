@@ -178,15 +178,41 @@ def main(args):
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)
 
+    def set_filters(sh_filters):
+        """Return filters for AWS Security Hub get_findings Call"""
+        filters = {}
+        for key, values in sh_filters.items():
+            if key != "self" and values is not None:
+                filters[key] = []
+                for value in values:
+                    value_to_append = {"Comparison": "EQUALS", "Value": value}
+                    filters[key].append(value_to_append)
+        return filters
+
     default_sh_filters = {
         "RecordState": ["ACTIVE"],
         "WorkflowStatus": ["NEW"],
         "ProductName": ["Security Hub"],
     }
-    if not args.sh_filters:
+    if not args.sh_filters and not args.sh_template:
         sh_filters = default_sh_filters
+        sh_filters = set_filters(sh_filters)
+    elif args.sh_template:
+        import yaml
+        from pathlib import Path
+        try:
+            yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
+            dict_values = next(iter(yaml_to_dict.values()))
+            sh_filters = dict_values
+        except yaml.scanner.ScannerError as err:
+            logger.error("SH Template reading error: %s", err)
+            exit (0)
+        except FileNotFoundError:
+            logger.error("SH Template file not found: %s", args.sh_template)
+            exit (0)
     else:
         sh_filters = args.sh_filters
+        sh_filters = set_filters(sh_filters)
 
     default_mh_filters = {}
     if not args.mh_filters:
@@ -205,6 +231,7 @@ def main(args):
     print_title_line("")
     print_table("SH filters: ", str(sh_filters))
     print_table("MH filters: ", str(mh_filters))
+    print_table("SH template: ", str(args.sh_template))
     print_table("MetaChecks: ", str(args.meta_checks))
     print_table("SH Account: ", str(args.sh_account))
     print_table("SH Role: ", str(args.sh_assume_role))
