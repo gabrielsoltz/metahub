@@ -3,11 +3,13 @@
 import json
 from sys import argv, exit
 
+from helpers import (color, get_logger, get_parser, print_banner, print_table,
+                     print_title_line)
 from metachecks.metachecks import list_metachecks, run_metachecks
 from securityhub import SecurityHub
-from helpers import get_parser, get_logger, color
 
-def list_findings(
+
+def generate_findings(
     logger, sh_filters, mh_filters, metachecks, sh_account, sh_role, mh_role
 ):
     mh_findings = {}
@@ -15,15 +17,15 @@ def list_findings(
     mh_findings_short = {}
     mh_inventory = []
     mh_statistics = {
-        'Title': {},
-        'SeverityLabel': {},
-        'Workflow': {},
-        'RecordState': {},
-        'Compliance': {},
-        'Id': {},
-        'ProductArn': {},
-        'Type': {},
-        'AwsAccountId': {}
+        "Title": {},
+        "SeverityLabel": {},
+        "Workflow": {},
+        "RecordState": {},
+        "Compliance": {},
+        "Id": {},
+        "ProductArn": {},
+        "Type": {},
+        "AwsAccountId": {},
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
@@ -59,31 +61,33 @@ def list_findings(
             # STATISTICS (we count by matched finding)
             for key, value in finding_parsed.items():
                 # Title
-                if not key in mh_statistics['Title']: 
-                    mh_statistics['Title'][key] = 0
-                mh_statistics['Title'][key] += 1
+                if not key in mh_statistics["Title"]:
+                    mh_statistics["Title"][key] = 0
+                mh_statistics["Title"][key] += 1
                 # Values
                 for v in value:
-                    if v == 'Workflow' or v == 'Compliance':
+                    if v == "Workflow" or v == "Compliance":
                         if value[v]:
-                            if not value[v]['Status'] in mh_statistics[v]:
-                                mh_statistics[v][value[v]['Status']] = 0
-                            mh_statistics[v][value[v]['Status']] += 1
+                            if not value[v]["Status"] in mh_statistics[v]:
+                                mh_statistics[v][value[v]["Status"]] = 0
+                            mh_statistics[v][value[v]["Status"]] += 1
                             continue
                     if not value[v] in mh_statistics[v]:
                         mh_statistics[v][value[v]] = 0
                     mh_statistics[v][value[v]] += 1
                 # AwsAccountId
-                if not finding["AwsAccountId"] in mh_statistics['AwsAccountId']: 
-                    mh_statistics['AwsAccountId'][finding["AwsAccountId"]] = 0
-                mh_statistics['AwsAccountId'][finding["AwsAccountId"]] += 1
+                if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
+                    mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
+                mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
 
             # RESOURCE (we add the resource only once)
             if not resource_arn in mh_findings:
                 mh_findings[resource_arn] = {"findings": []}
                 mh_findings_short[resource_arn] = {"findings": []}
                 mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                mh_findings_short[resource_arn]["AwsAccountId"] = finding[
+                    "AwsAccountId"
+                ]
 
                 # INVENTORY
                 mh_inventory.append(resource_arn)
@@ -157,10 +161,6 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     return [], []
 
 
-def banner():
-    print(color["BLUE"] + color["BOLD"] + "\n * * * MetaHub * * *\n" + color["END"])
-
-
 def confirm_choice(message):
     """Simple function to confirm the action, returns True or False based on user entry"""
     confirm = input(message + " [c]Confirm or [v]Void: ")
@@ -173,15 +173,15 @@ def confirm_choice(message):
 
 
 def main(args):
-    banner()
+    print_banner()
     parser = get_parser()
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)
 
     default_sh_filters = {
-        "RecordState": "ACTIVE",
-        "WorkflowStatus": "NEW",
-        "ProductName": "Security Hub",
+        "RecordState": ["ACTIVE"],
+        "WorkflowStatus": ["NEW"],
+        "ProductName": ["Security Hub"],
     }
     if not args.sh_filters:
         sh_filters = default_sh_filters
@@ -194,132 +194,102 @@ def main(args):
     else:
         mh_filters = args.mh_filters
     for mh_filer_key, mh_filer_value in mh_filters.items():
-        if mh_filters[mh_filer_key].lower() == 'true':
+        if mh_filters[mh_filer_key].lower() == "true":
             mh_filters[mh_filer_key] = bool(True)
-        elif mh_filters[mh_filer_key].lower() == 'false':
+        elif mh_filters[mh_filer_key].lower() == "false":
             mh_filters[mh_filer_key] = bool(False)
         else:
-            logger.error('MetaHub Filter Only True/False Supported: ' + str(mh_filters))
+            logger.error("MetaHub Filter Only True/False Supported: " + str(mh_filters))
             exit(1)
 
-    if args.output:
-        if not args.output in ('short', 'json', 'inventory', 'statistics'):
-            logger.error('Wrong Output: ' + str(args.output))
-            exit(1)
+    print_title_line("")
+    print_table("SH filters: ", str(sh_filters))
+    print_table("MH filters: ", str(mh_filters))
+    print_table("MetaChecks: ", str(args.meta_checks))
+    print_table("SH Account: ", str(args.sh_account))
+    print_table("SH Role: ", str(args.sh_assume_role))
+    print_table("MH Role: ", str(args.mh_assume_role))
+    print_table("Output: ", str(args.output))
+    print_table("Log Level: ", str(args.log_level))
+    print_table("Update: ", str(args.update_findings))
 
     if args.list_metachecks:
+        print_title_line("List MetaChecks")
         list_metachecks(logger)
         exit(0)
 
+    # Generate Findings
+    (
+        mh_findings,
+        mh_findings_short,
+        sh_findings,
+        mh_inventory,
+        mh_statistics,
+    ) = generate_findings(
+        logger,
+        sh_filters,
+        mh_filters=mh_filters,
+        metachecks=args.meta_checks,
+        sh_account=args.sh_account,
+        sh_role=args.sh_assume_role,
+        mh_role=args.mh_assume_role,
+    )
+
     if args.list_findings:
-        print(color["BOLD"] + "------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
-        mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics = list_findings(
-            logger,
-            sh_filters,
-            mh_filters=mh_filters,
-            metachecks=args.meta_checks,
-            sh_account=args.sh_account,
-            sh_role=args.sh_assume_role,
-            mh_role=args.mh_assume_role,
-        )
         if mh_findings:
-            if args.output == 'json':
-                with open("output.json", "w", encoding="utf-8") as f:
-                    json.dump(mh_findings, f, indent=2)
-                print ('Output written to output.txt')
-            elif args.output == 'short':
-                print(json.dumps(mh_findings_short, indent=2))
-            elif args.output == 'inventory':
-                print(json.dumps(mh_inventory, indent=2))
-            elif args.output == 'statistics':
-                print(json.dumps(mh_statistics, indent=2))
-            else:
-                print(json.dumps(mh_findings, indent=2))
-        print(color["BOLD"] + "\n------------------------------------" + color["END"])
-        print(color["BLUE"] + "MetaHub Listing Findings Results" + color["END"])
-        print(
-            color["BOLD"]
-            + "AWS Security Hub filters: "
-            + str(sh_filters)
-            + color["END"]
-        )
-        print(color["BOLD"] + "MetaHub filters: " + str(mh_filters) + color["END"])
-        print(
-            color["BOLD"]
-            + "Total Non-Compliant Resources: "
-            + str(len(mh_findings))
-            + color["END"]
-        )
-        print(
-            color["BOLD"]
-            + "Total AWS Security Hub Findings: "
-            + str(len(sh_findings))
-            + color["END"]
-        )
-        print(color["BOLD"] + "------------------------------------\n" + color["END"])
+            for out in args.output:
+                print_title_line("List Findings: " + out)
+                if out == "short":
+                    print(json.dumps(mh_findings_short, indent=2))
+                if out == "inventory":
+                    print(json.dumps(mh_inventory, indent=2))
+                if out == "statistics":
+                    print(json.dumps(mh_statistics, indent=2))
+                if out == "standard":
+                    print(json.dumps(mh_findings, indent=2))
 
-        if args.update_findings:
-            print(color["BOLD"] + "------------------------------------" + color["END"])
-            print(
-                color["BLUE"]
-                + "MetaHub Update Findings: "
-                + str(args.update_findings)
-                + color["END"]
-            )
-            print(
-                color["BLUE"]
-                + "Findings to update: "
-                + str(len(sh_findings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
-            if not mh_findings:
-                print(color["BOLD"] + "Nothing to update..." + color["END"])
-                exit(1)
-            ProcessedFindings, UnprocessedFindings = update_findings(
-                logger, 
-                mh_findings, 
-                args.update_findings,
-                args.sh_account,
-                args.sh_assume_role,
-            )
-            print(color["BOLD"] + "------------------------------------" + color["END"])
-            print(
-                color["BLUE"]
-                + "MetaHub Update Findings Results: "
-                + str(args.update_findings)
-                + color["END"]
-            )
-            print(
-                color["BOLD"]
-                + "ProcessedFindings: "
-                + str(len(ProcessedFindings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"]
-                + "UnprocessedFindings: "
-                + str(len(UnprocessedFindings))
-                + color["END"]
-            )
-            print(
-                color["BOLD"] + "------------------------------------\n" + color["END"]
-            )
+    if args.write_json:
+        if mh_findings:
+            for out in args.output:
+                print_title_line("Write Json: " + out)
+                if out == "short":
+                    with open(out + ".json", "w", encoding="utf-8") as f:
+                        json.dump(mh_findings_short, f, indent=2)
+                        print_table("File: ", out + ".json")
+                if out == "inventory":
+                    with open(out + ".json", "w", encoding="utf-8") as f:
+                        json.dump(mh_inventory, f, indent=2)
+                        print_table("File: ", out + ".json")
+                if out == "statistics":
+                    with open(out + ".json", "w", encoding="utf-8") as f:
+                        json.dump(mh_statistics, f, indent=2)
+                        print_table("File: ", out + ".json")
+                if out == "standard":
+                    with open(out + ".json", "w", encoding="utf-8") as f:
+                        json.dump(mh_findings, f, indent=2)
+                        print_table("File: ", out + ".json")
 
-        exit(0)
+    print_title_line("Results")
+    print_table("Non-Compliant Resources: ", str(len(mh_findings)))
+    print_table("AWS Security Hub Findings: ", str(len(sh_findings)))
 
-    parser.print_help()
+    if args.update_findings:
+        print_title_line("Update Findings")
+        print_table("Findings: ", str(len(sh_findings)))
+        print_table("Update: ", str(args.update_findings))
+        if not mh_findings:
+            print(color["BOLD"] + "Nothing to update..." + color["END"])
+            exit(1)
+        ProcessedFindings, UnprocessedFindings = update_findings(
+            logger,
+            mh_findings,
+            args.update_findings,
+            args.sh_account,
+            args.sh_assume_role,
+        )
+        print_title_line("Results")
+        print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
+        print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)))
 
 
 if __name__ == "__main__":

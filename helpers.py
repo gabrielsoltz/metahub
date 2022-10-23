@@ -1,11 +1,12 @@
 import argparse
 import logging
 
+
 class KeyValueWithList(argparse.Action):
     """Parser keyvalue with list Action"""
 
     def __call__(self, parser, namespace, values, option_string=None):
-        #setattr(namespace, self.dest, dict())
+        # setattr(namespace, self.dest, dict())
         setattr(namespace, self.dest, Dictlist())
         logger = get_logger("ERROR")
         for value in values:
@@ -17,6 +18,7 @@ class KeyValueWithList(argparse.Action):
                 exit(1)
             # Dictionary:
             getattr(namespace, self.dest)[key] = value
+
 
 class KeyValue(argparse.Action):
     """Parser keyvalue Action"""
@@ -33,6 +35,7 @@ class KeyValue(argparse.Action):
                 exit(1)
             # Dictionary:
             getattr(namespace, self.dest)[key] = value
+
 
 class Dictlist(dict):
     def __setitem__(self, key, value):
@@ -55,7 +58,7 @@ def get_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-    MetaHub for AWS Security Hub
+    Metahub: the command line utility for AWS Security Hub.
     """,
     )
     parser.add_argument(
@@ -135,35 +138,40 @@ def get_parser():
     )
     parser.add_argument(
         "--output",
-        default=None,
-        help="Output. Default is full. Options: short, json, inventory, statistics",
+        choices=["standard", "short", "inventory", "statistics"],
+        default=["standard"],
+        nargs="+",
+        help="Output. Default is standard. Options: standard, short, inventory, statistics. \
+            You can speficy more than one separating them with spaces.",
         required=False,
     )
     parser.add_argument(
         "--log-level",
+        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
         default="ERROR",
         help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)",
         required=False,
     )
+    parser.add_argument(
+        "--write-json",
+        help="Write Json to File",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
     return parser
+
 
 def get_logger(log_level):
     """Configure Logger"""
     logger = logging.getLogger()
     for handler in logger.handlers:
         logger.removeHandler(handler)
-    if log_level in ("INFO" "ERROR" "WARNING" "DEBUG"):
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s",
-        )
-        return logger
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=log_level,
         format="%(asctime)s - %(process)d - %(filename)s:%(funcName)s - [%(levelname)s] %(message)s",
     )
-    logger.info("--log-level incorrect value, using DEBUG...")
     return logger
+
 
 color = {
     "PURPLE": "\033[95m",
@@ -181,3 +189,52 @@ color = {
     "MEDIUM": "\033[93m",
     "LOW": "\033[94m",
 }
+
+
+def print_banner():
+    print_title_line("")
+    print(
+        r" "
+        + color["BOLD"]
+        + "______  ___    _____       ______  __      ______  "
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "___   |/  /______  /______ ___  / / /___  ____  /_ "
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "__  /|_/ /_  _ \  __/  __ `/_  /_/ /_  / / /_  __ \\"
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "_  /  / / /  __/ /_ / /_/ /_  __  / / /_/ /_  /_/ /"
+        + color["END"]
+    )
+    print(
+        r" "
+        + color["BOLD"]
+        + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ "
+        + color["END"]
+    )
+    print(r"  " + color["DARKCYAN"] + "the command line utility for AWS Security Hub" + color["END"])
+
+
+def print_table(key, value, keycolor=color["DARKCYAN"]):
+    print(keycolor + key + color["END"], " \t", value)
+
+
+def print_title_line(text, ch="-", length=78):
+    if text:
+        spaced_text = " %s " % text
+    else:
+        spaced_text = text
+    colored_text = color["BOLD"] + spaced_text + color["END"]
+    banner = colored_text.center(length, ch)
+    print(banner)
