@@ -110,6 +110,10 @@ def generate_findings(
                 list(finding_parsed.keys())[0]
             )
             mh_findings[resource_arn]["findings"].append(finding_parsed)
+    
+    #Sort Statistics
+    for key_to_sort in mh_statistics:
+        mh_statistics[key_to_sort] = dict(sorted(mh_statistics[key_to_sort].items(), key=lambda item: item[1], reverse=True))
 
     return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
 
