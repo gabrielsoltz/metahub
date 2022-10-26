@@ -22,10 +22,10 @@ def generate_findings(
         "Workflow": {},
         "RecordState": {},
         "Compliance": {},
-        "Id": {},
         "ProductArn": {},
         "Type": {},
         "AwsAccountId": {},
+        "Resource": {}
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
@@ -59,6 +59,12 @@ def generate_findings(
         if mh_matched:
 
             # STATISTICS (we count by matched finding)
+
+            # Resource ARN
+            if not resource_arn in mh_statistics["Resource"]:
+                mh_statistics["Resource"][resource_arn] = 0
+            mh_statistics["Resource"][resource_arn] += 1
+
             for key, value in finding_parsed.items():
                 # Title
                 if not key in mh_statistics["Title"]:
@@ -72,6 +78,8 @@ def generate_findings(
                                 mh_statistics[v][value[v]["Status"]] = 0
                             mh_statistics[v][value[v]["Status"]] += 1
                             continue
+                    if v == "Id":
+                        continue
                     if not value[v] in mh_statistics[v]:
                         mh_statistics[v][value[v]] = 0
                     mh_statistics[v][value[v]] += 1
