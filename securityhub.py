@@ -78,7 +78,7 @@ class SecurityHub:
                 "Compliance": compliance,
                 "Id": finding["Id"],
                 "ProductArn": finding["ProductArn"],
-                "Type": finding["Resources"][0]["Type"],
+                "ResourceType": finding["Resources"][0]["Type"],
             },
         }
         return finding["Resources"][0]["Id"], findings

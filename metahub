@@ -5,12 +5,12 @@ from sys import argv, exit
 
 from helpers import (color, get_logger, get_parser, print_banner, print_table,
                      print_title_line)
-from metachecks.metachecks import list_metachecks, run_metachecks
+from metachecks.metachecks import list_metachecks, run_metachecks, run_tags
 from securityhub import SecurityHub
 
 
 def generate_findings(
-    logger, sh_filters, mh_filters, metachecks, sh_account, sh_role, mh_role
+    logger, sh_filters, metachecks, mh_filters_checks, metatags, mh_filters_tags, sh_account, sh_role, mh_role
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -25,28 +25,46 @@ def generate_findings(
         "ProductArn": {},
         "Type": {},
         "AwsAccountId": {},
-        "Resource": {}
+        "ResourceId": {}
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
     for finding in sh_findings:
         mh_matched = False
         resource_arn, finding_parsed = sh.parse_finding(finding)
-        # MetaChecks:
-        if metachecks:
-            # We run metachecks only once:
-            if (
-                not resource_arn in mh_findings
-                and not resource_arn in mh_findings_not_matched_findings
-            ):
-                mh_values, mh_matched = run_metachecks(
-                    logger, finding, mh_filters, mh_role
-                )
-            # If the resource was already matched, we don't run metachecks again but we show others findings
+
+        # MetaChecks and MetaTags:
+        if metachecks or metatags:
+            # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
             if resource_arn in mh_findings:
                 mh_matched = True
+            if metachecks:
+                # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
+                if (
+                    not resource_arn in mh_findings
+                    and not resource_arn in mh_findings_not_matched_findings
+                ):
+                    mh_values, mh_checks_matched = run_metachecks(
+                        logger, finding, mh_filters_checks, mh_role
+                    )
+            else:
+                mh_checks_matched = True
+            if metatags:
+                # We run metatags only once:
+                if (
+                    not resource_arn in mh_findings
+                    and not resource_arn in mh_findings_not_matched_findings
+                ):
+                    mh_tags, mh_tags_matched = run_tags(
+                        logger, finding, mh_filters_tags, mh_role
+                    )
+            else:
+                mh_tags_matched = True
+            # If both checks are True we show the resource
+            if mh_tags_matched and mh_checks_matched:
+                mh_matched = True    
         else:
-            # If no metachecks, we enforce to True the match so we show the resource:
+            # If no metachecks and no metachecks, we enforce to True the match so we show the resource:
             mh_matched = True
 
         # We keep a dict with no matched resources so we don't run MetaChecks again
@@ -61,9 +79,9 @@ def generate_findings(
             # STATISTICS (we count by matched finding)
 
             # Resource ARN
-            if not resource_arn in mh_statistics["Resource"]:
-                mh_statistics["Resource"][resource_arn] = 0
-            mh_statistics["Resource"][resource_arn] += 1
+            if not resource_arn in mh_statistics["ResourceId"]:
+                mh_statistics["ResourceId"][resource_arn] = 0
+            mh_statistics["ResourceId"][resource_arn] += 1
 
             for key, value in finding_parsed.items():
                 # Title
@@ -104,6 +122,11 @@ def generate_findings(
                 if metachecks:
                     mh_findings[resource_arn]["metachecks"] = mh_values
                     mh_findings_short[resource_arn]["metachecks"] = mh_values
+                
+                # METATAGS
+                if metatags:
+                    mh_findings[resource_arn]['metatags'] = mh_tags
+                    mh_findings_short[resource_arn]['metatags'] = mh_tags
 
             # FINDINGS
             mh_findings_short[resource_arn]["findings"].append(
@@ -190,7 +213,7 @@ def main(args):
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)
 
-    def set_filters(sh_filters):
+    def set_sh_filters(sh_filters):
         """Return filters for AWS Security Hub get_findings Call"""
         filters = {}
         for key, values in sh_filters.items():
@@ -208,7 +231,7 @@ def main(args):
     }
     if not args.sh_filters and not args.sh_template:
         sh_filters = default_sh_filters
-        sh_filters = set_filters(sh_filters)
+        sh_filters = set_sh_filters(sh_filters)
     elif args.sh_template:
         import yaml
         from pathlib import Path
@@ -224,27 +247,36 @@ def main(args):
             exit (0)
     else:
         sh_filters = args.sh_filters
-        sh_filters = set_filters(sh_filters)
+        sh_filters = set_sh_filters(sh_filters)
 
-    default_mh_filters = {}
-    if not args.mh_filters:
-        mh_filters = default_mh_filters
+    default_mh_filters_checks = {}
+    if not args.mh_filters_checks:
+        mh_filters_checks = default_mh_filters_checks
     else:
-        mh_filters = args.mh_filters
-    for mh_filer_key, mh_filer_value in mh_filters.items():
-        if mh_filters[mh_filer_key].lower() == "true":
-            mh_filters[mh_filer_key] = bool(True)
-        elif mh_filters[mh_filer_key].lower() == "false":
-            mh_filters[mh_filer_key] = bool(False)
+        mh_filters_checks = args.mh_filters_checks
+    for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
+        if mh_filters_checks[mh_filter_check_key].lower() == "true":
+            mh_filters_checks[mh_filter_check_key] = bool(True)
+        elif mh_filters_checks[mh_filter_check_key].lower() == "false":
+            mh_filters_checks[mh_filter_check_key] = bool(False)
         else:
-            logger.error("MetaHub Filter Only True/False Supported: " + str(mh_filters))
+            logger.error("MetaHub Filter Only True/False Supported: " + str(mh_filters_checks))
             exit(1)
+
+    default_mh_filters_tags = {}
+    if not args.mh_filters_tags:
+        mh_filters_tags = default_mh_filters_tags
+    else:
+        mh_filters_tags = args.mh_filters_tags
+    # To Do: Validate
 
     print_title_line("")
     print_table("SH filters: ", str(sh_filters))
-    print_table("MH filters: ", str(mh_filters))
     print_table("SH template: ", str(args.sh_template))
-    print_table("MetaChecks: ", str(args.meta_checks))
+    print_table("Meta Checks: ", str(args.meta_checks))
+    print_table("Fltr Checks: ", str(mh_filters_checks))
+    print_table("Meta Tags: ", str(args.meta_tags))
+    print_table("Fltr Tags: ", str(mh_filters_tags))
     print_table("SH Account: ", str(args.sh_account))
     print_table("SH Role: ", str(args.sh_assume_role))
     print_table("MH Role: ", str(args.mh_assume_role))
@@ -252,8 +284,14 @@ def main(args):
     print_table("Log Level: ", str(args.log_level))
     print_table("Update: ", str(args.update_findings))
 
-    if args.list_metachecks:
+    if args.list_meta_checks:
         print_title_line("List MetaChecks")
+        list_metachecks(logger)
+        exit(0)
+
+    if args.list_meta_tags:
+        print_title_line("List MetaTags")
+        # To do: List Meta Tags
         list_metachecks(logger)
         exit(0)
 
@@ -267,8 +305,10 @@ def main(args):
     ) = generate_findings(
         logger,
         sh_filters,
-        mh_filters=mh_filters,
         metachecks=args.meta_checks,
+        mh_filters_checks=mh_filters_checks,
+        metatags=args.meta_tags,
+        mh_filters_tags=mh_filters_tags,
         sh_account=args.sh_account,
         sh_role=args.sh_assume_role,
         mh_role=args.mh_assume_role,

@@ -87,7 +87,7 @@ def get_parser():
         required=False,
     )
     parser.add_argument(
-        "--list-metachecks",
+        "--list-meta-checks",
         help="Use this option to list all available Meta Checks",
         required=False,
         action=argparse.BooleanOptionalAction,
@@ -99,13 +99,32 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "--mh-filters",
+        "--meta-tags",
+        help="Use this option to enable Meta Tags",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--mh-filters-checks",
         default=None,
-        help="MetaHub Filters: Use this option to filter the resources based on Meta Checks results. \
-            You can list available Meta Checks using --list-metachecks \
+        help="MetaHub MetaChecks Filters: Use this option to filter the resources based on Meta Checks results. \
+            You can list available Meta Checks using --list-meta-checks \
             Set a number of key-value pairs (do not put spaces before or after the = sign). \
             Only True or False valid values. \
-            Example: ./metahub --list-findings  --meta-checks --mh-filters is_attached_to_ec2_instance_with_public_ip=True is_public=False \
+            Example: ./metahub --list-findings  --meta-checks -mh-filters-checks is_attached_to_ec2_instance_with_public_ip=True is_public=False \
+            Default: None",
+        required=False,
+        nargs="*",
+        action=KeyValue,
+    )
+    parser.add_argument(
+        "--mh-filters-tags",
+        default=None,
+        help="MetaHub MetaTags Filters: Use this option to filter the resources based on Meta Checks results. \
+            You can list available Meta Checks using --list-meta-tags \
+            Set a number of key-value pairs (do not put spaces before or after the = sign). \
+            Only True or False valid values. \
+            Example: ./metahub --list-findings  --meta-tags -mh-filters-tags environment=prod\
             Default: None",
         required=False,
         nargs="*",
