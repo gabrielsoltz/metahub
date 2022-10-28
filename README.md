@@ -512,29 +512,33 @@ You can find examples under the folder [templates](templates)
 
 ## Security Hub Filtering
 
-MetaHub supports KEY=VALUE filtering for AWS Security Hub, the same way you would filter using AWS CLI but limited to `EQUALS` comparison. If you want to use other comparison use the option `--sh-template`.
+MetaHub supports filtering AWS Security Hub findings in the form of `KEY=VALUE` filtering for AWS Security Hub using the option `--sh-filters`, the same way you would filter using AWS CLI but limited to the `EQUALS` comparison. If you want to use other comparison use the option `--sh-template` [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates).
+
+You can check available filters in [AWS Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub.html#SecurityHub.Client.get_findings)
 
 ```sh
 ./metahub --list-findings --sh-filters <KEY=VALUE>
 ```
-Default Filters (without passing any): `RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`
+If you don't speficy any filters, defaults filters are applied: `RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`
 
-Passing filters using this option resets the default filters, so if you want to add filters to the defaults one, you need to add them to your filter. 
-
-For example, adding SeverityLabel to the defaults filters:
+Passing filters using this option resets the default filters. If what you want is to add filters to the defaults one, you need to speficy them in adition to the defaults ones. For example, adding SeverityLabel to the defaults filters:
 
 ```sh
 ./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub" SeverityLabel=CRITICAL
 ```
-Filters are defined as key=value. If a value contains spaces, you should use it with double quotes: KeyToFilter="this is a value."
+If a value contains spaces, you should speficy it using double quotes: `ProductName="Security Hub"`
 
-You can add how many filters you need to your query.
+You can add how many different filters you need to your query and also adding the same filter key with different values:
 
 Examples:
 
-- Filter by Severity:
+- Filter by Severity (CRITICAL):
 ```sh
 ./metaHub --list-findings --sh-filters SeverityLabel=CRITICAL
+```
+- Filter by Severity (CRITICAL and HIGH):
+```sh
+./metaHub --list-findings --sh-filters SeverityLabel=CRITICAL SeverityLabel=HIGH
 ```
 - Filter by Severity and AWS Account:
 ```sh
@@ -561,19 +565,15 @@ Examples:
 ./metahub --list-findings --sh-filters ComplianceStatus=FAILED
 ```
 
-You can check available filters in [AWS Documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub.html#SecurityHub.Client.get_findings)
-
 ## MetaChecks Filtering
 
-MetaHub supports filtering for MetaChecks in the form of a Key=Value. You can use how many filters you want and separate them using spaces. If you specify more than one check, you will get all resources that match all the filters.
+**MetaHub** supports **MetaChecks filters** in the form of `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-checks`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will resources that match all the filters.
 
-MetaChecks filters only supports True or False value:
+MetaChecks filters only supports `True` or `False` values:
 - A MetaChecks filter set to **True** means `True` or with data.
 - A MetaChecks filter set to **False** means `False` or without data.
 
-The MetaCheck filters are applied to the output of the MetaCheck that executes over your AWS Resources. 
-
-This is the workflow:
+MetaChecks filters runs after AWS Security Hub filters:
 
 1. MetaHub fetches AWS Security Findings based on the filters you specifi using `--sh-filters` (or the default ones).
 2. MetaHub executes MetaChecks for the AWS affected resources based on the previous list of findings
@@ -600,7 +600,7 @@ You can list all available MetaChecks using `--list-meta-checks`
 
 ## MetaTags Filtering
 
-MetaHub supports filtering for MetaChecks in the form of a Key=Value. You can use how many filters you want and separate them using spaces. If you specify more than one check, you will get all resources that match all the filters.
+**MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and Value is the Tag Value. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will resources that match all the filters.
 
 Examples:
 
@@ -620,11 +620,11 @@ You can update those 4 AWS Security Findings in one single command with **MetaHu
 
 For example, you can update the Workflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED.`
 
-**MetaHub** supports KEY=VALUE parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
-
-Filters are defined as key=value. If a value contains spaces, you should use double quotes: KeyToUpdate="this is a value."
+**MetaHub** supports `KEY=VALUE` parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
 AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings besides the amount.
+
+It's only possible to update the field `Worfklow` as for now. 
 
 Examples:
 
