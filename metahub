@@ -23,7 +23,7 @@ def generate_findings(
         "RecordState": {},
         "Compliance": {},
         "ProductArn": {},
-        "Type": {},
+        "ResourceType": {},
         "AwsAccountId": {},
         "ResourceId": {}
     }
@@ -105,28 +105,39 @@ def generate_findings(
                 if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
                     mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
                 mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
+                # ResourceType
+                if not finding["Resources"][0]["Type"] in mh_statistics["ResourceType"]:
+                    mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] = 0
+                mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
 
             # RESOURCE (we add the resource only once)
             if not resource_arn in mh_findings:
+                # Short
                 mh_findings[resource_arn] = {"findings": []}
-                mh_findings_short[resource_arn] = {"findings": []}
                 mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                mh_findings_short[resource_arn]["AwsAccountId"] = finding[
-                    "AwsAccountId"
-                ]
+                mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
+                # Standard
+                mh_findings_short[resource_arn] = {"findings": []}
+                mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
 
                 # INVENTORY
                 mh_inventory.append(resource_arn)
 
                 # METACHECKS:
                 if metachecks:
-                    mh_findings[resource_arn]["metachecks"] = mh_values
+                    # Short
                     mh_findings_short[resource_arn]["metachecks"] = mh_values
+                    # Standard
+                    mh_findings[resource_arn]["metachecks"] = mh_values
+
                 
                 # METATAGS
                 if metatags:
-                    mh_findings[resource_arn]['metatags'] = mh_tags
+                    # Short
                     mh_findings_short[resource_arn]['metatags'] = mh_tags
+                    # Standard
+                    mh_findings[resource_arn]['metatags'] = mh_tags
 
             # FINDINGS
             mh_findings_short[resource_arn]["findings"].append(
@@ -286,12 +297,6 @@ def main(args):
 
     if args.list_meta_checks:
         print_title_line("List MetaChecks")
-        list_metachecks(logger)
-        exit(0)
-
-    if args.list_meta_tags:
-        print_title_line("List MetaTags")
-        # To do: List Meta Tags
         list_metachecks(logger)
         exit(0)
 
