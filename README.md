@@ -25,7 +25,7 @@
 
 ## Description
 
-**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that lets you work with multiple product sources, standards, checks, and thousands of findings simply using the command line aggregating, filtering, and updating your data. In addition, **MetaHub** adds **MetaChecks** and **MetaTags**, an effortless and flexible way to do any extra tests on top of your resources to improve confidence in your findings. 
+**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that lets you work with multiple product sources, standards, checks, and thousands of findings simply using the command line aggregating, filtering, and updating your data. In addition, **MetaHub** adds **MetaChecks** and **MetaTags**, an effortless and flexible way to do any extra tests on top of your resources to improve confidence and enrich your findings. 
 
 ## Features
 
