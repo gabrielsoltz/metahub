@@ -578,6 +578,8 @@ MetaChecks filters only supports `True` or `False` values:
 - A MetaChecks filter set to **True** means `True` or with data.
 - A MetaChecks filter set to **False** means `False` or without data.
 
+You need to enable MetaChecks to be able to filter by them with the option `--meta-checks`.
+
 MetaChecks filters runs after AWS Security Hub filters:
 
 1. MetaHub fetches AWS Security Findings based on the filters you specifi using `--sh-filters` (or the default ones).
@@ -606,6 +608,14 @@ You can list all available MetaChecks using `--list-meta-checks`
 ## MetaTags Filtering
 
 **MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and Value is the Tag Value. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will resources that match all the filters.
+
+You need to enable MetaTags to be able to filter by them with the option `--meta-tags`.
+
+MetaChecks filters runs after AWS Security Hub filters:
+
+1. MetaHub fetches AWS Security Findings based on the filters you specifi using `--sh-filters` (or the default ones).
+2. MetaHub executes MetaTags for the AWS affected resources based on the previous list of findings
+3. MetaHub only shows you the resources that matches your `--mh-filters-tags`, so it's a subset of the resources from point 1.
 
 Examples:
 
