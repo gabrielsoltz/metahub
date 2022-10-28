@@ -498,12 +498,6 @@ You can use MetaTags for your filters or for updating resources. See [Filtering]
 
 # Filtering
 
-- [Security Hub Filtering using YAML templates](#Security Hub Filtering using YAML templates)
-- [Security Hub Filtering](#Security Hub Filtering)
-- [MetaChecks Filtering](#MetaChecks Filtering)
-- [MetaTags Filtering](#MetaTags Filtering)
-
-
 ## Security Hub Filtering using YAML templates
 
 **MetaHub** let you create complex filters using YAML that you can then re-use when you need them. YAML templates let you write using any comparison supported by AWS Security Hub like `'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'`. You can call your YAML file using the option `--sh-template <<FILE>>`.
