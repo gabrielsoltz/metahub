@@ -510,6 +510,11 @@ You can use MetaTags for your filters or for updating resources. See [Filtering]
 
 You can find examples under the folder [templates](templates)
 
+- Filter using YAML template default.yml:
+```sh
+./metaHub --list-findings --sh-template templates/default.yml
+```
+
 ## Security Hub Filtering
 
 MetaHub supports filtering AWS Security Hub findings in the form of `KEY=VALUE` filtering for AWS Security Hub using the option `--sh-filters`, the same way you would filter using AWS CLI but limited to the `EQUALS` comparison. If you want to use other comparison use the option `--sh-template` [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates).
