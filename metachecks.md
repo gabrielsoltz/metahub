@@ -1,47 +1,46 @@
 # MetaChecks
 
-## How to add a new MetaCheck
+## How to add a new ResourceType
 
-To add a new MetaCheck for a new ResourceType, start by using this template and create a new file under the metachecks folder with the name of the ResourceType.
+To add a new ResourceType, start by using this template and create a new file under the metachecks folder with the name of the ResourceType.
 
 ```
 '''MetaCheck: <AWSResourceType>'''
 
 import boto3
+from metachecks.checks.Base import MetaChecksBase
 
 
-class Metacheck:
+class Metacheck(MetaChecksBase):
 
-    def __init__(self, logger, finding, mh_filters, sess):
+    def __init__(self, logger, finding, metachecks, mh_filters_checks, metatags, mh_filters_tags, sess):
         self.logger = logger
         if not sess:
-            self.client = boto3.client(<SERVICE>)
+            self.client = boto3.client("ec2")
         else:
-            self.client = sess.client(service_name=<SERVICE>)
-        if finding:
-            self.mh_filters = mh_filters
-            # Populate object with describe functions here
+            self.client = sess.client(service_name="ec2")
+        if metatags or metachecks:
+            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
+            if metatags:
+                self.mh_filters_tags = mh_filters_tags
+                self.tags = self._tags()
+            if metachecks:
+                self.mh_filters_checks = mh_filters_checks
+                # Populate object with describe functions here
             
     def checks(self):
         checks = [
             ]
         return checks
-
-    def output(self):
-        mh_values = {}
-        mh_matched = False if self.mh_filters else True
-
-        for check in self.checks():
-            hndl = getattr(self, check)()
-            mh_values.update({check: hndl})
-            if check in self.mh_filters and hndl:
-                mh_matched = True
-                
-        return mh_values, mh_matched
 ```
 
 Create a function for your test and return True (or data) if the checks match or False if not. 
 Add the function name to the variable checks under the function checks().
+
+
+## How to add a new MetaCheck
+
+
 
 
 ## Checks

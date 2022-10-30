@@ -5,7 +5,6 @@ from sys import argv, exit
 
 from helpers import (color, get_logger, get_parser, print_banner, print_table,
                      print_title_line)
-from metachecks.metachecks import list_metachecks, run_metachecks, run_tags
 from securityhub import SecurityHub
 
 
@@ -35,6 +34,8 @@ def generate_findings(
 
         # MetaChecks and MetaTags:
         if metachecks or metatags:
+            from metachecks.metachecks import run_metachecks, run_tags
+
             # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
             if resource_arn in mh_findings:
                 mh_matched = True
@@ -279,7 +280,6 @@ def main(args):
         mh_filters_tags = default_mh_filters_tags
     else:
         mh_filters_tags = args.mh_filters_tags
-    # To Do: Validate
 
     print_title_line("")
     print_table("SH filters: ", str(sh_filters))
@@ -296,6 +296,8 @@ def main(args):
     print_table("Update: ", str(args.update_findings))
 
     if args.list_meta_checks:
+        from metachecks.metachecks import list_metachecks
+
         print_title_line("List MetaChecks")
         list_metachecks(logger)
         exit(0)
