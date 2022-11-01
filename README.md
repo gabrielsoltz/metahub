@@ -25,15 +25,13 @@
 
 ## Description
 
-**MetaHub** is a command line utility for investigating [AWS Security Hub](https://aws.amazon.com/security-hub) findings. Using **MetaHub**, you can rely on [AWS Security Hub](https://aws.amazon.com/security-hub) and your already favorite integrated scanners as a source of the non-context findings to then add what is missing from your environments and connect your findings with the big-picture. 
+**MetaHub** is a command line utility for investigating [AWS Security Hub](https://aws.amazon.com/security-hub) findings. Using **MetaHub**, you can rely on [AWS Security Hub](https://aws.amazon.com/security-hub) and your already favorite integrated scanners as a source of the non-context findings to then add what is missing from your environments and connect your findings with the big-picture. **MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling,  like Nmap, to enrich your investigation even more and automate those outputs.
 
 **MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (YOUR context).
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
 
-**MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling,  like Nmap, to enrich your investigation even more and automate those outputs.
-
-If you are investigating a Security Group with a port open, you can then investigate and automate the following:
+If you are investigating a finding for Security Group with a port open, you can then investigate and automate the following:
 - If the security group is attached
 - If the attached resource is public
 - If the environment is Production
