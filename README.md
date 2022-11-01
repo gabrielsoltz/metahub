@@ -25,9 +25,9 @@
 
 ## Description
 
-**MetaHub** is a command line utility for investigating [AWS Security Hub](https://aws.amazon.com/security-hub) findings. Using **MetaHub**, you can rely on [AWS Security Hub](https://aws.amazon.com/security-hub) and your already favorite [integrated scanners](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-partner-providers.html) as a source of the non-context findings to then add what is missing from your environments and connect your findings with the big-picture.
+**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). Using **MetaHub**, you can perform your investigations on top no matter what amount of product sources, standards, checks, or findings you have for identifying real and false positives, grouping related findings, and enriching them with data about your context.
 
-**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (YOUR context). **MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling, like Nmap, to enrich your investigation even more and automate those outputs.
+**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (**your** context). **MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling, like Nmap, to further enrich your investigation and automate those outputs. **MetaTags** are a way to fetch all tags that are associated with the affected resources you are investigating. 
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
 
@@ -37,7 +37,7 @@ If you are investigating a finding for Security Group with a port open, you can 
 - If the environment is Production
 - If the port is answering
 
-You can save the output of this investigation using YAML files as filters or update all the related findings directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
+You can save the the filters of this investigation using YAML templates files to then re-use them in automated or manual way when you need them. You can update all the related findings directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
 
 ## Features
 
