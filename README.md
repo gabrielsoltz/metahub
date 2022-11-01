@@ -25,13 +25,27 @@
 
 ## Description
 
-**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub) that lets you work with multiple product sources, standards, checks, and thousands of findings simply using the command line aggregating, filtering, and updating your data. In addition, **MetaHub** adds **MetaChecks** and **MetaTags**, an effortless and flexible way to do any extra tests on top of your resources to improve confidence and enrich your findings. 
+**MetaHub** is a command line utility for investigating [AWS Security Hub](https://aws.amazon.com/security-hub) findings. Using **MetaHub**, you can rely on [AWS Security Hub](https://aws.amazon.com/security-hub) and your already favorite integrated scanners as a source of the non-context findings to then add what is missing from your environments and connect your findings with the big-picture. 
+
+**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (YOUR context).
+
+**MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
+
+**MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling,  like Nmap, to enrich your investigation even more and automate those outputs.
+
+If you are investigating a Security Group with a port open, you can then investigate and automate the following:
+- If the security group is attached
+- If the attached resource is public
+- If the environment is Production
+- If the port is answering
+
+You can save the output of this investigation using YAML files as filters or update all the related findings directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
 
 ## Features
 
 **MetaHub** introduces different **ways of listing Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. Metahub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** queries the affected resources in the affected account to add extra information using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`) . **MetaChecks** are custom python checks that you can run directly on the affected resources to increase the level of confidence in your findings, like checking if the resource is effectively public or if it has a certain policy attached or if it is attached to a public resource, and **MetaTags** let you enrich your findings with the tags that are associated with the resource. You can then query the results of these outputs, for example, listing all resources that are effectively public and are tagged with a tag `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
+**MetaHub** queries the affected resources in the affected account to add context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). **MetaChecks** are custom python checks that you can run directly on the affected resources to increase the level of confidence in your findings, like checking if the resource is effectively public or if it has a certain policy attached or if it is attached to a public resource, and **MetaTags** let you enrich your findings with the tags that are associated with the resource. You can then query the results of these outputs, for example, listing all resources that are effectively public and are tagged with a tag `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
 
 **MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. In addition and combination, it supports **MetaChecks filtering** using the option `--mh-filters-checks` and **MetaTags filtering** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
