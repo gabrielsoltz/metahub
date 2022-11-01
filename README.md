@@ -37,7 +37,7 @@ If you are investigating a finding for Security Group with a port open, you can 
 - If the environment is Production
 - If the port is answering
 
-You can save the the filters of this investigation using YAML templates files to then re-use them in automated or manual way when you need them. You can update all the related findings directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
+You can save the the filters of this investigation using YAML templates files to then re-use them in automated or manual way when you need them. You can update all the related findings together directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
 
 ## Features
 
