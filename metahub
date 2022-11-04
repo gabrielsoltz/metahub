@@ -4,7 +4,7 @@ import json
 from sys import argv, exit
 
 from helpers import (color, get_logger, get_parser, print_banner, print_table,
-                     print_title_line)
+                     print_title_line, confirm_choice, test_python_version)
 from securityhub import SecurityHub
 
 
@@ -208,19 +208,9 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     return [], []
 
 
-def confirm_choice(message):
-    """Simple function to confirm the action, returns True or False based on user entry"""
-    confirm = input(message + " [c]Confirm or [v]Void: ")
-    if confirm != "c" and confirm != "v":
-        print("\n Invalid Option. Please Enter a Valid Option.")
-        return confirm_choice(message)
-    if confirm == "c":
-        return True
-    return False
-
-
 def main(args):
     print_banner()
+    test_python_version()
     parser = get_parser()
     args = parser.parse_args(args)
     logger = get_logger(args.log_level)

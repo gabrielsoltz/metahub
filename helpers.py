@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 
 
 class KeyValueWithList(argparse.Action):
@@ -264,3 +265,20 @@ def print_title_line(text, ch="-", length=78):
     colored_text = color["BOLD"] + spaced_text + color["END"]
     banner = colored_text.center(length, ch)
     print(banner)
+
+def confirm_choice(message):
+    """Simple function to confirm the action, returns True or False based on user entry"""
+    confirm = input(message + " [c]Confirm or [v]Void: ")
+    if confirm != "c" and confirm != "v":
+        print("\n Invalid Option. Please Enter a Valid Option.")
+        return confirm_choice(message)
+    if confirm == "c":
+        return True
+    return False
+
+def test_python_version():
+    """Check Python Version"""
+    logger = get_logger("ERROR")
+    if sys.version_info < (3, 9):
+        logger.error("Python Version must be Python 3.9 or above. Please update your Python version: %s", sys.version)
+        sys.exit(1)
