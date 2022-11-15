@@ -6,21 +6,17 @@ from metachecks.checks.Base import MetaChecksBase
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, metatags, mh_filters_tags, sess):
+    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if not sess:
             self.client = boto3.client("ec2")
         else:
             self.client = sess.client(service_name="ec2")
-        if metatags or metachecks:
+        if metachecks:
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
-            if metatags:
-                self.mh_filters_tags = mh_filters_tags
-                self.tags = self._tags()
-            if metachecks:
-                self.mh_filters_checks = mh_filters_checks
-                self.security_groups = self._describe_security_group()
-                self.network_interfaces = self._describe_network_interfaces()
+            self.mh_filters_checks = mh_filters_checks
+            self.security_groups = self._describe_security_group()
+            self.network_interfaces = self._describe_network_interfaces()
 
     def _describe_security_group(self):
         response = self.client.describe_security_groups()
@@ -84,19 +80,6 @@ class Metacheck(MetaChecksBase):
         if references:
             return references
         return False
-
-    def _tags(self):
-        response = self.client.describe_tags(
-            Filters=[
-                {
-                    "Name": "resource-id",
-                    "Values": [
-                        self.resource_id,
-                    ],
-                },
-            ],
-        )
-        return response["Tags"]
 
     def is_attached_to_network_interfaces(self):
         NetworkInterfaces = []

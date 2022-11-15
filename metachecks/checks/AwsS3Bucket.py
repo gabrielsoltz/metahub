@@ -8,21 +8,17 @@ from metachecks.checks.Base import MetaChecksBase
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, metatags, mh_filters_tags, sess):
+    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if not sess:
             self.client = boto3.client("s3")
         else:
             self.client = sess.client(service_name="s3")
-        if metatags or metachecks:
+        if metachecks:
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
-            if metatags:
-                self.mh_filters_tags = mh_filters_tags
-                self.tags = self._tags()
-            if metachecks:
-                self.mh_filters_checks = mh_filters_checks
-                self.bucket_acl = self._get_bucket_acl()
-                self.bucket_policy = self._get_bucket_policy()
+            self.mh_filters_checks = mh_filters_checks
+            self.bucket_acl = self._get_bucket_acl()
+            self.bucket_policy = self._get_bucket_policy()
 
     def _get_bucket_acl(self):
         try:
@@ -66,25 +62,6 @@ class Metacheck(MetaChecksBase):
                 return False
         return json.loads(response["Policy"])
 
-    def _tags(self):
-        try:
-            response = self.client.get_bucket_tagging(Bucket=self.resource_id)
-        except ClientError as err:
-            if err.response["Error"]["Code"] in [
-                "AccessDenied",
-                "UnauthorizedOperation",
-            ]:
-                self.logger.error(
-                    "Access denied for get_bucket_tagging: " + self.resource_id
-                )
-                return False
-            elif err.response["Error"]["Code"] == "NoSuchTagSet":
-                return False
-            else:
-                self.logger.error("Failed to get_bucket_tagging: " + self.resource_id)
-                return False
-        return response["TagSet"]
-    
     def it_has_bucket_policy(self):
         bucket_policy = False
         if self.bucket_policy:

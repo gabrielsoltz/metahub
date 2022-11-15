@@ -8,22 +8,18 @@ from metachecks.checks.Base import MetaChecksBase
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, metatags, mh_filters_tags, sess):
+    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
 
         self.logger = logger
         if not sess:
             self.client = boto3.client("es")
         else:
             self.client = sess.client(service_name="es")
-        if metatags or metachecks:
+        if metachecks:
             self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
             self.resource_arn = finding["Resources"][0]["Id"]
-            if metatags:
-                self.mh_filters_tags = mh_filters_tags
-                self.tags = self._tags()
-            if metachecks:
-                self.mh_filters_checks = mh_filters_checks
-                self.elasticsearch_domain = self._describe_elasticsearch_domain()
+            self.mh_filters_checks = mh_filters_checks
+            self.elasticsearch_domain = self._describe_elasticsearch_domain()
 
     def _describe_elasticsearch_domain(self):
         try:
@@ -46,21 +42,6 @@ class Metacheck(MetaChecksBase):
                 )
                 return False
         return response["DomainStatus"]
-
-    def _tags(self):
-        try:
-            response = self.client.list_tags(ARN=self.resource_arn)
-        except ClientError as err:
-            if err.response["Error"]["Code"] in [
-                "AccessDenied",
-                "UnauthorizedOperation",
-            ]:
-                self.logger.error("Access denied for list_tags: " + self.resource_id)
-                return False
-            else:
-                self.logger.error("Failed to list_tags: " + self.resource_id)
-                return False
-        return response["TagList"]
 
     def it_has_public_endpoint(self):
         public_endpoints = []

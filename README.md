@@ -43,7 +43,7 @@ You can save the the filters of this investigation using YAML templates files to
 
 **MetaHub** introduces different **ways of listing Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. Metahub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** queries the affected resources in the affected account to add context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). **MetaChecks** are custom python checks that you can run directly on the affected resources to increase the level of confidence in your findings, like checking if the resource is effectively public or if it has a certain policy attached or if it is attached to a public resource, and **MetaTags** let you enrich your findings with the tags that are associated with the resource. You can create a filter on top of these outpus to automate the detection of another resources with the same problems. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
+**MetaHub** queries the affected resources in the affected account to add context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). **MetaChecks** are custom python checks that you can run directly on the affected resources to increase the level of confidence in your findings, like checking if the resource is effectively public or if it has a certain policy attached or if it is attached to a public resource, and **MetaTags** let you enrich your findings with the tags that are associated with the resource by using [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html). You can create a filter on top of these outpus to automate the detection of another resources with the same problems. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
 
 **MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. In addition and combination, it supports **MetaChecks filtering** using the option `--mh-filters-checks` and **MetaTags filtering** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
@@ -487,7 +487,9 @@ Use cases examples:
 
 ## MetaTags
 
-You can also enrich your findings with tagging, by using the option `--meta-tags`
+**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query your the tags associated to your resources by using the option `--meta-tags.`
+
+Note that not all AWS resource type supports this API, you can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -584,7 +586,7 @@ Examples:
 
 ## MetaChecks Filtering
 
-**MetaHub** supports **MetaChecks filters** in the form of `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-checks`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will resources that match all the filters.
+**MetaHub** supports **MetaChecks filters** in the form of `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-checks`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **all** filters.
 
 MetaChecks filters only supports `True` or `False` values:
 - A MetaChecks filter set to **True** means `True` or with data.
@@ -619,7 +621,7 @@ You can list all available MetaChecks using `--list-meta-checks`
 
 ## MetaTags Filtering
 
-**MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and Value is the Tag Value. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will resources that match all the filters.
+**MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and Value is the Tag Value. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **at least one** filter.
 
 You need to enable MetaTags to be able to filter by them with the option `--meta-tags`.
 

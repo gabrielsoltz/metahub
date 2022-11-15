@@ -3,28 +3,6 @@ class MetaChecksBase():
     def __init__(self):
         pass
 
-    def output_tags(self):
-        '''
-        return mh_values_tags: MetaTags values dictionary.
-        return mh_matched_tags: True if mh-filters-tags match one of the metatags values
-        '''
-
-        mh_values_tags = {}
-        mh_matched_tags = False if self.mh_filters_tags else True
-        if self.tags:
-            for tag in self.tags:
-                mh_values_tags.update({tag["Key"]: tag["Value"]})
-            compare = {k: mh_values_tags[k] for k in mh_values_tags if k in self.mh_filters_tags and mh_values_tags[k] == self.mh_filters_tags[k]}
-            self.logger.info(
-                "Evaluating MetaTag filter. Expected: "
-                + str(self.mh_filters_tags)
-                + " Found: "
-                + str(bool(compare))
-            )
-            if self.mh_filters_tags and bool(compare):
-                mh_matched_tags = True
-        return mh_values_tags, mh_matched_tags
-
     def output_checks(self):
         '''
         return mh_values_checks: MetaChecks values dictionary.

@@ -34,7 +34,8 @@ def generate_findings(
 
         # MetaChecks and MetaTags:
         if metachecks or metatags:
-            from metachecks.metachecks import run_metachecks, run_tags
+            from metachecks.metachecks import run_metachecks
+            from metatags.metatags import run_metatags
 
             # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
             if resource_arn in mh_findings:
@@ -56,7 +57,7 @@ def generate_findings(
                     not resource_arn in mh_findings
                     and not resource_arn in mh_findings_not_matched_findings
                 ):
-                    mh_tags, mh_tags_matched = run_tags(
+                    mh_tags, mh_tags_matched = run_metatags(
                         logger, finding, mh_filters_tags, mh_role
                     )
             else:
