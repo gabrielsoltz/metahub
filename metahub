@@ -345,6 +345,66 @@ def main(args):
                     with open(out + ".json", "w", encoding="utf-8") as f:
                         json.dump(mh_findings, f, indent=2)
                         print_table("File: ", out + ".json")
+    
+    if args.write_html:
+        from json2html import json2html
+        from json2table import convert
+        build_direction = "TOP_TO_BOTTOM"
+        table_attributes = {"style" : "width:50%", "class" : "table table-striped"}
+
+        if mh_findings:
+            for out in args.output:
+                print_title_line("Write HTML: " + out)
+                if out == "short":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_findings_short)
+                        html = convert(mh_findings_short, build_direction=build_direction, table_attributes=table_attributes)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+                if out == "inventory":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_inventory)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+                if out == "statistics":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_statistics)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+                if out == "standard":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_findings)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+
+    if args.write_csv:
+        import pandas as pd
+
+        if mh_findings:
+            for out in args.output:
+                print_title_line("Write CSV: " + out)
+                if out == "short":
+                    print (mh_findings_short)
+                    with open(out + ".csv", "w", encoding="utf-8") as f:
+                        df = pd.read_json(json.dumps(mh_findings_short, indent=2))
+                        csv = df.to_csv()
+                        f.write(csv)
+                        print_table("File: ", out + ".csv")
+                if out == "inventory":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_inventory)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+                if out == "statistics":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_statistics)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
+                if out == "standard":
+                    with open(out + ".html", "w", encoding="utf-8") as f:
+                        html = json2html.convert(json = mh_findings)
+                        f.write(html)
+                        print_table("File: ", out + ".html")
 
     print_title_line("Results")
     print_table("Non-Compliant Resources: ", str(len(mh_findings)))
