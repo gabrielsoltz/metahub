@@ -9,6 +9,9 @@ class MetaChecksBase():
         return mh_matched_checks: True if mh-filters-checks matchs one of metachecks the values
         '''
 
+        #mode = "atleast1"
+        mode = "all"
+
         mh_values_checks = {}
         # If there is no filters, we force match to True
         mh_matched_checks = False if self.mh_filters_checks else True
@@ -34,7 +37,7 @@ class MetaChecksBase():
                     mh_matched_checks_all_checks = False
         
         # All checks needs to be matched
-        if not mh_matched_checks_all_checks:
+        if not mh_matched_checks_all_checks and mode =="all":
             mh_matched_checks = False
 
         return mh_values_checks, mh_matched_checks
