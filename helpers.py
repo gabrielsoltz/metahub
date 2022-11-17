@@ -185,6 +185,18 @@ def get_parser():
         required=False,
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "--write-html",
+        help="Write HTML to File",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--write-csv",
+        help="Write CSV to File",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
     return parser
 
 
