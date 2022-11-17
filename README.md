@@ -49,7 +49,7 @@ You can save the the filters of this investigation using YAML templates files to
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow states using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Findings](#Updating-Findings)
 
-**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs)
+**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). You can also export your outputs to Json, CSV and HTML formats.
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Advanced Usage](#advanced-usage)
 
@@ -307,6 +307,14 @@ You can use `--output statistics` to get statistics about your search. You get s
 `ComplianceStatus`
 `ProductArn`
 `ResourceType`
+
+## Write File
+
+You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`.
+
+CSV meta-checks and meta-tags columns can be customized for CSV format, letting you choose which tags or checks to use as columns. This configuration can be defined by editing the variables `metatags_columns` and `metachecks_columns`. This is useful if you want to use AutoFilters in your Spreadsheets (lines 376 and 383 of metahub main file).
+
+TO-DO: Move variables to parameters.
 
 ## Findings Aggregation
 
