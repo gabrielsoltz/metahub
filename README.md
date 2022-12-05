@@ -62,9 +62,9 @@ Or:
 
 With the output of your investigation, you can then:
 
---> Create a Ticket with all the relevant information and keep track of it using Notes: Using the update findings functionality from MetaHub you can mention a ticket id or any URL and change the workflow status of all the findings that match your investigation
---> Automate an alert if your investigation filters match again: You can save the filters of this investigation using YAML templates files to re-use them in an automated or manual way when you need them.
---> Integrate with a Visualization/Dashboarding tool for monitoring
+- Create a Ticket with all the relevant information and keep track of it using Notes: Using the update findings functionality from MetaHub you can mention a ticket id or any URL and change the workflow status of all the findings that match your investigation
+- Automate an alert if your investigation filters match again: You can save the filters of this investigation using YAML templates files to re-use them in an automated or manual way when you need them.
+- Integrate with a Visualization/Dashboarding tool for monitoring using the json output
 
 ## Features
 
