@@ -312,9 +312,15 @@ You can use `--output statistics` to get statistics about your search. You get s
 
 You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`.
 
-CSV meta-checks and meta-tags columns can be customized for CSV format, letting you choose which tags or checks to use as columns. This configuration can be defined by editing the variables `metatags_columns` and `metachecks_columns`. This is useful if you want to use AutoFilters in your Spreadsheets (lines 376 and 383 of metahub main file).
+CSV Meta Checks and Meta Tags columns can be customized for CSV format, letting you choose which tags or checks to use as columns. To customize them, you can use the options `--write-csv-meta-tags-columns` and `--write-csv-meta-checks-columns` as a list of columns. If the metachecks or metatags you define as columns doesn't exist for the affected resource, they will be empty. 
 
-TO-DO: Move variables to parameters.
+For example: `./metahub --sh-filters ResourceType=AwsS3Bucket --write-csv --write-csv-meta-tags-columns Owner --write-csv-meta-checks-columns is_bucket_acl_public is_bucket_policy_public is_public it_has_bucket_policy it_has_bucket_acl is_encrypted` 
+
+You will get a CSV with the following columns:
+
+<p align="center">
+  <img src="csv-columns.png" alt="MetaHub"/>
+</p>
 
 ## Findings Aggregation
 

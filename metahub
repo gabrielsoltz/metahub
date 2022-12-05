@@ -373,16 +373,8 @@ def main(args):
         import csv
 
         def output_csv(output):
-            metachecks_columns = [
-                "is_bucket_acl_public",
-                "is_bucket_policy_public",
-                "is_public",
-                "it_has_bucket_policy",
-                "it_has_bucket_acl"
-            ]
-            metatags_columns = [
-                "Owner"
-            ]
+            metachecks_columns = args.write_csv_meta_checks_columns
+            metatags_columns = args.write_csv_meta_tags_columns
             new_list = []
             for key, dictionary in output.items():
                 new_dict = {'ARN': key}

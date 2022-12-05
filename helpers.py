@@ -197,8 +197,21 @@ def get_parser():
         required=False,
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "--write-csv-meta-tags-columns",
+        help="CSV MetaTags Columns. Use this option to unroll MetaTags as CSV Columns.",
+        default=[],
+        nargs="+",
+        required=False,
+    )
+    parser.add_argument(
+        "--write-csv-meta-checks-columns",
+        help="CSV MetaTags Columns. Use this option to unroll MetaChecks as CSV Columns.",
+        default=[],
+        nargs="+",
+        required=False,
+    )
     return parser
-
 
 def get_logger(log_level):
     """Configure Logger"""
