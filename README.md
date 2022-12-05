@@ -31,19 +31,36 @@
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
 
-If you are investigating a finding for Security Group with a port open, you can then investigate and automate the following:
-- If the security group is attached
-- If the attached resource is public
-- If the environment is Production
+If you are investigating a finding for a Security Group with a port open, you can then investigate and automate the following:
+- If the security group is attached to a Network Interface (`is_attached_to_network_interfaces`)
+- If the attached resource is public (`is_attached_to_public_ips`)
+- If the environment is `Production`
 - If the port is answering
+
+If you are investigating a finding for a S3 Bucket with Block Public Access feature disabled, you can then investigate and automate the following:
+- If the bucket has an ACL (`it_has_bucket_acl`)
+- If the ACL is granting another AWS Account Cannonical Id access (`it_has_bucket_acl_with_cross_account`)
+- If the ACL is granting public access (`is_bucket_acl_public`)
+- If the bucket has a Policy (`it_has_bucket_policy`)
+- If the Policy is granting another AWS Account access (`it_has_bucket_policy_allow_with_cross_account_principal`)
+- If the Policy is granting public access (`is_bucket_policy_public`)
+- If the bucket is encrypted (`is_encrypted`)
+- If the environment is `Production`
+- If the bucket is public (`is_public`)
 
 You can save the the filters of this investigation using YAML templates files to then re-use them in automated or manual way when you need them. You can update all the related findings together directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
 
 ## Features
 
-**MetaHub** introduces different **ways of listing Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. Metahub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
+**MetaHub** introduces different **ways of listing AWS Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. MetaHub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** queries the affected resources in the affected account to add context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). **MetaChecks** are custom python checks that you can run directly on the affected resources to increase the level of confidence in your findings, like checking if the resource is effectively public or if it has a certain policy attached or if it is attached to a public resource, and **MetaTags** let you enrich your findings with the tags that are associated with the resource by using [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html). You can create a filter on top of these outpus to automate the detection of another resources with the same problems. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
+**MetaHub** queries the affected resources in the affected account directly to add extra information from your context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). 
+
+You can define your own **MetaChecks** as yes/no questions using python (is public? is encrypted? is production? is accessed from development?).
+
+**MetaTags** let you enrich your findings with the tags that are associated with the resource by using [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html). 
+
+You can create a filter on top of these outpus to automate the detection of another resources with the same issues. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks) and [MetaTags](#MetaTags).
 
 **MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. In addition and combination, it supports **MetaChecks filtering** using the option `--mh-filters-checks` and **MetaTags filtering** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
@@ -497,6 +514,8 @@ You can use MetaChecks for your filters or for updating resources. See [Filterin
 Use cases examples:
 - Trigger an alert when you find a SG open for port 3389/TCP and it's attached to a Public resource. 
 - Change severity for a finding that is related with port 3389/TCP from Critical to High when is NOT attached to a public resource.
+
+If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull requests are more than welcome.
 
 
 ## MetaTags
