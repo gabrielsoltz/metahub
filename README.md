@@ -27,28 +27,44 @@
 
 **MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). Using **MetaHub**, you can perform your investigations on top no matter what amount of product sources, standards, checks, or findings you have for identifying real and false positives, grouping related findings, and enriching them with data about your context.
 
-**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (**your** context). **MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling, like Nmap, to further enrich your investigation and automate those outputs. **MetaTags** are a way to fetch all tags that are associated with the affected resources you are investigating. 
+**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (**your** context). 
+
+**MetaChecks** are provided for some resource types as part of the tool. Still, you can add your custom checks or connect to another specific tooling, like Nmap, to further enrich your investigation and run automation on top of them. 
+
+**MetaTags** are added to your affected resources using different API calls to standarize you Tagging strategy and filter, aggregate or correlate on top of it.
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
 
-If you are investigating a finding for a Security Group with a port open, you can then investigate and automate the following:
+Security Hub Findings --> MetaHub Converts them to Affected Resources --> MetaHub adds Context with MetaChecks and MetaTags --> Filter on top your context --> TAKE ACTION
+
+If you are investigating a finding for a **Security Group** with a port open, you can use MetaHub to investigate and automate the following:
+- If there are other findings for this resource
 - If the security group is attached to a Network Interface (`is_attached_to_network_interfaces`)
 - If the attached resource is public (`is_attached_to_public_ips`)
-- If the environment is `Production`
+- If the environment is `Production` (Tags)
 - If the port is answering
 
-If you are investigating a finding for a S3 Bucket with Block Public Access feature disabled, you can then investigate and automate the following:
+If you are investigating a finding for a **S3 Bucket** with Block Public Access feature disabled, you can then investigate and automate the following:
+- If the bucket is public (`is_public`)
+
+Or:
+- If the environment is `Production`
+- If the bucket has a Policy (`it_has_bucket_policy`)
+- If the Policy is granting another AWS Account access (`it_has_bucket_policy_allow_with_cross_account_principal`)
+- If the other AWS Account is one of your AWS Accounts
+
+Or:
 - If the bucket has an ACL (`it_has_bucket_acl`)
 - If the ACL is granting another AWS Account Cannonical Id access (`it_has_bucket_acl_with_cross_account`)
 - If the ACL is granting public access (`is_bucket_acl_public`)
-- If the bucket has a Policy (`it_has_bucket_policy`)
-- If the Policy is granting another AWS Account access (`it_has_bucket_policy_allow_with_cross_account_principal`)
-- If the Policy is granting public access (`is_bucket_policy_public`)
 - If the bucket is encrypted (`is_encrypted`)
-- If the environment is `Production`
-- If the bucket is public (`is_public`)
+- If the environment is `Production` (Tags)
 
-You can save the the filters of this investigation using YAML templates files to then re-use them in automated or manual way when you need them. You can update all the related findings together directly in AWS Security Hub for fields like WorkflowStatus, Notes, and Severities. The result of your investigation can then be automated or integrated with any of your favorites (or corporate) tools like alerting, ticketing, or monitoring systems. 
+With the output of your investigation, you can then:
+
+--> Create a Ticket with all the relevant information and keep track of it using Notes: Using the update findings functionality from MetaHub you can mention a ticket id or any URL and change the workflow status of all the findings that match your investigation
+--> Automate an alert if your investigation filters match again: You can save the filters of this investigation using YAML templates files to re-use them in an automated or manual way when you need them.
+--> Integrate with a Visualization/Dashboarding tool for monitoring
 
 ## Features
 
