@@ -42,3 +42,25 @@ def get_boto3_session(Credentials):
         aws_session_token=session_token,
     )
     return boto3_session
+
+def get_account_id():
+    return boto3.client('sts').get_caller_identity().get('Account')
+
+def get_account_alias(logger, aws_account_number=None, role_name=None):
+    if not aws_account_number:
+        aliases = boto3.client('iam').list_account_aliases()['AccountAliases']
+        if aliases:
+            return aliases[0]
+        return ""
+    else:
+        sh_role_assumend = assume_role(logger, aws_account_number, role_name)
+        sess = get_boto3_session(sh_role_assumend)
+        logger.info(
+            "Assuming IAM Role: %s (%s)",
+            role_name,
+            aws_account_number,
+        )
+        aliases = sess.client(service_name="iam").list_account_aliases()['AccountAliases']
+        if aliases:
+            return aliases[0]
+        return ""
