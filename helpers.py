@@ -279,8 +279,11 @@ def print_banner():
 
 
 def print_table(key, value, keycolor=color["DARKCYAN"]):
-    print(keycolor + key + color["END"], " \t", value)
-
+    #print(keycolor + key + color["END"], " \t", value)
+    tabs = "\t\t"
+    if (len(key)) > 14:
+        tabs = "\t"
+    print(keycolor + key + color["END"], tabs, value)
 
 def print_title_line(text, ch="-", length=78):
     if text:
