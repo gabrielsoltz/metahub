@@ -91,6 +91,8 @@ class Metacheck(MetaChecksBase):
             self.bucket_acl = self._get_bucket_acl() --> YOUR DESCRIBE FUNCTION AS AN ATTRIBUTE
 ```
 
+5. Import Metacheck in metachecks/checks/__init__.py file
+
 ## Defining MetaChecks
 
 You can code any check you need on top of the data fetched by the *describe functions*.
@@ -181,3 +183,30 @@ To enable the check, add it to the list in the fuction `checks` of your `Resourc
 ## it_has_access_policies_public
 
 ## is_public
+
+
+# AwsEc2Instance
+
+## it_has_public_ip
+
+## it_has_private_ip
+
+## it_has_key
+
+## it_has_private_dns
+
+## it_has_public_dns
+
+## is_running
+
+## is_attached_to_security_groups
+
+## it_has_instance_profile
+
+## it_has_instance_profile_roles
+
+## is_instance_metadata_v2
+
+## it_has_ebs it_has_unencrypted_ebs
+
+## is_attached_to_security_group_rules_unrestricted
