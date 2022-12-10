@@ -5,6 +5,7 @@ from sys import argv, exit
 
 from helpers import (color, get_logger, get_parser, print_banner, print_table,
                      print_title_line, confirm_choice, test_python_version)
+from AwsHelpers import get_account_id, get_account_alias
 from securityhub import SecurityHub
 
 
@@ -209,6 +210,12 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     return [], []
 
 
+def count_mh_findings(mh_findings):
+    count = 0
+    for resource in mh_findings:
+        count += len(mh_findings[resource]["findings"])
+    return count
+
 def main(args):
     print_banner()
     test_python_version()
@@ -271,20 +278,33 @@ def main(args):
         mh_filters_tags = default_mh_filters_tags
     else:
         mh_filters_tags = args.mh_filters_tags
+    
+    if (args.sh_account and not args.sh_assume_role) or (not args.sh_account and args.sh_assume_role):
+        logger.error("Parameter error: sh_assume_role and sh_account must be provided together")
+        exit(1)
+
+    if not args.sh_account:
+        sh_account = get_account_id()
+        sh_account_alias = get_account_alias(logger)
+    else:
+        sh_account = args.sh_account
+        sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
+    
+
 
     print_title_line("")
-    print_table("SH filters: ", str(sh_filters))
-    print_table("SH template: ", str(args.sh_template))
-    print_table("Meta Checks: ", str(args.meta_checks))
-    print_table("Fltr Checks: ", str(mh_filters_checks))
-    print_table("Meta Tags: ", str(args.meta_tags))
-    print_table("Fltr Tags: ", str(mh_filters_tags))
-    print_table("SH Account: ", str(args.sh_account))
-    print_table("SH Role: ", str(args.sh_assume_role))
-    print_table("MH Role: ", str(args.mh_assume_role))
+    print_table("Security Hub filters: ", str(sh_filters))
+    print_table("Security Hub yaml: ", str(args.sh_template))
+    print_table("MetaChecks: ", str(args.meta_checks))
+    print_table("Flters MetaChecks: ", str(mh_filters_checks))
+    print_table("MetaTags: ", str(args.meta_tags))
+    print_table("Flters MetaTags: ", str(mh_filters_tags))
+    print_table("Security Hub Account: ", str(sh_account) + " (" + str(sh_account_alias) + ")")
+    print_table("Security Hub Role: ", str(args.sh_assume_role))
+    print_table("Child Account Role: ", str(args.mh_assume_role))
     print_table("Output: ", str(args.output))
     print_table("Log Level: ", str(args.log_level))
-    print_table("Update: ", str(args.update_findings))
+    print_table("Update Findings: ", str(args.update_findings))
 
     if args.list_meta_checks:
         from metachecks.metachecks import list_metachecks
@@ -421,13 +441,16 @@ def main(args):
                 if out != "statistics":
                     print_table("File: ", out + ".csv")
 
+
+
     print_title_line("Results")
     print_table("Non-Compliant Resources: ", str(len(mh_findings)))
-    print_table("AWS Security Hub Findings: ", str(len(sh_findings)))
+    print_table("Non-Compliant Findings: ", str(count_mh_findings(mh_findings)))
+    print_table("Total Security Hub Findings: ", str(len(sh_findings)))
 
     if args.update_findings:
         print_title_line("Update Findings")
-        print_table("Findings: ", str(len(sh_findings)))
+        print_table("Findings: ", str(count_mh_findings(mh_findings)))
         print_table("Update: ", str(args.update_findings))
         if not mh_findings:
             print(color["BOLD"] + "Nothing to update..." + color["END"])
