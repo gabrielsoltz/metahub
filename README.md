@@ -1,7 +1,7 @@
 # MetaHub
 
 <p align="center">
-  <img src="metahub.png" alt="MetaHub"/>
+  <img src="metahub.png" alt="MetaHub" width="50"/>
 </p>
 
 <p align="center">
