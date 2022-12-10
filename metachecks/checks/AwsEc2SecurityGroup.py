@@ -22,45 +22,31 @@ class Metacheck(MetaChecksBase):
         response = self.client.describe_security_groups()
         return response["SecurityGroups"]
 
-    def _check_security_group_exists_in_account(self):
-        for sg in self.security_groups:
-            if self.resource_id == sg["GroupId"]:
-                return True
-        self.logger.error(
-            "We couldn't find SG %s in AWS account. Try using --mh-assume-role...",
-            self.resource_id,
-        )
-        return False
-
     def _describe_network_interfaces(self):
-        if self._check_security_group_exists_in_account():
-            response = self.client.describe_network_interfaces(
-                Filters=[
-                    {
-                        "Name": "group-id",
-                        "Values": [
-                            self.resource_id,
-                        ],
-                    },
-                ],
-            )
-            return response["NetworkInterfaces"]
-        return False
+        response = self.client.describe_network_interfaces(
+            Filters=[
+                {
+                    "Name": "group-id",
+                    "Values": [
+                        self.resource_id,
+                    ],
+                },
+            ],
+        )
+        return response["NetworkInterfaces"]
 
     def _describe_security_group_rules(self):
-        if self._check_security_group_exists_in_account():
-            response = self.client.describe_security_group_rules(
-                Filters=[
-                    {
-                        "Name": "group-id",
-                        "Values": [
-                            self.resource_id,
-                        ],
-                    },
-                ],
-            )
-            return response["SecurityGroupRules"]
-        return False
+        response = self.client.describe_security_group_rules(
+            Filters=[
+                {
+                    "Name": "group-id",
+                    "Values": [
+                        self.resource_id,
+                    ],
+                },
+            ],
+        )
+        return response["SecurityGroupRules"]
 
     def is_referenced_by_another_sg(self):
         references = []
