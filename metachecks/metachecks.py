@@ -1,5 +1,7 @@
 import metachecks.checks
-from AwsHelpers import assume_role, get_boto3_session
+from AwsHelpers import assume_role, get_boto3_session, get_account_id
+
+
 
 
 def run_metachecks(logger, finding, mh_filters_checks, mh_role):
@@ -13,6 +15,17 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
     """
 
     meta_checks = True
+
+    AwsAccountId = finding["AwsAccountId"]
+    current_account_id = get_account_id()
+    
+    # If the resources lives in another account, you need to provide a role for running MetaChecks
+    if AwsAccountId != current_account_id and not mh_role:
+        resource_arn = finding["Resources"][0]["Id"]
+        logger.error("Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaChecks...", resource_arn, AwsAccountId, current_account_id)
+        if mh_filters_checks:
+            return False, False
+        return False, True
 
     # Get a Boto3 Session in the Child Account if mh_role is passed
     AwsAccountId = finding["AwsAccountId"]

@@ -1,7 +1,7 @@
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-from AwsHelpers import assume_role, get_boto3_session
+from AwsHelpers import assume_role, get_boto3_session, get_account_id
 
 def run_metatags(logger, finding, mh_filters_tags, mh_role):
     """
@@ -12,6 +12,17 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
     :param mh_role: AWS IAM Role to be assumed in the AWS Account (--mh-role)
     :return: mh_tags_values (the MetaTags output as dictionary), mh_tags_matched (a Boolean to confirm if the resource matched the filters)
     """
+
+    AwsAccountId = finding["AwsAccountId"]
+    current_account_id = get_account_id()
+    
+    # If the resources lives in another account, you need to provide a role for running MetaTags
+    if AwsAccountId != current_account_id and not mh_role:
+        resource_arn = finding["Resources"][0]["Id"]
+        logger.error("Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaTags...", resource_arn, AwsAccountId, current_account_id)
+        if mh_filters_tags:
+            return False, False
+        return False, True
 
     # Get a Boto3 Session in the Child Account if mh_role is passed
     AwsAccountId = finding["AwsAccountId"]
