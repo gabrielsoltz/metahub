@@ -29,6 +29,9 @@ def generate_findings(
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
+    
+    print_title_line("")
+    print_table("Security Hub findings found: ", len(sh_findings))
     for finding in sh_findings:
         mh_matched = False
         resource_arn, finding_parsed = sh.parse_finding(finding)
@@ -41,33 +44,36 @@ def generate_findings(
             # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
             if resource_arn in mh_findings:
                 mh_matched = True
-            if metachecks:
-                # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
-                if (
-                    not resource_arn in mh_findings
-                    and not resource_arn in mh_findings_not_matched_findings
-                ):
-                    mh_values, mh_checks_matched = run_metachecks(
-                        logger, finding, mh_filters_checks, mh_role
-                    )
+            elif resource_arn in mh_findings_not_matched_findings:
+                mh_matched = False
             else:
-                mh_checks_matched = True
-            if metatags:
-                # We run metatags only once:
-                if (
-                    not resource_arn in mh_findings
-                    and not resource_arn in mh_findings_not_matched_findings
-                ):
-                    mh_tags, mh_tags_matched = run_metatags(
-                        logger, finding, mh_filters_tags, mh_role
-                    )
-            else:
-                mh_tags_matched = True
-            # If both checks are True we show the resource
-            if mh_tags_matched and mh_checks_matched:
-                mh_matched = True    
+                if metachecks:
+                    # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
+                    if (
+                        not resource_arn in mh_findings
+                        and not resource_arn in mh_findings_not_matched_findings
+                    ):
+                        mh_values, mh_checks_matched = run_metachecks(
+                            logger, finding, mh_filters_checks, mh_role
+                        )
+                else:
+                    mh_checks_matched = True
+                if metatags:
+                    # We run metatags only once:
+                    if (
+                        not resource_arn in mh_findings
+                        and not resource_arn in mh_findings_not_matched_findings
+                    ):
+                        mh_tags, mh_tags_matched = run_metatags(
+                            logger, finding, mh_filters_tags, mh_role
+                        )
+                else:
+                    mh_tags_matched = True
+                # If both checks are True we show the resource
+                if mh_tags_matched and mh_checks_matched:
+                    mh_matched = True
         else:
-            # If no metachecks and no metachecks, we enforce to True the match so we show the resource:
+            # If no metachecks and no metatags, we enforce to True the match so we show the resource:
             mh_matched = True
 
         # We keep a dict with no matched resources so we don't run MetaChecks again
@@ -289,16 +295,14 @@ def main(args):
     else:
         sh_account = args.sh_account
         sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
-    
-
 
     print_title_line("")
     print_table("Security Hub filters: ", str(sh_filters))
     print_table("Security Hub yaml: ", str(args.sh_template))
     print_table("MetaChecks: ", str(args.meta_checks))
-    print_table("Flters MetaChecks: ", str(mh_filters_checks))
+    print_table("MetaChecks Filters: ", str(mh_filters_checks))
     print_table("MetaTags: ", str(args.meta_tags))
-    print_table("Flters MetaTags: ", str(mh_filters_tags))
+    print_table("MetaTags Filters: ", str(mh_filters_tags))
     print_table("Security Hub Account: ", str(sh_account) + " (" + str(sh_account_alias) + ")")
     print_table("Security Hub Role: ", str(args.sh_assume_role))
     print_table("Child Account Role: ", str(args.mh_assume_role))
@@ -446,7 +450,6 @@ def main(args):
     print_title_line("Results")
     print_table("Non-Compliant Resources: ", str(len(mh_findings)))
     print_table("Non-Compliant Findings: ", str(count_mh_findings(mh_findings)))
-    print_table("Total Security Hub Findings: ", str(len(sh_findings)))
 
     if args.update_findings:
         print_title_line("Update Findings")
