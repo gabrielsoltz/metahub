@@ -135,7 +135,7 @@ class Metacheck(MetaChecksBase):
             State = self.instance["State"]['Name']
             if State == "running":
                 return True
-        return State
+        return False
 
     def is_attached_to_security_groups(self):
         SG = []
@@ -241,6 +241,7 @@ class Metacheck(MetaChecksBase):
             "it_has_instance_profile",
             "it_has_instance_profile_roles",
             "is_instance_metadata_v2",
+            "is_instance_metadata_hop_limit_1",
             "it_has_ebs",
             "it_has_unencrypted_ebs",
             "is_attached_to_security_group_rules_unrestricted",
