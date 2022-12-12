@@ -280,7 +280,7 @@ def main(args):
         mh_filters_tags = args.mh_filters_tags
     
     if (args.sh_account and not args.sh_assume_role) or (not args.sh_account and args.sh_assume_role):
-        logger.error("Parameter error: sh_assume_role and sh_account must be provided together")
+        logger.error("Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided.")
         exit(1)
 
     if not args.sh_account:

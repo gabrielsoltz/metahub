@@ -219,6 +219,16 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
+    def is_public(self):
+        if self.it_has_public_ip() and self.is_attached_to_security_group_rules_unrestricted():
+            return True
+        return False
+
+    def is_encrypted(self):
+        if not self.it_has_unencrypted_ebs():
+            return True
+        return False
+
     def checks(self):
         checks = [
             "it_has_public_ip",
@@ -233,6 +243,8 @@ class Metacheck(MetaChecksBase):
             "is_instance_metadata_v2",
             "it_has_ebs",
             "it_has_unencrypted_ebs",
-            "is_attached_to_security_group_rules_unrestricted"
+            "is_attached_to_security_group_rules_unrestricted",
+            "is_public",
+            "is_encrypted"
         ]
         return checks
