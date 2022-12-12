@@ -73,47 +73,65 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 ### Investigating security findings using Security Hub filters
 
-- You can list all security findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
+- List all affected resources by AWS Security Hub findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
 `./metahub --list-findings`
 
-- You can change the output to statistics:
+- Show the statistics ouptut:
 `./metahub --list-findings --output statistics`
 
-- You can filter the findings to get only the active ones for a specific resource:
+- Filter only one resource:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>`
 
-- You can filter the findings for a specific AWS Account and show statistics:
+- Filter only one AWS Account and show statistics:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --output statistics`
 
 ### Investigating resources based on MetaTags (Tagging)
 
-- You can list all security findings with MetaTags enabled:
+- List all affected resources by AWS Security Hub findings and enrich them with MetaTags (Tagging):
 `./metahub --list-findings --meta-tags`
 
-- You can list all security findings for resources that has a spefific tagging (for example Environment=production)
+- Filter only the affected resources that has a Tag "Environment" with value "Production"
 `./metahub --list-findings --meta-tags --mh-filters-tags Environment=production`
+
+- Filter only the affected resources that has a Tag "Environment" with value "Production" wich are HIGH severity:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production`
 
 ### Investigating resources based on MetaChecks
 
-- You can list all security findings for resources that are effectively public:
+- List all MetaChecks available:
+`./metahub --list-findings --list-meta-checks`
+
+- List all affected resources by AWS Security Hub findings and enrich them with MetaChecks:
+`./metahub --list-findings --meta-checks`
+
+- Filter only the affected resoruces that are efffectively public:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_public=True`
 
-- You can list all security findings for resources that are unencrypted:
+- Show the previous list of affected resources in inventory output:
+`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --output inventory`
+
+- Filter only the affected resoruces that are unencrypted:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True`
 
-- You can list all MetaChecks available:
-`./metahub --list-findings --list-meta-checks`
+- Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI":
+`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI`
+
+- Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI" and write a CSV Spreadsheet:
+`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --write-csv`
 
 ### Investigating a finding
 
-- You can list all affected resources for a spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
+- List all affected resources with spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"`
 
-- You can then enable MetaChecks to get more info for those resources:
+- Enable MetaChecks to get more info for those resources:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks`
 
-- You can then filter that output using MetaCheck to only list the Security Groups that are attached to public ips:
+- Filter only the affected resources that are attached to public ips:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_attached_to_public_ips=True`
+
+- Update all related AWS Security Findings to NOTIFIED with a Note:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_attached_to_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"`
 
 ## Requirements
 
