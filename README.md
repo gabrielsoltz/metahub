@@ -45,7 +45,7 @@ If you are investigating a finding for a Security Group with a port open, you ca
 - If the port is answering
 
 <p align="center">
-  <img src="diagram-metahub.drawio.png" alt="Diagram" width="800"/>
+  <img src="diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
 
