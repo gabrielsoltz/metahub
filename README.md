@@ -12,6 +12,7 @@
 
 - [Description](#description)
 - [Features](#features)
+- [Examples](#investigations-examples)
 - [Requirements](#requirements)
 - [AWS Authentication](#aws-authentication)
 - [Usage](#usage)
@@ -35,36 +36,18 @@
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
 
-Security Hub Findings --> MetaHub Converts them to Affected Resources --> MetaHub adds Context with MetaChecks and MetaTags --> Filter on top your context --> TAKE ACTION
+If you are investigating a finding for a Security Group with a port open, you can use MetaHub to investigate and automate the following:
 
-If you are investigating a finding for a **Security Group** with a port open, you can use MetaHub to investigate and automate the following:
 - If there are other findings for this resource
 - If the security group is attached to a Network Interface (`is_attached_to_network_interfaces`)
 - If the attached resource is public (`is_attached_to_public_ips`)
-- If the environment is `Production` (Tags)
+- If the environment is Production (MetaTags)
 - If the port is answering
 
-If you are investigating a finding for a **S3 Bucket** with Block Public Access feature disabled, you can then investigate and automate the following:
-- If the bucket is public (`is_public`)
+<p align="center">
+  <img src="diagram-metahub.drawio.png" alt="Diagram" width="200"/>
+</p>
 
-Or:
-- If the environment is `Production`
-- If the bucket has a Policy (`it_has_bucket_policy`)
-- If the Policy is granting another AWS Account access (`it_has_bucket_policy_allow_with_cross_account_principal`)
-- If the other AWS Account is one of your AWS Accounts
-
-Or:
-- If the bucket has an ACL (`it_has_bucket_acl`)
-- If the ACL is granting another AWS Account Cannonical Id access (`it_has_bucket_acl_with_cross_account`)
-- If the ACL is granting public access (`is_bucket_acl_public`)
-- If the bucket is encrypted (`is_encrypted`)
-- If the environment is `Production` (Tags)
-
-With the output of your investigation, you can then:
-
-- Create a Ticket with all the relevant information and keep track of it using Notes: Using the update findings functionality from MetaHub you can mention a ticket id or any URL and change the workflow status of all the findings that match your investigation
-- Automate an alert if your investigation filters match again: You can save the filters of this investigation using YAML templates files to re-use them in an automated or manual way when you need them.
-- Integrate with a Visualization/Dashboarding tool for monitoring using the json output
 
 ## Features
 
@@ -85,6 +68,51 @@ You can create a filter on top of these outpus to automate the detection of anot
 **MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). You can also export your outputs to Json, CSV and HTML formats.
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Advanced Usage](#advanced-usage)
+
+## Investigations Examples
+
+### Investigating security findings using Security Hub filters
+
+- You can list all security findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
+`./metahub --list-findings`
+
+- You can change the output to statistics:
+`./metahub --list-findings --output statistics`
+
+- You can filter the findings to get only the active ones for a specific resource:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>`
+
+- You can filter the findings for a specific AWS Account and show statistics:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --output statistics`
+
+### Investigating resources based on tagging
+
+- You can list all security findings with MetaTags enabled:
+`./metahub --list-findings --meta-tags`
+
+- You can list all security findings for resources that has a spefific tagging (for example Environment=production)
+`./metahub --list-findings --meta-tags --mh-filters-tags Environment=production`
+
+### Investigating public resources
+
+- You can list all security findings for resources that are effectively public:
+`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True`
+
+### Investigating resources not encrypted
+
+- You can list all security findings for resources that are effectively public:
+`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True`
+
+### Investigating a finding
+
+- You can list all affected resources for a spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"`
+
+- You can then enable MetaChecks to get more info for those resources:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks`
+
+- You can then filter that output using MetaCheck to only list the Security Groups that are attached to public ips:
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_attached_to_public_ips=True`
 
 ## Requirements
 
