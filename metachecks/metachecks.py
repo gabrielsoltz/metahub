@@ -18,10 +18,12 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
 
     AwsAccountId = finding["AwsAccountId"]
     current_account_id = get_account_id()
-    
+
+    AWSResourceType = finding["Resources"][0]["Type"]
+    resource_arn = finding["Resources"][0]["Id"]
+
     # If the resources lives in another account, you need to provide a role for running MetaChecks
     if AwsAccountId != current_account_id and not mh_role:
-        resource_arn = finding["Resources"][0]["Id"]
         logger.error("Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not --mh-assume-role was provided. Ignoring MetaChecks...", resource_arn, AwsAccountId, current_account_id)
         if mh_filters_checks:
             return False, False
@@ -40,13 +42,12 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
     else:
         sess = None
 
-    AWSResourceType = finding["Resources"][0]["Type"]
     try:
         hndl = getattr(metachecks.checks, AWSResourceType).Metacheck(
             logger, finding, meta_checks, mh_filters_checks, sess
         )
     except AttributeError as err:
-        logger.debug("No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err)
+        logger.error("No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err)
         if mh_filters_checks:
             return False, False
         return False, True
