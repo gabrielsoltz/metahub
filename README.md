@@ -85,7 +85,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 - You can filter the findings for a specific AWS Account and show statistics:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --output statistics`
 
-### Investigating resources based on tagging
+### Investigating resources based on MetaTags (Tagging)
 
 - You can list all security findings with MetaTags enabled:
 `./metahub --list-findings --meta-tags`
@@ -93,15 +93,16 @@ You can create a filter on top of these outpus to automate the detection of anot
 - You can list all security findings for resources that has a spefific tagging (for example Environment=production)
 `./metahub --list-findings --meta-tags --mh-filters-tags Environment=production`
 
-### Investigating public resources
+### Investigating resources based on MetaChecks
 
 - You can list all security findings for resources that are effectively public:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_public=True`
 
-### Investigating resources not encrypted
-
-- You can list all security findings for resources that are effectively public:
+- You can list all security findings for resources that are unencrypted:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True`
+
+- You can list all MetaChecks available:
+`./metahub --list-findings --list-meta-checks`
 
 ### Investigating a finding
 
