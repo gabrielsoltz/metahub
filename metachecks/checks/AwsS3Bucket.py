@@ -211,14 +211,24 @@ class Metacheck(MetaChecksBase):
                         policy_allow_with_cross_account_principal.append("*")
                     else:
                         if "AWS" in principal:
-                            for p in principal['AWS']:
-                                if p.split(":")[4] != self.account_id:
-                                    policy_allow_with_cross_account_principal.append(p.split(":")[4])
+                            principals = principal['AWS']
+                        elif "Service" in principal:
+                            principals = []
                         else:
-                            if principal.split(":")[4] != self.account_id:
-                                policy_allow_with_cross_account_principal.append(principal.split(":")[4])
-        if policy_allow_with_cross_account_principal:
-            return policy_allow_with_cross_account_principal
+                            principals = principal
+                        if type(principals) is not list:
+                            principals = [principals]
+                        for p in principals:
+                            try:
+                                account_id = p.split(":")[4]
+                                if account_id != self.account_id:
+                                    policy_allow_with_cross_account_principal.append(account_id)
+                            except IndexError:
+                                self.logger.error("Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ", p, self.resource_id)
+                                # To DO: check identifiers-unique-ids 
+                                # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
+            if policy_allow_with_cross_account_principal:
+                return policy_allow_with_cross_account_principal
         return False
 
     def is_public(self):
