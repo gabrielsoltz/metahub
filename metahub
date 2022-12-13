@@ -30,16 +30,11 @@ def generate_findings(
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
+    print_title_line("")
+    print_table("Security Hub findings found: ", len(sh_findings))
     with alive_bar(
-        total=len(sh_findings),
-        ctrl_c=False,
-        bar="blocks",
-        spinner="classic",
-        stats=False,
-        enrich_print=False,
+        total=len(sh_findings)
     ) as bar:
-        print_title_line("")
-        print_table("Security Hub findings found: ", len(sh_findings))
         for finding in sh_findings:
             bar.title = f"-> Analyzing findings..."
 
