@@ -87,7 +87,7 @@ class SecurityHub:
         for i in range(0, len(lst), n):
             yield lst[i:i + n]
 
-    def update_findings(self, mh_findings, update):
+    def update_findings_workflow(self, mh_findings, update):
         update["FindingIdentifiers"] = []
         response_multiple = []
         for mh_finding in mh_findings:
@@ -107,3 +107,41 @@ class SecurityHub:
             )
             response_multiple.append(response)
         return response_multiple
+
+
+    def update_findings_meta(self, mh_findings):
+        for mh_finding in mh_findings:
+            # MetaTags
+            try:
+                finding_metatags = mh_findings[mh_finding]["metatags"]
+            except KeyError:
+                finding_metatags = {}
+            for key in list(finding_metatags):
+                finding_metatags["MetaTags :: " + key] = finding_metatags[key]
+                del finding_metatags[key]
+            # MetaChecks
+            try:
+                finding_metachecks = mh_findings[mh_finding]["metachecks"]
+                if not finding_metachecks:
+                    finding_metachecks = {}
+            except KeyError:
+                finding_metachecks = {}
+            for key in list(finding_metachecks):
+                finding_metachecks["MetaChecks :: " + key] = finding_metachecks[key]
+                finding_metachecks["MetaChecks :: " + key] = str(finding_metachecks["MetaChecks :: " + key])
+                del finding_metachecks[key]
+            
+            combined = {**finding_metatags, **finding_metachecks}
+
+            for finding in mh_findings[mh_finding]["findings"]:
+                for f, v in finding.items():
+                    FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
+                    if finding_metatags:
+                        self.logger.info("Updating finding %s with MetaTags: %s", FindingIdentifier["Id"], finding_metatags)
+
+                        response = self.sh_client.batch_update_findings(
+                            FindingIdentifiers=[FindingIdentifier],
+                            UserDefinedFields=combined,
+                            Note = {"Text": "test", "UpdatedBy": "MetaHub"},
+                        )
+        return response

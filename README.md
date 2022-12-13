@@ -23,6 +23,7 @@
 - [MetaTags](#MetaTags)
 - [Filtering](#Filtering)
 - [Updating Findings](#Updating-Findings)
+- [Enriching Findings](#enriching-findings)
 
 ## Description
 
@@ -734,7 +735,6 @@ Examples:
 ./metahub --list-findings --meta-tags --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
 ```
 
-
 # Updating Findings
 
 You can use **MetaHub** to update your AWS Security Findings in bulk. 
@@ -757,3 +757,15 @@ Examples:
 ```sh
 ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
 ```
+
+# Enriching Findings
+
+You can use **MetaHub** to enrich your AWS Security Findings with `MetaTags` and `MetaChecks` using the `UserDefinedFields` field. 
+
+- Enrich all findings with WorkflowStatus=NEW RecordState=ACTIVE
+
+```sh
+./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --enrich-findings --meta-tags 
+```
+
+After you enrich your findings, you can then use this data directly in Security Hub for Insights or Filters.
