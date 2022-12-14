@@ -151,9 +151,6 @@ def generate_findings(
                         mh_findings_short[resource_arn]["metachecks"] = mh_values
                         # Standard
                         mh_findings[resource_arn]["metachecks"] = mh_values
-                        # Related Resources
-                        mh_findings[resource_arn]["metarelated"] = mh_related_resources
-                        mh_findings_short[resource_arn]["metarelated"] = mh_related_resources
                     
                     # METATAGS
                     if metatags:
@@ -411,29 +408,18 @@ def main(args):
                 print_table("File: ", out + ".json")
     
     if args.write_html:
-        from json2html import json2html
+        from jinja2 import Template
 
         if mh_findings:
             for out in args.output:
                 print_title_line("Write HTML: " + out)
-                if out == "short":
-                    with open(out + ".html", "w", encoding="utf-8") as f:
-                        html = json2html.convert(json = mh_findings_short)
-                        f.write(html)
                 if out == "inventory":
+                    data = json.loads(mh_inventory)
+                    template = Template.from_file('jinja_templates/template.html')
                     with open(out + ".html", "w", encoding="utf-8") as f:
-                        html = json2html.convert(json = mh_inventory)
+                        html = template.render(data=data)
                         f.write(html)
-                        print_table("File: ", out + ".html")
-                if out == "statistics":
-                    with open(out + ".html", "w", encoding="utf-8") as f:
-                        html = json2html.convert(json = mh_statistics)
-                        f.write(html)
-                        print_table("File: ", out + ".html")
-                if out == "standard":
-                    with open(out + ".html", "w", encoding="utf-8") as f:
-                        html = json2html.convert(json = mh_findings)
-                        f.write(html)
+
                 print_table("File: ", out + ".html")
 
     if args.write_csv:
