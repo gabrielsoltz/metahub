@@ -8,6 +8,7 @@ from helpers import (color, get_logger, get_parser, print_banner, print_table,
 from AwsHelpers import get_account_id, get_account_alias
 from securityhub import SecurityHub
 
+from alive_progress import alive_bar
 
 def generate_findings(
     logger, sh_filters, metachecks, mh_filters_checks, metatags, mh_filters_tags, sh_account, sh_role, mh_role
@@ -29,130 +30,136 @@ def generate_findings(
     }
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
-    
     print_title_line("")
     print_table("Security Hub findings found: ", len(sh_findings))
-    for finding in sh_findings:
-        mh_matched = False
-        resource_arn, finding_parsed = sh.parse_finding(finding)
+    with alive_bar(
+        total=len(sh_findings)
+    ) as bar:
+        for finding in sh_findings:
+            bar.title = f"-> Analyzing findings..."
 
-        # MetaChecks and MetaTags:
-        if metachecks or metatags:
-            from metachecks.metachecks import run_metachecks
-            from metatags.metatags import run_metatags
+            mh_matched = False
+            resource_arn, finding_parsed = sh.parse_finding(finding)
 
-            # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
-            if resource_arn in mh_findings:
-                mh_matched = True
-            elif resource_arn in mh_findings_not_matched_findings:
-                mh_matched = False
-            else:
-                if metachecks:
-                    # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
-                    if (
-                        not resource_arn in mh_findings
-                        and not resource_arn in mh_findings_not_matched_findings
-                    ):
-                        mh_values, mh_checks_matched = run_metachecks(
-                            logger, finding, mh_filters_checks, mh_role
-                        )
-                else:
-                    mh_checks_matched = True
-                if metatags:
-                    # We run metatags only once:
-                    if (
-                        not resource_arn in mh_findings
-                        and not resource_arn in mh_findings_not_matched_findings
-                    ):
-                        mh_tags, mh_tags_matched = run_metatags(
-                            logger, finding, mh_filters_tags, mh_role
-                        )
-                else:
-                    mh_tags_matched = True
-                # If both checks are True we show the resource
-                if mh_tags_matched and mh_checks_matched:
+            # MetaChecks and MetaTags:
+            if metachecks or metatags:
+                from metachecks.metachecks import run_metachecks
+                from metatags.metatags import run_metatags
+
+                # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
+                if resource_arn in mh_findings:
                     mh_matched = True
-        else:
-            # If no metachecks and no metatags, we enforce to True the match so we show the resource:
-            mh_matched = True
+                elif resource_arn in mh_findings_not_matched_findings:
+                    mh_matched = False
+                else:
+                    if metachecks:
+                        # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
+                        if (
+                            not resource_arn in mh_findings
+                            and not resource_arn in mh_findings_not_matched_findings
+                        ):
+                            mh_values, mh_checks_matched = run_metachecks(
+                                logger, finding, mh_filters_checks, mh_role
+                            )
+                    else:
+                        mh_checks_matched = True
+                    if metatags:
+                        # We run metatags only once:
+                        if (
+                            not resource_arn in mh_findings
+                            and not resource_arn in mh_findings_not_matched_findings
+                        ):
+                            mh_tags, mh_tags_matched = run_metatags(
+                                logger, finding, mh_filters_tags, mh_role
+                            )
+                    else:
+                        mh_tags_matched = True
+                    # If both checks are True we show the resource
+                    if mh_tags_matched and mh_checks_matched:
+                        mh_matched = True
+            else:
+                # If no metachecks and no metatags, we enforce to True the match so we show the resource:
+                mh_matched = True
 
-        # We keep a dict with no matched resources so we don't run MetaChecks again
-        if not mh_matched:
-            # We add the resource in our output only once:
-            if not resource_arn in mh_findings_not_matched_findings:
-                mh_findings_not_matched_findings[resource_arn] = {}
+            # We keep a dict with no matched resources so we don't run MetaChecks again
+            if not mh_matched:
+                # We add the resource in our output only once:
+                if not resource_arn in mh_findings_not_matched_findings:
+                    mh_findings_not_matched_findings[resource_arn] = {}
 
-        # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
-        if mh_matched:
+            # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
+            if mh_matched:
 
-            # STATISTICS (we count by matched finding)
+                # STATISTICS (we count by matched finding)
 
-            # Resource ARN
-            if not resource_arn in mh_statistics["ResourceId"]:
-                mh_statistics["ResourceId"][resource_arn] = 0
-            mh_statistics["ResourceId"][resource_arn] += 1
+                # Resource ARN
+                if not resource_arn in mh_statistics["ResourceId"]:
+                    mh_statistics["ResourceId"][resource_arn] = 0
+                mh_statistics["ResourceId"][resource_arn] += 1
 
-            for key, value in finding_parsed.items():
-                # Title
-                if not key in mh_statistics["Title"]:
-                    mh_statistics["Title"][key] = 0
-                mh_statistics["Title"][key] += 1
-                # Values
-                for v in value:
-                    if v == "Workflow" or v == "Compliance":
-                        if value[v]:
-                            if not value[v]["Status"] in mh_statistics[v]:
-                                mh_statistics[v][value[v]["Status"]] = 0
-                            mh_statistics[v][value[v]["Status"]] += 1
+                for key, value in finding_parsed.items():
+                    # Title
+                    if not key in mh_statistics["Title"]:
+                        mh_statistics["Title"][key] = 0
+                    mh_statistics["Title"][key] += 1
+                    # Values
+                    for v in value:
+                        if v == "Workflow" or v == "Compliance":
+                            if value[v]:
+                                if not value[v]["Status"] in mh_statistics[v]:
+                                    mh_statistics[v][value[v]["Status"]] = 0
+                                mh_statistics[v][value[v]["Status"]] += 1
+                                continue
+                        if v == "Id":
                             continue
-                    if v == "Id":
-                        continue
-                    if not value[v] in mh_statistics[v]:
-                        mh_statistics[v][value[v]] = 0
-                    mh_statistics[v][value[v]] += 1
-                # AwsAccountId
-                if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
-                    mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
-                mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
-                # ResourceType
-                if not finding["Resources"][0]["Type"] in mh_statistics["ResourceType"]:
-                    mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] = 0
-                mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
+                        if not value[v] in mh_statistics[v]:
+                            mh_statistics[v][value[v]] = 0
+                        mh_statistics[v][value[v]] += 1
+                    # AwsAccountId
+                    if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
+                        mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
+                    mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
+                    # ResourceType
+                    if not finding["Resources"][0]["Type"] in mh_statistics["ResourceType"]:
+                        mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] = 0
+                    mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
 
-            # RESOURCE (we add the resource only once)
-            if not resource_arn in mh_findings:
-                # Short
-                mh_findings[resource_arn] = {"findings": []}
-                mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
-                # Standard
-                mh_findings_short[resource_arn] = {"findings": []}
-                mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
-
-                # INVENTORY
-                mh_inventory.append(resource_arn)
-
-                # METACHECKS:
-                if metachecks:
+                # RESOURCE (we add the resource only once)
+                if not resource_arn in mh_findings:
                     # Short
-                    mh_findings_short[resource_arn]["metachecks"] = mh_values
+                    mh_findings[resource_arn] = {"findings": []}
+                    mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
                     # Standard
-                    mh_findings[resource_arn]["metachecks"] = mh_values
+                    mh_findings_short[resource_arn] = {"findings": []}
+                    mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
 
-                
-                # METATAGS
-                if metatags:
-                    # Short
-                    mh_findings_short[resource_arn]['metatags'] = mh_tags
-                    # Standard
-                    mh_findings[resource_arn]['metatags'] = mh_tags
+                    # INVENTORY
+                    mh_inventory.append(resource_arn)
 
-            # FINDINGS
-            mh_findings_short[resource_arn]["findings"].append(
-                list(finding_parsed.keys())[0]
-            )
-            mh_findings[resource_arn]["findings"].append(finding_parsed)
+                    # METACHECKS:
+                    if metachecks:
+                        # Short
+                        mh_findings_short[resource_arn]["metachecks"] = mh_values
+                        # Standard
+                        mh_findings[resource_arn]["metachecks"] = mh_values
+
+                    
+                    # METATAGS
+                    if metatags:
+                        # Short
+                        mh_findings_short[resource_arn]['metatags'] = mh_tags
+                        # Standard
+                        mh_findings[resource_arn]['metatags'] = mh_tags
+
+                # FINDINGS
+                mh_findings_short[resource_arn]["findings"].append(
+                    list(finding_parsed.keys())[0]
+                )
+                mh_findings[resource_arn]["findings"].append(finding_parsed)
+            bar()
+        bar.title = f"-> Completed"
     
     #Sort Statistics
     for key_to_sort in mh_statistics:

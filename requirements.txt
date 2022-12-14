@@ -1,6 +1,5 @@
 boto3
 pyyaml
-json2html
 json2table
-pandas
 csv
+alive_progress
