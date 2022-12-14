@@ -59,7 +59,7 @@ def generate_findings(
                             not resource_arn in mh_findings
                             and not resource_arn in mh_findings_not_matched_findings
                         ):
-                            mh_values, mh_checks_matched, mh_related_resources = run_metachecks(
+                            mh_values, mh_checks_matched = run_metachecks(
                                 logger, finding, mh_filters_checks, mh_role
                             )
                     else:
