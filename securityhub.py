@@ -114,11 +114,12 @@ class SecurityHub:
             # MetaTags
             try:
                 finding_metatags = mh_findings[mh_finding]["metatags"]
+                if not finding_metatags:
+                    finding_metatags = {}
             except KeyError:
                 finding_metatags = {}
             for key in list(finding_metatags):
-                finding_metatags["MetaTags :: " + key] = finding_metatags[key]
-                del finding_metatags[key]
+                finding_metatags[key] = str(finding_metatags[key])
             # MetaChecks
             try:
                 finding_metachecks = mh_findings[mh_finding]["metachecks"]
@@ -127,21 +128,20 @@ class SecurityHub:
             except KeyError:
                 finding_metachecks = {}
             for key in list(finding_metachecks):
-                finding_metachecks["MetaChecks :: " + key] = finding_metachecks[key]
-                finding_metachecks["MetaChecks :: " + key] = str(finding_metachecks["MetaChecks :: " + key])
-                del finding_metachecks[key]
+                finding_metachecks[key] = str(finding_metachecks[key])
             
             combined = {**finding_metatags, **finding_metachecks}
 
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
-                    if finding_metatags:
-                        self.logger.info("Updating finding %s with MetaTags: %s", FindingIdentifier["Id"], finding_metatags)
+                    if combined:
+                        self.logger.info("Updating finding %s with MetaTags and MetaChecks: %s", FindingIdentifier["Id"], combined)
+        exit (0)
 
-                        response = self.sh_client.batch_update_findings(
-                            FindingIdentifiers=[FindingIdentifier],
-                            UserDefinedFields=combined,
-                            Note = {"Text": "test", "UpdatedBy": "MetaHub"},
-                        )
-        return response
+        #                 response = self.sh_client.batch_update_findings(
+        #                     FindingIdentifiers=[FindingIdentifier],
+        #                     UserDefinedFields=combined,
+        #                     Note = {"Text": "test", "UpdatedBy": "MetaHub"},
+        #                 )
+        # return response

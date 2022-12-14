@@ -213,7 +213,7 @@ def get_parser():
     )
     parser.add_argument(
         "--enrich-findings",
-        help="Enrich Findings with MetaTags",
+        help="Enrich Findings with MetaTags and MetaChecks",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
