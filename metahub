@@ -225,17 +225,23 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
 def enrich_findings(logger, mh_findings, sh_account, sh_role):
     sh = SecurityHub(logger, sh_account, sh_role)
     if confirm_choice("Are you sure you want to enrich all findings?"):
-        update = sh.update_findings_meta(mh_findings)
-        for ProcessedFinding in update["ProcessedFindings"]:
-            logger.info("Updated Finding : " + ProcessedFinding["Id"])
-        for UnprocessedFinding in update["UnprocessedFindings"]:
-            logger.error(
-                "Error Updating Finding: "
-                + UnprocessedFinding["FindingIdentifier"]["Id"]
-                + " Error: "
-                + UnprocessedFinding["ErrorMessage"]
-            )
-    return update["ProcessedFindings"], update["UnprocessedFindings"]
+        update_multiple = sh.update_findings_meta(mh_findings)
+        update_multiple_ProcessedFinding = []
+        update_multiple_UnprocessedFindings = []
+        for update in update_multiple:
+            for ProcessedFinding in update["ProcessedFindings"]:
+                logger.info("Updated Finding : " + ProcessedFinding["Id"])
+                update_multiple_ProcessedFinding.append(ProcessedFinding)
+            for UnprocessedFinding in update["UnprocessedFindings"]:
+                logger.error(
+                    "Error Updating Finding: "
+                    + UnprocessedFinding["FindingIdentifier"]["Id"]
+                    + " Error: "
+                    + UnprocessedFinding["ErrorMessage"]
+                )
+                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
+        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
+    return [], []
 
 def count_mh_findings(mh_findings):
     count = 0
@@ -474,7 +480,7 @@ def main(args):
 
     if args.update_findings:
         print_title_line("Update Findings")
-        print_table("Findings: ", str(count_mh_findings(mh_findings)))
+        print_table("Findings to update: ", str(count_mh_findings(mh_findings)))
         print_table("Update: ", str(args.update_findings))
         if not mh_findings:
             print(color["BOLD"] + "Nothing to update..." + color["END"])
@@ -492,7 +498,7 @@ def main(args):
 
     if args.enrich_findings:
         print_title_line("Enrich Findings")
-        print_table("Findings: ", str(count_mh_findings(mh_findings)))
+        print_table("Findings to enrich: ", str(count_mh_findings(mh_findings)))
         if not mh_findings:
             print(color["BOLD"] + "Nothing to update..." + color["END"])
             exit(1)

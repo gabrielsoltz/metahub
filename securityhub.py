@@ -110,6 +110,7 @@ class SecurityHub:
 
 
     def update_findings_meta(self, mh_findings):
+        response_multiple = []
         for mh_finding in mh_findings:
             # MetaTags
             try:
@@ -129,19 +130,21 @@ class SecurityHub:
                 finding_metachecks = {}
             for key in list(finding_metachecks):
                 finding_metachecks[key] = str(finding_metachecks[key])
-            
+            # Combining MetaChecks and MetaTags
             combined = {**finding_metatags, **finding_metachecks}
 
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
-                    if combined:
-                        self.logger.info("Updating finding %s with MetaTags and MetaChecks: %s", FindingIdentifier["Id"], combined)
-        exit (0)
-
-        #                 response = self.sh_client.batch_update_findings(
-        #                     FindingIdentifiers=[FindingIdentifier],
-        #                     UserDefinedFields=combined,
-        #                     Note = {"Text": "test", "UpdatedBy": "MetaHub"},
-        #                 )
-        # return response
+                # To Do: Improve, only one update for resource.
+                if combined:
+                    self.logger.info("Enriching finding %s with MetaTags and MetaChecks: %s", FindingIdentifier["Id"], combined)
+                    response = self.sh_client.batch_update_findings(
+                        FindingIdentifiers=[FindingIdentifier],
+                        UserDefinedFields=combined,
+                        Note = {"Text": "test", "UpdatedBy": "MetaHub"},
+                    )
+                    response_multiple.append(response)
+                else:
+                    self.logger.info("Ignoring finding %s as it has not MetaTags and MetaChecks", FindingIdentifier["Id"])
+        return response_multiple
