@@ -267,6 +267,7 @@ def main(args):
                     filters[key].append(value_to_append)
         return filters
 
+    # Parameter Validation: --sh-filters and --sh-template
     default_sh_filters = {
         "RecordState": ["ACTIVE"],
         "WorkflowStatus": ["NEW"],
@@ -292,6 +293,9 @@ def main(args):
         sh_filters = args.sh_filters
         sh_filters = set_sh_filters(sh_filters)
 
+    # Parameter Validation: --mh-filters-checks
+    if args.mh_filters_checks and not args.meta_checks:
+        logger.error("--mh-filters-checks provided but --meta-checks are disabled, ignoring...")
     default_mh_filters_checks = {}
     if not args.mh_filters_checks:
         mh_filters_checks = default_mh_filters_checks
@@ -306,6 +310,9 @@ def main(args):
             logger.error("MetaHub Filter Only True/False Supported: " + str(mh_filters_checks))
             exit(1)
 
+    # Parameter Validation: --mh-filters-tags
+    if args.mh_filters_tags and not args.meta_tags:
+        logger.error("--mh-filters-tags provided but --meta-tags are disabled, ignoring...")
     default_mh_filters_tags = {}
     if not args.mh_filters_tags:
         mh_filters_tags = default_mh_filters_tags
