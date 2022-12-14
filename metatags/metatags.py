@@ -55,17 +55,25 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
         try:
             tags = response['ResourceTagMappingList'][0]['Tags']
         except IndexError:
-            logger.error("No Tags found for resource: %s", AWSResourceId)
+            logger.info("No Tags found for resource: %s", AWSResourceId)
     except ClientError as err:
         logger.error("Error Fetching Tags: %s", err)
 
     mh_tags_values = {}
     mh_tags_matched = False if mh_filters_tags else True
 
+    # Ignore Case
+    
+
     if tags:
         for tag in tags:
-            mh_tags_values.update({tag["Key"]: tag["Value"]})
-        compare = {k: mh_tags_values[k] for k in mh_tags_values if k in mh_filters_tags and mh_tags_values[k] == mh_filters_tags[k]}
+            mh_tags_values.update({(tag["Key"]): tag["Value"]})
+
+        # Lower Case for better matching:
+        mh_tags_values_lower = dict((k.lower(), v.lower()) for k,v in mh_tags_values.items())
+        mh_filters_tags_lower = dict((k.lower(), v.lower()) for k,v in mh_filters_tags.items())
+
+        compare = {k: mh_tags_values_lower[k] for k in mh_tags_values_lower if k in mh_filters_tags_lower and mh_tags_values_lower[k] == mh_filters_tags_lower[k]}
         logger.info(
             "Evaluating MetaTag filter. Expected: "
             + str(mh_filters_tags)

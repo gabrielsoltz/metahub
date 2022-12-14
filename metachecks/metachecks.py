@@ -47,7 +47,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
             logger, finding, meta_checks, mh_filters_checks, sess
         )
     except AttributeError as err:
-        logger.error("No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err)
+        logger.info("No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err)
         if mh_filters_checks:
             return False, False
         return False, True
@@ -69,7 +69,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
         return execute
     else:
         logger.error(
-            "Error running MetaChecks output() for AWSResourceType: %s", AWSResourceType
+            "Error running MetaChecks output_checks() for AWSResourceType: %s", AWSResourceType
         )
 
 def list_metachecks(logger):
@@ -98,5 +98,5 @@ def list_metachecks(logger):
             print(name + ": " + " ".join(execute))
         else:
             logger.error(
-                "Error running MetaCheck checks() for AWSResourceType: %s", name
+                "Error running MetaChecks checks() for AWSResourceType: %s", name
             )
