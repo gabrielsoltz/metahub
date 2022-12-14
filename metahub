@@ -26,6 +26,7 @@ def generate_findings(
         "ProductArn": {},
         "ResourceType": {},
         "AwsAccountId": {},
+        "Region": {},
         "ResourceId": {}
     }
     sh = SecurityHub(logger, sh_account, sh_role)
@@ -58,7 +59,7 @@ def generate_findings(
                             not resource_arn in mh_findings
                             and not resource_arn in mh_findings_not_matched_findings
                         ):
-                            mh_values, mh_checks_matched = run_metachecks(
+                            mh_values, mh_checks_matched, mh_related_resources = run_metachecks(
                                 logger, finding, mh_filters_checks, mh_role
                             )
                     else:
@@ -119,6 +120,10 @@ def generate_findings(
                     if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
                         mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
                     mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
+                    # Region
+                    if not finding["Region"] in mh_statistics["Region"]:
+                        mh_statistics["Region"][finding["Region"]] = 0
+                    mh_statistics["Region"][finding["Region"]] += 1
                     # ResourceType
                     if not finding["Resources"][0]["Type"] in mh_statistics["ResourceType"]:
                         mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] = 0
@@ -129,10 +134,12 @@ def generate_findings(
                     # Short
                     mh_findings[resource_arn] = {"findings": []}
                     mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings[resource_arn]["Region"] = finding["Region"]
                     mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
                     # Standard
                     mh_findings_short[resource_arn] = {"findings": []}
                     mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings_short[resource_arn]["Region"] = finding["Region"]
                     mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
 
                     # INVENTORY
@@ -144,7 +151,9 @@ def generate_findings(
                         mh_findings_short[resource_arn]["metachecks"] = mh_values
                         # Standard
                         mh_findings[resource_arn]["metachecks"] = mh_values
-
+                        # Related Resources
+                        mh_findings[resource_arn]["metarelated"] = mh_related_resources
+                        mh_findings_short[resource_arn]["metarelated"] = mh_related_resources
                     
                     # METATAGS
                     if metatags:
