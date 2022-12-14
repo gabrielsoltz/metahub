@@ -211,6 +211,12 @@ def get_parser():
         nargs="+",
         required=False,
     )
+    parser.add_argument(
+        "--enrich-findings",
+        help="Enrich Findings with MetaTags and MetaChecks",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
     return parser
 
 def get_logger(log_level):

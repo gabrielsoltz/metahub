@@ -197,7 +197,7 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
     # Run Update
     sh = SecurityHub(logger, sh_account, sh_role)
     if confirm_choice("Are you sure you want to update all findings?"):
-        update_multiple = sh.update_findings(mh_findings, UpdateFilters)
+        update_multiple = sh.update_findings_workflow(mh_findings, UpdateFilters)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
         for update in update_multiple:
@@ -215,6 +215,20 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role):
         return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
     return [], []
 
+def enrich_findings(logger, mh_findings, sh_account, sh_role):
+    sh = SecurityHub(logger, sh_account, sh_role)
+    if confirm_choice("Are you sure you want to enrich all findings?"):
+        update = sh.update_findings_meta(mh_findings)
+        for ProcessedFinding in update["ProcessedFindings"]:
+            logger.info("Updated Finding : " + ProcessedFinding["Id"])
+        for UnprocessedFinding in update["UnprocessedFindings"]:
+            logger.error(
+                "Error Updating Finding: "
+                + UnprocessedFinding["FindingIdentifier"]["Id"]
+                + " Error: "
+                + UnprocessedFinding["ErrorMessage"]
+            )
+    return update["ProcessedFindings"], update["UnprocessedFindings"]
 
 def count_mh_findings(mh_findings):
     count = 0
@@ -469,6 +483,21 @@ def main(args):
         print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
         print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)))
 
+    if args.enrich_findings:
+        print_title_line("Enrich Findings")
+        print_table("Findings: ", str(count_mh_findings(mh_findings)))
+        if not mh_findings:
+            print(color["BOLD"] + "Nothing to update..." + color["END"])
+            exit(1)
+        ProcessedFindings, UnprocessedFindings = enrich_findings(
+            logger,
+            mh_findings,
+            args.sh_account,
+            args.sh_assume_role,
+        )
+        print_title_line("Results")
+        print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
+        print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)))
 
 if __name__ == "__main__":
     main(argv[1:])
