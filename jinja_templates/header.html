@@ -1,0 +1,87 @@
+<style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    
+    /* Float four columns side by side */
+    .column {
+      float: left;
+      width: 25%;
+      padding: 0 10px;
+    }
+    
+    /* Remove extra left and right margins, due to padding */
+    .row {margin: 0 -5px;}
+    
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+    
+    /* Responsive columns */
+    @media screen and (max-width: 600px) {
+      .column {
+        width: 100%;
+        display: block;
+        margin-bottom: 20px;
+      }
+    }
+    
+    /* Style the counter cards */
+    .card_critical {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      text-align: center;
+      background-color: #FF0000;
+    }
+    .card_high {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      text-align: center;
+      background-color: #BC0000;
+    }
+    .card_medium {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      text-align: center;
+      background-color: #BC4700;
+    }
+    .card_low {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      padding: 16px;
+      text-align: center;
+      background-color: #BCB900;
+    }
+    </style>
+  <div class="row">
+    <div class="column">
+      <div class="card_critical">
+        <h3>CRITICAL</h3>
+        <p>10</p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="card_high">
+        <h3>HIGH</h3>
+        <p>10</p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="card_medium">
+        <h3>MEDIUM</h3>
+        <p>10</p>
+      </div>
+    </div>
+    <div class="column">
+      <div class="card_low">
+        <h3>LOW</h3>
+        <p>10</p>
+      </div>
+    </div>
+  </div>

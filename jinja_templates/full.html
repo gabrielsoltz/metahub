@@ -1,0 +1,203 @@
+<html>
+  <head>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Severity', 'Count'],
+          {% for severity, count in statistics.SeverityLabel.items() %}
+            ["{{ severity }}", {{ count }}],
+          {% endfor %}
+        ]);
+        var options = {
+          title: 'Severities'
+        };
+        var chart = new google.visualization.PieChart(document.getElementById('piechartseverity'));
+        chart.draw(data, options);
+      }
+    </script>
+    <div id="piechartseverity" style="width: 900px; height: 500px;"></div>
+
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['AwsAccountId', 'Count'],
+          {% for account, count in statistics.AwsAccountId.items() %}
+            ["{{ account }}", {{ count }}],
+          {% endfor %}
+        ]);
+        var options = {
+          title: 'Accounts'
+        };
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+        chart.draw(data, options);
+      }
+    </script>
+    <div id="piechart" style="width: 900px; height: 500px;"></div>
+
+
+    <title>{{ title }}</title>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+    <style>
+      body {
+        font-family: Sans-Serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>{{ title }}</h1>
+      <hr>
+      <style>
+        * {
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        /* Float four columns side by side */
+        .column {
+          float: left;
+          width: 25%;
+          padding: 0 10px;
+        }
+        
+        /* Remove extra left and right margins, due to padding */
+        .row {margin: 0 -5px;}
+        
+        /* Clear floats after the columns */
+        .row:after {
+          content: "";
+          display: table;
+          clear: both;
+        }
+        
+        /* Responsive columns */
+        @media screen and (max-width: 600px) {
+          .column {
+            width: 100%;
+            display: block;
+            margin-bottom: 20px;
+          }
+        }
+        /* Style the counter cards */
+        .card_critical {
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+          padding: 16px;
+          text-align: center;
+          background-color: #f44336;
+        }
+        .card_high {
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+          padding: 16px;
+          text-align: center;
+          background-color: #f44336;
+        }
+        .card_medium {
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+          padding: 16px;
+          text-align: center;
+          background-color: #ff9800;
+        }
+        .card_low {
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+          padding: 16px;
+          text-align: center;
+          background-color: #2196F3;
+        }
+        </style>
+      <div class="row">
+        <div class="column">
+          <div class="card_critical">
+            <h3>CRITICAL</h3>
+            <p>'{{ statistics.SeverityLabel.CRITICAL }}'</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="card_high">
+            <h3>HIGH</h3>
+            <p>'{{ statistics.SeverityLabel.HIGH }}'</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="card_medium">
+            <h3>MEDIUM</h3>
+            <p>'{{ statistics.SeverityLabel.MEDIUM }}'</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="card_low">
+            <h3>LOW</h3>
+            <p>'{{ statistics.SeverityLabel.LOW }}'</p>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div id="table"></div>
+    </div>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <script>
+        new gridjs.Grid({
+            columns: [
+                { id: 'ARN', name: 'ARN' , sort: true },
+                { id: 'AwsAccountId', name: 'AwsAccountId', sort: true },
+                { id: 'Region', name: 'Region', sort: true },
+                { id: 'ResourceType', name: 'ResourceType', sort: true },
+                { id: 'Severity', name: 'Severity', sort: true },
+                { id: 'Finding', name: 'Finding' , sort: true },
+                { id: "MetaTags", name: "MetaTags", columns: [
+                    { id: 'Owner', name: 'Owner' },
+                    { id: 'Name', name: 'Name' },
+                ]},
+                { id: "MetaChecks", name: "MetaChecks", columns: [
+                    { id: 'is_public', name: 'is_public' },
+                    { id: 'is_encrypted', name: 'is_encrypted' },
+                ]},
+            ],
+          data: [
+            {% for resource, resource_value in data.items() %}
+             {% for finding in resource_value.findings %}
+              {% for finding_name, finding_values in finding.items() %}
+                {
+                    Finding: '{{ finding_name }}',
+                    Severity: '{{ finding_values.SeverityLabel }}',
+                    ARN: '{{ resource }}',
+                    AwsAccountId: '{{ resource_value.AwsAccountId }}',
+                    Region: '{{ resource_value.Region }}',
+                    ResourceType: '{{ resource_value.ResourceType }}',
+                    {% if 'metatags' in resource_value %}
+                      Owner: '{{ resource_value.metatags.Owner }}',
+                      Name: '{{ resource_value.metatags.Name }}',
+                    {% endif %}
+                },
+                {% endfor %}
+              {% endfor %}
+            {% endfor %}
+          ],
+          search: {
+            selector: (cell, rowIndex, cellIndex) => [0, 1, 4].includes(cellIndex) ? cell : null,
+          },
+          sort: true,
+          pagination: true,
+            style: { 
+                table: { 
+                'white-space': 'nowrap'
+                }
+            },
+        }).render(document.getElementById('table'));
+      </script>
+      <hr>
+      
+  </body>
+</html>
+
+# Ver Columns Filters: https://www.ag-grid.com/archive/27.0.1/javascript-data-grid/filtering/#example-provided-simple
+# Graficos

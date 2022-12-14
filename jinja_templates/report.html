@@ -1,0 +1,43 @@
+{% extends "jinja_templates/base.html" %}
+
+{% block content %}
+<table id="data" class="table table-striped">
+  <thead>
+  <tr>
+      <th>ARN</th>
+      <th>AwsAccountId</th>
+      <th>Region</th>
+      <th>ResourceType</th>
+      <th>findings</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for resource, resource_value in data.items() %}
+      {% for finding in resource_value.findings %}
+          <tr>
+          <td>{{ resource }}</td>
+          <td>{{ resource_value.AwsAccountId }}</td>
+          <td>{{ resource_value.Region }}</td>
+          <td>{{ resource_value.ResourceType }}</td>
+          <td>{{ finding }}</td>
+          </tr>
+      {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable({
+        columns: [
+          {searchable: true},
+          {searchable: true},
+          {orderable: true, searchable: true},
+          {orderable: true, searchable: true},
+          {searchable: true}],
+      });
+    });
+  </script>
+{% endblock %}
