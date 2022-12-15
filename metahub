@@ -29,6 +29,7 @@ def generate_findings(
         "Region": {},
         "ResourceId": {}
     }
+    AwsAccountAliasData = {}
     sh = SecurityHub(logger, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
     print_title_line("")
@@ -91,6 +92,12 @@ def generate_findings(
             # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
             if mh_matched:
 
+                # Query AwsAccountAlias and let's add it to the finding
+                if finding["AwsAccountId"] not in AwsAccountAliasData:
+                    AwsAccountAlias = get_account_alias(logger, finding["AwsAccountId"], mh_role)
+                    AwsAccountAliasData[finding["AwsAccountId"]] = AwsAccountAlias
+                finding["AwsAccountAlias"] = AwsAccountAliasData[finding["AwsAccountId"]]
+
                 # STATISTICS (we count by matched finding)
 
                 # Resource ARN
@@ -134,11 +141,13 @@ def generate_findings(
                     # Short
                     mh_findings[resource_arn] = {"findings": []}
                     mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings[resource_arn]["AwsAccountAlias"] = finding["AwsAccountAlias"]
                     mh_findings[resource_arn]["Region"] = finding["Region"]
                     mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
                     # Standard
                     mh_findings_short[resource_arn] = {"findings": []}
                     mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings_short[resource_arn]["AwsAccountAlias"] = finding["AwsAccountAlias"]
                     mh_findings_short[resource_arn]["Region"] = finding["Region"]
                     mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
 
