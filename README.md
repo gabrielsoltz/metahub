@@ -166,14 +166,21 @@ Next time you only need steps 4 and 6 to use the program.
 
 ## AWS Authentication
 
-- You need to be authenticated to AWS to be able to connect with AWS Security Hub to fetch findings.
-- You need to be authenticated to AWS to be able to connect to resources and run MetaChecks.
+- Ensure you have AWS credentials setup on your local machine (or from where you will run MetaHub).
+
+### Single Account Setup 
+
+- If you are running MetaHub on a single account setup (AWS Security Hub is not aggregating findings from another accounts), you don't need to assume to call AssumeRole. Check that your credentials can get_findings from AWS Security Hub (and update them if you want to use the options --update-findings or --enrich-findings).
+- If you want to execute `--meta-checks` and `--meta-tags` you will also need Read policies for describing your resources.
+- Still, is also possible if you need it to login and assume a role in the same account, just use the options `--mh-assune-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
+
+If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
+
+### Configuring AWS Credentials using the AWS CLI and export them to environment
 
     ```sh
     aws configure
     ```
-
-    or
 
     ```sh
     export AWS_DEFAULT_REGION="region"
@@ -182,9 +189,13 @@ Next time you only need steps 4 and 6 to use the program.
     export AWS_SESSION_TOKEN="XXXXXXXXX"
     ```
 
-- Those credentials must be associated to a user or role with proper permissions to do all checks. You can use managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
+### Policies for MetaChecks and MetaTags
 
-If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
+- You can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
+
+### Policies for describe and/or update AWS Security Hub findings
+
+- You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
 
 ## Usage
 
