@@ -198,15 +198,15 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "--write-csv-meta-tags-columns",
-        help="CSV MetaTags Columns. Use this option to unroll MetaTags as CSV Columns.",
+        "--write-meta-tags-columns",
+        help="MetaTags Columns (for CSV and HTML formats). Use this option to unroll MetaTags as Columns.",
         default=[],
         nargs="+",
         required=False,
     )
     parser.add_argument(
-        "--write-csv-meta-checks-columns",
-        help="CSV MetaTags Columns. Use this option to unroll MetaChecks as CSV Columns.",
+        "--write-meta-checks-columns",
+        help="MetaChecks Columns (for CSV and HTML formats). Use this option to unroll MetaChecks as Columns.",
         default=[],
         nargs="+",
         required=False,

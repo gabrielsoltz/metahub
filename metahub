@@ -409,14 +409,13 @@ def main(args):
     
     if args.write_html:
         import jinja2
-
-        metachecks_columns = ["is_public"]
-        metatags_columns = ["Owner", "Status", "Environment"]
+        metachecks_columns = args.write_meta_checks_columns
+        metatags_columns = args.write_meta_tags_columns
 
         if mh_findings:
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
             templateEnv = jinja2.Environment(loader=templateLoader)
-            TEMPLATE_FILE = "jinja_templates/report_full/report_full.html"
+            TEMPLATE_FILE = "outputs/html/template.html"
             template = templateEnv.get_template(TEMPLATE_FILE)
             print_title_line("Write HTML")
             with open("report.html", "w", encoding="utf-8") as f:
@@ -426,10 +425,10 @@ def main(args):
 
     if args.write_csv:
         import csv
+        metachecks_columns = args.write_csv_meta_checks_columns
+        metatags_columns = args.write_csv_meta_tags_columns
 
         def output_csv(output):
-            metachecks_columns = args.write_csv_meta_checks_columns
-            metatags_columns = args.write_csv_meta_tags_columns
             new_list = []
             for key, dictionary in output.items():
                 new_dict = {'ARN': key}
@@ -475,7 +474,6 @@ def main(args):
                         dict_writer.writerows(csv_list)
                 if out != "statistics":
                     print_table("File: ", out + ".csv")
-
 
 
     print_title_line("Results")

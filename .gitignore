@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 ToDo.md
+jinja_templates/
+.DS_Store
