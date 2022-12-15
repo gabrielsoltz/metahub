@@ -27,7 +27,9 @@ class Metacheck(MetaChecksBase):
                 self.resource_id,
             ]
         )
-        return response['Reservations'][0]['Instances'][0]
+        if response['Reservations']:
+            return response['Reservations'][0]['Instances'][0]
+        return False
 
     def _describe_volumes(self):
         BlockDeviceMappings = []
