@@ -438,11 +438,15 @@ def main(args):
                             dictionary[column] = dictionary['metatags'][column]
                         except KeyError:
                             dictionary[column] = ''
+                        except TypeError:
+                            dictionary[column] = ''
                 if metachecks_columns:
                     for column in metachecks_columns:
                         try:
                             dictionary[column] = dictionary['metachecks'][column]
                         except KeyError:
+                            dictionary[column] = ''
+                        except TypeError:
                             dictionary[column] = ''
                 new_dict.update(dictionary)
                 new_list.append(new_dict)
