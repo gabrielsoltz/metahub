@@ -419,7 +419,7 @@ For example: `./metahub --output standard inventory --meta-tags --write-meta-tag
 
 You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
 
-HTML Columns are sortable, and filterable. Meaning you can manipulate the htnm report in a lot of different ways. 
+HTML Reports are interactive in many ways: You can add/remove columns, you can sort and filter by any column, and you can also download that data to xlsx, csv, html and json. Meaning you can manipulate the htnml report in a lot of different ways. 
 
 For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 1 html file (`report.html`)
 
