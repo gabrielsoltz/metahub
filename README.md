@@ -393,16 +393,37 @@ You can use `--output statistics` to get statistics about your search. You get s
 
 ## Write File
 
-You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`.
+You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. 
 
-CSV Meta Checks and Meta Tags columns can be customized for CSV format, letting you choose which tags or checks to use as columns. To customize them, you can use the options `--write-csv-meta-tags-columns` and `--write-csv-meta-checks-columns` as a list of columns. If the metachecks or metatags you define as columns doesn't exist for the affected resource, they will be empty. 
+### Json
 
-For example: `./metahub --sh-filters ResourceType=AwsS3Bucket --write-csv --write-csv-meta-tags-columns Owner --write-csv-meta-checks-columns is_bucket_acl_public is_bucket_policy_public is_public it_has_bucket_policy it_has_bucket_acl is_encrypted` 
+`--write-json` will create a file for each `--output` selected. 
+For example: `./metahub --output standard inventory --meta-tags --write-json` will generate 2 json files, one for standard (`standard.json`) and one for inventory (`inventory.json`) outputs.
 
-You will get a CSV with the following columns:
+### CSV
+
+`--write-csv` will create a file for each `--output` selected. Output `statistics` is not supported for this format. 
+
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
+
+For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 2 csv files, one for standard (`standard.csv`) and one for inventory (`inventory.csv`) outputs.
 
 <p align="center">
-  <img src="csv-columns.png" alt="MetaHub"/>
+  <img src="csv-columns.png" alt="csv-example"/>
+</p>
+
+### HTML
+
+`--write-html` supports only one report for now, it will be named `report.html`. 
+
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
+
+HTML Columns are sortable, and filterable. Meaning you can manipulate the htnm report in a lot of different ways. 
+
+For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 1 html file (`report.html`)
+
+<p align="center">
+  <img src="html-export.png" alt="html-example"/>
 </p>
 
 ## Findings Aggregation

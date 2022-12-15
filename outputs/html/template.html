@@ -1,0 +1,111 @@
+{% extends "outputs/html/base.html" %}
+
+{% block table %}
+<div id="findings-table"></div>
+<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script>
+
+//define column header menu as column visibility toggle
+var headerMenu = function(){
+    var menu = [];
+    var columns = this.getColumns();
+
+    for(let column of columns){
+
+        //create checkbox element using font awesome icons
+        let icon = document.createElement("i");
+        icon.classList.add("fa");
+        icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
+
+        //build label
+        let label = document.createElement("span");
+        let title = document.createElement("span");
+
+        title.textContent = " " + column.getDefinition().title;
+
+        label.appendChild(icon);
+        label.appendChild(title);
+
+        //create menu item
+        menu.push({
+            label:label,
+            action:function(e){
+                //prevent menu closing
+                e.stopPropagation();
+
+                //toggle current column visibility
+                column.toggle();
+
+                //change menu item icon
+                if(column.isVisible()){
+                    icon.classList.remove("fa-square");
+                    icon.classList.add("fa-check-square");
+                }else{
+                    icon.classList.remove("fa-check-square");
+                    icon.classList.add("fa-square");
+                }
+            }
+        });
+    }
+
+   return menu;
+};
+
+var tableData = [
+      {% for resource, resource_value in data.items() %}
+       {% for finding in resource_value.findings %} 
+        {% for finding_name, finding_values in finding.items() %}
+          {
+              ARN: '{{ resource }}',
+              AwsAccountId: '{{ resource_value.AwsAccountId }}',
+              Region: '{{ resource_value.Region }}',
+              ResourceType: '{{ resource_value.ResourceType }}',
+              Severity: '{{ finding_values.SeverityLabel }}',
+              Finding: '{{ finding_name }}',
+              {% if 'metatags' in resource_value %}
+                {% for metatags_column in metatags_columns %}
+                  {{ metatags_column }}: '{{ resource_value.metatags[metatags_column] }}',
+                {% endfor %}
+              {% endif %}
+              {% if 'metachecks' in resource_value %}
+                {% for metachecks_column in metachecks_columns %}
+                  {{ metachecks_column }}: '{{ resource_value.metachecks[metachecks_column] }}',
+                {% endfor %}
+              {% endif %}
+          },
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+]
+
+
+//initialize table
+var table = new Tabulator("#findings-table", {
+  data:tableData, 
+    layout:"fitDataStretch",
+    pagination:true, 
+    paginationSize:25,
+    paginationCounter:"rows",
+    columnDefaults:{
+        tooltip:true,
+    },
+    // groupBy:"ARN",
+    columns:[
+        {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"Finding", field:"Finding", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+          {% for metatags_column in metatags_columns %}
+              { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+          {% endfor %}
+          {% for metachecks_column in metachecks_columns %}
+            { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+          {% endfor %}
+    ],
+});
+</script>
+{% endblock %}

@@ -1,5 +1,5 @@
 boto3
 pyyaml
-json2table
 csv
 alive_progress
+jinja2
