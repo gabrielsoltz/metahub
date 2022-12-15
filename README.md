@@ -18,6 +18,7 @@
 - [Usage](#usage)
 - [Advanced Usage](#advanced-usage)
 - [Outputs](#Outputs)
+- [Write File](#write-file)
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks)
 - [MetaTags](#MetaTags)

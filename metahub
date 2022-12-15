@@ -425,8 +425,8 @@ def main(args):
 
     if args.write_csv:
         import csv
-        metachecks_columns = args.write_csv_meta_checks_columns
-        metatags_columns = args.write_csv_meta_tags_columns
+        metachecks_columns = args.write_meta_checks_columns
+        metatags_columns = args.write_meta_tags_columns
 
         def output_csv(output):
             new_list = []
