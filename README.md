@@ -357,7 +357,7 @@ Combine all options
 
 ## Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`
+**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-` options, or show them as output using the option `--list-findings`.
 
 ### Standard
 
@@ -410,7 +410,7 @@ You can customize the MetaChecks and MetaTags to use as columns headers using th
 For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 2 csv files, one for standard (`standard.csv`) and one for inventory (`inventory.csv`) outputs.
 
 <p align="center">
-  <img src="csv-columns.png" alt="csv-example"/>
+  <img src="csv-export.png" alt="csv-example"/>
 </p>
 
 ### HTML
