@@ -23,7 +23,7 @@
 - [MetaChecks](#MetaChecks)
 - [MetaTags](#MetaTags)
 - [Filtering](#Filtering)
-- [Updating Findings](#Updating-Findings)
+- [Updating Findings](#updating-findings-1)
 - [Enriching Findings](#enriching-findings)
 
 ## Description
