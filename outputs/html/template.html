@@ -60,6 +60,7 @@ var tableData = [
           {
               ARN: '{{ resource }}',
               AwsAccountId: '{{ resource_value.AwsAccountId }}',
+              AwsAccountAlias: '{{ resource_value.AwsAccountAlias }}',
               Region: '{{ resource_value.Region }}',
               ResourceType: '{{ resource_value.ResourceType }}',
               Severity: '{{ finding_values.SeverityLabel }}',
@@ -95,6 +96,7 @@ var table = new Tabulator("#findings-table", {
     columns:[
         {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"AwsAccountAlias", field:"AwsAccountAlias", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -106,6 +108,38 @@ var table = new Tabulator("#findings-table", {
             { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
           {% endfor %}
     ],
+});
+</script>
+{% endblock %}
+
+{% block export %}
+<!-- Export Data Scripts -->
+<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+<div>
+  <button class="btn" id="download-csv"><i class="fa fa-download"></i> Download CSV</button>
+  <button class="btn" id="download-json"><i class="fa fa-download"></i> Download JSON</button>
+  <button class="btn" id="download-xlsx"><i class="fa fa-download"></i> Download XLSX</button>
+  <button class="btn" id="download-html"><i class="fa fa-download"></i> Download HTML</button>
+</div>
+<script>
+//trigger download of data.csv file
+document.getElementById("download-csv").addEventListener("click", function(){
+    table.download("csv", "data.csv");
+});
+
+//trigger download of data.json file
+document.getElementById("download-json").addEventListener("click", function(){
+    table.download("json", "data.json");
+});
+
+//trigger download of data.xlsx file
+document.getElementById("download-xlsx").addEventListener("click", function(){
+    table.download("xlsx", "data.xlsx", {sheetName:"My Data"});
+});
+
+//trigger download of data.html file
+document.getElementById("download-html").addEventListener("click", function(){
+    table.download("html", "data.html", {style:true});
 });
 </script>
 {% endblock %}

@@ -121,6 +121,15 @@
       width: 100%;
     }
   }
+
+  .btn {
+    background-color: DodgerBlue;
+    border: none;
+    color: white;
+    padding: 12px 30px;
+    cursor: pointer;
+    font-size: 20px;
+  }
 </style>
 </head>
 
@@ -149,6 +158,8 @@
   <div class="main">
     <h2>Findings Details</h2>
     {% block table %}{% endblock %}
+    <br>
+    {% block export %}{% endblock %}
   </div>
 </div>
 
