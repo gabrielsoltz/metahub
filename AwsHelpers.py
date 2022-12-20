@@ -52,7 +52,7 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         if aliases:
             return aliases[0]
         return ""
-    else:
+    elif aws_account_number and role_name:
         sh_role_assumend = assume_role(logger, aws_account_number, role_name)
         sess = get_boto3_session(sh_role_assumend)
         logger.info(
@@ -63,4 +63,6 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         aliases = sess.client(service_name="iam").list_account_aliases()['AccountAliases']
         if aliases:
             return aliases[0]
+        return ""
+    else:
         return ""
