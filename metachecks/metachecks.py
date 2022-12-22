@@ -17,7 +17,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
     meta_checks = True
 
     AwsAccountId = finding["AwsAccountId"]
-    current_account_id = get_account_id()
+    current_account_id = get_account_id(logger)
 
     AWSResourceType = finding["Resources"][0]["Type"]
     resource_arn = finding["Resources"][0]["Id"]
@@ -30,7 +30,6 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
         return False, True
 
     # Get a Boto3 Session in the Child Account if mh_role is passed
-    AwsAccountId = finding["AwsAccountId"]
     if mh_role:
         sh_role_assumend = assume_role(logger, AwsAccountId, mh_role)
         sess = get_boto3_session(sh_role_assumend)

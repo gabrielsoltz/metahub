@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+from AwsHelpers import get_available_regions
 
 
 class KeyValueWithList(argparse.Action):
@@ -216,6 +217,14 @@ def get_parser():
         help="Enrich Findings with MetaTags and MetaChecks",
         required=False,
         action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--sh-region",
+        choices=get_available_regions(get_logger("ERROR"), "securityhub"),
+        default=[],
+        #nargs="+",
+        help="AWS Security Hub Region",
+        required=False,
     )
     return parser
 

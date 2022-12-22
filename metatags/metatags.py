@@ -3,7 +3,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from AwsHelpers import assume_role, get_boto3_session, get_account_id
 
-def run_metatags(logger, finding, mh_filters_tags, mh_role):
+def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
     """
     Executes Tags discover for the AWS Resource Type
     :param logger: logger configuration
@@ -14,7 +14,7 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
     """
 
     AwsAccountId = finding["AwsAccountId"]
-    current_account_id = get_account_id()
+    current_account_id = get_account_id(logger)
     
     # If the resources lives in another account, you need to provide a role for running MetaTags
     if AwsAccountId != current_account_id and not mh_role:
@@ -25,7 +25,6 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
         return False, True
 
     # Get a Boto3 Session in the Child Account if mh_role is passed
-    AwsAccountId = finding["AwsAccountId"]
     if mh_role:
         sh_role_assumend = assume_role(logger, AwsAccountId, mh_role)
         sess = get_boto3_session(sh_role_assumend)
@@ -37,13 +36,12 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
     else:
         sess = None
 
-    AWSResourceType = finding["Resources"][0]["Type"]
     AWSResourceId = finding["Resources"][0]["Id"]
 
     if not sess:
-        client = boto3.client('resourcegroupstaggingapi')
+        client = boto3.client('resourcegroupstaggingapi', region_name=sh_region)
     else:
-        client = sess.client(service_name="resourcegroupstaggingapi")
+        client = sess.client(service_name="resourcegroupstaggingapi", region_name=sh_region)
 
     tags = False
     try:
