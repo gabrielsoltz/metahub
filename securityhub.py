@@ -10,14 +10,14 @@ from AwsHelpers import assume_role, get_boto3_session
 class SecurityHub:
     """Interfaces with the AWS Security Hub"""
 
-    def __init__(self, logger, sh_account=False, sh_role=False):
+    def __init__(self, logger, sh_region, sh_account=False, sh_role=False):
         self.logger = logger
         if not sh_role or not sh_account:
-            self.sh_client = boto3.client("securityhub")
+            self.sh_client = boto3.client("securityhub", region_name=sh_region)
         elif sh_role and sh_account:
             sh_role_assumend = assume_role(logger, sh_account, sh_role)
             shsess = get_boto3_session(sh_role_assumend)
-            self.sh_client = shsess.client(service_name="securityhub")
+            self.sh_client = shsess.client(service_name="securityhub", region_name=sh_region)
         else:
             self.logger.error("Missing data for assuming a Session to SH")
             exit(1)
