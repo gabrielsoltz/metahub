@@ -2,8 +2,6 @@ import metachecks.checks
 from AwsHelpers import assume_role, get_boto3_session, get_account_id
 
 
-
-
 def run_metachecks(logger, finding, mh_filters_checks, mh_role):
     """
     Executes MetaChecks for the AWS Resource Type
@@ -24,7 +22,12 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
 
     # If the resources lives in another account, you need to provide a role for running MetaChecks
     if AwsAccountId != current_account_id and not mh_role:
-        logger.error("Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not --mh-assume-role was provided. Ignoring MetaChecks...", resource_arn, AwsAccountId, current_account_id)
+        logger.error(
+            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not --mh-assume-role was provided. Ignoring MetaChecks...",
+            resource_arn,
+            AwsAccountId,
+            current_account_id,
+        )
         if mh_filters_checks:
             return False, False
         return False, True
@@ -46,7 +49,9 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
             logger, finding, meta_checks, mh_filters_checks, sess
         )
     except AttributeError as err:
-        logger.info("No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err)
+        logger.info(
+            "No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err
+        )
         if mh_filters_checks:
             return False, False
         return False, True
@@ -68,8 +73,10 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
         return execute
     else:
         logger.error(
-            "Error running MetaChecks output_checks() for AWSResourceType: %s", AWSResourceType
+            "Error running MetaChecks output_checks() for AWSResourceType: %s",
+            AWSResourceType,
         )
+
 
 def list_metachecks(logger):
     """List Meta Checks"""
@@ -83,7 +90,7 @@ def list_metachecks(logger):
 
     for name, obj in inspect.getmembers(metachecks.checks, inspect.ismodule):
         if name == "Base":
-            continue 
+            continue
         try:
             hndl = getattr(metachecks.checks, name).Metacheck(
                 logger, finding, meta_checks, mh_filters_checks, sess

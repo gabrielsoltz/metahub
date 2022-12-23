@@ -94,13 +94,13 @@ class Metacheck(MetaChecksBase):
 
     def is_rest_encrypted(self):
         if self.elasticsearch_domain:
-            if self.elasticsearch_domain['EncryptionAtRestOptions']:
+            if self.elasticsearch_domain["EncryptionAtRestOptions"]:
                 return True
         return False
 
     def is_node_to_node_encrypted(self):
         if self.elasticsearch_domain:
-            if self.elasticsearch_domain['NodeToNodeEncryptionOptions']:
+            if self.elasticsearch_domain["NodeToNodeEncryptionOptions"]:
                 return True
         return False
 
@@ -118,6 +118,6 @@ class Metacheck(MetaChecksBase):
             "is_public",
             "is_rest_encrypted",
             "is_node_to_node_encrypted",
-            "is_encrypted"
+            "is_encrypted",
         ]
         return checks

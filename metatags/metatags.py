@@ -3,6 +3,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from AwsHelpers import assume_role, get_boto3_session, get_account_id
 
+
 def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
     """
     Executes Tags discover for the AWS Resource Type
@@ -15,11 +16,16 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
 
     AwsAccountId = finding["AwsAccountId"]
     current_account_id = get_account_id(logger)
-    
+
     # If the resources lives in another account, you need to provide a role for running MetaTags
     if AwsAccountId != current_account_id and not mh_role:
         resource_arn = finding["Resources"][0]["Id"]
-        logger.error("Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaTags...", resource_arn, AwsAccountId, current_account_id)
+        logger.error(
+            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaTags...",
+            resource_arn,
+            AwsAccountId,
+            current_account_id,
+        )
         if mh_filters_tags:
             return False, False
         return False, True
@@ -39,9 +45,11 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
     AWSResourceId = finding["Resources"][0]["Id"]
 
     if not sess:
-        client = boto3.client('resourcegroupstaggingapi', region_name=sh_region)
+        client = boto3.client("resourcegroupstaggingapi", region_name=sh_region)
     else:
-        client = sess.client(service_name="resourcegroupstaggingapi", region_name=sh_region)
+        client = sess.client(
+            service_name="resourcegroupstaggingapi", region_name=sh_region
+        )
 
     tags = False
     try:
@@ -51,7 +59,7 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
             ]
         )
         try:
-            tags = response['ResourceTagMappingList'][0]['Tags']
+            tags = response["ResourceTagMappingList"][0]["Tags"]
         except IndexError:
             logger.info("No Tags found for resource: %s", AWSResourceId)
     except ClientError as err:
@@ -61,17 +69,25 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
     mh_tags_matched = False if mh_filters_tags else True
 
     # Ignore Case
-    
 
     if tags:
         for tag in tags:
             mh_tags_values.update({(tag["Key"]): tag["Value"]})
 
         # Lower Case for better matching:
-        mh_tags_values_lower = dict((k.lower(), v.lower()) for k,v in mh_tags_values.items())
-        mh_filters_tags_lower = dict((k.lower(), v.lower()) for k,v in mh_filters_tags.items())
+        mh_tags_values_lower = dict(
+            (k.lower(), v.lower()) for k, v in mh_tags_values.items()
+        )
+        mh_filters_tags_lower = dict(
+            (k.lower(), v.lower()) for k, v in mh_filters_tags.items()
+        )
 
-        compare = {k: mh_tags_values_lower[k] for k in mh_tags_values_lower if k in mh_filters_tags_lower and mh_tags_values_lower[k] == mh_filters_tags_lower[k]}
+        compare = {
+            k: mh_tags_values_lower[k]
+            for k in mh_tags_values_lower
+            if k in mh_filters_tags_lower
+            and mh_tags_values_lower[k] == mh_filters_tags_lower[k]
+        }
         logger.info(
             "Evaluating MetaTag filter. Expected: "
             + str(mh_filters_tags)

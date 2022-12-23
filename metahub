@@ -3,9 +3,22 @@
 import json
 from sys import argv, exit
 
-from helpers import (color, get_logger, get_parser, print_banner, print_table,
-                     print_title_line, confirm_choice, test_python_version)
-from AwsHelpers import get_account_id, get_account_alias, get_region, get_sh_findings_aggregator
+from helpers import (
+    color,
+    get_logger,
+    get_parser,
+    print_banner,
+    print_table,
+    print_title_line,
+    confirm_choice,
+    test_python_version,
+)
+from AwsHelpers import (
+    get_account_id,
+    get_account_alias,
+    get_region,
+    get_sh_findings_aggregator,
+)
 from securityhub import SecurityHub
 
 from alive_progress import alive_bar
@@ -15,8 +28,18 @@ from time import strftime
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
 
+
 def generate_findings(
-    logger, sh_filters, metachecks, mh_filters_checks, metatags, mh_filters_tags, sh_account, sh_role, mh_role, sh_region
+    logger,
+    sh_filters,
+    metachecks,
+    mh_filters_checks,
+    metatags,
+    mh_filters_tags,
+    sh_account,
+    sh_role,
+    mh_role,
+    sh_region,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -32,16 +55,14 @@ def generate_findings(
         "ResourceType": {},
         "AwsAccountId": {},
         "Region": {},
-        "ResourceId": {}
+        "ResourceId": {},
     }
     AwsAccountAliasData = {}
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
     sh_findings = sh.get_findings(sh_filters)
     print_title_line("")
     print_table("Security Hub findings found: ", len(sh_findings))
-    with alive_bar(
-        total=len(sh_findings)
-    ) as bar:
+    with alive_bar(total=len(sh_findings)) as bar:
         for finding in sh_findings:
             bar.title = f"-> Analyzing findings..."
 
@@ -99,9 +120,13 @@ def generate_findings(
 
                 # Query AwsAccountAlias and let's add it to the finding
                 if finding["AwsAccountId"] not in AwsAccountAliasData:
-                    AwsAccountAlias = get_account_alias(logger, finding["AwsAccountId"], mh_role)
+                    AwsAccountAlias = get_account_alias(
+                        logger, finding["AwsAccountId"], mh_role
+                    )
                     AwsAccountAliasData[finding["AwsAccountId"]] = AwsAccountAlias
-                finding["AwsAccountAlias"] = AwsAccountAliasData[finding["AwsAccountId"]]
+                finding["AwsAccountAlias"] = AwsAccountAliasData[
+                    finding["AwsAccountId"]
+                ]
 
                 # STATISTICS (we count by matched finding)
 
@@ -137,8 +162,13 @@ def generate_findings(
                         mh_statistics["Region"][finding["Region"]] = 0
                     mh_statistics["Region"][finding["Region"]] += 1
                     # ResourceType
-                    if not finding["Resources"][0]["Type"] in mh_statistics["ResourceType"]:
-                        mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] = 0
+                    if (
+                        not finding["Resources"][0]["Type"]
+                        in mh_statistics["ResourceType"]
+                    ):
+                        mh_statistics["ResourceType"][
+                            finding["Resources"][0]["Type"]
+                        ] = 0
                     mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
 
                 # RESOURCE (we add the resource only once)
@@ -146,15 +176,25 @@ def generate_findings(
                     # Short
                     mh_findings[resource_arn] = {"findings": []}
                     mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                    mh_findings[resource_arn]["AwsAccountAlias"] = finding["AwsAccountAlias"]
+                    mh_findings[resource_arn]["AwsAccountAlias"] = finding[
+                        "AwsAccountAlias"
+                    ]
                     mh_findings[resource_arn]["Region"] = finding["Region"]
-                    mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
+                    mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0][
+                        "Type"
+                    ]
                     # Standard
                     mh_findings_short[resource_arn] = {"findings": []}
-                    mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                    mh_findings_short[resource_arn]["AwsAccountAlias"] = finding["AwsAccountAlias"]
+                    mh_findings_short[resource_arn]["AwsAccountId"] = finding[
+                        "AwsAccountId"
+                    ]
+                    mh_findings_short[resource_arn]["AwsAccountAlias"] = finding[
+                        "AwsAccountAlias"
+                    ]
                     mh_findings_short[resource_arn]["Region"] = finding["Region"]
-                    mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0]["Type"]
+                    mh_findings_short[resource_arn]["ResourceType"] = finding[
+                        "Resources"
+                    ][0]["Type"]
 
                     # INVENTORY
                     mh_inventory.append(resource_arn)
@@ -165,13 +205,13 @@ def generate_findings(
                         mh_findings_short[resource_arn]["metachecks"] = mh_values
                         # Standard
                         mh_findings[resource_arn]["metachecks"] = mh_values
-                    
+
                     # METATAGS
                     if metatags:
                         # Short
-                        mh_findings_short[resource_arn]['metatags'] = mh_tags
+                        mh_findings_short[resource_arn]["metatags"] = mh_tags
                         # Standard
-                        mh_findings[resource_arn]['metatags'] = mh_tags
+                        mh_findings[resource_arn]["metatags"] = mh_tags
 
                 # FINDINGS
                 mh_findings_short[resource_arn]["findings"].append(
@@ -180,10 +220,16 @@ def generate_findings(
                 mh_findings[resource_arn]["findings"].append(finding_parsed)
             bar()
         bar.title = f"-> Completed"
-    
-    #Sort Statistics
+
+    # Sort Statistics
     for key_to_sort in mh_statistics:
-        mh_statistics[key_to_sort] = dict(sorted(mh_statistics[key_to_sort].items(), key=lambda item: item[1], reverse=True))
+        mh_statistics[key_to_sort] = dict(
+            sorted(
+                mh_statistics[key_to_sort].items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )
+        )
 
     return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
 
@@ -242,6 +288,7 @@ def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region)
         return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
     return [], []
 
+
 def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
     if confirm_choice("Are you sure you want to enrich all findings?"):
@@ -263,11 +310,13 @@ def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region):
         return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
     return [], []
 
+
 def count_mh_findings(mh_findings):
     count = 0
     for resource in mh_findings:
         count += len(mh_findings[resource]["findings"])
     return count
+
 
 def main(args):
     print_banner()
@@ -299,23 +348,26 @@ def main(args):
     elif args.sh_template:
         import yaml
         from pathlib import Path
+
         try:
             yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
             dict_values = next(iter(yaml_to_dict.values()))
             sh_filters = dict_values
         except yaml.scanner.ScannerError as err:
             logger.error("SH Template reading error: %s", err)
-            exit (0)
+            exit(0)
         except FileNotFoundError:
             logger.error("SH Template file not found: %s", args.sh_template)
-            exit (0)
+            exit(0)
     else:
         sh_filters = args.sh_filters
         sh_filters = set_sh_filters(sh_filters)
 
     # Parameter Validation: --mh-filters-checks
     if args.mh_filters_checks and not args.meta_checks:
-        logger.error("--mh-filters-checks provided but --meta-checks are disabled, ignoring...")
+        logger.error(
+            "--mh-filters-checks provided but --meta-checks are disabled, ignoring..."
+        )
     default_mh_filters_checks = {}
     if not args.mh_filters_checks:
         mh_filters_checks = default_mh_filters_checks
@@ -327,20 +379,28 @@ def main(args):
         elif mh_filters_checks[mh_filter_check_key].lower() == "false":
             mh_filters_checks[mh_filter_check_key] = bool(False)
         else:
-            logger.error("MetaHub Filter Only True/False Supported: " + str(mh_filters_checks))
+            logger.error(
+                "MetaHub Filter Only True/False Supported: " + str(mh_filters_checks)
+            )
             exit(1)
 
     # Parameter Validation: --mh-filters-tags
     if args.mh_filters_tags and not args.meta_tags:
-        logger.error("--mh-filters-tags provided but --meta-tags are disabled, ignoring...")
+        logger.error(
+            "--mh-filters-tags provided but --meta-tags are disabled, ignoring..."
+        )
     default_mh_filters_tags = {}
     if not args.mh_filters_tags:
         mh_filters_tags = default_mh_filters_tags
     else:
         mh_filters_tags = args.mh_filters_tags
-    
-    if (args.sh_account and not args.sh_assume_role) or (not args.sh_account and args.sh_assume_role):
-        logger.error("Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided.")
+
+    if (args.sh_account and not args.sh_assume_role) or (
+        not args.sh_account and args.sh_assume_role
+    ):
+        logger.error(
+            "Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided."
+        )
         exit(1)
 
     if not args.sh_account:
@@ -349,7 +409,7 @@ def main(args):
     else:
         sh_account = args.sh_account
         sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
-    
+
     if not args.sh_region:
         sh_region = get_region(logger)
     else:
@@ -357,22 +417,31 @@ def main(args):
     sh_region_aggregator = get_sh_findings_aggregator()
     if sh_region_aggregator:
         if sh_region_aggregator != sh_region:
-            logger.error("You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s...", sh_region, sh_region_aggregator, sh_region_aggregator)
+            logger.error(
+                "You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s...",
+                sh_region,
+                sh_region_aggregator,
+                sh_region_aggregator,
+            )
 
     print_title_line("")
+    sh_account_alias_str = (
+        " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
+    )
+    print_table("Security Hub Account: ", str(sh_account) + sh_account_alias_str)
+    print_table("Security Hub Role: ", str(args.sh_assume_role))
+    print_table("Security Hub Region: ", sh_region)
+    print_table("MetaHub Role: ", str(args.mh_assume_role))
     print_table("Security Hub filters: ", str(sh_filters))
     print_table("Security Hub yaml: ", str(args.sh_template))
     print_table("MetaChecks: ", str(args.meta_checks))
     print_table("MetaChecks Filters: ", str(mh_filters_checks))
     print_table("MetaTags: ", str(args.meta_tags))
     print_table("MetaTags Filters: ", str(mh_filters_tags))
-    print_table("Security Hub Account: ", str(sh_account) + " (" + str(sh_account_alias) + ")")
-    print_table("Security Hub Role: ", str(args.sh_assume_role))
-    print_table("Security Hub Region: ", sh_region)
-    print_table("Child Account Role: ", str(args.mh_assume_role))
+    print_table("Update Findings: ", str(args.update_findings))
+    print_table("Enrich Findings: ", str(args.enrich_findings))
     print_table("Output: ", str(args.output))
     print_table("Log Level: ", str(args.log_level))
-    print_table("Update Findings: ", str(args.update_findings))    
 
     if args.list_meta_checks:
         from metachecks.metachecks import list_metachecks
@@ -398,7 +467,7 @@ def main(args):
         sh_account=args.sh_account,
         sh_role=args.sh_assume_role,
         mh_role=args.mh_assume_role,
-        sh_region=sh_region
+        sh_region=sh_region,
     )
 
     if args.list_findings:
@@ -432,9 +501,10 @@ def main(args):
                     with open(WRITE_FILE, "w", encoding="utf-8") as f:
                         json.dump(mh_findings, f, indent=2)
                 print_table("File: ", WRITE_FILE)
-    
+
     if args.write_html:
         import jinja2
+
         metachecks_columns = args.write_meta_checks_columns
         metatags_columns = args.write_meta_tags_columns
         WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
@@ -446,35 +516,42 @@ def main(args):
             template = templateEnv.get_template(TEMPLATE_FILE)
             print_title_line("Write HTML")
             with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                html = template.render(data=mh_findings, statistics=mh_statistics, title="MetaHub", metachecks_columns=metachecks_columns, metatags_columns=metatags_columns)
+                html = template.render(
+                    data=mh_findings,
+                    statistics=mh_statistics,
+                    title="MetaHub",
+                    metachecks_columns=metachecks_columns,
+                    metatags_columns=metatags_columns,
+                )
                 f.write(html)
                 print_table("File: ", WRITE_FILE)
 
     if args.write_csv:
         import csv
+
         metachecks_columns = args.write_meta_checks_columns
         metatags_columns = args.write_meta_tags_columns
 
         def output_csv(output):
             new_list = []
             for key, dictionary in output.items():
-                new_dict = {'ARN': key}
+                new_dict = {"ARN": key}
                 if metatags_columns:
                     for column in metatags_columns:
                         try:
-                            dictionary[column] = dictionary['metatags'][column]
+                            dictionary[column] = dictionary["metatags"][column]
                         except KeyError:
-                            dictionary[column] = ''
+                            dictionary[column] = ""
                         except TypeError:
-                            dictionary[column] = ''
+                            dictionary[column] = ""
                 if metachecks_columns:
                     for column in metachecks_columns:
                         try:
-                            dictionary[column] = dictionary['metachecks'][column]
+                            dictionary[column] = dictionary["metachecks"][column]
                         except KeyError:
-                            dictionary[column] = ''
+                            dictionary[column] = ""
                         except TypeError:
-                            dictionary[column] = ''
+                            dictionary[column] = ""
                 new_dict.update(dictionary)
                 new_list.append(new_dict)
             columns = new_list[0].keys()
@@ -485,13 +562,17 @@ def main(args):
                 print_title_line("Write CSV: " + out)
                 WRITE_FILE = OUTPUT_DIR + "metahub-" + out + "-" + TIMESTRF + ".csv"
                 if out == "short":
-                    with open(WRITE_FILE, "w", encoding="utf-8", newline='') as output_file:
+                    with open(
+                        WRITE_FILE, "w", encoding="utf-8", newline=""
+                    ) as output_file:
                         columns, csv_list = output_csv(mh_findings_short)
                         dict_writer = csv.DictWriter(output_file, columns)
                         dict_writer.writeheader()
                         dict_writer.writerows(csv_list)
                 if out == "inventory":
-                    with open(WRITE_FILE, "w", encoding="utf-8", newline='') as output_file:
+                    with open(
+                        WRITE_FILE, "w", encoding="utf-8", newline=""
+                    ) as output_file:
                         columns = ["ARN"]
                         dict_writer = csv.writer(output_file)
                         dict_writer.writerow(columns)
@@ -499,14 +580,15 @@ def main(args):
                 if out == "statistics":
                     logger.error("CSV Output for Statistics not implemented...")
                 if out == "standard":
-                    with open(WRITE_FILE, "w", encoding="utf-8", newline='') as output_file:
+                    with open(
+                        WRITE_FILE, "w", encoding="utf-8", newline=""
+                    ) as output_file:
                         columns, csv_list = output_csv(mh_findings)
                         dict_writer = csv.DictWriter(output_file, columns)
                         dict_writer.writeheader()
                         dict_writer.writerows(csv_list)
                 if out != "statistics":
                     print_table("File: ", WRITE_FILE)
-
 
     print_title_line("Results")
     print_table("Non-Compliant Resources: ", str(len(mh_findings)))
@@ -525,7 +607,7 @@ def main(args):
             args.update_findings,
             args.sh_account,
             args.sh_assume_role,
-            sh_region
+            sh_region,
         )
         print_title_line("Results")
         print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
@@ -538,15 +620,12 @@ def main(args):
             print(color["BOLD"] + "Nothing to update..." + color["END"])
             exit(1)
         ProcessedFindings, UnprocessedFindings = enrich_findings(
-            logger,
-            mh_findings,
-            args.sh_account,
-            args.sh_assume_role,
-            sh_region
+            logger, mh_findings, args.sh_account, args.sh_assume_role, sh_region
         )
         print_title_line("Results")
         print_table("ProcessedFindings: ", str(len(ProcessedFindings)))
         print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)))
+
 
 if __name__ == "__main__":
     main(argv[1:])

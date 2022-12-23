@@ -1,7 +1,8 @@
-'''MetaCheck: AwsEc2Instance'''
+"""MetaCheck: AwsEc2Instance"""
 
 import boto3
 from metachecks.checks.Base import MetaChecksBase
+
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
@@ -28,29 +29,27 @@ class Metacheck(MetaChecksBase):
                 self.resource_id,
             ]
         )
-        if response['Reservations']:
-            return response['Reservations'][0]['Instances'][0]
+        if response["Reservations"]:
+            return response["Reservations"][0]["Instances"][0]
         return False
 
     def _describe_volumes(self):
         BlockDeviceMappings = []
         if self.instance:
-            if self.instance['BlockDeviceMappings']:
-                for ebs in self.instance['BlockDeviceMappings']:
-                    BlockDeviceMappings.append(ebs['Ebs']['VolumeId'])
+            if self.instance["BlockDeviceMappings"]:
+                for ebs in self.instance["BlockDeviceMappings"]:
+                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
         if BlockDeviceMappings:
-            response = self.client.describe_volumes(
-                VolumeIds=BlockDeviceMappings
-            )
-            return response['Volumes']
+            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
+            return response["Volumes"]
         return False
 
     def _describe_security_group_rules(self):
         SG = []
         if self.instance:
-            if self.instance['SecurityGroups']:
-                for sg in self.instance['SecurityGroups']:
-                    SG.append(sg['GroupId'])
+            if self.instance["SecurityGroups"]:
+                for sg in self.instance["SecurityGroups"]:
+                    SG.append(sg["GroupId"])
         if SG:
             response = self.client.describe_security_group_rules(
                 Filters=[
@@ -67,7 +66,7 @@ class Metacheck(MetaChecksBase):
         IamInstanceProfile = False
         if self.instance:
             try:
-                IamInstanceProfile = self.instance["IamInstanceProfile"]['Arn']
+                IamInstanceProfile = self.instance["IamInstanceProfile"]["Arn"]
             except KeyError:
                 IamInstanceProfile = False
         if IamInstanceProfile:
@@ -135,7 +134,7 @@ class Metacheck(MetaChecksBase):
     def is_running(self):
         State = False
         if self.instance:
-            State = self.instance["State"]['Name']
+            State = self.instance["State"]["Name"]
             if State == "running":
                 return True
         return False
@@ -144,8 +143,8 @@ class Metacheck(MetaChecksBase):
         SG = []
         if self.instance_security_groups_rules:
             for rule in self.instance_security_groups_rules:
-                if rule['GroupId'] not in SG:
-                    SG.append(rule['GroupId'])
+                if rule["GroupId"] not in SG:
+                    SG.append(rule["GroupId"])
         if SG:
             return SG
         return False
@@ -177,26 +176,28 @@ class Metacheck(MetaChecksBase):
         IamInstanceProfileRoles = False
         if self.instance_profile_roles:
             for role in self.instance_profile_roles["Roles"]:
-                IamInstanceProfileRoles = role['Arn']
+                IamInstanceProfileRoles = role["Arn"]
             return IamInstanceProfileRoles
         return False
 
-    def is_instance_metadata_v2(self):      
+    def is_instance_metadata_v2(self):
         HttpTokens = False
         if self.instance:
             try:
-                HttpTokens = self.instance["MetadataOptions"]['HttpTokens']
+                HttpTokens = self.instance["MetadataOptions"]["HttpTokens"]
             except KeyError:
                 HttpTokens = False
             if HttpTokens == "required":
                 return True
         return False
 
-    def is_instance_metadata_hop_limit_1(self):      
+    def is_instance_metadata_hop_limit_1(self):
         HttpPutResponseHopLimit = False
         if self.instance:
             try:
-                HttpPutResponseHopLimit = self.instance["MetadataOptions"]['HttpPutResponseHopLimit']
+                HttpPutResponseHopLimit = self.instance["MetadataOptions"][
+                    "HttpPutResponseHopLimit"
+                ]
             except KeyError:
                 HttpPutResponseHopLimit = False
             if HttpPutResponseHopLimit == 1:
@@ -207,7 +208,7 @@ class Metacheck(MetaChecksBase):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
-                EBS.append(ebs['VolumeId'])
+                EBS.append(ebs["VolumeId"])
         if EBS:
             return EBS
         return False
@@ -216,14 +217,17 @@ class Metacheck(MetaChecksBase):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
-                if not ebs['Encrypted']:
-                    EBS.append(ebs['VolumeId'])
+                if not ebs["Encrypted"]:
+                    EBS.append(ebs["VolumeId"])
         if EBS:
             return EBS
         return False
 
     def is_public(self):
-        if self.it_has_public_ip() and self.is_attached_to_security_group_rules_unrestricted():
+        if (
+            self.it_has_public_ip()
+            and self.is_attached_to_security_group_rules_unrestricted()
+        ):
             return True
         return False
 
@@ -249,6 +253,6 @@ class Metacheck(MetaChecksBase):
             "it_has_unencrypted_ebs",
             "is_attached_to_security_group_rules_unrestricted",
             "is_public",
-            "is_encrypted"
+            "is_encrypted",
         ]
         return checks

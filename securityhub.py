@@ -17,7 +17,9 @@ class SecurityHub:
         elif sh_role and sh_account:
             sh_role_assumend = assume_role(logger, sh_account, sh_role)
             shsess = get_boto3_session(sh_role_assumend)
-            self.sh_client = shsess.client(service_name="securityhub", region_name=sh_region)
+            self.sh_client = shsess.client(
+                service_name="securityhub", region_name=sh_region
+            )
         else:
             self.logger.error("Missing data for assuming a Session to SH")
             exit(1)
@@ -85,7 +87,7 @@ class SecurityHub:
     def _spit_list(self, lst, n):
         """split a list into multipe lists from n items"""
         for i in range(0, len(lst), n):
-            yield lst[i:i + n]
+            yield lst[i : i + n]
 
     def update_findings_workflow(self, mh_findings, update):
         update["FindingIdentifiers"] = []
@@ -97,9 +99,15 @@ class SecurityHub:
                     update["FindingIdentifiers"].append(FindingIdentifier)
         self.logger.info("Splitting findings into 100 items batches...")
         sub_list_count = 0
-        for FindingIdentifiers_sub_list in list(self._spit_list(update["FindingIdentifiers"], 100)):
+        for FindingIdentifiers_sub_list in list(
+            self._spit_list(update["FindingIdentifiers"], 100)
+        ):
             sub_list_count += 1
-            self.logger.info("Updating Batch %s (items: %s)", sub_list_count, len(FindingIdentifiers_sub_list))
+            self.logger.info(
+                "Updating Batch %s (items: %s)",
+                sub_list_count,
+                len(FindingIdentifiers_sub_list),
+            )
             response = self.sh_client.batch_update_findings(
                 FindingIdentifiers=FindingIdentifiers_sub_list,
                 Workflow=update["Workflow"],
@@ -107,7 +115,6 @@ class SecurityHub:
             )
             response_multiple.append(response)
         return response_multiple
-
 
     def update_findings_meta(self, mh_findings):
         response_multiple = []
@@ -138,13 +145,20 @@ class SecurityHub:
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
                 # To Do: Improve, only one update for resource.
                 if combined:
-                    self.logger.info("Enriching finding %s with MetaTags and MetaChecks: %s", FindingIdentifier["Id"], combined)
+                    self.logger.info(
+                        "Enriching finding %s with MetaTags and MetaChecks: %s",
+                        FindingIdentifier["Id"],
+                        combined,
+                    )
                     response = self.sh_client.batch_update_findings(
                         FindingIdentifiers=[FindingIdentifier],
                         UserDefinedFields=combined,
-                        Note = {"Text": "test", "UpdatedBy": "MetaHub"},
+                        Note={"Text": "test", "UpdatedBy": "MetaHub"},
                     )
                     response_multiple.append(response)
                 else:
-                    self.logger.info("Ignoring finding %s as it has not MetaTags and MetaChecks", FindingIdentifier["Id"])
+                    self.logger.info(
+                        "Ignoring finding %s as it has not MetaTags and MetaChecks",
+                        FindingIdentifier["Id"],
+                    )
         return response_multiple

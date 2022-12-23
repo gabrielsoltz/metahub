@@ -17,7 +17,7 @@ class Metacheck(MetaChecksBase):
             self.client = sess.client(service_name="s3", region_name=region)
         if metachecks:
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
-            self.account_id = finding['AwsAccountId']
+            self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
             self.bucket_acl = self._get_bucket_acl()
             self.bucket_policy = self._get_bucket_policy()
@@ -48,12 +48,17 @@ class Metacheck(MetaChecksBase):
                 # so bucket is still available in listing but actually not exists
                 pass
                 return False
-            elif err.response["Error"]["Code"] == "ServerSideEncryptionConfigurationNotFoundError":
+            elif (
+                err.response["Error"]["Code"]
+                == "ServerSideEncryptionConfigurationNotFoundError"
+            ):
                 return False
             else:
-                self.logger.error("Failed to get_bucket_encryption: " + self.resource_id)
+                self.logger.error(
+                    "Failed to get_bucket_encryption: " + self.resource_id
+                )
                 return False
-        return response['ServerSideEncryptionConfiguration']['Rules']
+        return response["ServerSideEncryptionConfiguration"]["Rules"]
 
     def _get_bucket_acl(self):
         try:
@@ -212,7 +217,7 @@ class Metacheck(MetaChecksBase):
                         policy_allow_with_cross_account_principal.append("*")
                     else:
                         if "AWS" in principal:
-                            principals = principal['AWS']
+                            principals = principal["AWS"]
                         elif "Service" in principal:
                             principals = []
                         else:
@@ -223,10 +228,16 @@ class Metacheck(MetaChecksBase):
                             try:
                                 account_id = p.split(":")[4]
                                 if account_id != self.account_id:
-                                    policy_allow_with_cross_account_principal.append(account_id)
+                                    policy_allow_with_cross_account_principal.append(
+                                        account_id
+                                    )
                             except IndexError:
-                                self.logger.error("Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ", p, self.resource_id)
-                                # To DO: check identifiers-unique-ids 
+                                self.logger.error(
+                                    "Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ",
+                                    p,
+                                    self.resource_id,
+                                )
+                                # To DO: check identifiers-unique-ids
                                 # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
             if policy_allow_with_cross_account_principal:
                 return policy_allow_with_cross_account_principal
@@ -244,15 +255,15 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "is_bucket_acl_public", 
-            "is_bucket_policy_public", 
-            "is_public", 
-            "it_has_bucket_policy", 
-            "it_has_bucket_acl", 
+            "is_bucket_acl_public",
+            "is_bucket_policy_public",
+            "is_public",
+            "it_has_bucket_policy",
+            "it_has_bucket_acl",
             "it_has_bucket_acl_with_cross_account",
-            "it_has_bucket_policy_allow_with_wildcard_principal", 
+            "it_has_bucket_policy_allow_with_wildcard_principal",
             "it_has_bucket_policy_allow_with_wildcard_actions",
             "it_has_bucket_policy_allow_with_cross_account_principal",
-            "is_encrypted"
-            ]
+            "is_encrypted",
+        ]
         return checks
