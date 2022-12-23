@@ -210,13 +210,24 @@ You can use three options to configure where and how AWS Security Hub is running
 
 # Usage
 
+- [Help](#help)
+- [Listing Findings](#listing)
+- [Security Hub Filters](#security-hub-filters)
+- [MetaChecks](#metachecks-1)
+- [MetaTags](#metatags-1)
+- [Updating Findings Workflow Status](#updating-findings-workflow-status)
+- [Enriching Findings](#enriching-findings-1)
+- [Write Files](#write-files)
+- [SH House Keeping](#sh-house-keeping)
+- [Debug](#debug)
+
 ## Help
 
   ```sh
   ./metahub --help
   ```
 
-## Listing
+## Listing Findings
 
 ### Get findings (default security hub filters applied)
 
@@ -368,7 +379,9 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --output statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
   ```
 
-## Set Log Level (INFO, WARNING, ERROR or DEBUG. Default: ERROR)
+## Debug
+
+### Set Log Level (INFO, WARNING, ERROR or DEBUG. Default: ERROR)
 
   ```sh
   ./metahub --log-level INFO
