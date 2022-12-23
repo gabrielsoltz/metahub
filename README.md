@@ -15,8 +15,8 @@
 - [Examples](#investigations-examples)
 - [Requirements](#requirements)
 - [AWS Authentication](#aws-authentication)
+- [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
-- [Advanced Usage](#advanced-usage)
 - [Outputs](#Outputs)
 - [Write File](#write-file)
 - [Findings Aggregation](#findings-aggregation)
@@ -71,7 +71,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). You can also export your outputs to Json, CSV and HTML formats.
 
-**MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Advanced Usage](#advanced-usage)
+**MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
 
 ## Investigations Examples
 
@@ -168,34 +168,44 @@ Next time you only need steps 4 and 6 to use the program.
 
 - Ensure you have AWS credentials setup on your local machine (or from where you will run MetaHub).
 
-### Single Account Setup 
+For example you can use `aws configure` option. 
+  ```sh
+  aws configure
+  ```
 
-- If you are running MetaHub on a single account setup (AWS Security Hub is not aggregating findings from another accounts), you don't need to assume to call AssumeRole. Check that your credentials can get_findings from AWS Security Hub (and update them if you want to use the options --update-findings or --enrich-findings).
-- If you want to execute `--meta-checks` and `--meta-tags` you will also need Read policies for describing your resources.
-- Still, is also possible if you need it to login and assume a role in the same account, just use the options `--mh-assune-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
+Or you can export your credentials to environment. 
 
-If you are using a Multi Account setup see [Advanced Usage](#advanced-usage)
+  ```sh
+  export AWS_DEFAULT_REGION="us-east-1"
+  export AWS_ACCESS_KEY_ID="ASXXXXXXX"
+  export AWS_SECRET_ACCESS_KEY="XXXXXXXXX"
+  export AWS_SESSION_TOKEN="XXXXXXXXX"
+  ```
 
-### Configuring AWS Credentials using the AWS CLI and export them to environment
+## Configuring Security Hub
 
-    ```sh
-    aws configure
-    ```
+You can use three options to configure where and how AWS Security Hub is running:
 
-    ```sh
-    export AWS_DEFAULT_REGION="region"
-    export AWS_ACCESS_KEY_ID="ASXXXXXXX"
-    export AWS_SECRET_ACCESS_KEY="XXXXXXXXX"
-    export AWS_SESSION_TOKEN="XXXXXXXXX"
-    ```
+- `--sh-region`: The AWS Region where Security Hub is running. If you don't specify any region, it will use the one configured in your environment. If you are using [AWS Security Hub Cross-Region aggregation](https://docs.aws.amazon.com/securityhub/latest/userguide/finding-aggregation.html), you should use that region as the `--sh-region` option so that you can fetch all findings together. 
+- `--sh-account` and `--sh-assume-role`: The AWS Account ID where Security Hub is running (`--sh-account`) and the AWS IAM role to assume in that account (`--sh-assume-role`). These options are helpful when you are logged in to a different AWS Account than the one where AWS Security Hub is running or when you are running AWS Security Hub in a multiple AWS Account setup. Both options must be used together. The role provided needs to have enough policies to get and update findings in AWS Security Hub (if needed).
+- You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
 
-### Policies for MetaChecks and MetaTags
+### Configuring MetaChecks and MetaTags
 
+- The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks` and `--meta-tags`.
+- The role you assume needs to be able to describe services. 
+- Still, it is also possible if you need it to log in and assumes a role in the same account, just use the options `--mh-assume-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
 - You can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
 
-### Policies for describe and/or update AWS Security Hub findings
+### Single Account Setup 
 
-- You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
+- If you are running MetaHub for a single AWS account setup (AWS Security Hub is not aggregating findings from other accounts), you don't need to use any of the assume-role options. Check that your credentials can get_findings from AWS Security Hub (and update them if you want to use the options --update-findings or --enrich-findings) and that you can describe services.
+- Still, if your IAM requires it, it is possible to log in and assume a role in the same account. Just use the options `--mh-assume-role` to specify the role and `--sh-account` with the same AWS Account ID where you are logged in. 
+
+### Multiple Account Setup
+
+- If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for MetaChecks and MetaTags as the affected resources are not in the same AWS Account than the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources. 
+- You can choose to provide `--sh-account` and `--sh-assume-role` as needed, for example, if you are logged in the same account than AWS Security Hub, you probably don't need to assume a role there. But you can if needed. 
 
 ## Usage
 
@@ -322,53 +332,9 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ./metahub --log-level INFO
   ```
 
-
-## Advanced Usage
-
-### Multi Accounts Setups
-
-If you are running AWS Security Hub in the same account as your resources, you can skip this part. 
-
-**MetaHub** supports 3 different Multi Accounts setups in addition to the single account setup.
-
-- Running MetaHub where AWS Security Hub master is running, but your resources are running in different AWS Accounts. See [Assuming a role for your Child Accounts](#Assuming-a-role-for-your-Child-AWS-Accounts)
-- Running MetaHub in a different AWS Account than the one where AWS Security Hub is running. Your resources are in this account. See [Assuming a role for Security Hub](#Assuming-a-role-for-AWS-Security-Hub)
-- Running MetaHub in a different AWS Account than the one where AWS Security Hub is running, and your resources are running. See [Assuming a role for Security Hub and your Child AWS Accounts](#Assuming-a-role-for-Security-Hub-and-your-Child-AWS-Accounts)
-
-### Assuming a role for your Child AWS Accounts
-
-In this scenario, you are running **MetaHub** in a different AWS Account than the one your resources are running.
-You need to assume a role to connect to your resources to execute MetaChecks. 
-
-Use `--mh-assume-role` to specify the AWS IAM Role to be assumed in that AWS Account.
-
-```sh
-./metahub --list-findings --mh-assume-role SecurityRole
-```
-
-### Assuming a role for AWS Security Hub
-
-In this scenario, you are running **MetaHub** in a different AWS Account than the one where AWS Security Hub runs as Master. 
-You need to assume a role to connect with AWS Security Hub and fetch all security findings.
-
-Use `--sh-account` to specify the AWS Account ID where AWS Security Hub is running.
-Use `--sh-assume-role` to specify the AWS IAM Role to be assumed in that AWS Account.
-
-```sh
-./metahub --list-findings --sh-account 01234567890 --sh-assume-role SecurityRole
-```
-
-### Assuming a role for Security Hub and your Child AWS Accounts
-
-Combine all options
-
-```sh
-./metahub --list-findings --sh-account 01234567890 --sh-assume-role SecurityRole --mh-assume-role SecurityRole
-```
-
 ## Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-` options, or show them as output using the option `--list-findings`.
+**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-html`, `--write-json` or `--write-csv` options, or show them as output using the option `--list-findings`.
 
 ### Standard
 
@@ -638,8 +604,6 @@ Note that not all AWS resource type supports this API, you can check [supported 
 
 So now, in addition to the `findings` section we have an extra section `metatags.`
 
-MetaTags are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`.
-
 You can use MetaTags for your filters or for updating resources. See [Filtering](#Filtering)
 
 # Filtering
@@ -770,9 +734,9 @@ Examples:
 ./metahub --list-findings --meta-tags --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
 ```
 
-# Updating Findings
+# Updating Workflow Status
 
-You can use **MetaHub** to update your AWS Security Findings in bulk. 
+You can use **MetaHub** to update your AWS Security Findings Workflow Status in bulk. 
 
 Think again at the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
 
@@ -783,8 +747,6 @@ For example, you can update the Workflow Status of those findings in one shot: `
 **MetaHub** supports `KEY=VALUE` parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
 
 AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings besides the amount.
-
-It's only possible to update the field `Worfklow` as for now. 
 
 Examples:
 
