@@ -205,6 +205,7 @@ You can use three options to configure where and how AWS Security Hub is running
 ### Multiple Account Setup
 
 - If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for MetaChecks and MetaTags as the affected resources are not in the same AWS Account than the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources. 
+- If you are logged in to a Master/SSO/Jump AWS Account, that you use just for log in, you then probably need to speficy all the options together: `--sh-account` and `--sh-assume-role` for speficying where AWS Security Hub is running and which role to assume, and `--mh-assume-role` to speficy which role to assume in the affected AWS Accounts when you are using `--meta-checks` and `--meta-tags`. If you use the same role for AWS Security Hub and for the affected AWS Accounts, speficy both with the same value.
 - You can choose to provide `--sh-account` and `--sh-assume-role` as needed, for example, if you are logged in the same account than AWS Security Hub, you probably don't need to assume a role there. But you can if needed. 
 
 ## Usage
