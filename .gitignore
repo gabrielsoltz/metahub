@@ -131,3 +131,7 @@ dmypy.json
 ToDo.md
 jinja_templates/*
 .DS_Store
+
+outputs/*.html
+outputs/*.csv
+outputs/*.json
