@@ -23,8 +23,8 @@
 - [MetaChecks](#MetaChecks)
 - [MetaTags](#MetaTags)
 - [Filtering](#Filtering)
-- [Updating Findings](#updating-findings-1)
-- [Enriching Findings](#enriching-findings)
+- [Updating Workflow Status](#updating-workflow-status)
+- [Enriching Findings](#enriching-findings-1)
 
 ## Description
 
@@ -211,10 +211,10 @@ You can use three options to configure where and how AWS Security Hub is running
 # Usage
 
 - [Help](#help)
-- [Listing Findings](#listing)
+- [Listing Findings](#listing-findings)
 - [Security Hub Filters](#security-hub-filters)
-- [MetaChecks](#metachecks-1)
-- [MetaTags](#metatags-1)
+- [MetaChecks](#metachecks)
+- [MetaTags](#metatags)
 - [Updating Findings Workflow Status](#updating-findings-workflow-status)
 - [Enriching Findings](#enriching-findings-1)
 - [Write Files](#write-files)
