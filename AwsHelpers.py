@@ -50,18 +50,39 @@ def get_account_id(logger):
     except NoCredentialsError as e:
         logger.error("Error Getting Account Id: {}".format(e))
         exit(1)
+    except ClientError as e:
+        logger.error("Error Getting Account Id: {}".format(e))
+        exit(1)
     return account_id
 
 
 def get_region(logger):
-    my_session = boto3.session.Session()
-    my_region = my_session.region_name
+    try:
+        my_session = boto3.session.Session()
+        my_region = my_session.region_name
+    except NoCredentialsError as e:
+        logger.error("Error Getting Region: {}".format(e))
+        exit(1)
+    except ClientError as e:
+        logger.error("Error Getting Region: {}".format(e))
+        exit(1)
     return my_region
 
 
 def get_available_regions(logger, aws_service):
-    my_session = boto3.session.Session()
-    available_regions = my_session.get_available_regions(aws_service)
+    try:
+        my_session = boto3.session.Session()
+        available_regions = my_session.get_available_regions(aws_service)
+    except NoCredentialsError as e:
+        logger.error(
+            "Error Getting Available Regions for Service {}: {}".format(aws_service, e)
+        )
+        exit(1)
+    except ClientError as e:
+        logger.error(
+            "Error Getting Available Regions for Service {}: {}".format(aws_service, e)
+        )
+        exit(1)
     return available_regions
 
 
