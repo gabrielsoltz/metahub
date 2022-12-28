@@ -54,6 +54,7 @@ def generate_findings(
         "ProductArn": {},
         "ResourceType": {},
         "AwsAccountId": {},
+        "AwsAccountAlias": {},
         "Region": {},
         "ResourceId": {},
     }
@@ -157,6 +158,10 @@ def generate_findings(
                     if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
                         mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
                     mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
+                    # AwsAccountAlias
+                    if not finding["AwsAccountAlias"] in mh_statistics["AwsAccountAlias"]:
+                        mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] = 0
+                    mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] += 1
                     # Region
                     if not finding["Region"] in mh_statistics["Region"]:
                         mh_statistics["Region"][finding["Region"]] = 0
