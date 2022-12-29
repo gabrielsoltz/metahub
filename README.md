@@ -538,7 +538,9 @@ You can create enriched HTML reports of your findings, adding MetaChecks and Met
 
 HTML Reports are interactive in many ways: You can add/remove columns, you can sort and filter by any column, and you can also download that data to xlsx, csv, html and json. Meaning you can manipulate the htnml report in a lot of different ways.
 
-You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. For example you can enable MetaTags and add "Owner" and "Environment" as columns to your report using: 
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. 
+
+For example you can enable MetaTags and add "Owner" and "Environment" as columns to your report using: 
 
 `./metahub --meta-tags --write-html --write-meta-tags-columns Owner Environment`
 
@@ -552,7 +554,9 @@ You can customize the MetaChecks and MetaTags to use as columns headers using th
 
 You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
 
-For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 2 csv files, one for standard and one for inventory outputs with extra columns `Name` `Owner` from MetaTags and `is_encrypted` from MetaChecks.
+For example you can generate 2 csv outputs one for standard and one for inventory with MetaTags and MetaChecks enabled adding columns `is_encrypted` from MetaChecks and `Name` and `Owner` from MetaTags:
+
+`./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv`
 
 <p align="center">
   <img src="csv-export.png" alt="csv-example"/>
