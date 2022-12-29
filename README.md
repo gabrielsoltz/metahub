@@ -426,7 +426,7 @@ You can use `--output statistics` to get statistics about your search. You get s
 
 ## Write File
 
-You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. Outpus will be saved in folder output with the date of the run . 
+You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. Outpus will be saved in folder `/outputs` with the date of the run . 
 
 ### Json
 
