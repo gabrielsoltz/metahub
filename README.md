@@ -759,15 +759,25 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
 
 So now, in addition to the `findings` section we have an extra section `metachecks.` MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. In this example, 6 MetaChecks were executed against the affected resource: `is_attached_to_network_interfaces`, `is_attached_to_ec2_instances`, `is_attached_to_public_ips`, `is_attached_to_managed_services`, `is_public` and `is_referenced_by_another_sg`. Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
 
-You can use MetaChecks for your filters or for updating resources. See [MetaChecks Filtering](#metachecks-filtering)
+You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
 
 If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull requests are more than welcome.
 
 ## MetaTags
 
-**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query your the tags associated to your resources by using the option `--meta-tags.`
+**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated to your resources by using the option `--meta-tags.`
 
 Note that not all AWS resource type supports this API, you can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
+
+Tags are a critical part for understanding your context. Tags strategies often includes: 
+- Environment (like Production, Staging, Development, etc.)
+- Data classification (like Confidential, Restricted, etc.)
+- Owner (like a team, a squad, a business unit, etc.)
+- Compliance (like PCI, SOX, etc.)
+
+If you follow a useful tagging strategy, you will be able to filter and generate interesting outputs, for example, you could list all findings that are related to a speficic team and provide that data directly to that team.
+
+`./metahub --list-findings --sh-filters ResourceId=arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890 --meta-tags`
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -781,13 +791,15 @@ Note that not all AWS resource type supports this API, you can check [supported 
   "metatags": {
     "Name": "testSG",
     "Environment": "Production",
+    "Classification": "Restricted",
+    "Owner": "Security Team"
   }
 }
 ```
 
 So now, in addition to the `findings` section we have an extra section `metatags.` Each entry is a combination of Tag and Value for the associated with the affected resource.
 
-You can use MetaTags for your filters or for updating resources. See [MetaTags Filtering](#metatags-filtering)
+You can filter your findings based on MetaTags output using the option `--mh-filters-tags Tag=Value`. See [MetaTags Filtering](#metatags-filtering)
 
 # Filtering
 
