@@ -389,40 +389,138 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
 
 # Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-html`, `--write-json` or `--write-csv` options, or show them as output using the option `--list-findings`.
+**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-html`, `--write-json` or `--write-csv` options, or show them as output using the option `--list-findings`. You can enrich these outputs by enabling `--meta-checks` and `--meta-tags`.
 
 ### Standard
 
 The default output. Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding you will get:
 
-`Title`
-`SeverityLabel`
-`WorkflowStatus`
-`RecordState`
-`ComplianceStatus`
-`Id`
-`ProductArn`
-`ResourceType`
+```
+  "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/ofuscated": {
+    "findings": [
+      {
+        "SageMaker.3 Users should not have root access to SageMaker notebook instances": {
+          "SeverityLabel": "HIGH",
+          "Workflow": {
+            "Status": "NEW"
+          },
+          "RecordState": "ACTIVE",
+          "Compliance": {
+            "Status": "FAILED"
+          },
+          "Id": "arn:aws:securityhub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.3/finding/12345-0193-4a97-9ad7-bc7c1730eec6",
+          "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
+        }
+      },
+      {
+        "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": {
+          "SeverityLabel": "HIGH",
+          "Workflow": {
+            "Status": "NEW"
+          },
+          "RecordState": "ACTIVE",
+          "Compliance": {
+            "Status": "FAILED"
+          },
+          "Id": "arn:aws:securityhub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.2/finding/12345-e8e1-4915-9881-965104b0aabf",
+          "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
+        }
+      },
+      {
+        "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": {
+          "SeverityLabel": "HIGH",
+          "Workflow": {
+            "Status": "NEW"
+          },
+          "RecordState": "ACTIVE",
+          "Compliance": {
+            "Status": "FAILED"
+          },
+          "Id": "arn:aws:securityhub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.1/finding/12345-3a21-4016-a8e5-f5173b44e90a",
+          "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
+        }
+      }
+    ],
+    "AwsAccountId": "ofuscated",
+    "AwsAccountAlias": "ofuscated",
+    "Region": "eu-west-1",
+    "ResourceType": "AwsSageMakerNotebookInstance"
+  },
+```
 
 ### Short
 
 You can use `--output short` to reduce the findings section to show only the Title.
 
+```
+  "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated": {
+    "findings": [
+      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
+      "SageMaker.3 Users should not have root access to SageMaker notebook instances",
+      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
+    ],
+    "AwsAccountId": "ofuscated",
+    "AwsAccountAlias": "ofuscated",
+    "Region": "us-east-1",
+    "ResourceType": "AwsSageMakerNotebookInstance"
+  },
+```  
+
 ### Inventory
 
 You can use `--output inventory` to get only a list of resource's ARNs.
 
+```
+[
+  arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated
+]
+```
+
 ### Statistics
 
-You can use `--output statistics` to get statistics about your search. You get statistics by:
+You can use `--output statistics` to get statistics about your search. You get statistics by each field:
 
-`Title`
-`SeverityLabel`
-`WorkflowStatus`
-`RecordState`
-`ComplianceStatus`
-`ProductArn`
-`ResourceType`
+```
+{
+  "Title": {
+    "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": 2,
+    "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": 2,
+    "SageMaker.3 Users should not have root access to SageMaker notebook instances": 2,
+  },
+  "SeverityLabel": {
+    "HIGH": 6
+  },
+  "Workflow": {
+    "NEW": 6
+  },
+  "RecordState": {
+    "ACTIVE": 6
+  },
+  "Compliance": {
+    "FAILED": 6
+  },
+  "ProductArn": {
+    "arn:aws:securityhub:eu-west-1::product/aws/securityhub": 6,
+  },
+  "ResourceType": {
+    "AwsSageMakerNotebookInstance": 6
+  },
+  "AwsAccountId": {
+    "ofuscated": 6
+  },
+  "AwsAccountAlias": {
+    "ofuscated": 6
+  },
+  "Region": {
+    "eu-west-1": 3,
+    "us-east-1": 3
+  },
+  "ResourceId": {
+    "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/ofuscated": 3,
+    "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated": 3
+  }
+}
+```
 
 ## Write File
 
