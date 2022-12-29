@@ -67,7 +67,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** lets you enrich your AWS Security Hub findings directly in AWS Security Hub using the option `--enrich-findings`. This action will update your Security Hub findings using the field `UserDefinedFields`. You can then create filters or insights direclty in AWS Security Hub. See [Enriching Findings](#enriching-findings)
 
-**MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow states using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Findings](#Updating-Findings)
+**MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
 
 **MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). You can also export your outputs to Json, CSV and HTML formats.
 
