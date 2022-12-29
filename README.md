@@ -391,7 +391,7 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
 
 **MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-html`, `--write-json` or `--write-csv` options, or show them as output using the option `--list-findings`. You can enrich these outputs by enabling `--meta-checks` and `--meta-tags`.
 
-### Standard
+## Standard
 
 The default output. Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding you will get:
 
@@ -448,7 +448,7 @@ The default output. Show all findings with all data. Findings are organized by R
   },
 ```
 
-### Short
+## Short
 
 You can use `--output short` to reduce the findings section to show only the Title.
 
@@ -466,7 +466,7 @@ You can use `--output short` to reduce the findings section to show only the Tit
   },
 ```  
 
-### Inventory
+## Inventory
 
 You can use `--output inventory` to get only a list of resource's ARNs.
 
@@ -476,7 +476,7 @@ You can use `--output inventory` to get only a list of resource's ARNs.
 ]
 ```
 
-### Statistics
+## Statistics
 
 You can use `--output statistics` to get statistics about your search. You get statistics by each field:
 
@@ -522,16 +522,16 @@ You can use `--output statistics` to get statistics about your search. You get s
 }
 ```
 
-## Write File
+# Write File
 
 You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. Outpus will be saved in folder `/outputs` with the date of the run . 
 
-### Json
+## Json
 
 `--write-json` will create a file for each `--output` selected. 
 For example: `./metahub --output standard inventory --meta-tags --write-json` will generate 2 json files, one for standard and one for inventory outputs.
 
-### HTML
+## HTML
 
 You can create enriched HTML reports of your findings, adding MetaChecks and MetaTags as part of them. 
 
@@ -545,7 +545,7 @@ You can customize the MetaChecks and MetaTags to use as columns headers using th
   <img src="html-export.png" alt="html-example"/>
 </p>
 
-### CSV
+## CSV
 
 `--write-csv` will create a file for each `--output` selected. Output `statistics` is not supported for this format. 
 
@@ -557,7 +557,7 @@ For example: `./metahub --output standard inventory --meta-tags --write-meta-tag
   <img src="csv-export.png" alt="csv-example"/>
 </p>
 
-## Findings Aggregation
+# Findings Aggregation
 
 Working with AWS Security Hub findings sometimes introduces the problem of Shadowing and Duplication.
 
@@ -584,7 +584,7 @@ So now you have in your dashboard four findings for one resource!
 
 Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
 
-### MetaHub Aggregation by Resource
+## MetaHub Aggregation by Resource
 
 **MetaHub** aggregates all findings under the affected resource. You have 2 possible outputs, the short one and the default one:
 
@@ -597,7 +597,11 @@ This is how MetaHub shows the previous example using the `--output-short` output
     "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
     "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
     "EC2.22 Unused EC2 security groups should be removed"
-  ]
+  ],
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
 }
 ```
 
@@ -614,8 +618,7 @@ And this is how MetaHub shows you the output using the default output:
         },
         "RecordState": "ACTIVE",
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
-        "Type": "AwsEc2SecurityGroup"
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
     },
     {
@@ -626,8 +629,7 @@ And this is how MetaHub shows you the output using the default output:
         },
         "RecordState": "ACTIVE",
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
-        "Type": "AwsEc2SecurityGroup"
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
     },
     {
@@ -638,8 +640,7 @@ And this is how MetaHub shows you the output using the default output:
         },
         "RecordState": "ACTIVE",
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
-        "Type": "AwsEc2SecurityGroup"
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
     },
     {
@@ -650,13 +651,15 @@ And this is how MetaHub shows you the output using the default output:
         },
         "RecordState": "ACTIVE",
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
-        "Type": "AwsEc2SecurityGroup"
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
     }
     }
   ],
-  "AwsAccountId": "01234567890"
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
 }
 ```
 
@@ -676,7 +679,11 @@ Think again about that SG. Let's assume it's attached to something, so we have t
     "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
     "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
     "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
-  ]
+  ],
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
 }
 ```
 
@@ -719,7 +726,11 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
       "sg-02222222222",
       "sg-03333333333"
     ]
-  }
+  },
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
 }
 ```
 
