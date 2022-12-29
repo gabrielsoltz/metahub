@@ -8,7 +8,7 @@
   <b>MetaHub</b> is the command line utility for AWS Security Hub.
 </p>
 
-## Table of Contents
+# Table of Contents
 
 - [Description](#description)
 - [Features](#features)
@@ -26,7 +26,7 @@
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings-1)
 
-## Description
+# Description
 
 **MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). Using **MetaHub**, you can perform your investigations on top no matter what amount of product sources, standards, checks, or findings you have for identifying real and false positives, grouping related findings, and enriching them with data about your context.
 
@@ -51,7 +51,7 @@ If you are investigating a finding for a Security Group with a port open, you ca
 </p>
 
 
-## Features
+# Features
 
 **MetaHub** introduces different **ways of listing AWS Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. MetaHub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
@@ -73,9 +73,9 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
 
-## Investigations Examples
+# Investigations Examples
 
-### Investigating security findings using Security Hub filters
+## Investigating security findings using Security Hub filters
 
 - List all affected resources by AWS Security Hub findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
 `./metahub --list-findings`
@@ -89,7 +89,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 - Filter only one AWS Account and show statistics:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --output statistics`
 
-### Investigating resources based on MetaTags (Tagging)
+## Investigating resources based on MetaTags (Tagging)
 
 - List all affected resources by AWS Security Hub findings and enrich them with MetaTags (Tagging):
 `./metahub --list-findings --meta-tags`
@@ -100,7 +100,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 - Filter only the affected resources that has a Tag "Environment" with value "Production" wich are HIGH severity:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production`
 
-### Investigating resources based on MetaChecks
+## Investigating resources based on MetaChecks
 
 - List all MetaChecks available:
 `./metahub --list-findings --list-meta-checks`
@@ -123,7 +123,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 - Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI" and write a CSV Spreadsheet:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --write-csv`
 
-### Investigating a finding
+## Investigating a finding
 
 - List all affected resources with spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"`
@@ -137,7 +137,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 - Update all related AWS Security Findings to NOTIFIED with a Note:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_attached_to_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"`
 
-## Requirements
+# Requirements
 
 **MetaHub** is a Python3 program. You need to have Python3 installed in your system and the required python modules described in the file `requirements.txt`.
 
@@ -145,7 +145,7 @@ Requirements can be installed in your system manually (using pip3) or using a Py
 
 Alternatively you can run this tool using Docker. 
 
-### Run it using Python Virtual Environment
+## Run it using Python Virtual Environment
 
 1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 2. Change to repostiory dir: `cd metahub`
@@ -157,14 +157,14 @@ Alternatively you can run this tool using Docker.
 
 Next time you only need steps 4 and 6 to use the program. 
 
-### Run it using Docker
+## Run it using Docker
 
 1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 3. Change to repostiory dir: `cd metahub`
 4. Build docker image: `docker build -t metahub .`
 5. Run: `docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN --rm -ti metahub ./metahub -h`
 
-## AWS Authentication
+# AWS Authentication
 
 - Ensure you have AWS credentials setup on your local machine (or from where you will run MetaHub).
 
@@ -182,7 +182,7 @@ Or you can export your credentials to environment.
   export AWS_SESSION_TOKEN="XXXXXXXXX"
   ```
 
-## Configuring Security Hub
+# Configuring Security Hub
 
 You can use three options to configure where and how AWS Security Hub is running:
 
@@ -190,19 +190,19 @@ You can use three options to configure where and how AWS Security Hub is running
 - `--sh-account` and `--sh-assume-role`: The AWS Account ID where Security Hub is running (`--sh-account`) and the AWS IAM role to assume in that account (`--sh-assume-role`). These options are helpful when you are logged in to a different AWS Account than the one where AWS Security Hub is running or when you are running AWS Security Hub in a multiple AWS Account setup. Both options must be used together. The role provided needs to have enough policies to get and update findings in AWS Security Hub (if needed). If you don't specify a `--sh-account`, MetaHub will assume the one you are logged in.
 - You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
 
-### Configuring MetaChecks and MetaTags
+## Configuring MetaChecks and MetaTags
 
 - The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks` and `--meta-tags`.
 - The role you assume needs to be able to describe services. 
 - Still, it is also possible if you need it to log in and assumes a role in the same account, just use the options `--mh-assume-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
 - You can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
 
-### Single Account Setup 
+## Single Account Setup 
 
 - If you are running MetaHub for a single AWS account setup (AWS Security Hub is not aggregating findings from other accounts), you don't need to use any of the assume-role options. Check that your credentials can get_findings from AWS Security Hub (and update them if you want to use the options --update-findings or --enrich-findings) and that you can describe services.
 - Still, if your IAM requires it, it is possible to log in and assume a role in the same account. Just use the options `--mh-assume-role` to specify the role and `--sh-account` with the same AWS Account ID where you are logged in. 
 
-### Multiple Account Setup
+## Multiple Account Setup
 
 - If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for MetaChecks and MetaTags as the affected resources are not in the same AWS Account than the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources. 
 - If you are logged in to a Master/SSO/Jump AWS Account, that you use just for log in, you then probably need to speficy all the options together: `--sh-account` and `--sh-assume-role` for speficying where AWS Security Hub is running and which role to assume, and `--mh-assume-role` to speficy which role to assume in the affected AWS Accounts when you are using `--meta-checks` and `--meta-tags`. If you use the same role for AWS Security Hub and for the affected AWS Accounts, speficy both with the same value.
@@ -618,6 +618,9 @@ And this is how MetaHub shows you the output using the default output:
           "Status": "NEW"
         },
         "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
         "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
@@ -629,6 +632,9 @@ And this is how MetaHub shows you the output using the default output:
           "Status": "NEW"
         },
         "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
         "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
@@ -640,6 +646,9 @@ And this is how MetaHub shows you the output using the default output:
           "Status": "NEW"
         },
         "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
         "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
@@ -651,10 +660,12 @@ And this is how MetaHub shows you the output using the default output:
           "Status": "NEW"
         },
         "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
         "Id": "arn:aws:securityhub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
         "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub"
       }
-    }
     }
   ],
   "AwsAccountId": "01234567890",
@@ -666,7 +677,7 @@ And this is how MetaHub shows you the output using the default output:
 
 Your findings are combined under the ARN of the resource affected, ending in only one result or one non-compliant resource.
 
-You can now work in MetaHub with all these four findings together as if they were only one. For example you can update these four findings using only one command, See [Updating Findings](#Updating-Findings)
+You can now work in MetaHub with all these four findings together as if they were only one. For example you can update these four Workflow Status findings using only one command, See [Updating Workflow Status](#updating-workflow-status)
 
 ## MetaChecks
 
@@ -688,8 +699,6 @@ Think again about that SG. Let's assume it's attached to something, so we have t
 }
 ```
 
-The check `EC2.19` it's classified as `Critical` severity by the Security Standard.
-
 What if we can go further based on the findings and get more information? For example, check what this SG is attached to, if it's public or not, for how long, and who did it, and get all this information in the same simple output that MetaHub provides and even filter on top of that information.
 
 Let's run MetaHub again for the previous finding with MetaChecks enabled:
@@ -702,6 +711,9 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
   ...
   ],
   "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup",
   "metachecks": {
     "is_attached_to_network_interfaces": [
       "eni-01234567890",
@@ -727,26 +739,15 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
       "sg-02222222222",
       "sg-03333333333"
     ]
-  },
-  "AwsAccountId": "01234567890",
-  "AwsAccountAlias": "ofuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup"
+  }
 }
 ```
 
-So now, in addition to the `findings` section we have an extra section `metachecks.`
+So now, in addition to the `findings` section we have an extra section `metachecks.` MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. In this example, 6 MetaChecks were executed against the affected resource: `is_attached_to_network_interfaces`, `is_attached_to_ec2_instances`, `is_attached_to_public_ips`, `is_attached_to_managed_services`, `is_public` and `is_referenced_by_another_sg`. Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
 
-MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`.
-
-You can use MetaChecks for your filters or for updating resources. See [Filtering](#Filtering)
-
-Use cases examples:
-- Trigger an alert when you find a SG open for port 3389/TCP and it's attached to a Public resource. 
-- Change severity for a finding that is related with port 3389/TCP from Critical to High when is NOT attached to a public resource.
+You can use MetaChecks for your filters or for updating resources. See [MetaChecks Filtering](#metachecks-filtering)
 
 If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull requests are more than welcome.
-
 
 ## MetaTags
 
@@ -760,6 +761,9 @@ Note that not all AWS resource type supports this API, you can check [supported 
   ...
   ],
   "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup",
   "metatags": {
     "Name": "testSG",
     "Environment": "Production",
@@ -767,12 +771,13 @@ Note that not all AWS resource type supports this API, you can check [supported 
 }
 ```
 
-So now, in addition to the `findings` section we have an extra section `metatags.`
+So now, in addition to the `findings` section we have an extra section `metatags.` Each entry is a combination of Tag and Value for the associated with the affected resource.
 
-You can use MetaTags for your filters or for updating resources. See [Filtering](#Filtering)
+You can use MetaTags for your filters or for updating resources. See [MetaTags Filtering](#metatags-filtering)
 
 # Filtering
 
+You can filter the findings and resources that you get from Security Hub in different way and you can combine all of them to get exactly what you are looking for, and to then re-use those filters to create alerts.
 
 - [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates)
 - [Security Hub Filtering](#security-hub-filtering)
@@ -922,12 +927,12 @@ Examples:
 
 # Enriching Findings
 
-You can use **MetaHub** to enrich your AWS Security Findings with `MetaTags` and `MetaChecks` using the `UserDefinedFields` field. 
+You can use **MetaHub** to enrich your AWS Security Findings with `MetaTags` and `MetaChecks` outputs. Enriching your findings means updating those findings directly in Security Hub. **MetaHub** uses the field `UserDefinedFields` field for adding all the MetaChecks and MetaTags available for the affected resource.
+
+By enriching your findings diretcly in AWS Security Hub, you can then take advantage of it features like Insights and Filters by using the extra information that was not available in Security Hub before. 
 
 - Enrich all findings with WorkflowStatus=NEW RecordState=ACTIVE
 
 ```sh
 ./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --enrich-findings --meta-tags 
 ```
-
-After you enrich your findings, you can then use this data directly in Security Hub for Insights or Filters.
