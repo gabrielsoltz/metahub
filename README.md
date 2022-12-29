@@ -906,24 +906,29 @@ Examples:
 
 # Updating Workflow Status
 
-You can use **MetaHub** to update your AWS Security Findings Workflow Status in bulk. 
+You can use **MetaHub** to update your AWS Security Findings Workflow Status in bulk. By using the option `--update-findings` you will update all the findings realted to your filters. This means that you can update, one, ten or thousands of findings all together using only one command.
 
-Think again at the first example. We have 1 MetaHub resource non-compliant, based on 4 AWS Security Hub findings. 
+For example, using the following filter: `./metahub --list-findings --sh-filters ResourceType=AwsSageMakerNotebookInstance RecordState=ACTIVE WorkflowStatus=NEW` I found 2 affected resources with 3 finding each making 6 security hub finiding in total.
 
-You can update those 4 AWS Security Findings in one single command with **MetaHub**: `--update-findings.`
+Running the following update command, will update those 6 findings workflow status to `NOTIFIED` with a Note:
 
-For example, you can update the Workflow Status of those findings in one shot: `--update-findings Workflow=NOTIFIED.`
+```sh
+--update-findings Workflow=NOTIFIED Note="Enter your ticket id or reason here as a note that you will add to the finding as part of this update"
+```
 
-**MetaHub** supports `KEY=VALUE` parameters for updating AWS Security Hub findings, the same way you would using AWS CLI. 
+<p align="center">
+  <img src="update-findings-1.png" alt="update-findings" width="850"/>
+</p>
+
+<p align="center">
+  <img src="update-findings-2.png" alt="update-findings" width="850"/>
+</p>
+
+Workflow Status options are: `NOTIFIED`, `NEW`, `RESOLVED` and `SUPPRESSED`
 
 AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings besides the amount.
 
-Examples:
-
-- Update all Workflow Status to RESOLVED for findings with RecordState ARCHIVED and Workflow Status NEW
-```sh
-./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --update-findings Workflow=RESOLVED Note="Resolving Findings that are ARCHIVED"
-```
+See more examples under [Updating Findings Workflow Status](#updating-findings-workflow-status)
 
 # Enriching Findings
 
@@ -931,8 +936,12 @@ You can use **MetaHub** to enrich your AWS Security Findings with `MetaTags` and
 
 By enriching your findings diretcly in AWS Security Hub, you can then take advantage of it features like Insights and Filters by using the extra information that was not available in Security Hub before. 
 
-- Enrich all findings with WorkflowStatus=NEW RecordState=ACTIVE
+For example, you want to enrich all AWS Security Hub findings with WorkflowStatus=NEW, RecordState=ACTIVE and ResourceType=AwsS3Bucket that are MetaCheck is_public=True with MetaChecks and MetaTags:
 
 ```sh
-./metahub --list-findings --sh-filters RecordState=ARCHIVED WorkflowStatus=NEW --enrich-findings --meta-tags 
+./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --meta-tags --meta-checks --mh-filters-checks is_public=True --enrich-findings  
 ```
+
+<p align="center">
+  <img src="enrich-findings-1.png" alt="update-findings" width="850"/>
+</p>
