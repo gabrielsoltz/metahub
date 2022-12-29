@@ -695,7 +695,7 @@ You can now work in MetaHub with all these four findings together as if they wer
 
 ## MetaChecks
 
-On top of the AWS Security Hub findings, **MetaHub** can run additional checks. We call these, **MetaChecks**. 
+On top of the AWS Security Hub findings, **MetaHub** can run additional checks directly on the affected resource in the affected account. We call these, **MetaChecks**. 
 
 Think again about that SG. Let's assume it's attached to something, so we have three AWS Security Hub findings combined in one MetaHub result:
 
@@ -769,7 +769,7 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 
 Note that not all AWS resource type supports this API, you can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
 
-Tags are a critical part for understanding your context. Tags strategies often includes: 
+Tags are a crucial part for understanding your context. Tagging strategies often includes: 
 - Environment (like Production, Staging, Development, etc.)
 - Data classification (like Confidential, Restricted, etc.)
 - Owner (like a team, a squad, a business unit, etc.)
