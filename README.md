@@ -69,7 +69,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
 
-**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). You can also export your outputs to Json, CSV and HTML formats.
+**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as json, csv and HTML files using the [Write File](#write-file) options.
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
 
