@@ -426,12 +426,26 @@ You can use `--output statistics` to get statistics about your search. You get s
 
 ## Write File
 
-You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. 
+You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. Outpus will be saved in folder output with the date of the run . 
 
 ### Json
 
 `--write-json` will create a file for each `--output` selected. 
-For example: `./metahub --output standard inventory --meta-tags --write-json` will generate 2 json files, one for standard (`standard.json`) and one for inventory (`inventory.json`) outputs.
+For example: `./metahub --output standard inventory --meta-tags --write-json` will generate 2 json files, one for standard and one for inventory outputs.
+
+### HTML
+
+You can create enriched HTML reports of your findings, adding MetaChecks and MetaTags as part of them. 
+
+HTML Reports are interactive in many ways: You can add/remove columns, you can sort and filter by any column, and you can also download that data to xlsx, csv, html and json. Meaning you can manipulate the htnml report in a lot of different ways.
+
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. For example you can enable MetaTags and add "Owner" and "Environment" as columns to your report using: 
+
+`./metahub --meta-tags --write-html --write-meta-tags-columns Owner Environment`
+
+<p align="center">
+  <img src="html-export.png" alt="html-example"/>
+</p>
 
 ### CSV
 
@@ -439,24 +453,10 @@ For example: `./metahub --output standard inventory --meta-tags --write-json` wi
 
 You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
 
-For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 2 csv files, one for standard (`standard.csv`) and one for inventory (`inventory.csv`) outputs.
+For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 2 csv files, one for standard and one for inventory outputs with extra columns `Name` `Owner` from MetaTags and `is_encrypted` from MetaChecks.
 
 <p align="center">
   <img src="csv-export.png" alt="csv-example"/>
-</p>
-
-### HTML
-
-`--write-html` supports only one report for now, it will be named `report.html`. 
-
-You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns.
-
-HTML Reports are interactive in many ways: You can add/remove columns, you can sort and filter by any column, and you can also download that data to xlsx, csv, html and json. Meaning you can manipulate the htnml report in a lot of different ways. 
-
-For example: `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv` will generate 1 html file (`report.html`)
-
-<p align="center">
-  <img src="html-export.png" alt="html-example"/>
 </p>
 
 ## Findings Aggregation
