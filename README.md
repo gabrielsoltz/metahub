@@ -500,7 +500,8 @@ You can use `--output statistics` to get statistics about your search. You get s
     "FAILED": 6
   },
   "ProductArn": {
-    "arn:aws:securityhub:eu-west-1::product/aws/securityhub": 6,
+    "arn:aws:securityhub:eu-west-1::product/aws/securityhub": 3,
+    "arn:aws:securityhub:us-east-1::product/aws/securityhub": 3
   },
   "ResourceType": {
     "AwsSageMakerNotebookInstance": 6
