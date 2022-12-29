@@ -472,7 +472,8 @@ You can use `--output inventory` to get only a list of resource's ARNs.
 
 ```
 [
-  arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated
+  "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated",
+  "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/ofuscated"
 ]
 ```
 
