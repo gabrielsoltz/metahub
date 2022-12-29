@@ -389,7 +389,7 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
 
 # Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. This outputs can then be written into files using the `--write-html`, `--write-json` or `--write-csv` options, or show them as output using the option `--list-findings`. You can enrich these outputs by enabling `--meta-checks` and `--meta-tags`.
+**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. These outputs can then be written into files [using the `--write-html`, `--write-json` or `--write-csv` options](#write-file), or show them as output using the option `--list-findings`. You can enrich these outputs by using [`--meta-checks`](#metachecks) and [`--meta-tags`](#metatags) options.
 
 ## Standard
 
