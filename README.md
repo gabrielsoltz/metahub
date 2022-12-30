@@ -33,7 +33,7 @@
 **MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (**your** context). **MetaChecks** and **MetaTags** are executed directly on the affected resource on the affected account, letting you fetch the information you need from the resources to then filter and generate enriched outputs or alerts.
 
 <p align="center">
-  <img src="diagram-metahub.drawio.png" alt="Diagram" width="850"/>
+  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
 **MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
