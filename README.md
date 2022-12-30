@@ -1,7 +1,7 @@
 # MetaHub
 
 <p align="center">
-  <img src="metahub.png" alt="MetaHub" width="200"/>
+  <img src="docs/imgs/metahub.png" alt="MetaHub" width="200"/>
 </p>
 
 <p align="center">
@@ -550,7 +550,7 @@ For example you can enable MetaTags and add "Owner" and "Environment" as columns
 `./metahub --meta-tags --write-html --write-meta-tags-columns Owner Environment`
 
 <p align="center">
-  <img src="html-export.png" alt="html-example"/>
+  <img src="docs/imgs/html-export.png" alt="html-example"/>
 </p>
 
 ## CSV
@@ -564,7 +564,7 @@ For example you can generate 2 csv outputs one for standard and one for inventor
 `./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv`
 
 <p align="center">
-  <img src="csv-export.png" alt="csv-example"/>
+  <img src="docs/imgs/csv-export.png" alt="csv-example"/>
 </p>
 
 # Findings Aggregation
@@ -938,11 +938,11 @@ Running the following update command, will update those 6 findings workflow stat
 ```
 
 <p align="center">
-  <img src="update-findings-1.png" alt="update-findings" width="850"/>
+  <img src="docs/imgs/update-findings-1.png" alt="update-findings" width="850"/>
 </p>
 
 <p align="center">
-  <img src="update-findings-2.png" alt="update-findings" width="850"/>
+  <img src="docs/imgs/update-findings-2.png" alt="update-findings" width="850"/>
 </p>
 
 Workflow Status options are: `NOTIFIED`, `NEW`, `RESOLVED` and `SUPPRESSED`
@@ -964,5 +964,5 @@ For example, you want to enrich all AWS Security Hub findings with WorkflowStatu
 ```
 
 <p align="center">
-  <img src="enrich-findings-1.png" alt="update-findings" width="850"/>
+  <img src="docs/imgs/enrich-findings-1.png" alt="update-findings" width="850"/>
 </p>
