@@ -400,6 +400,7 @@ def main(args):
     else:
         mh_filters_tags = args.mh_filters_tags
 
+    # Parameter Validation: --sh-account and --sh-assume-role
     if (args.sh_account and not args.sh_assume_role) or (
         not args.sh_account and args.sh_assume_role
     ):
@@ -414,7 +415,11 @@ def main(args):
     else:
         sh_account = args.sh_account
         sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
+    sh_account_alias_str = (
+        " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
+    )
 
+    # Parameter Validation: --sh-region
     if not args.sh_region:
         sh_region = get_region(logger)
     else:
@@ -423,16 +428,13 @@ def main(args):
     if sh_region_aggregator:
         if sh_region_aggregator != sh_region:
             logger.error(
-                "You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s...",
+                "You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s for aggregated findings...",
                 sh_region,
                 sh_region_aggregator,
                 sh_region_aggregator,
             )
 
     print_title_line("")
-    sh_account_alias_str = (
-        " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
-    )
     print_table("Security Hub Account: ", str(sh_account) + sh_account_alias_str)
     print_table("Security Hub Role: ", str(args.sh_assume_role))
     print_table("Security Hub Region: ", sh_region)

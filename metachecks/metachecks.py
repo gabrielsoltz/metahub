@@ -1,5 +1,6 @@
 import metachecks.checks
 from AwsHelpers import assume_role, get_boto3_session, get_account_id
+from helpers import print_table
 
 
 def run_metachecks(logger, finding, mh_filters_checks, mh_role):
@@ -101,7 +102,7 @@ def list_metachecks(logger):
         execute = hndl.checks()
 
         if execute is not False:
-            print(name + ": " + " ".join(execute))
+            print_table(name + ": ", " ".join(execute))
         else:
             logger.error(
                 "Error running MetaChecks checks() for AWSResourceType: %s", name

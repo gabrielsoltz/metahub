@@ -10,12 +10,12 @@ from metachecks.checks.Base import MetaChecksBase
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
-        region = finding["Region"]
-        if not sess:
-            self.client = boto3.client("es", region_name=region)
-        else:
-            self.client = sess.client(service_name="es", region_name=region)
         if metachecks:
+            region = finding["Region"]
+            if not sess:
+                self.client = boto3.client("es", region_name=region)
+            else:
+                self.client = sess.client(service_name="es", region_name=region)
             self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
             self.resource_arn = finding["Resources"][0]["Id"]
             self.mh_filters_checks = mh_filters_checks
