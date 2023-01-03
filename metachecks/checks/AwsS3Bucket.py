@@ -17,46 +17,30 @@ class Metacheck(MetaChecksBase):
             else:
                 self.client = sess.client(service_name="s3", region_name=region)
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+            self.region = region
             self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
             self.bucket_acl = self._get_bucket_acl()
             self.bucket_policy = self._get_bucket_policy()
             self.cannonical_user_id = self._get_canonical_user_id()
+            self.bucket_website = self._get_bucket_website()
 
     def _get_canonical_user_id(self):
         try:
             response = self.client.list_buckets()
         except ClientError as err:
-            self.logger.error("Failed to list_buckets: " + self.resource_id)
+            self.logger.error("Failed to get_canonical_user_id {}, {}".format(self.resource_id, err))
             return False
-        response["Owner"]["ID"]
+        return response["Owner"]["ID"]
 
     def _get_bucket_encryption(self):
         try:
             response = self.client.get_bucket_encryption(Bucket=self.resource_id)
         except ClientError as err:
-            if err.response["Error"]["Code"] in [
-                "AccessDenied",
-                "UnauthorizedOperation",
-            ]:
-                self.logger.error(
-                    "Access denied for get_bucket_encryption: " + self.resource_id
-                )
-                return False
-            elif err.response["Error"]["Code"] == "NoSuchBucket":
-                # deletion was not fully propogated to S3 backend servers
-                # so bucket is still available in listing but actually not exists
-                pass
-                return False
-            elif (
-                err.response["Error"]["Code"]
-                == "ServerSideEncryptionConfigurationNotFoundError"
-            ):
+            if err.response["Error"]["Code"] == "ServerSideEncryptionConfigurationNotFoundError":
                 return False
             else:
-                self.logger.error(
-                    "Failed to get_bucket_encryption: " + self.resource_id
-                )
+                self.logger.error("Failed to get_bucket_encryption {}, {}".format(self.resource_id, err))
                 return False
         return response["ServerSideEncryptionConfiguration"]["Rules"]
 
@@ -64,22 +48,8 @@ class Metacheck(MetaChecksBase):
         try:
             response = self.client.get_bucket_acl(Bucket=self.resource_id)
         except ClientError as err:
-            if err.response["Error"]["Code"] in [
-                "AccessDenied",
-                "UnauthorizedOperation",
-            ]:
-                self.logger.error(
-                    "Access denied for get_bucket_acl: " + self.resource_id
-                )
-                return False
-            elif err.response["Error"]["Code"] == "NoSuchBucket":
-                # deletion was not fully propogated to S3 backend servers
-                # so bucket is still available in listing but actually not exists
-                pass
-                return False
-            else:
-                self.logger.error("Failed to get_bucket_acl: " + self.resource_id)
-                return False
+            self.logger.error("Failed to get_bucket_acl {}, {}".format(self.resource_id, err))
+            return False
         return response["Grants"]
 
     def _get_bucket_policy(self):
@@ -88,19 +58,21 @@ class Metacheck(MetaChecksBase):
         except ClientError as err:
             if err.response["Error"]["Code"] == "NoSuchBucketPolicy":
                 return False
-            elif err.response["Error"]["Code"] == "NoSuchBucket":
-                # deletion was not fully propogated to S3 backend servers
-                # so bucket is still available in listing but actually not exists
-                return False
-            elif err.response["Error"]["Code"] == "AccessDenied":
-                self.logger.error(
-                    "Access denied for get_bucket_policy: " + self.resource_id
-                )
-                return False
             else:
-                self.logger.error("Failed to get_bucket_policy: " + self.resource_id)
+                self.logger.error("Failed to get_bucket_policy {}, {}".format(self.resource_id, err))
                 return False
         return json.loads(response["Policy"])
+
+    def _get_bucket_website(self):
+        try:
+            response = self.client.get_bucket_website(Bucket=self.resource_id)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "NoSuchWebsiteConfiguration":
+                return False
+            else:
+                self.logger.error("Failed to get_bucket_website {}, {}".format(self.resource_id, err))
+                return False
+        return response
 
     def it_has_bucket_policy(self):
         bucket_policy = False
@@ -228,9 +200,10 @@ class Metacheck(MetaChecksBase):
                             try:
                                 account_id = p.split(":")[4]
                                 if account_id != self.account_id:
-                                    policy_allow_with_cross_account_principal.append(
-                                        account_id
-                                    )
+                                    if account_id not in ("cloudfront"):
+                                        policy_allow_with_cross_account_principal.append(
+                                            account_id
+                                        )
                             except IndexError:
                                 self.logger.error(
                                     "Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ",
@@ -241,6 +214,15 @@ class Metacheck(MetaChecksBase):
                                 # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
             if policy_allow_with_cross_account_principal:
                 return policy_allow_with_cross_account_principal
+        return False
+
+    def is_website_enabled(self):
+        if self.bucket_website:
+            if self.region == "us-east-1":
+                url = "http://%s.s3-website-%s.amazonaws.com" % (self.resource_id, self.region)
+            else:
+                url = "http://%s.s3-website.%s.amazonaws.com" % (self.resource_id, self.region)
+            return url
         return False
 
     def is_public(self):
@@ -265,5 +247,6 @@ class Metacheck(MetaChecksBase):
             "it_has_bucket_policy_allow_with_wildcard_actions",
             "it_has_bucket_policy_allow_with_cross_account_principal",
             "is_encrypted",
+            "is_website_enabled"
         ]
         return checks

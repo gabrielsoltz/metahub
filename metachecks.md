@@ -38,12 +38,12 @@ from metachecks.checks.Base import MetaChecksBase
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
-        region = finding["Region"]
-        if not sess:
-            self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=region)
-        else:
-            self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=region)
         if metachecks:
+            region = finding["Region"]
+            if not sess:
+                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=region)
+            else:
+                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
@@ -62,22 +62,8 @@ def _get_bucket_acl(self):
     try:
         response = self.client.get_bucket_acl(Bucket=self.resource_id)
     except ClientError as err:
-        if err.response["Error"]["Code"] in [
-            "AccessDenied",
-            "UnauthorizedOperation",
-        ]:
-            self.logger.error(
-                "Access denied for get_bucket_acl: " + self.resource_id
-            )
-            return False
-        elif err.response["Error"]["Code"] == "NoSuchBucket":
-            # deletion was not fully propogated to S3 backend servers
-            # so bucket is still available in listing but actually not exists
-            pass
-            return False
-        else:
-            self.logger.error("Failed to get_bucket_acl: " + self.resource_id)
-            return False
+        self.logger.error("Failed to get_bucket_acl {}, {}".format(self.resource_id, err))
+        return False
     return response["Grants"]
 ```
 
@@ -91,16 +77,17 @@ from metachecks.checks.Base import MetaChecksBase
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
-
         self.logger = logger
-        if not sess:
-            self.client = boto3.client(<<BOTO3 SERVICE>>)
-        else:
-            self.client = sess.client(service_name=<<BOTO3 SERVICE>>)
         if metachecks:
+            region = finding["Region"]
+            if not sess:
+                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=region)
+            else:
+                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
+
             self.bucket_acl = self._get_bucket_acl() --> YOUR DESCRIBE FUNCTION AS AN ATTRIBUTE
 ```
 
@@ -156,6 +143,7 @@ To enable the check, add it to the list in the fuction `checks` of your `Resourc
         ]
         return checks
 ```
+
 
 # AwsEc2SecurityGroup
 
@@ -272,6 +260,13 @@ Return
 Check if the bucket is encrypted
 Return
     - True
+    - False
+
+## is_website_enabled
+
+Check if the bucket is configured as website
+Return
+    - Website Url
     - False
 
 # AwsElasticsearchDomain
