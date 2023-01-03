@@ -14,9 +14,9 @@ def assume_role(logger, aws_account_number, role_name, duration=3600):
     sts_client = sts_session.client(
         "sts", config=botocore.config.Config(max_pool_connections=100)
     )
-    # Get the current partition
-    partition = sts_client.get_caller_identity()["Arn"].split(":")[1]
     try:
+        # Get the current partition
+        partition = sts_client.get_caller_identity()["Arn"].split(":")[1]
         response = sts_client.assume_role(
             RoleArn="arn:{}:iam::{}:role/{}".format(
                 partition,

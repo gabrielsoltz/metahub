@@ -57,6 +57,8 @@ def generate_findings(
         "AwsAccountAlias": {},
         "Region": {},
         "ResourceId": {},
+        "metatags": {},
+        "metachecks": {}
     }
     AwsAccountAliasData = {}
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
@@ -235,9 +237,39 @@ def generate_findings(
                 reverse=True,
             )
         )
+    
+    def statistics_metatags(mh_findings_short):
+        metatags_statistics = {}
+        for d in mh_findings_short:
+            if 'metatags' in mh_findings_short[d]:
+                if mh_findings_short[d]['metatags']:
+                    for tag, value in mh_findings_short[d]['metatags'].items():
+                        if not tag in metatags_statistics:
+                            metatags_statistics[tag] = {}
+                        if value not in metatags_statistics[tag]:
+                            metatags_statistics[tag][value] = 1
+                        else:
+                            metatags_statistics[tag][value] += 1
+        return metatags_statistics
+    mh_statistics['metatags'] = statistics_metatags(mh_findings_short)
+
+    def statistics_metachecks(mh_findings_short):
+        metachecks_statistics = {}
+        for d in mh_findings_short:
+            if 'metachecks' in mh_findings_short[d]:
+                if mh_findings_short[d]['metachecks']:
+                    for check, value in mh_findings_short[d]['metachecks'].items():
+                        if not check in metachecks_statistics:
+                            metachecks_statistics[check] = {False: 0, True: 0}
+                        if bool(mh_findings_short[d]['metachecks'][check]):
+                            metachecks_statistics[check][True] += 1
+                        else:
+                            metachecks_statistics[check][False] += 1
+
+        return metachecks_statistics
+    mh_statistics['metachecks'] = statistics_metachecks(mh_findings_short)
 
     return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
-
 
 def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region):
     UpdateFilters = {}
@@ -512,8 +544,15 @@ def main(args):
     if args.write_html:
         import jinja2
 
-        metachecks_columns = args.write_meta_checks_columns
-        metatags_columns = args.write_meta_tags_columns
+        if args.write_meta_checks_columns:
+            metachecks_columns = args.write_meta_checks_columns
+        else:
+            metachecks_columns = mh_statistics['metachecks']
+        if args.write_meta_tags_columns:
+            metatags_columns = args.write_meta_tags_columns
+        else: 
+            metatags_columns = mh_statistics['metatags']
+            
         WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
 
         if mh_findings:
@@ -536,29 +575,33 @@ def main(args):
     if args.write_csv:
         import csv
 
-        metachecks_columns = args.write_meta_checks_columns
-        metatags_columns = args.write_meta_tags_columns
+        if args.write_meta_checks_columns:
+            metachecks_columns = args.write_meta_checks_columns
+        else:
+            metachecks_columns = mh_statistics['metachecks']
+        if args.write_meta_tags_columns:
+            metatags_columns = args.write_meta_tags_columns
+        else: 
+            metatags_columns = mh_statistics['metatags']
 
         def output_csv(output):
             new_list = []
             for key, dictionary in output.items():
                 new_dict = {"ARN": key}
-                if metatags_columns:
-                    for column in metatags_columns:
-                        try:
-                            dictionary[column] = dictionary["metatags"][column]
-                        except KeyError:
-                            dictionary[column] = ""
-                        except TypeError:
-                            dictionary[column] = ""
-                if metachecks_columns:
-                    for column in metachecks_columns:
-                        try:
-                            dictionary[column] = dictionary["metachecks"][column]
-                        except KeyError:
-                            dictionary[column] = ""
-                        except TypeError:
-                            dictionary[column] = ""
+                for column in metatags_columns:
+                    try:
+                        dictionary[column] = dictionary["metatags"][column]
+                    except KeyError:
+                        dictionary[column] = ""
+                    except TypeError:
+                        dictionary[column] = ""
+                for column in metachecks_columns:
+                    try:
+                        dictionary[column] = dictionary["metachecks"][column]
+                    except KeyError:
+                        dictionary[column] = ""
+                    except TypeError:
+                        dictionary[column] = ""
                 new_dict.update(dictionary)
                 new_list.append(new_dict)
             columns = new_list[0].keys()

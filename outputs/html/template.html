@@ -14,14 +14,17 @@ var tableData = [
           ResourceType: "{{ resource_value.ResourceType }}",
           Severity: "{{ finding_values.SeverityLabel }}",
           Title: "{{ finding_name }}",
+          WorkflowStatus: "{{ finding_values.Workflow.Status }}",
+          RecordState: "{{ finding_values.RecordState }}",
+          ComplianceStatus: "{{ finding_values.Compliance.Status }}",
           {% if 'metatags' in resource_value %}
             {% for metatags_column in metatags_columns %}
-              {{ metatags_column }}: '{{ resource_value.metatags[metatags_column] }}',
+              "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column] }}",
             {% endfor %}
           {% endif %}
           {% if 'metachecks' in resource_value %}
             {% for metachecks_column in metachecks_columns %}
-              {{ metachecks_column }}: '{{ resource_value.metachecks[metachecks_column] }}',
+              "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column] }}",
             {% endfor %}
           {% endif %}
       },
@@ -103,12 +106,15 @@ var table = new Tabulator("#findings-table", {
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% for metatags_column in metatags_columns %}
-              { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% endfor %}
-          {% for metachecks_column in metachecks_columns %}
-            { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% endfor %}
+        {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% for metatags_column in metatags_columns %}
+          { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
+        {% for metachecks_column in metachecks_columns %}
+          { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
     ],
 });
 </script>
@@ -186,12 +192,15 @@ var table = new Tabulator("#findings-table-groupped", {
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% for metatags_column in metatags_columns %}
-              { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% endfor %}
-          {% for metachecks_column in metachecks_columns %}
-            { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-          {% endfor %}
+        {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% for metatags_column in metatags_columns %}
+          { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
+        {% for metachecks_column in metachecks_columns %}
+          { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
     ],
 });
 </script>
