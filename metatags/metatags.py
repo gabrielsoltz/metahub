@@ -1,5 +1,5 @@
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from botocore.exceptions import BotoCoreError, ClientError, ParamValidationError
 
 from AwsHelpers import assume_role, get_boto3_session, get_account_id
 
@@ -63,7 +63,9 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
         except IndexError:
             logger.info("No Tags found for resource: %s", AWSResourceId)
     except ClientError as err:
-        logger.error("Error Fetching Tags: %s", err)
+        logger.error("Error Fetching Tags %s: %s", AWSResourceId, err)
+    except ParamValidationError as err:
+        logger.error("Error Fetching Tags %s: %s", AWSResourceId, err)
 
     mh_tags_values = {}
     mh_tags_matched = False if mh_filters_tags else True

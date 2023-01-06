@@ -188,9 +188,10 @@ You can use three options to configure where and how AWS Security Hub is running
 ## Configuring MetaChecks and MetaTags
 
 - The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks` and `--meta-tags`.
-- The role you assume needs to be able to describe services. 
-- Still, it is also possible if you need it to log in and assumes a role in the same account, just use the options `--mh-assume-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
-- You can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit` 
+- For MetaTags you need the policy: `tag:get_resources`
+- For MetaCheks you can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit`
+- If you need it to log in and assumes a role in the same account, just use the options `--mh-assume-role` for spefifying the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for spefifying the role you want to assume to read/write from AWS Security Hub.
+
 
 ## Single Account Setup 
 
@@ -762,12 +763,13 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 
 | ResourceType           | MetaCheck                                               | Description                                                                                                                           | True                                                                 | False |
 |------------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|-------|
-| AwsEc2SecurityGroup    | is_attached_to_network_interfaces                       | Check if the Security Group is attached to Network Interfaces (ENIs).                                                                 | List of attached  `NetworkInterfaceId`                               | False |
-| AwsEc2SecurityGroup    | is_attached_to_ec2_instances                            | Check if the Security Group is attached to EC2 Instances.                                                                             | List of attached  `InstanceId`                                       | False |
-| AwsEc2SecurityGroup    | is_attached_to_managed_services                         | Check if the Security Group is attached to AWS Managed Services (like ELB, ALB, EFS, etc.).                                           | List of attached  `Descriptions`                                     | False |
-| AwsEc2SecurityGroup    | is_attached_to_public_ips                               | Check if the Security Group is attached to Network Interfaces (ENIs) with Public IPs.                                                 | List of attached  `Public Ips`                                       | False |
+| AwsEc2SecurityGroup    | is_associated_to_network_interfaces                     | Check if the Security Group is associated to Network Interfaces (ENIs).                                                               | List of attached  `NetworkInterfaceId`                               | False |
+| AwsEc2SecurityGroup    | is_associated_to_ec2_instances                          | Check if the Security Group is associated to EC2 Instances.                                                                           | List of attached  `InstanceId`                                       | False |
+| AwsEc2SecurityGroup    | is_associated_to_managed_services                       | Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).                                         | List of attached  `Descriptions`                                     | False |
+| AwsEc2SecurityGroup    | is_associated_to_public_ips                             | Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.                                               | List of attached  `Public Ips`                                       | False |
 | AwsEc2SecurityGroup    | is_public                                               | Check if the Security Group is Public based on if  `is_attached_to_public_ips.`                                                       | True                                                                 | False |
 | AwsEc2SecurityGroup    | is_referenced_by_another_sg                             | Check if the Security Group is referenced by another Security Group.                                                                  | List of SG  `GroupId` referencing the SG                             | False |
+| AwsEc2SecurityGroup    | is_default                                              | Check if the Security Group is the default one.                                                                                       | True                                                                 | False |
 | AwsS3Bucket            | it_has_bucket_acl                                       | Check if the S3 Bucket has a bucket ACL.                                                                                              | The Bucket ACL                                                       | False |
 | AwsS3Bucket            | is_bucket_acl_public                                    | Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)                                | List of permissions granted for the public statement                 | False |
 | AwsS3Bucket            | it_has_bucket_acl_with_cross_account                    | Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser                                                   | List of permissions granted for that CanonicalUser                   | False |
@@ -801,6 +803,8 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 | AwsEc2Instance         | it_has_ebs                                              | Check if the EC2 Instance has EBS attached                                                                                            | The list of `VolumeId` attached to the instance                      | False |
 | AwsEc2Instance         | it_has_unencrypted_ebs                                  | Check if the EC2 Instance has EBS attached that are unencrypted                                                                       | The list of `VolumeId` attached to the instance that are unencrypted | False |
 | AwsEc2Instance         | is_encrypted                                            | Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`                                                        | True                                                                 | False |
+| AwsEc2NetworkAcl       | is_associated_to_subnets                                | Check if the Network ACL is associated to Subnets                                                                                     | The list of `SubnetId`                                               | False |
+| AwsEc2NetworkAcl       | is_default                                              | Check if the Network ACL is the default one                                                                                           | True                                                                 | False |
 
 ## MetaTags
 
