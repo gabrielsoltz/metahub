@@ -72,10 +72,14 @@ class SecurityHub:
             compliance = finding["Compliance"]
         except KeyError:
             compliance = None
+        try:
+            workflow = finding["Workflow"]
+        except KeyError:
+            workflow = None
         findings = {
             finding["Title"]: {
                 "SeverityLabel": finding["Severity"]["Label"],
-                "Workflow": finding["Workflow"],
+                "Workflow": workflow,
                 "RecordState": finding["RecordState"],
                 "Compliance": compliance,
                 "Id": finding["Id"],

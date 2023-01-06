@@ -226,6 +226,12 @@ def get_parser():
         help="AWS Security Hub Region",
         required=False,
     )
+    parser.add_argument(
+        "--input-asff",
+        default=None,
+        help="ASFF Json File for findings.",
+        required=False,
+    )
     return parser
 
 def get_logger(log_level):
