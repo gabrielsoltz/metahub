@@ -19,6 +19,8 @@ class Metacheck(MetaChecksBase):
             self.security_groups = self._describe_security_group()
             self.network_interfaces = self._describe_network_interfaces()
 
+    # Describe Functions
+
     def _describe_security_group(self):
         response = self.client.describe_security_groups()
         return response["SecurityGroups"]
@@ -48,6 +50,8 @@ class Metacheck(MetaChecksBase):
             ],
         )
         return response["SecurityGroupRules"]
+    
+    # MetaChecks
 
     def is_referenced_by_another_sg(self):
         references = []
@@ -68,7 +72,7 @@ class Metacheck(MetaChecksBase):
             return references
         return False
 
-    def is_attached_to_network_interfaces(self):
+    def is_associated_to_network_interfaces(self):
         NetworkInterfaces = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -76,7 +80,7 @@ class Metacheck(MetaChecksBase):
             return NetworkInterfaces
         return False
 
-    def is_attached_to_ec2_instances(self):
+    def is_associated_to_ec2_instances(self):
         Ec2Instances = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -88,7 +92,7 @@ class Metacheck(MetaChecksBase):
                 return Ec2Instances
         return False
 
-    def is_attached_to_managed_services(self):
+    def is_associated_to_managed_services(self):
         ManagedServices = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -102,7 +106,7 @@ class Metacheck(MetaChecksBase):
                 return ManagedServices
         return False
 
-    def is_attached_to_public_ips(self):
+    def is_associated_to_public_ips(self):
         PublicIPs = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -115,17 +119,26 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
-        if self.is_attached_to_public_ips():
+        if self.is_associated_to_public_ips():
             return True
+        return False
+
+    def is_default(self):
+        if self.security_groups:
+            for sg in self.security_groups:
+                if sg['GroupId'] == self.resource_id:
+                    if sg['GroupName'] == "default":
+                        return True
         return False
 
     def checks(self):
         checks = [
-            "is_attached_to_network_interfaces",
-            "is_attached_to_ec2_instances",
-            "is_attached_to_public_ips",
-            "is_attached_to_managed_services",
+            "is_associated_to_network_interfaces",
+            "is_associated_to_ec2_instances",
+            "is_associated_to_public_ips",
+            "is_associated_to_managed_services",
             "is_public",
             "is_referenced_by_another_sg",
+            "is_default"
         ]
         return checks

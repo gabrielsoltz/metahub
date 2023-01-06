@@ -24,6 +24,8 @@ class Metacheck(MetaChecksBase):
             self.bucket_policy = self._get_bucket_policy()
             self.cannonical_user_id = self._get_canonical_user_id()
             self.bucket_website = self._get_bucket_website()
+    
+    # Describe Functions
 
     def _get_canonical_user_id(self):
         try:
@@ -73,6 +75,8 @@ class Metacheck(MetaChecksBase):
                 self.logger.error("Failed to get_bucket_website {}, {}".format(self.resource_id, err))
                 return False
         return response
+    
+    # MetaChecks
 
     def it_has_bucket_policy(self):
         bucket_policy = False

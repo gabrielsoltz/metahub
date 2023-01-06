@@ -3,4 +3,5 @@ from metachecks.checks import (
     AwsElasticsearchDomain,
     AwsS3Bucket,
     AwsEc2Instance,
+    AwsEc2NetworkAcl
 )

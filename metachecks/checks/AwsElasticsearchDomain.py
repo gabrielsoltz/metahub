@@ -21,6 +21,8 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.elasticsearch_domain = self._describe_elasticsearch_domain()
 
+    # Describe Functions
+
     def _describe_elasticsearch_domain(self):
         try:
             response = self.client.describe_elasticsearch_domain(
@@ -42,6 +44,8 @@ class Metacheck(MetaChecksBase):
                 )
                 return False
         return response["DomainStatus"]
+    
+    # MetaChecks
 
     def it_has_public_endpoint(self):
         public_endpoints = []

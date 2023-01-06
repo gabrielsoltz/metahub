@@ -80,7 +80,7 @@ class Metacheck(MetaChecksBase):
             return response["InstanceProfile"]
         return False
 
-    # Check Functions
+    # MetaChecks
 
     def it_has_public_ip(self):
         PublicIp = False
