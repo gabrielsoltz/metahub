@@ -7,24 +7,24 @@ var tableData = [
     {% for finding in resource_value.findings %} 
     {% for finding_name, finding_values in finding.items() %}
       {
-          ARN: "{{ resource }}",
-          AwsAccountId: "{{ resource_value.AwsAccountId }}",
-          AwsAccountAlias: "{{ resource_value.AwsAccountAlias }}",
-          Region: "{{ resource_value.Region }}",
-          ResourceType: "{{ resource_value.ResourceType }}",
-          Severity: "{{ finding_values.SeverityLabel }}",
-          Title: "{{ finding_name }}",
-          WorkflowStatus: "{{ finding_values.Workflow.Status }}",
-          RecordState: "{{ finding_values.RecordState }}",
-          ComplianceStatus: "{{ finding_values.Compliance.Status }}",
+          ARN: "{{ resource|e }}",
+          AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
+          AwsAccountAlias: "{{ resource_value.AwsAccountAlias|e }}",
+          Region: "{{ resource_value.Region|e }}",
+          ResourceType: "{{ resource_value.ResourceType|e }}",
+          Severity: "{{ finding_values.SeverityLabel|e }}",
+          Title: "{{ finding_name|e }}",
+          WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
+          RecordState: "{{ finding_values.RecordState|e }}",
+          ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
           {% if 'metatags' in resource_value %}
             {% for metatags_column in metatags_columns %}
-              "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column] }}",
+              "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
             {% endfor %}
           {% endif %}
           {% if 'metachecks' in resource_value %}
             {% for metachecks_column in metachecks_columns %}
-              "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column] }}",
+              "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
             {% endfor %}
           {% endif %}
       },
@@ -266,16 +266,16 @@ document.getElementById("download-html").addEventListener("click", function(){
 <script>
 // SeverityLabel
 var statsSeverityLabelData = [
-  {% for stat, value in statistics['SeverityLabel'].items() %}
+  {% for stat, value in statistics["SeverityLabel"].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsSeverityLabelLabels = [
   {% for stat, value in statistics['SeverityLabel'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -283,14 +283,14 @@ var statsSeverityLabelLabels = [
 var statsRegionData = [
   {% for stat, value in statistics['Region'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsRegionLabels = [
   {% for stat, value in statistics['Region'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -298,14 +298,14 @@ var statsRegionLabels = [
 var statsAwsAccountIdData = [
   {% for stat, value in statistics['AwsAccountId'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsAwsAccountIdLabels = [
   {% for stat, value in statistics['AwsAccountId'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -313,14 +313,14 @@ var statsAwsAccountIdLabels = [
 var statsAwsAccountAliasData = [
   {% for stat, value in statistics['AwsAccountAlias'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsAwsAccountAliasLabels = [
   {% for stat, value in statistics['AwsAccountAlias'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -328,14 +328,14 @@ var statsAwsAccountAliasLabels = [
 var statsResourceTypeData = [
   {% for stat, value in statistics['ResourceType'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsResourceTypeLabels = [
   {% for stat, value in statistics['ResourceType'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -343,14 +343,14 @@ var statsResourceTypeLabels = [
 var statsResourceIdData = [
   {% for stat, value in statistics['ResourceId'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsResourceIdLabels = [
   {% for stat, value in statistics['ResourceId'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 
@@ -358,14 +358,14 @@ var statsResourceIdLabels = [
 var statsTitleData = [
   {% for stat, value in statistics['Title'].items() %}
     {
-      stat: "{{ stat }}", value: {{ value }}
+      stat: "{{ stat|e }}", value: {{ value|e }}
     },
   {% endfor %}
 ]
 
 var statsTitleLabels = [
   {% for stat, value in statistics['Title'].items() %}
-    "{{ stat }}",
+    "{{ stat|e }}",
   {% endfor %}
 ]
 </script>
