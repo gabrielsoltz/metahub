@@ -24,6 +24,7 @@ class Metacheck(MetaChecksBase):
             self.bucket_policy = self._get_bucket_policy()
             self.cannonical_user_id = self._get_canonical_user_id()
             self.bucket_website = self._get_bucket_website()
+            self.bucket_public_access_block = self._get_bucket_public_access_block()
     
     # Describe Functions
 
@@ -75,14 +76,19 @@ class Metacheck(MetaChecksBase):
                 self.logger.error("Failed to get_bucket_website {}, {}".format(self.resource_id, err))
                 return False
         return response
-    
-    # MetaChecks
 
-    def it_has_bucket_policy(self):
-        bucket_policy = False
-        if self.bucket_policy:
-            bucket_policy = self.bucket_policy
-        return bucket_policy
+    def _get_bucket_public_access_block(self):
+        try:
+            response = self.client.get_public_access_block(Bucket=self.resource_id)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
+                return False
+            else:
+                self.logger.error("Failed to get_public_access_block {}, {}".format(self.resource_id, err))
+                return False
+        return response['PublicAccessBlockConfiguration']
+
+    # MetaChecks
 
     def it_has_bucket_acl(self):
         bucket_acl = False
@@ -90,7 +96,19 @@ class Metacheck(MetaChecksBase):
             bucket_acl = self.bucket_acl
         return bucket_acl
 
-    def is_bucket_acl_public(self):
+    def it_has_bucket_acl_cross_account(self):
+        acl_with_cross_account = []
+        if self.bucket_acl:
+            for grant in self.bucket_acl:
+                if grant["Grantee"]["Type"] == "CanonicalUser":
+                    if grant["Grantee"]["ID"] != self.cannonical_user_id:
+                        perm = grant["Permission"]
+                        acl_with_cross_account.append(grant)
+        if acl_with_cross_account:
+            return acl_with_cross_account
+        return False
+
+    def it_has_bucket_acl_public(self):
         public_acls = []
         if self.bucket_acl:
             for grant in self.bucket_acl:
@@ -103,24 +121,18 @@ class Metacheck(MetaChecksBase):
                         perm = grant["Permission"]
                         # group all permissions (READ(_ACP), WRITE(_ACP), FULL_CONTROL) by AWS predefined groups
                         # public_acls.setdefault(who, []).append(perm)
-                        public_acls.append(perm)
+                        public_acls.append(grant)
         if public_acls:
             return public_acls
         return False
 
-    def it_has_bucket_acl_with_cross_account(self):
-        acl_with_cross_account = []
-        if self.bucket_acl:
-            for grant in self.bucket_acl:
-                if grant["Grantee"]["Type"] == "CanonicalUser":
-                    if grant["Grantee"]["ID"] != self.cannonical_user_id:
-                        perm = grant["Permission"]
-                        acl_with_cross_account.append(perm)
-        if acl_with_cross_account:
-            return acl_with_cross_account
-        return False
+    def it_has_bucket_policy(self):
+        bucket_policy = False
+        if self.bucket_policy:
+            bucket_policy = self.bucket_policy
+        return bucket_policy
 
-    def is_bucket_policy_public(self):
+    def it_has_bucket_policy_public(self):
         public_policy = []
         if self.bucket_policy:
             for statement in self.bucket_policy["Statement"]:
@@ -143,7 +155,7 @@ class Metacheck(MetaChecksBase):
             return public_policy
         return False
 
-    def it_has_bucket_policy_allow_with_wildcard_principal(self):
+    def it_has_bucket_policy_principal_wildcard(self):
         policy_with_allow_and_wildcard_principal = []
         if self.bucket_policy:
             for statement in self.bucket_policy["Statement"]:
@@ -159,7 +171,7 @@ class Metacheck(MetaChecksBase):
             return policy_with_allow_and_wildcard_principal
         return False
 
-    def it_has_bucket_policy_allow_with_wildcard_actions(self):
+    def it_has_bucket_policy_actions_wildcard(self):
         policy_with_allow_and_wildcard_actions = []
         if self.bucket_policy:
             for statement in self.bucket_policy["Statement"]:
@@ -179,7 +191,7 @@ class Metacheck(MetaChecksBase):
             return policy_with_allow_and_wildcard_actions
         return False
 
-    def it_has_bucket_policy_allow_with_cross_account_principal(self):
+    def it_has_bucket_policy_principal_cross_account(self):
         policy_allow_with_cross_account_principal = []
         if self.bucket_policy:
             for statement in self.bucket_policy["Statement"]:
@@ -190,7 +202,8 @@ class Metacheck(MetaChecksBase):
                 suffix = "/0"
                 if effect == "Allow":
                     if principal == "*" or principal.get("AWS") == "*":
-                        policy_allow_with_cross_account_principal.append("*")
+                        # We pass this one as is already included in metacheck it_has_bucket_policy_principal_wildcard
+                        pass
                     else:
                         if "AWS" in principal:
                             principals = principal["AWS"]
@@ -206,7 +219,7 @@ class Metacheck(MetaChecksBase):
                                 if account_id != self.account_id:
                                     if account_id not in ("cloudfront"):
                                         policy_allow_with_cross_account_principal.append(
-                                            account_id
+                                            statement
                                         )
                             except IndexError:
                                 self.logger.error(
@@ -220,7 +233,12 @@ class Metacheck(MetaChecksBase):
                 return policy_allow_with_cross_account_principal
         return False
 
-    def is_website_enabled(self):
+    def it_has_public_access_block_enabled(self):
+        if self.bucket_public_access_block:
+            return self.bucket_public_access_block
+        return False
+
+    def it_has_website_enabled(self):
         if self.bucket_website:
             if self.region == "us-east-1":
                 url = "http://%s.s3-website-%s.amazonaws.com" % (self.resource_id, self.region)
@@ -229,9 +247,15 @@ class Metacheck(MetaChecksBase):
             return url
         return False
 
-    def is_public(self):
-        if self.is_bucket_policy_public() or self.is_bucket_acl_public():
+    def is_unrestricted(self):
+        if self.it_has_bucket_policy_public() or self.it_has_bucket_acl_public():
             return True
+        return False
+
+    def is_public(self):
+        if self.it_has_website_enabled():
+            if self.it_has_bucket_policy_public() or self.it_has_bucket_acl_public():
+                self.it_has_website_enabled()
         return False
 
     def is_encrypted(self):
@@ -241,16 +265,18 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "is_bucket_acl_public",
-            "is_bucket_policy_public",
+            # "it_has_bucket_acl",
+            "it_has_bucket_acl_cross_account",
+            "it_has_bucket_acl_public",
+            # "it_has_bucket_policy",
+            # "it_has_bucket_policy_principal_wildcard",
+            "it_has_bucket_policy_principal_cross_account",
+            "it_has_bucket_policy_actions_wildcard",
+            "it_has_bucket_policy_public",
+            "it_has_public_access_block_enabled",
             "is_public",
-            "it_has_bucket_policy",
-            "it_has_bucket_acl",
-            "it_has_bucket_acl_with_cross_account",
-            "it_has_bucket_policy_allow_with_wildcard_principal",
-            "it_has_bucket_policy_allow_with_wildcard_actions",
-            "it_has_bucket_policy_allow_with_cross_account_principal",
+            "is_unrestricted",
             "is_encrypted",
-            "is_website_enabled"
+            "it_has_website_enabled"
         ]
         return checks

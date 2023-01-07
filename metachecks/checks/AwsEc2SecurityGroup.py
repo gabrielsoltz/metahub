@@ -18,6 +18,7 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.security_groups = self._describe_security_group()
             self.network_interfaces = self._describe_network_interfaces()
+            self.rules = self._describe_security_group_rules()
 
     # Describe Functions
 
@@ -53,7 +54,53 @@ class Metacheck(MetaChecksBase):
     
     # MetaChecks
 
-    def is_referenced_by_another_sg(self):
+    def its_associated_to_network_interfaces(self):
+        NetworkInterfaces = []
+        if self.network_interfaces:
+            for NetworkInterface in self.network_interfaces:
+                NetworkInterfaces.append(NetworkInterface["NetworkInterfaceId"])
+            return NetworkInterfaces
+        return False
+
+    def its_associated_to_ec2_instances(self):
+        Ec2Instances = []
+        if self.network_interfaces:
+            for NetworkInterface in self.network_interfaces:
+                try:
+                    Ec2Instances.append(NetworkInterface["Attachment"]["InstanceId"])
+                except KeyError:
+                    continue
+            if Ec2Instances:
+                return Ec2Instances
+        return False
+
+    def its_associated_to_managed_services(self):
+        ManagedServices = []
+        if self.network_interfaces:
+            for NetworkInterface in self.network_interfaces:
+                try:
+                    RequesterId = NetworkInterface["RequesterManaged"]
+                    if RequesterId == True:
+                        ManagedServices.append(NetworkInterface["Description"])
+                except KeyError:
+                    continue
+            if ManagedServices:
+                return ManagedServices
+        return False
+
+    def its_associated_to_ips_public(self):
+        PublicIPs = []
+        if self.network_interfaces:
+            for NetworkInterface in self.network_interfaces:
+                try:
+                    PublicIPs.append(NetworkInterface["Association"]["PublicIp"])
+                except KeyError:
+                    continue
+            if PublicIPs:
+                return PublicIPs
+        return False
+
+    def its_referenced_by_another_sg(self):
         references = []
         if self.security_groups:
             for sg in self.security_groups:
@@ -72,54 +119,24 @@ class Metacheck(MetaChecksBase):
             return references
         return False
 
-    def is_associated_to_network_interfaces(self):
-        NetworkInterfaces = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                NetworkInterfaces.append(NetworkInterface["NetworkInterfaceId"])
-            return NetworkInterfaces
-        return False
-
-    def is_associated_to_ec2_instances(self):
-        Ec2Instances = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    Ec2Instances.append(NetworkInterface["Attachment"]["InstanceId"])
-                except KeyError:
-                    continue
-            if Ec2Instances:
-                return Ec2Instances
-        return False
-
-    def is_associated_to_managed_services(self):
-        ManagedServices = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    RequesterId = NetworkInterface["RequesterManaged"]
-                    if RequesterId == True:
-                        ManagedServices.append(NetworkInterface["Description"])
-                except KeyError:
-                    continue
-            if ManagedServices:
-                return ManagedServices
-        return False
-
-    def is_associated_to_public_ips(self):
-        PublicIPs = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    PublicIPs.append(NetworkInterface["Association"]["PublicIp"])
-                except KeyError:
-                    continue
-            if PublicIPs:
-                return PublicIPs
+    def it_has_rules_unrestricted(self):
+        UnrestrictedRule = []
+        if self.rules:
+            for rule in self.rules:
+                if "CidrIpv4" in rule:
+                    if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
+                        if rule not in UnrestrictedRule:
+                            UnrestrictedRule.append(rule)
+                if "CidrIpv6" in rule:
+                    if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
+                        if rule not in UnrestrictedRule:
+                            UnrestrictedRule.append(rule)
+        if UnrestrictedRule:
+            return UnrestrictedRule
         return False
 
     def is_public(self):
-        if self.is_associated_to_public_ips():
+        if self.its_associated_to_ips_public() and self.it_has_rules_unrestricted():
             return True
         return False
 
@@ -133,12 +150,13 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "is_associated_to_network_interfaces",
-            "is_associated_to_ec2_instances",
-            "is_associated_to_public_ips",
-            "is_associated_to_managed_services",
+            "its_associated_to_network_interfaces",
+            "its_associated_to_ec2_instances",
+            "its_associated_to_ips_public",
+            "its_associated_to_managed_services",
+            "its_referenced_by_another_sg",
+            "it_has_rules_unrestricted",
             "is_public",
-            "is_referenced_by_another_sg",
             "is_default"
         ]
         return checks

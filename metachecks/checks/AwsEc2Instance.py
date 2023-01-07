@@ -139,7 +139,7 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def is_attached_to_security_groups(self):
+    def its_associated_to_security_groups(self):
         SG = []
         if self.instance_security_groups_rules:
             for rule in self.instance_security_groups_rules:
@@ -149,7 +149,7 @@ class Metacheck(MetaChecksBase):
             return SG
         return False
 
-    def is_attached_to_security_group_rules_unrestricted(self):
+    def its_associated_to_security_group_rules_unrestricted(self):
         UnrestrictedRule = []
         if self.instance_security_groups_rules:
             for rule in self.instance_security_groups_rules:
@@ -204,7 +204,7 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def it_has_ebs(self):
+    def its_associated_to_ebs(self):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
@@ -213,7 +213,7 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
-    def it_has_unencrypted_ebs(self):
+    def its_associated_to_ebs_unencrypted(self):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
@@ -226,13 +226,13 @@ class Metacheck(MetaChecksBase):
     def is_public(self):
         if (
             self.it_has_public_ip()
-            and self.is_attached_to_security_group_rules_unrestricted()
+            and self.its_associated_to_security_group_rules_unrestricted()
         ):
-            return True
+            return self.it_has_public_ip()
         return False
 
     def is_encrypted(self):
-        if not self.it_has_unencrypted_ebs():
+        if not self.its_associated_to_ebs_unencrypted():
             return True
         return False
 
@@ -243,16 +243,16 @@ class Metacheck(MetaChecksBase):
             "it_has_key",
             "it_has_private_dns",
             "it_has_public_dns",
-            "is_running",
-            "is_attached_to_security_groups",
             "it_has_instance_profile",
             "it_has_instance_profile_roles",
+            "its_associated_to_security_groups",
+            "its_associated_to_security_group_rules_unrestricted",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
-            "it_has_ebs",
-            "it_has_unencrypted_ebs",
-            "is_attached_to_security_group_rules_unrestricted",
+            "its_associated_to_ebs",
+            "its_associated_to_ebs_unencrypted",
             "is_public",
             "is_encrypted",
+            "is_running",
         ]
         return checks

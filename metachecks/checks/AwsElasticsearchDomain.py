@@ -93,7 +93,7 @@ class Metacheck(MetaChecksBase):
     def is_public(self):
         if self.elasticsearch_domain:
             if self.it_has_access_policies_public() and self.it_has_public_endpoint():
-                return True
+                self.it_has_public_endpoint()
         return False
 
     def is_rest_encrypted(self):
@@ -102,7 +102,7 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def is_node_to_node_encrypted(self):
+    def is_transit_encrypted(self):
         if self.elasticsearch_domain:
             if self.elasticsearch_domain["NodeToNodeEncryptionOptions"]:
                 return True
@@ -110,7 +110,7 @@ class Metacheck(MetaChecksBase):
 
     def is_encrypted(self):
         if self.elasticsearch_domain:
-            if self.is_rest_encrypted() and self.is_node_to_node_encrypted():
+            if self.is_rest_encrypted() and self.is_transit_encrypted():
                 return True
         return False
 
@@ -119,9 +119,11 @@ class Metacheck(MetaChecksBase):
             "it_has_access_policies",
             "it_has_public_endpoint",
             "it_has_access_policies_public",
+            "is_network_public",
+            "is_iam_public",
             "is_public",
             "is_rest_encrypted",
-            "is_node_to_node_encrypted",
+            "is_transit_encrypted",
             "is_encrypted",
         ]
         return checks
