@@ -816,7 +816,7 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 MetaChecks are defined in the form of:
 
 - [is_](#is_)
-- [its_associated_to_][#its_associated_to]
+- [its_associated_to_](#its_associated_to)
 - [it_has_](#it_has)
 - [its_referenced_by_](#its_referenced_by)
 
