@@ -822,7 +822,7 @@ MetaChecks are defined in the form of:
 
 ### is_
 
-Refers to the affected resource itself.
+> Refers to the affected resource itself.
 
 #### Public
 
