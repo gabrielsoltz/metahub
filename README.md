@@ -744,11 +744,25 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
       "200.200.200.200"
     ],
     "its_associated_to_managed_services": false,
-    "is_public": true,
     "its_referenced_by_another_sg": [
       "sg-02222222222",
       "sg-03333333333"
-    ]
+    ],
+    "it_has_rules_unrestricted": [
+      {
+        "SecurityGroupRuleId": "sgr-01234567899",
+        "GroupId": "sg-01234567899",
+        "GroupOwnerId": "01234567899",
+        "IsEgress": false,
+        "IpProtocol": "tcp",
+        "FromPort": 3389,
+        "ToPort": 3389,
+        "CidrIpv4": "0.0.0.0/0",
+        "Tags": []
+      }
+      ],
+      "is_public": true,
+      "is_default": false
   }
 }
 ```
