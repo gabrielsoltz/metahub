@@ -852,7 +852,7 @@ Unrestricted refers to Policies Layer (API, IAM, Resources Policies, Rules, etc.
 
 ### its_associated_to
 
-> Resources that are indepedently managed (For example and EC2 Elastic IP)
+> Resources that are indepedently managed (For example an Elastic IP (EIP))
 
 When True returns list of something_is_associated_to...
 
