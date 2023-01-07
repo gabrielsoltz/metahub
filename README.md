@@ -828,27 +828,27 @@ Refers to the affected resource itself.
 
 Public refers to Network Layer. Must be effectively Public, meaning that if a resource, has a Public IP but the Security Group is closed, the resource is not Public. 
 
-is_public
+- is_public
 
 #### Unrestricted
 
 Unrestricted refers to Policies Layer (API, IAM, Resources Policies, Rules, etc.). 
 
-is_unrestricted
+- is_unrestricted
 
 #### Encryption
 
-is_encrypted
-is_rest_encrypted
-is_transit_encrypted
+- is_encrypted
+- is_rest_encrypted
+- is_transit_encrypted
 
 #### Default
 
-is_default
+- is_default
 
 #### Status
 
-is_running
+- is_running
 
 ### its_associated_to
 
@@ -856,12 +856,12 @@ is_running
 
 When True returns list of something_is_associated_to...
 
-its_associated_to_<something_is_associated_to>
-its_associated_to_<something_is_associated_to>_unencrypted
-its_associated_to_<something_is_associated_to>_unrestricted_cross_account
-its_associated_to_<something_is_associated_to>_unrestricted_wildcard
-its_associated_to_<something_is_associated_to>_unencrypted
-its_associated_to_<something_is_associated_to>_public
+- its_associated_to_<something_is_associated_to>
+- its_associated_to_<something_is_associated_to>_unencrypted
+- its_associated_to_<something_is_associated_to>_unrestricted_cross_account
+- its_associated_to_<something_is_associated_to>_unrestricted_wildcard
+- its_associated_to_<something_is_associated_to>_unencrypted
+- its_associated_to_<something_is_associated_to>_public
 
 ### it_has
 
@@ -869,12 +869,12 @@ its_associated_to_<something_is_associated_to>_public
 
 When True returns list of something_it_has...
 
-it_has_<something_it_has>
-it_has_<something_it_has>_unencrypted
-it_has_<something_it_has>_unrestricted_cross_account
-it_has_<something_it_has>_unrestricted_wildcard
-it_has_<something_it_has>_unencrypted
-it_has_<something_it_has>_public
+- it_has_<something_it_has>
+- it_has_<something_it_has>_unencrypted
+- it_has_<something_it_has>_unrestricted_cross_account
+- it_has_<something_it_has>_unrestricted_wildcard
+- it_has_<something_it_has>_unencrypted
+- it_has_<something_it_has>_public
 
 ### its_referenced_by
 
@@ -882,7 +882,7 @@ it_has_<something_it_has>_public
 
 When True returns list of something_that_is_referencing_the_affected_resource...
 
-its_referenced_by_<something_that_is_referencing_the_affected_resource>
+- its_referenced_by_<something_that_is_referencing_the_affected_resource>
 
 
 ## MetaTags
