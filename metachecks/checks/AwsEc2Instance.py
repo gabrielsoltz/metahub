@@ -11,8 +11,10 @@ class Metacheck(MetaChecksBase):
             region = finding["Region"]
             if not sess:
                 self.client = boto3.client("ec2", region_name=region)
+                self.asg_client = boto3.client("autoscaling", region_name=region)
             else:
                 self.client = sess.client(service_name="ec2", region_name=region)
+                self.asg_client = sess.client(service_name="autoscaling", region_name=region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
@@ -20,6 +22,7 @@ class Metacheck(MetaChecksBase):
             self.instance_volumes = self._describe_volumes()
             self.instance_security_groups_rules = self._describe_security_group_rules()
             self.instance_profile_roles = self._describe_instance_profile(sess)
+            self.instance_auto_scaling_group = self._describe_auto_scaling_instances()
 
     # Describe Functions
 
@@ -78,6 +81,17 @@ class Metacheck(MetaChecksBase):
                 InstanceProfileName=IamInstanceProfile.split("/")[1]
             )
             return response["InstanceProfile"]
+        return False
+
+    def _describe_auto_scaling_instances(self):
+        # AutoScaling Group is also defined as Tag aws:autoscaling:groupName, but using this endpoint we can also get the launch configuration.
+        if self.instance:
+            response = self.asg_client.describe_auto_scaling_instances(
+                InstanceIds=[
+                    self.resource_id,
+                ],
+            )
+            return response['AutoScalingInstances']
         return False
 
     # MetaChecks
@@ -223,6 +237,27 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
+    def its_associated_to_an_asg(self):
+        if self.instance_auto_scaling_group:
+            return self.instance_auto_scaling_group[0]["AutoScalingGroupName"]
+        return False
+
+    def its_associated_to_an_asg_launch_configuration(self):
+        if self.instance_auto_scaling_group:
+            try:
+                return self.instance_auto_scaling_group[0]["LaunchConfigurationName"]
+            except:
+                return False
+        return False
+
+    def its_associated_to_an_asg_launch_template(self):
+        if self.instance_auto_scaling_group:
+            try:
+                return self.instance_auto_scaling_group[0]["LaunchTemplate"]
+            except:
+                return False
+        return False
+
     def is_public(self):
         if (
             self.it_has_public_ip()
@@ -251,6 +286,9 @@ class Metacheck(MetaChecksBase):
             "is_instance_metadata_hop_limit_1",
             "its_associated_to_ebs",
             "its_associated_to_ebs_unencrypted",
+            "its_associated_to_an_asg",
+            "its_associated_to_an_asg_launch_configuration",
+            "its_associated_to_an_asg_launch_template",
             "is_public",
             "is_encrypted",
             "is_running",

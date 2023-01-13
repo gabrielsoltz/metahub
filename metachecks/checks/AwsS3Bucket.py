@@ -221,6 +221,8 @@ class Metacheck(MetaChecksBase):
                                         policy_allow_with_cross_account_principal.append(
                                             statement
                                         )
+                                        # If matched, we don't continue analyzing other pincipals
+                                        break
                             except IndexError:
                                 self.logger.error(
                                     "Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ",
