@@ -116,7 +116,7 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
     group_security_hub.add_argument(
-        "--input",
+        "--inputs",
         choices=["securityhub", "file-asff"],
         default=["securityhub"],
         nargs="+",
@@ -180,7 +180,7 @@ def get_parser():
         "Output Options"
     )
     group_output.add_argument(
-        "--output",
+        "--outputs",
         choices=["short", "full", "inventory", "statistics"],
         default=["short"],
         nargs="+",

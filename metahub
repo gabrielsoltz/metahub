@@ -40,6 +40,7 @@ def generate_findings(
     sh_role,
     mh_role,
     sh_region,
+    inputs,
     asff_findings
 ):
     mh_findings = {}
@@ -65,16 +66,20 @@ def generate_findings(
     
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
 
-    # ASFF
-    if asff_findings:
-        sh_findings = asff_findings
-    else:
-        sh_findings = sh.get_findings(sh_filters)
-    
     print_title_line("")
-    print_table("Security Hub findings found: ", len(sh_findings))
-    with alive_bar(total=len(sh_findings)) as bar:
-        for finding in sh_findings:
+
+    # To do: verify if update is the correct method.
+    findings = []
+    if "file-asff" in inputs and asff_findings:
+        findings.extend(asff_findings)
+        print_table("Input ASFF findings found: ", len(asff_findings))
+    if "securityhub" in inputs:
+        sh_findings = sh.get_findings(sh_filters)
+        findings.extend(sh_findings)
+        print_table("Security Hub findings found: ", len(sh_findings))
+    
+    with alive_bar(total=len(findings)) as bar:
+        for finding in findings:
             bar.title = f"-> Analyzing findings..."
 
             mh_matched = False
@@ -284,7 +289,7 @@ def generate_findings(
         return metachecks_statistics
     mh_statistics['metachecks'] = statistics_metachecks(mh_findings_short)
 
-    return mh_findings, mh_findings_short, sh_findings, mh_inventory, mh_statistics
+    return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region):
     UpdateFilters = {}
@@ -394,9 +399,8 @@ def main(args):
         list_metachecks(logger)
         exit(0)
 
-
-    # Parameter Validation: --input and --input-asff
-    if "file-asff" in args.input:
+    # Parameter Validation: --inputs and --input-asff
+    if "file-asff" in args.inputs:
         if not args.input_asff:
             logger.error("file-asff input specified but not --input-asff, specify the input file with --input-asff")
             exit(1)
@@ -410,7 +414,8 @@ def main(args):
         except FileNotFoundError:
             logger.error("--input-asff file %s not found!", file)
             exit(1)
-
+    else:
+        asff_findings = False
 
     # Parameter Validation: --sh-filters and --sh-template
     default_sh_filters = {
@@ -419,8 +424,7 @@ def main(args):
         "ProductName": ["Security Hub"],
     }
     if not args.sh_filters and not args.sh_template:
-        sh_filters = default_sh_filters
-        sh_filters = set_sh_filters(sh_filters)
+        sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
         import yaml
         from pathlib import Path
@@ -506,8 +510,7 @@ def main(args):
             )
 
 
-    print_title_line("")
-    print_table("Input: ", str(args.input))
+    print_title_line("")  
     print_table("Security Hub Account: ", str(sh_account) + sh_account_alias_str)
     print_table("Security Hub Role: ", str(args.sh_assume_role))
     print_table("Security Hub Region: ", sh_region)
@@ -520,15 +523,15 @@ def main(args):
     print_table("MetaTags Filters: ", str(mh_filters_tags))
     print_table("Update Findings: ", str(args.update_findings))
     print_table("Enrich Findings: ", str(args.enrich_findings))
-    print_table("Output: ", str(args.output))
+    print_table("Output: ", str(args.outputs))
     print_table("Output Modes: ", str(args.output_modes))
+    print_table("Input: ", str(args.inputs))
     print_table("Log Level: ", str(args.log_level))
         
     # Generate Findings
     (
         mh_findings,
         mh_findings_short,
-        sh_findings,
         mh_inventory,
         mh_statistics,
     ) = generate_findings(
@@ -542,12 +545,13 @@ def main(args):
         sh_role=args.sh_assume_role,
         mh_role=args.mh_assume_role,
         sh_region=sh_region,
+        inputs=args.inputs,
         asff_findings=asff_findings
     )
     
     if args.list_findings:
         if mh_findings:
-            for out in args.output:
+            for out in args.outputs:
                 print_title_line("List Findings: " + out)
                 if out == "short":
                     print(json.dumps(mh_findings_short, indent=2))
@@ -572,8 +576,8 @@ def main(args):
 
     if "json" in args.output_modes:
         if mh_findings:
-            for out in args.output:
-                print_title_line("Write Json: " + out)
+            for out in args.outputs:
+                print_title_line("Output JSON: " + out)
                 WRITE_FILE = OUTPUT_DIR + "metahub-" + out + "-" + TIMESTRF + ".json"
                 if out == "short":
                     with open(WRITE_FILE, "w", encoding="utf-8") as f:
@@ -590,6 +594,7 @@ def main(args):
                 print_table("File: ", WRITE_FILE)
 
     if "html" in args.output_modes:
+        print_title_line("Output HTML")
         import jinja2
         if mh_findings:
             WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
@@ -597,7 +602,6 @@ def main(args):
             templateEnv = jinja2.Environment(loader=templateLoader)
             TEMPLATE_FILE = "outputs/html/template.html"
             template = templateEnv.get_template(TEMPLATE_FILE)
-            print_title_line("Write HTML")
             with open(WRITE_FILE, "w", encoding="utf-8") as f:
                 html = template.render(
                     data=mh_findings,
@@ -607,9 +611,10 @@ def main(args):
                     metatags_columns=metatags_columns,
                 )
                 f.write(html)
-                print_table("File: ", WRITE_FILE)
+            print_table("File: ", WRITE_FILE)
 
     if "csv" in args.output_modes:
+        print_title_line("Output CSV")
         import csv
         def output_csv(output):
             new_list = []
@@ -634,41 +639,19 @@ def main(args):
             columns = new_list[0].keys()
             return columns, new_list
         if mh_findings:
-            for out in args.output:
-                print_title_line("Write CSV: " + out)
-                WRITE_FILE = OUTPUT_DIR + "metahub-" + out + "-" + TIMESTRF + ".csv"
-                if out == "short":
-                    with open(
-                        WRITE_FILE, "w", encoding="utf-8", newline=""
-                    ) as output_file:
-                        columns, csv_list = output_csv(mh_findings_short)
-                        dict_writer = csv.DictWriter(output_file, columns)
-                        dict_writer.writeheader()
-                        dict_writer.writerows(csv_list)
-                if out == "inventory":
-                    with open(
-                        WRITE_FILE, "w", encoding="utf-8", newline=""
-                    ) as output_file:
-                        columns = ["ARN"]
-                        dict_writer = csv.writer(output_file)
-                        dict_writer.writerow(columns)
-                        dict_writer.writerows([mh_inventory])
-                if out == "statistics":
-                    logger.error("CSV Output for Statistics not implemented...")
-                if out == "standard":
-                    with open(
-                        WRITE_FILE, "w", encoding="utf-8", newline=""
-                    ) as output_file:
-                        columns, csv_list = output_csv(mh_findings)
-                        dict_writer = csv.DictWriter(output_file, columns)
-                        dict_writer.writeheader()
-                        dict_writer.writerows(csv_list)
-                if out != "statistics":
-                    print_table("File: ", WRITE_FILE)
+            WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".csv"
+            with open(
+                WRITE_FILE, "w", encoding="utf-8", newline=""
+            ) as output_file:
+                columns, csv_list = output_csv(mh_findings_short)
+                dict_writer = csv.DictWriter(output_file, columns)
+                dict_writer.writeheader()
+                dict_writer.writerows(csv_list)
+            print_table("File: ", WRITE_FILE)
 
     print_title_line("Results")
-    print_table("Non-Compliant Resources: ", str(len(mh_findings)))
-    print_table("Non-Compliant Findings: ", str(count_mh_findings(mh_findings)))
+    print_table("Total Resources: ", str(len(mh_findings)))
+    print_table("Total Findings: ", str(count_mh_findings(mh_findings)))
 
     if args.update_findings:
         print_title_line("Update Findings")
