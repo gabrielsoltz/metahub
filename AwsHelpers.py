@@ -1,6 +1,6 @@
 import boto3
 import botocore
-from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError, EndpointConnectionError
 
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):
@@ -53,6 +53,10 @@ def get_account_id(logger):
     except ClientError as e:
         logger.error("Error Getting Account Id: {}".format(e))
         exit(1)
+    except EndpointConnectionError as e:
+        logger.error("Error Getting Account Id: {}".format(e))
+        return False
+        #exit(1)
     return account_id
 
 
@@ -88,7 +92,11 @@ def get_available_regions(logger, aws_service):
 
 def get_account_alias(logger, aws_account_number=None, role_name=None):
     if not aws_account_number:
-        aliases = boto3.client("iam").list_account_aliases()["AccountAliases"]
+        try:
+            aliases = boto3.client("iam").list_account_aliases()["AccountAliases"]
+        except EndpointConnectionError as e:
+            logger.error("Error Account Alias: {}".format(e))
+            aliases = None
         if aliases:
             return aliases[0]
         return ""
@@ -109,11 +117,14 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
     else:
         return ""
 
-
-def get_sh_findings_aggregator():
-    sh_findings_aggregator = boto3.client("securityhub").list_finding_aggregators()[
-        "FindingAggregators"
-    ]
+def get_sh_findings_aggregator(logger):
+    try:
+        sh_findings_aggregator = boto3.client("securityhub").list_finding_aggregators()[
+            "FindingAggregators"
+        ]
+    except EndpointConnectionError as e:
+        logger.error("Error Getting SH Aggregators: {}".format(e))
+        return False
     if sh_findings_aggregator:
         sh_findings_aggregator_region = sh_findings_aggregator[0][
             "FindingAggregatorArn"

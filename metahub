@@ -388,6 +388,30 @@ def main(args):
                     filters[key].append(value_to_append)
         return filters
 
+    if args.list_meta_checks:
+        from metachecks.metachecks import list_metachecks
+        print_title_line("List MetaChecks")
+        list_metachecks(logger)
+        exit(0)
+
+
+    # Parameter Validation: --input and --input-asff
+    if "file-asff" in args.input:
+        if not args.input_asff:
+            logger.error("file-asff input specified but not --input-asff, specify the input file with --input-asff")
+            exit(1)
+        file = args.input_asff
+        try:
+            with open(file) as f:
+                asff_findings = json.load(f)
+        except json.decoder.JSONDecodeError:
+            logger.error("--input-asff file %s invalid format!", file)
+            exit(1)
+        except FileNotFoundError:
+            logger.error("--input-asff file %s not found!", file)
+            exit(1)
+
+
     # Parameter Validation: --sh-filters and --sh-template
     default_sh_filters = {
         "RecordState": ["ACTIVE"],
@@ -471,7 +495,7 @@ def main(args):
         sh_region = get_region(logger)
     else:
         sh_region = args.sh_region
-    sh_region_aggregator = get_sh_findings_aggregator()
+    sh_region_aggregator = get_sh_findings_aggregator(logger)
     if sh_region_aggregator:
         if sh_region_aggregator != sh_region:
             logger.error(
@@ -481,13 +505,15 @@ def main(args):
                 sh_region_aggregator,
             )
 
+
     print_title_line("")
+    print_table("Input: ", str(args.input))
     print_table("Security Hub Account: ", str(sh_account) + sh_account_alias_str)
     print_table("Security Hub Role: ", str(args.sh_assume_role))
     print_table("Security Hub Region: ", sh_region)
-    print_table("MetaHub Role: ", str(args.mh_assume_role))
     print_table("Security Hub filters: ", str(sh_filters))
     print_table("Security Hub yaml: ", str(args.sh_template))
+    print_table("MetaHub Role: ", str(args.mh_assume_role))
     print_table("MetaChecks: ", str(args.meta_checks))
     print_table("MetaChecks Filters: ", str(mh_filters_checks))
     print_table("MetaTags: ", str(args.meta_tags))
@@ -495,20 +521,8 @@ def main(args):
     print_table("Update Findings: ", str(args.update_findings))
     print_table("Enrich Findings: ", str(args.enrich_findings))
     print_table("Output: ", str(args.output))
+    print_table("Output Modes: ", str(args.output_modes))
     print_table("Log Level: ", str(args.log_level))
-
-    if args.list_meta_checks:
-        from metachecks.metachecks import list_metachecks
-
-        print_title_line("List MetaChecks")
-        list_metachecks(logger)
-        exit(0)
-
-    asff_findings = None
-    if args.input_asff:
-        file = args.input_asff
-        with open(file) as f:
-            asff_findings = json.load(f)
         
     # Generate Findings
     (
@@ -541,10 +555,22 @@ def main(args):
                     print(json.dumps(mh_inventory, indent=2))
                 if out == "statistics":
                     print(json.dumps(mh_statistics, indent=2))
-                if out == "standard":
+                if out == "full":
                     print(json.dumps(mh_findings, indent=2))
 
-    if args.write_json:
+    # Output Modes
+
+    # Columns for CSV and HTML
+    if args.output_meta_checks_columns:
+        metachecks_columns = args.output_meta_checks_columns
+    else:
+        metachecks_columns = mh_statistics['metachecks']
+    if args.output_meta_tags_columns:
+        metatags_columns = args.output_meta_tags_columns
+    else: 
+        metatags_columns = mh_statistics['metatags']
+
+    if "json" in args.output_modes:
         if mh_findings:
             for out in args.output:
                 print_title_line("Write Json: " + out)
@@ -558,26 +584,15 @@ def main(args):
                 if out == "statistics":
                     with open(WRITE_FILE, "w", encoding="utf-8") as f:
                         json.dump(mh_statistics, f, indent=2)
-                if out == "standard":
+                if out == "full":
                     with open(WRITE_FILE, "w", encoding="utf-8") as f:
                         json.dump(mh_findings, f, indent=2)
                 print_table("File: ", WRITE_FILE)
 
-    if args.write_html:
+    if "html" in args.output_modes:
         import jinja2
-
-        if args.write_meta_checks_columns:
-            metachecks_columns = args.write_meta_checks_columns
-        else:
-            metachecks_columns = mh_statistics['metachecks']
-        if args.write_meta_tags_columns:
-            metatags_columns = args.write_meta_tags_columns
-        else: 
-            metatags_columns = mh_statistics['metatags']
-            
-        WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
-
         if mh_findings:
+            WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
             templateEnv = jinja2.Environment(loader=templateLoader)
             TEMPLATE_FILE = "outputs/html/template.html"
@@ -594,18 +609,8 @@ def main(args):
                 f.write(html)
                 print_table("File: ", WRITE_FILE)
 
-    if args.write_csv:
+    if "csv" in args.output_modes:
         import csv
-
-        if args.write_meta_checks_columns:
-            metachecks_columns = args.write_meta_checks_columns
-        else:
-            metachecks_columns = mh_statistics['metachecks']
-        if args.write_meta_tags_columns:
-            metatags_columns = args.write_meta_tags_columns
-        else: 
-            metatags_columns = mh_statistics['metatags']
-
         def output_csv(output):
             new_list = []
             for key, dictionary in output.items():
@@ -628,7 +633,6 @@ def main(args):
                 new_list.append(new_dict)
             columns = new_list[0].keys()
             return columns, new_list
-
         if mh_findings:
             for out in args.output:
                 print_title_line("Write CSV: " + out)
