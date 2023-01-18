@@ -64,7 +64,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
 
-**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `standard`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as json, csv and HTML files using the [Write File](#write-file) options.
+**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `full`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as json, csv and HTML files using the [Write File](#write-file) options.
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
 
@@ -76,13 +76,13 @@ You can create a filter on top of these outpus to automate the detection of anot
 `./metahub --list-findings`
 
 - Show the statistics ouptut:
-`./metahub --list-findings --output statistics`
+`./metahub --list-findings --outputs statistics`
 
 - Filter only one resource:
 `./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>`
 
 - Filter only one AWS Account and show statistics:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --output statistics`
+`./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --outputs statistics`
 
 ## Investigating resources based on MetaTags (Tagging)
 
@@ -107,7 +107,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 `./metahub --list-findings --meta-checks --mh-filters-checks is_public=True`
 
 - Show the previous list of affected resources in inventory output:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --output inventory`
+`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --outputs inventory`
 
 - Filter only the affected resoruces that are unencrypted:
 `./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True`
@@ -116,7 +116,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 `./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI`
 
 - Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI" and write a CSV Spreadsheet:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --write-csv`
+`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --output-modes csv`
 
 ## Investigating a finding
 
@@ -225,25 +225,25 @@ You can use three options to configure where and how AWS Security Hub is running
 
 ## Listing Findings
 
-### Get findings (default security hub filters applied)
+### Get findings (--sh-filters are default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW, --outputs is default short and --output-mode is default json)
 
   ```sh
   ./metahub
   ```
 
-### Get findings and list them in default output "standard"
+### Get findings and output them in terminal (--sh-filters are default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW, --outputs is default short and --output-mode is default json)
 
   ```sh
   ./metahub --list-findings
   ```
 
-### Get findings and list them in output "short"
+### Get findings and output them in terminal as output full
 
   ```sh
-  ./metahub --list-findings --outputs short
+  ./metahub --list-findings --outputs full
   ```
 
-### Get findings and list them in output "inventory" and "statistics"
+### Get findings and output them in terminal as output inventory and statistics
 
   ```sh
   ./metahub --list-findings --outputs inventory statistics
@@ -253,10 +253,10 @@ You can use three options to configure where and how AWS Security Hub is running
 
 See more about [filtering](#Filtering)
 
-### Get findings with SH filter SeverityLabel=CRITICAL and ResourceType=AwsEc2SecurityGroup
+### Get findings with SH filter SeverityLabel=CRITICAL and ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW)
 
   ```sh
-  ./metahub --list-findings --sh-filters RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
+  ./metahub --list-findings --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
   ```
 
 ## MetaChecks
@@ -339,18 +339,12 @@ See more about [filtering](#Filtering)
   ./metahub --list-findings --meta-tags --meta-checks
   ```
 
-## Write Files
+## Output Modes
 
-### Get findings with default filters and MetaChecks enabled
-
-  ```sh
-  ./metahub --meta-checks --write-json
-  ```
-
-### Get and list findings with default filters and MetaTags enabled with filters Owner=securitys
+### Get and list findings with default filters and MetaTags enabled with filters Owner=Security and output in json, html and csv formats
 
   ```sh
-  ./metahub --list-findings --meta-tags --mh-filters-tags Owner=Security --write-html --write-csv
+  ./metahub --list-findings --meta-tags --mh-filters-tags Owner=Security --output-modes json html csv
   ```
 
 ## SH House Keeping
@@ -360,19 +354,19 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
 ### Move findings with Workflow Status NEW that has Compliance Status PASSED
 
   ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --output statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --outputs statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
   ```
 
 ### Move findings with Workflow Status NEW that has Compliance Status NOT_AVAILABLE
 
   ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE --output statistics --update-findings Note="House Keeping - Move NOT_AVAILABLE findings to RESOLVED" Workflow=RESOLVED
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE --outputs statistics --update-findings Note="House Keeping - Move NOT_AVAILABLE findings to RESOLVED" Workflow=RESOLVED
   ```
 
 ### Move findings with Workflow Status NEW that has RecordState ARCHIVED
 
   ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --output statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
+  ./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --outputs statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
   ```
 
 ## Debug
@@ -385,16 +379,35 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
 
 # Outputs
 
-**MetaHub** supports different type of outputs format and data by using the option `--output`. You can combine more than one output by using spaces between them, for example: `--output standard inventory`. These outputs can then be written into files [using the `--write-html`, `--write-json` or `--write-csv` options](#write-file), or show them as output using the option `--list-findings`. You can enrich these outputs by using [`--meta-checks`](#metachecks) and [`--meta-tags`](#metatags) options.
+**MetaHub** supports different data outputs using the option `--output`. By default, output is `short`. You can combine more than one output by using spaces between them, for example: `--outputs full inventory`. The outputs you chosee will be written to a json file by default (`--output-mode json`), or you can choose other modes. You can enrich these outputs by using [`--meta-checks`](#metachecks) and [`--meta-tags`](#metatags) options.
 
-- [Standard](#standard)
 - [Short](#short)
+- [Full](#Full)
 - [Inventory](#inventory)
 - [Statistics](#statistics)
 
-## Standard
+## Short
 
-The default output. Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding you will get:
+The default ouput. You get the findings title under each affected resource and the AwsAccountId, AwsAccountAlias, Region and ResourceType.
+
+```
+  "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated": {
+    "findings": [
+      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
+      "SageMaker.3 Users should not have root access to SageMaker notebook instances",
+      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
+    ],
+    "AwsAccountId": "ofuscated",
+    "AwsAccountAlias": "ofuscated",
+    "Region": "us-east-1",
+    "ResourceType": "AwsSageMakerNotebookInstance"
+  },
+```  
+
+
+## Full
+
+The full output. Use `--outputs full`. Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding you will get:
 
 ```
   "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/ofuscated": {
@@ -449,27 +462,9 @@ The default output. Show all findings with all data. Findings are organized by R
   },
 ```
 
-## Short
-
-You can use `--output short` to reduce the findings section to show only the Title.
-
-```
-  "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated": {
-    "findings": [
-      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
-      "SageMaker.3 Users should not have root access to SageMaker notebook instances",
-      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
-    ],
-    "AwsAccountId": "ofuscated",
-    "AwsAccountAlias": "ofuscated",
-    "Region": "us-east-1",
-    "ResourceType": "AwsSageMakerNotebookInstance"
-  },
-```  
-
 ## Inventory
 
-You can use `--output inventory` to get only a list of resource's ARNs.
+You can use `--outputs inventory` to get only a list of resource's ARNs.
 
 ```
 [
@@ -480,7 +475,7 @@ You can use `--output inventory` to get only a list of resource's ARNs.
 
 ## Statistics
 
-You can use `--output statistics` to get statistics about your search. You get statistics by each field:
+You can use `--outputs statistics` to get statistics about your search. You get statistics by each field:
 
 ```
 {
@@ -525,9 +520,9 @@ You can use `--output statistics` to get statistics about your search. You get s
 }
 ```
 
-# Write File
+# Output Modes
 
-You can write your output to files in JSON, CSV or HTML format using the options: `--write-json`, `--write-html` or `--write-csv`. You can combine them as you need. Outpus will be saved in folder `/outputs` with the date of the run.
+Default output mode is json. MetaHub can also generate rich HTML and CSV reports. You can combine them as you need. Outpus will be saved in folder `/outputs` with the execution date.
 
 - [JSON](#json)
 - [HTML](#html)
@@ -535,20 +530,21 @@ You can write your output to files in JSON, CSV or HTML format using the options
 
 ## Json
 
-`--write-json` will create a file for each `--output` selected. 
-For example: `./metahub --output standard inventory --meta-tags --write-json` will generate 2 json files, one for standard and one for inventory outputs.
+This is the default output. MetaHub will generate 1 json file for each `--ouput` choosed.
+
+For example: `./metahub --outputs full inventory --meta-tags ` will generate 2 json files, one for full and one for inventory outputs.
 
 ## HTML
 
-You can create enriched HTML reports of your findings, adding MetaChecks and MetaTags as part of them. 
+You can create rich HTML reports of your findings, adding MetaChecks and MetaTags as part of them. Use `--output-modes html`
 
 HTML Reports are interactive in many ways: You can add/remove columns, you can sort and filter by any column, and you can also download that data to xlsx, csv, html and json. Meaning you can manipulate the htnml report in a lot of different ways.
 
-You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enable `--meta-checks --meta-tags`)
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--output-meta-tags-columns` and `--output-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enable `--meta-checks --meta-tags`)
 
 For example you can enable MetaTags and add "Owner" and "Environment" as columns to your report using: 
 
-`./metahub --meta-tags --write-html --write-meta-tags-columns Owner Environment`
+`./metahub --meta-tags --output-modes html --output-meta-tags-columns Owner Environment`
 
 <p align="center">
   <img src="docs/imgs/html-export.png" alt="html-example"/>
@@ -556,13 +552,13 @@ For example you can enable MetaTags and add "Owner" and "Environment" as columns
 
 ## CSV
 
-`--write-csv` will create a file for each `--output` selected. Output `statistics` is not supported for this format. 
+You can create a CSV custom report from your findings, adding MetaChecks and MetaTags as part of them. Use `--output-modes csv`
 
-You can customize the MetaChecks and MetaTags to use as columns headers using the options `--write-meta-tags-columns` and `--write-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enable `--meta-checks --meta-tags`)
+You can customize the MetaChecks and MetaTags to use as columns headers using the options `--output-meta-tags-columns` and `--output-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns doesn't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enable `--meta-checks --meta-tags`)
 
-For example you can generate 2 csv outputs one for standard and one for inventory with MetaTags and MetaChecks enabled adding columns `is_encrypted` from MetaChecks and `Name` and `Owner` from MetaTags:
+For example you can generate 2 csv outputs one for full and one for inventory with MetaTags and MetaChecks enabled adding columns `is_encrypted` from MetaChecks and `Name` and `Owner` from MetaTags:
 
-`./metahub --output standard inventory --meta-tags --write-meta-tags-columns Name Owner --meta-checks --write-meta-checks-columns is_encrypted --write-csv`
+`./metahub --outputs full inventory --meta-tags --output-meta-tags-columns Name Owner --meta-checks --output-meta-checks-columns is_encrypted --output-modes csv`
 
 <p align="center">
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>
@@ -599,7 +595,7 @@ Suppose you are working with multi-account setups and many resources. In that ca
 
 **MetaHub** aggregates all findings under the affected resource. You have 2 possible outputs, the short one and the default one:
 
-This is how MetaHub shows the previous example using the `--output-short` output:
+This is how MetaHub shows the previous example with default options:
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -616,7 +612,7 @@ This is how MetaHub shows the previous example using the `--output-short` output
 }
 ```
 
-And this is how MetaHub shows you the output using the default output:
+And this is the `--outputs full`:
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {

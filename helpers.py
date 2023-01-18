@@ -63,175 +63,171 @@ def get_parser():
     Metahub: the command line utility for AWS Security Hub.
     """,
     )
-    parser.add_argument(
-        "--list-findings",
-        help="Use this option to list Security Hub findings (based on filters)",
-        required=False,
-        action=argparse.BooleanOptionalAction,
+
+    # Group: Security Hub 
+    group_security_hub = parser.add_argument_group(
+        "Security Hub Options"
     )
-    parser.add_argument(
+    group_security_hub.add_argument(
         "--sh-filters",
         default=None,
-        help='Security Hub Filters: Use this option to filter the result from Security Hub. \
-            Set a number of key-value pairs (do not put spaces before or after the = sign). \
-            If a value contains spaces, you should define it with double quotes: Filter="This is a value  \
-            Example: ./metahub --list-findings --sh-filters ResourceType=AwsEc2SecurityGroup\
-            Default: RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"',
+        help="Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName=\"Security Hub\" RecordState=ACTIVE WorkflowStatus=NEW",
         required=False,
         nargs="*",
         action=KeyValueWithList,
     )
-    parser.add_argument(
+    group_security_hub.add_argument(
         "--sh-template",
         default=None,
-        help="Use YAML templates as filter. \
-        You need to specify the template file: --sh-template templates/default.yml",
+        help="Use this option to filter the results from SH using a YAML file. You need to specify the file: --sh-template templates/default.yml",
         required=False,
     )
-    parser.add_argument(
+    group_security_hub.add_argument(
+        "--sh-assume-role",
+        default=None,
+        help="Specify the AWS IAM role to be assumed where SH is running. Use with --sh-account",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--sh-account",
+        default=None,
+        help="Specify the AWS Account ID where SH is running. Use with --sh-assume-role",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--sh-region",
+        choices=get_available_regions(get_logger("ERROR"), "securityhub"),
+        default=[],
+        help="Specify the AWS Region where SH is running",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--update-findings",
+        default=None,
+        help="Use this option to update the result findings Workflow Status (with a Note). Use --update-findings Workflow=NOTIFIED|RESOLVED|SUPPRESSED|NEW Note=\"You can whatever you like here, like a ticket ID, you will see this Note on your SH \"Updated at\" colum",
+        required=False,
+        nargs="*",
+        action=KeyValue,
+    )
+    group_security_hub.add_argument(
+        "--enrich-findings",
+        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags. Use with --meta-checks and/or --meta-tags",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    group_security_hub.add_argument(
+        "--inputs",
+        choices=["securityhub", "file-asff"],
+        default=["securityhub"],
+        nargs="+",
+        help="Specify input source for findings, by default securityhub but you can also use an ASFF file (file-asff) or boths inputs together and combine them",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--input-asff",
+        default=None,
+        help="Specify ASFF file path for use with --input file-asff",
+        required=False,
+    )
+
+    # Group: Meta Checks and Meta Tags Options
+    group_meta_checks = parser.add_argument_group(
+        "Meta Checks and Meta Tags Options"
+    )
+    group_meta_checks.add_argument(
         "--list-meta-checks",
         help="Use this option to list all available Meta Checks",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument(
+    group_meta_checks.add_argument(
         "--meta-checks",
         help="Use this option to enable Meta Checks",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument(
+    group_meta_checks.add_argument(
+        "--mh-filters-checks",
+        default=None,
+        help="Use this option to filter the resources based on Meta Checks results using key=value pairs, for example is_public=True. Only True or False. You can combine one or more filters using spaces",
+        required=False,
+        nargs="*",
+        action=KeyValue,
+    )
+    group_meta_checks.add_argument(
         "--meta-tags",
         help="Use this option to enable Meta Tags",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument(
-        "--mh-filters-checks",
-        default=None,
-        help="MetaHub MetaChecks Filters: Use this option to filter the resources based on Meta Checks results. \
-            You can list available Meta Checks using --list-meta-checks \
-            Set a number of key-value pairs (do not put spaces before or after the = sign). \
-            Only True or False valid values. \
-            Example: ./metahub --list-findings  --meta-checks -mh-filters-checks is_attached_to_ec2_instance_with_public_ip=True is_public=False \
-            Default: None",
-        required=False,
-        nargs="*",
-        action=KeyValue,
-    )
-    parser.add_argument(
+    group_meta_checks.add_argument(
         "--mh-filters-tags",
         default=None,
-        help="MetaHub MetaTags Filters: Use this option to filter the resources based on Meta Checks results. \
-            You can list available Meta Checks using --list-meta-tags \
-            Set a number of key-value pairs (do not put spaces before or after the = sign). \
-            Only True or False valid values. \
-            Example: ./metahub --list-findings  --meta-tags -mh-filters-tags environment=prod\
-            Default: None",
+        help="Use this option to filter the resources based on Meta Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
     )
-    parser.add_argument(
-        "--update-findings",
-        default=None,
-        help='Security Hub Update Fields: Use this option to update your findings. You need to speficy wich field to update and with wich value. \
-            Set a number of key-value pairs (do not put spaces before or after the = sign). \
-            If a value contains spaces, you should define it with double quotes: Key="This is a value  \
-            Example: ./metahub --list-findings --update-findings Workflow=RESOLVED \
-            Default: None',
-        required=False,
-        nargs="*",
-        action=KeyValue,
-    )
-    parser.add_argument(
-        "--sh-assume-role",
-        default=None,
-        help="The AWS IAM role name to be assumed where SH is running. \
-        Needs to be uses with --sh-account.",
-        required=False,
-    )
-    parser.add_argument(
-        "--sh-account",
-        default=None,
-        help="The AWS Account ID where your SH is running. \
-        Needs to be uses with --sh-assume-role.",
-        required=False,
-    )
-    parser.add_argument(
+    group_meta_checks.add_argument(
         "--mh-assume-role",
         default=None,
-        help="The AWS IAM role name to be assumed where resources ares running.",
+        help="Specify the AWS IAM role role to be assumed where the affected resources are running",
         required=False,
     )
-    parser.add_argument(
-        "--output",
-        choices=["standard", "short", "inventory", "statistics"],
-        default=["standard"],
+
+    # Group: Output Options
+    group_output = parser.add_argument_group(
+        "Output Options"
+    )
+    group_output.add_argument(
+        "--outputs",
+        choices=["short", "full", "inventory", "statistics"],
+        default=["short"],
         nargs="+",
-        help="Output. Default is standard. Options: standard, short, inventory, statistics. \
-            You can speficy more than one separating them with spaces.",
+        help="Specify the output you want, by default short. Combine one or more using spaces",
         required=False,
     )
-    parser.add_argument(
+    group_output.add_argument(
+        "--list-findings",
+        help="Use this option to show the ouput in the console prompt. All outputs will be shown, one by one",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    group_output.add_argument(
+        "--output-modes",
+        choices=["json", "html", "csv"],
+        default=["json"],
+        nargs="+",
+        help="Specify the output mode, by default json. Combine one or more using spaces",
+        required=False,
+    )
+    group_output.add_argument(
+        "--output-meta-tags-columns",
+        help="Specify which Meta Tags to unroll as Columns for output csv and html",
+        default=[],
+        nargs="+",
+        required=False,
+    )
+    group_output.add_argument(
+        "--output-meta-checks-columns",
+        help="Specify which Meta Checks to unroll as Columns for output csv and html",
+        default=[],
+        nargs="+",
+        required=False,
+    )
+
+    # Group: Debug Options
+    group_debug = parser.add_argument_group(
+        "Debug Options"
+    )
+    group_debug.add_argument(
         "--log-level",
         choices=["ERROR", "WARNING", "INFO", "DEBUG"],
         default="ERROR",
-        help="Log Level (Default: ERROR) (Valid Options: ERROR, WARNING, INFO or DEBUG)",
+        help="Specify Log Level, by default ERROR",
         required=False,
     )
-    parser.add_argument(
-        "--write-json",
-        help="Write Json to File",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--write-html",
-        help="Write HTML to File",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--write-csv",
-        help="Write CSV to File",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--write-meta-tags-columns",
-        help="MetaTags Columns (for CSV and HTML formats). Use this option to unroll MetaTags as Columns.",
-        default=[],
-        nargs="+",
-        required=False,
-    )
-    parser.add_argument(
-        "--write-meta-checks-columns",
-        help="MetaChecks Columns (for CSV and HTML formats). Use this option to unroll MetaChecks as Columns.",
-        default=[],
-        nargs="+",
-        required=False,
-    )
-    parser.add_argument(
-        "--enrich-findings",
-        help="Enrich Findings with MetaTags and MetaChecks",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "--sh-region",
-        choices=get_available_regions(get_logger("ERROR"), "securityhub"),
-        default=[],
-        #nargs="+",
-        help="AWS Security Hub Region",
-        required=False,
-    )
-    parser.add_argument(
-        "--input-asff",
-        default=None,
-        help="ASFF Json File for findings.",
-        required=False,
-    )
+
     return parser
 
 def get_logger(log_level):
