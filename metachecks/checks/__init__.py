@@ -4,5 +4,6 @@ from metachecks.checks import (
     AwsS3Bucket,
     AwsEc2Instance,
     AwsEc2NetworkAcl,
-    AwsAutoScalingLaunchConfiguration
+    AwsAutoScalingLaunchConfiguration,
+    AwsEc2LaunchTemplate
 )

@@ -153,7 +153,7 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def its_associated_to_security_groups(self):
+    def its_associated_with_security_groups(self):
         SG = []
         if self.instance_security_groups_rules:
             for rule in self.instance_security_groups_rules:
@@ -163,7 +163,7 @@ class Metacheck(MetaChecksBase):
             return SG
         return False
 
-    def its_associated_to_security_group_rules_unrestricted(self):
+    def its_associated_with_security_group_rules_unrestricted(self):
         UnrestrictedRule = []
         if self.instance_security_groups_rules:
             for rule in self.instance_security_groups_rules:
@@ -218,7 +218,7 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def its_associated_to_ebs(self):
+    def its_associated_with_ebs(self):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
@@ -227,7 +227,7 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
-    def its_associated_to_ebs_unencrypted(self):
+    def its_associated_with_ebs_unencrypted(self):
         EBS = []
         if self.instance_volumes:
             for ebs in self.instance_volumes:
@@ -237,12 +237,12 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
-    def its_associated_to_an_asg(self):
+    def its_associated_with_an_asg(self):
         if self.instance_auto_scaling_group:
             return self.instance_auto_scaling_group[0]["AutoScalingGroupName"]
         return False
 
-    def its_associated_to_an_asg_launch_configuration(self):
+    def its_associated_with_an_asg_launch_configuration(self):
         if self.instance_auto_scaling_group:
             try:
                 return self.instance_auto_scaling_group[0]["LaunchConfigurationName"]
@@ -250,7 +250,7 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    def its_associated_to_an_asg_launch_template(self):
+    def its_associated_with_an_asg_launch_template(self):
         if self.instance_auto_scaling_group:
             try:
                 return self.instance_auto_scaling_group[0]["LaunchTemplate"]
@@ -261,13 +261,13 @@ class Metacheck(MetaChecksBase):
     def is_public(self):
         if (
             self.it_has_public_ip()
-            and self.its_associated_to_security_group_rules_unrestricted()
+            and self.its_associated_with_security_group_rules_unrestricted()
         ):
             return self.it_has_public_ip()
         return False
 
     def is_encrypted(self):
-        if not self.its_associated_to_ebs_unencrypted():
+        if not self.its_associated_with_ebs_unencrypted():
             return True
         return False
 
@@ -280,15 +280,15 @@ class Metacheck(MetaChecksBase):
             "it_has_public_dns",
             "it_has_instance_profile",
             "it_has_instance_profile_roles",
-            "its_associated_to_security_groups",
-            "its_associated_to_security_group_rules_unrestricted",
+            "its_associated_with_security_groups",
+            "its_associated_with_security_group_rules_unrestricted",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
-            "its_associated_to_ebs",
-            "its_associated_to_ebs_unencrypted",
-            "its_associated_to_an_asg",
-            "its_associated_to_an_asg_launch_configuration",
-            "its_associated_to_an_asg_launch_template",
+            "its_associated_with_ebs",
+            "its_associated_with_ebs_unencrypted",
+            "its_associated_with_an_asg",
+            "its_associated_with_an_asg_launch_configuration",
+            "its_associated_with_an_asg_launch_template",
             "is_public",
             "is_encrypted",
             "is_running",

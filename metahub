@@ -418,6 +418,10 @@ def main(args):
         asff_findings = False
 
     # Parameter Validation: --sh-filters and --sh-template
+    if "file-asff" in args.inputs and not "securityhub" in args.inputs:
+        if args.sh_template or args.sh_filters:
+            logger.error("--sh-filters not supported for file-asff... If you want to fetch from securityhub and file-asff at the same time use --inputs file-asff securityhub")
+            exit(0)
     default_sh_filters = {
         "RecordState": ["ACTIVE"],
         "WorkflowStatus": ["NEW"],
@@ -428,7 +432,6 @@ def main(args):
     elif args.sh_template:
         import yaml
         from pathlib import Path
-
         try:
             yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
             dict_values = next(iter(yaml_to_dict.values()))
@@ -600,7 +603,7 @@ def main(args):
             WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
             templateEnv = jinja2.Environment(loader=templateLoader)
-            TEMPLATE_FILE = "outputs/html/template.html"
+            TEMPLATE_FILE = "html/template.html"
             template = templateEnv.get_template(TEMPLATE_FILE)
             with open(WRITE_FILE, "w", encoding="utf-8") as f:
                 html = template.render(
