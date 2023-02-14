@@ -54,7 +54,7 @@ class Metacheck(MetaChecksBase):
     
     # MetaChecks
 
-    def its_associated_to_network_interfaces(self):
+    def its_associated_with_network_interfaces(self):
         NetworkInterfaces = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -62,7 +62,7 @@ class Metacheck(MetaChecksBase):
             return NetworkInterfaces
         return False
 
-    def its_associated_to_ec2_instances(self):
+    def its_associated_with_ec2_instances(self):
         Ec2Instances = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -74,7 +74,7 @@ class Metacheck(MetaChecksBase):
                 return Ec2Instances
         return False
 
-    def its_associated_to_managed_services(self):
+    def its_associated_with_managed_services(self):
         ManagedServices = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -88,7 +88,7 @@ class Metacheck(MetaChecksBase):
                 return ManagedServices
         return False
 
-    def its_associated_to_ips_public(self):
+    def its_associated_with_ips_public(self):
         PublicIPs = []
         if self.network_interfaces:
             for NetworkInterface in self.network_interfaces:
@@ -136,7 +136,7 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
-        if self.its_associated_to_ips_public() and self.it_has_rules_unrestricted():
+        if self.its_associated_with_ips_public() and self.it_has_rules_unrestricted():
             return True
         return False
 
@@ -150,10 +150,10 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_associated_to_network_interfaces",
-            "its_associated_to_ec2_instances",
-            "its_associated_to_ips_public",
-            "its_associated_to_managed_services",
+            "its_associated_with_network_interfaces",
+            "its_associated_with_ec2_instances",
+            "its_associated_with_ips_public",
+            "its_associated_with_managed_services",
             "its_referenced_by_another_sg",
             "it_has_rules_unrestricted",
             "is_public",

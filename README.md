@@ -41,8 +41,8 @@
 If you are investigating a finding for a Security Group with a port open, you can use MetaHub to investigate and automate the following:
 
 - If there are other findings for this resource
-- If the security group is associated to a Network Interface (`its_associated_to_network_interfaces`)
-- If the associated resource is public (`its_associated_to_public_ips`)
+- If the security group is associated to a Network Interface (`its_associated_with_network_interfaces`)
+- If the associated resource is public (`its_associated_with_public_ips`)
 - If the environment is Production (MetaTags)
 - If the port is answering
 
@@ -127,10 +127,10 @@ You can create a filter on top of these outpus to automate the detection of anot
 `./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks`
 
 - Filter only the affected resources that are associated to public ips:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_to_public_ips=True`
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True`
 
 - Update all related AWS Security Findings to NOTIFIED with a Note:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_to_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"`
+`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"`
 
 # Requirements
 
@@ -279,10 +279,10 @@ See more about [filtering](#Filtering)
   ./metahub --list-findings --meta-checks -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-checks is_public=True
   ```
 
-### Get findings with SH filters ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters its_associated_to_public_ips=True
+### Get findings with SH filters ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters its_associated_with_public_ips=True
 
   ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_to_public_ips=True
+  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_public_ips=True
   ```
 
 ### Get findings with SH filters ResourceType=AwsS3Bucket (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters is_public=True
@@ -721,14 +721,14 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
   "Region": "eu-west-1",
   "ResourceType": "AwsEc2SecurityGroup",
   "metachecks": {
-    "its_associated_to_network_interfaces": [
+    "its_associated_with_network_interfaces": [
       "eni-01234567890",
       "eni-01234567891",
       "eni-01234567892",
       "eni-01234567893",
       "eni-01234567894"
     ],
-    "its_associated_to_ec2_instances": [
+    "its_associated_with_ec2_instances": [
       "i-01234567899",
       "i-01234567898",
       "i-01234567897",
@@ -736,10 +736,10 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
       "i-01234567895",
       "i-01234567894"
     ],
-    "its_associated_to_public_ips": [
+    "its_associated_with_public_ips": [
       "200.200.200.200"
     ],
-    "its_associated_to_managed_services": false,
+    "its_associated_with_managed_services": false,
     "its_referenced_by_another_sg": [
       "sg-02222222222",
       "sg-03333333333"
@@ -763,7 +763,7 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
 }
 ```
 
-So now, in addition to the `findings` section we have an extra section `metachecks.` MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. In this example, 6 MetaChecks were executed against the affected resource: `its_associated_to_network_interfaces`, `its_associated_to_ec2_instances`, `its_associated_to_public_ips`, `its_associated_to_managed_services`, `is_public` and `its_referenced_by_another_sg`. Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
+So now, in addition to the `findings` section we have an extra section `metachecks.` MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. In this example, 6 MetaChecks were executed against the affected resource: `its_associated_with_network_interfaces`, `its_associated_with_ec2_instances`, `its_associated_with_public_ips`, `its_associated_with_managed_services`, `is_public` and `its_referenced_by_another_sg`. Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
 
 You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
 
@@ -771,59 +771,66 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 
 ## List of MetaChecks
 
-| ResourceType                      | MetaCheck                                           | Description                                                                                                                    | True                                                                   | False | STATUS   |
-|-----------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|-------|----------|
-| AwsEc2SecurityGroup               | its_associated_to_network_interfaces                | Check if the Security Group is associated to Network Interfaces (ENIs).                                                        | List of associated  `NetworkInterfaceId`                               | False | Enabled  |
-| AwsEc2SecurityGroup               | its_associated_to_ec2_instances                     | Check if the Security Group is associated to EC2 Instances.                                                                    | List of associated  `InstanceId`                                       | False | Enabled  |
-| AwsEc2SecurityGroup               | its_associated_to_managed_services                  | Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).                                  | List of associated  `Descriptions`                                     | False | Enabled  |
-| AwsEc2SecurityGroup               | its_associated_to_ips_public                        | Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.                                        | List of associated  `Public Ips`                                       | False | Enabled  |
-| AwsEc2SecurityGroup               | it_has_rules_unrestricted                           | Check if the Security Group has unerestricted rules                                                                            | List of unrestricted `SecurityGroupRules`                              | False | Enabled  |
-| AwsEc2SecurityGroup               | is_public                                           | Check if the Security Group is Public based `is_associated_to_public_ips.` and `it_has_rules_unrestricted`                     | True                                                                   | False | Enabled  |
-| AwsEc2SecurityGroup               | its_referenced_by_another_sg                        | Check if the Security Group is referenced by another Security Group.                                                           | List of SG  `GroupId` referencing the SG                               | False | Enabled  |
-| AwsEc2SecurityGroup               | is_default                                          | Check if the Security Group is the default one.                                                                                | True                                                                   | False | Enabled  |
-| AwsS3Bucket                       | it_has_bucket_acl                                   | Check if the S3 Bucket has a bucket ACL.                                                                                       | The Bucket ACL                                                         | False | Disabled |
-| AwsS3Bucket                       | it_has_bucket_acl_public                            | Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)                         | The Bucket ACL Grant which is Public                                   | False | Enabled  |
-| AwsS3Bucket                       | it_has_bucket_acl_cross_account                     | Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser                                            | The Bucket ACL Grant which is Granted cross-account                    | False | Enabled  |
-| AwsS3Bucket                       | it_has_bucket_policy                                | Check if the S3 Bucket has a bucket Policy.                                                                                    | The bucket Policy                                                      | False | Disabled |
-| AwsS3Bucket                       | it_has_bucket_policy_public                         | Check if the S3 Bucket Policy contains Wildcard Principal without Conditions                                                   | The bucket Policy statements public                                    | False | Enabled  |
-| AwsS3Bucket                       | it_has_bucket_policy_principal_wildcard             | Check if the S3 Bucket Policy contains Wildcard Principal                                                                      | The bucket Policy statements with Principal wildcard                   | False | Disabled |
-| AwsS3Bucket                       | it_has_bucket_policy_actions_wildcard               | Check if the S3 Bucket Policy contains Wildcard Actions                                                                        | The bucket Policy statements with Actions wildcard                     | False | Enabled  |
-| AwsS3Bucket                       | it_has_bucket_policy_principal_cross_account        | Check if the S3 Bucket Policy is granted to another AWS Account based on Principal                                             | The bucket Policy statements with external accounts                    | False | Enabled  |
-| AwsS3Bucket                       | it_has_public_access_block_enabled                  | Check if the S3 Bucket Public Access Block is enabled                                                                          | The bucket Public Access Block                                         | False | Enabled  |
-| AwsS3Bucket                       | is_public                                           | Check if bucket is `it_has_website_enabled` and `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.           | True                                                                   | False | Enabled  |
-| AwsS3Bucket                       | is_unrestricted                                     | Check if either `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.                                           |                                                                        |       |          |
-| AwsS3Bucket                       | is_encrypted                                        | Check if the S3 Bucket is encrypted (SSE)                                                                                      | True                                                                   | False | Enabled  |
-| AwsS3Bucket                       | it_has_website_enabled                              | Check if the S3 Bucket is configured as website                                                                                | Endpoint URL                                                           | False | Enabled  |
-| AwsElasticsearchDomain            | it_has_access_policies                              | Check if the Elastic Search Domain has an access policy                                                                        | The list of access policies                                            | False | Enabled  |
-| AwsElasticsearchDomain            | it_has_access_policies_public                       | Check if the Elastic Search Domain access policy and if any of their statements are public (Principal = `*` with no condition) | The public statements                                                  | False | Enabled  |
-| AwsElasticsearchDomain            | it_has_public_endpoint                              | Check if the Elastic Search Domain has a public endpoint                                                                       | The public endpoint                                                    | False | Enabled  |
-| AwsElasticsearchDomain            | is_public                                           | Check if the Elastic Search Domain is public based on is_access_policies_public and it_has_public_endpoint                     | True                                                                   | False | Enabled  |
-| AwsElasticsearchDomain            | is_rest_encrypted                                   | Check if the Elastic Search Domain is configured with `EncryptionAtRestOptions`                                                | True                                                                   | False | Enabled  |
-| AwsElasticsearchDomain            | is_transit_encrypted                                | Check if the Elastic Search Domain is configured with `NodeToNodeEncryptionOptions`                                            | True                                                                   | False | Enabled  |
-| AwsElasticsearchDomain            | is_encrypted                                        | Check if the Elastic Search Domain is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`                | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | it_has_public_ip                                    | Check if the EC2 Instance has a Public Ip                                                                                      | List of Public Ips                                                     | False | Enabled  |
-| AwsEc2Instance                    | it_has_private_ip                                   | Check if the EC2 Instance has a Private Ip                                                                                     | List of Private Ips                                                    | False | Enabled  |
-| AwsEc2Instance                    | it_has_public_dns                                   | Check if the EC2 Instance has a Public DNS                                                                                     | The public DNS                                                         | False | Enabled  |
-| AwsEc2Instance                    | it_has_private_dns                                  | Check if the EC2 Instance has a Private DNS                                                                                    | The private DNS                                                        | False | Enabled  |
-| AwsEc2Instance                    | it_has_key                                          | Check if the EC2 Instance has key pair                                                                                         | The name of the key pair                                               | False | Enabled  |
-| AwsEc2Instance                    | is_running                                          | Check if the EC2 Instance is in "running" state                                                                                | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_security_groups                   | Check if the EC2 Instance is associated to Security Groups                                                                     | The List of Security Groups Ids                                        | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_security_group_rules_unrestricted | Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)       | The list of unrestricted rules                                         | False | Enabled  |
-| AwsEc2Instance                    | is_public                                           | Check if the EC2 Instance is public by checking if `it_has_public_ip` and `is_associated_to_security_group_rules_unrestricted` | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | it_has_instance_profile                             | Check if the EC2 Instance has an Instance Profile                                                                              | The ARN of the instance profile                                        | False | Enabled  |
-| AwsEc2Instance                    | it_has_instance_profile_roles                       | Check if the EC2 Instance has an Instance Profile and is related to a Role                                                     | The ARN of the role                                                    | False | Enabled  |
-| AwsEc2Instance                    | is_instance_metadata_v2                             | Check if the EC2 Instance is configured with Instance Metadata Service Version 2 (IMDSv2)                                      | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | is_instance_metadata_hop_limit_1                    | Check if the EC2 Instance Metadata is limited to 1 hop                                                                         | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_ebs                               | Check if the EC2 Instance has EBS associated                                                                                   | The list of `VolumeId` associated to the instance                      | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_ebs_unencrypted                   | Check if the EC2 Instance has EBS associated that are unencrypted                                                              | The list of `VolumeId` associated to the instance that are unencrypted | False | Enabled  |
-| AwsEc2Instance                    | is_encrypted                                        | Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`                                                 | True                                                                   | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_an_asg                            | Check if the EC2 Instance it's part of an Auto Scaling Group                                                                   | The `AutoScalingGroupName`                                             | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_an_asg_launch_configuration       | Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Configuration                                       | The `LaunchConfigurationName`                                          | False | Enabled  |
-| AwsEc2Instance                    | its_associated_to_an_asg_launch_template            | Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Template                                            | The `LaunchTemplate`                                                   | False | Enabled  |
-| AwsAutoScalingLaunchConfiguration | is_instance_metadata_v2                             | Check if the Launch Configuration is configured with Instance Metadata Service Version 2 (IMDSv2)                              | True                                                                   | False | Enabled  |
-| AwsAutoScalingLaunchConfiguration | is_instance_metadata_hop_limit_1                    | Check if the Launch Configuration Instance Metadata is limited to 1 hop                                                        | True                                                                   | False | Enabled  |
-| AwsEc2NetworkAcl                  | its_associated_to_subnets                           | Check if the Network ACL is associated to Subnets                                                                              | The list of `SubnetId`                                                 | False | Enabled  |
-| AwsEc2NetworkAcl                  | is_default                                          | Check if the Network ACL is the default one                                                                                    | True                                                                   | False | Enabled  |
+| ResourceType                      | MetaCheck                                             | Description                                                                                                                    | True                                                                   | False | STATUS   |
+|-----------------------------------|-------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------|-------|----------|
+| AwsEc2SecurityGroup               | its_associated_with_network_interfaces                | Check if the Security Group is associated to Network Interfaces (ENIs).                                                        | List of associated  `NetworkInterfaceId`                               | False | Enabled  |
+| AwsEc2SecurityGroup               | its_associated_with_ec2_instances                     | Check if the Security Group is associated to EC2 Instances.                                                                    | List of associated  `InstanceId`                                       | False | Enabled  |
+| AwsEc2SecurityGroup               | its_associated_with_managed_services                  | Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).                                  | List of associated  `Descriptions`                                     | False | Enabled  |
+| AwsEc2SecurityGroup               | its_associated_with_ips_public                        | Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.                                        | List of associated  `Public Ips`                                       | False | Enabled  |
+| AwsEc2SecurityGroup               | it_has_rules_unrestricted                             | Check if the Security Group has unerestricted rules                                                                            | List of unrestricted `SecurityGroupRules`                              | False | Enabled  |
+| AwsEc2SecurityGroup               | is_public                                             | Check if the Security Group is Public based `is_associated_to_public_ips.` and `it_has_rules_unrestricted`                     | True                                                                   | False | Enabled  |
+| AwsEc2SecurityGroup               | its_referenced_by_another_sg                          | Check if the Security Group is referenced by another Security Group.                                                           | List of SG  `GroupId` referencing the SG                               | False | Enabled  |
+| AwsEc2SecurityGroup               | is_default                                            | Check if the Security Group is the default one.                                                                                | True                                                                   | False | Enabled  |
+| AwsS3Bucket                       | it_has_bucket_acl                                     | Check if the S3 Bucket has a bucket ACL.                                                                                       | The Bucket ACL                                                         | False | Disabled |
+| AwsS3Bucket                       | it_has_bucket_acl_public                              | Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)                         | The Bucket ACL Grant which is Public                                   | False | Enabled  |
+| AwsS3Bucket                       | it_has_bucket_acl_cross_account                       | Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser                                            | The Bucket ACL Grant which is Granted cross-account                    | False | Enabled  |
+| AwsS3Bucket                       | it_has_bucket_policy                                  | Check if the S3 Bucket has a bucket Policy.                                                                                    | The bucket Policy                                                      | False | Disabled |
+| AwsS3Bucket                       | it_has_bucket_policy_public                           | Check if the S3 Bucket Policy contains Wildcard Principal without Conditions                                                   | The bucket Policy statements public                                    | False | Enabled  |
+| AwsS3Bucket                       | it_has_bucket_policy_principal_wildcard               | Check if the S3 Bucket Policy contains Wildcard Principal                                                                      | The bucket Policy statements with Principal wildcard                   | False | Disabled |
+| AwsS3Bucket                       | it_has_bucket_policy_actions_wildcard                 | Check if the S3 Bucket Policy contains Wildcard Actions                                                                        | The bucket Policy statements with Actions wildcard                     | False | Enabled  |
+| AwsS3Bucket                       | it_has_bucket_policy_principal_cross_account          | Check if the S3 Bucket Policy is granted to another AWS Account based on Principal                                             | The bucket Policy statements with external accounts                    | False | Enabled  |
+| AwsS3Bucket                       | it_has_public_access_block_enabled                    | Check if the S3 Bucket Public Access Block is enabled                                                                          | The bucket Public Access Block                                         | False | Enabled  |
+| AwsS3Bucket                       | is_public                                             | Check if bucket is `it_has_website_enabled` and `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.           | True                                                                   | False | Enabled  |
+| AwsS3Bucket                       | is_unrestricted                                       | Check if either `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.                                           |                                                                        |       |          |
+| AwsS3Bucket                       | is_encrypted                                          | Check if the S3 Bucket is encrypted (SSE)                                                                                      | True                                                                   | False | Enabled  |
+| AwsS3Bucket                       | it_has_website_enabled                                | Check if the S3 Bucket is configured as website                                                                                | Endpoint URL                                                           | False | Enabled  |
+| AwsElasticsearchDomain            | it_has_access_policies                                | Check if the Elastic Search Domain has an access policy                                                                        | The list of access policies                                            | False | Enabled  |
+| AwsElasticsearchDomain            | it_has_access_policies_public                         | Check if the Elastic Search Domain access policy and if any of their statements are public (Principal = `*` with no condition) | The public statements                                                  | False | Enabled  |
+| AwsElasticsearchDomain            | it_has_public_endpoint                                | Check if the Elastic Search Domain has a public endpoint                                                                       | The public endpoint                                                    | False | Enabled  |
+| AwsElasticsearchDomain            | is_public                                             | Check if the Elastic Search Domain is public based on is_access_policies_public and it_has_public_endpoint                     | True                                                                   | False | Enabled  |
+| AwsElasticsearchDomain            | is_rest_encrypted                                     | Check if the Elastic Search Domain is configured with `EncryptionAtRestOptions`                                                | True                                                                   | False | Enabled  |
+| AwsElasticsearchDomain            | is_transit_encrypted                                  | Check if the Elastic Search Domain is configured with `NodeToNodeEncryptionOptions`                                            | True                                                                   | False | Enabled  |
+| AwsElasticsearchDomain            | is_encrypted                                          | Check if the Elastic Search Domain is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`                | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | it_has_public_ip                                      | Check if the EC2 Instance has a Public Ip                                                                                      | List of Public Ips                                                     | False | Enabled  |
+| AwsEc2Instance                    | it_has_private_ip                                     | Check if the EC2 Instance has a Private Ip                                                                                     | List of Private Ips                                                    | False | Enabled  |
+| AwsEc2Instance                    | it_has_public_dns                                     | Check if the EC2 Instance has a Public DNS                                                                                     | The public DNS                                                         | False | Enabled  |
+| AwsEc2Instance                    | it_has_private_dns                                    | Check if the EC2 Instance has a Private DNS                                                                                    | The private DNS                                                        | False | Enabled  |
+| AwsEc2Instance                    | it_has_key                                            | Check if the EC2 Instance has key pair                                                                                         | The name of the key pair                                               | False | Enabled  |
+| AwsEc2Instance                    | is_running                                            | Check if the EC2 Instance is in "running" state                                                                                | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_security_groups                   | Check if the EC2 Instance is associated to Security Groups                                                                     | The List of Security Groups Ids                                        | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_security_group_rules_unrestricted | Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)       | The list of unrestricted rules                                         | False | Enabled  |
+| AwsEc2Instance                    | is_public                                             | Check if the EC2 Instance is public by checking if `it_has_public_ip` and `is_associated_to_security_group_rules_unrestricted` | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | it_has_instance_profile                               | Check if the EC2 Instance has an Instance Profile                                                                              | The ARN of the instance profile                                        | False | Enabled  |
+| AwsEc2Instance                    | it_has_instance_profile_roles                         | Check if the EC2 Instance has an Instance Profile and is related to a Role                                                     | The ARN of the role                                                    | False | Enabled  |
+| AwsEc2Instance                    | is_instance_metadata_v2                               | Check if the EC2 Instance is configured with Instance Metadata Service Version 2 (IMDSv2)                                      | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | is_instance_metadata_hop_limit_1                      | Check if the EC2 Instance Metadata is limited to 1 hop                                                                         | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_ebs                               | Check if the EC2 Instance has EBS associated                                                                                   | The list of `VolumeId` associated to the instance                      | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_ebs_unencrypted                   | Check if the EC2 Instance has EBS associated that are unencrypted                                                              | The list of `VolumeId` associated to the instance that are unencrypted | False | Enabled  |
+| AwsEc2Instance                    | is_encrypted                                          | Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`                                                 | True                                                                   | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_an_asg                            | Check if the EC2 Instance it's part of an Auto Scaling Group                                                                   | The `AutoScalingGroupName`                                             | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_an_asg_launch_configuration       | Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Configuration                                       | The `LaunchConfigurationName`                                          | False | Enabled  |
+| AwsEc2Instance                    | its_associated_with_an_asg_launch_template            | Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Template                                            | The `LaunchTemplate`                                                   | False | Enabled  |
+| AwsAutoScalingLaunchConfiguration | is_instance_metadata_v2                               | Check if the Launch Configuration is configured with Instance Metadata Service Version 2 (IMDSv2)                              | True                                                                   | False | Enabled  |
+| AwsAutoScalingLaunchConfiguration | is_instance_metadata_hop_limit_1                      | Check if the Launch Configuration Instance Metadata is limited to 1 hop                                                        | True                                                                   | False | Enabled  |
+| AwsAutoScalingLaunchConfiguration | its_associated_with_an_asg                            | Check if the Launch Configuration It's associated with an Auto Scaling Group                                                   | The `AutoScalingGroupARN`                                              | False | Enabled  |
+| AwsAutoScalingLaunchConfiguration | its_associated_with_asg_instances                     | Check if the Launch Configuration It's associated with an Auto Scaling Group with EC2 Instances                                | The list of `InstanceId`                                               | False | Enabled  |
+| AwsEc2LaunchTemplate              | is_instance_metadata_v2                               | Check if the Launch Template is configured with Instance Metadata Service Version 2 (IMDSv2)                                   | True                                                                   | False | Enabled  |
+| AwsEc2LaunchTemplate              | is_instance_metadata_hop_limit_1                      | Check if the Launch Template Instance Metadata is limited to 1 hop                                                             | True                                                                   | False | Enabled  |
+| AwsEc2LaunchTemplate              | its_associated_with_an_asg                            | Check if the Launch Template It's associated with an Auto Scaling Group                                                        | The `AutoScalingGroupARN`                                              | False | Enabled  |
+| AwsEc2LaunchTemplate              | its_associated_with_asg_instances                     | Check if the Launch Template It's associated with an Auto Scaling Group with EC2 Instances                                     | The list of `InstanceId`                                               | False | Enabled  |
+| AwsEc2LaunchTemplate              | it_has_name                                           | Check if the Launch Template has a name configured                                                                             | The `LaunchTemplateName`                                               | False | Enabled  |
+| AwsEc2NetworkAcl                  | its_associated_with_subnets                           | Check if the Network ACL is associated to Subnets                                                                              | The list of `SubnetId`                                                 | False | Enabled  |
+| AwsEc2NetworkAcl                  | is_default                                            | Check if the Network ACL is the default one                                                                                    | True                                                                   | False | Enabled  |
 
 
 ## MetaChecks Naming
@@ -831,7 +838,7 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 MetaChecks are defined in the form of:
 
 - [is_](#is_)
-- [its_associated_to_](#its_associated_to)
+- [its_associated_with_](#its_associated_with)
 - [it_has_](#it_has)
 - [its_referenced_by_](#its_referenced_by)
 
@@ -865,22 +872,22 @@ Unrestricted refers to Policies Layer (API, IAM, Resources Policies, Rules, etc.
 
 - is_running
 
-### its_associated_to
+### its_associated_with
 
-> Resources that are indepedently managed (For example an Elastic IP (EIP))
+> Resources that are independent (they have their own ARN) and are associated with the affected resource
 
-When True returns list of something_is_associated_to...
+When True returns list of something_is_associated_with...
 
-- its_associated_to_<something_is_associated_to>
-- its_associated_to_<something_is_associated_to>_unencrypted
-- its_associated_to_<something_is_associated_to>_unrestricted_cross_account
-- its_associated_to_<something_is_associated_to>_unrestricted_wildcard
-- its_associated_to_<something_is_associated_to>_unencrypted
-- its_associated_to_<something_is_associated_to>_public
+- its_associated_with_<something_is_associated_with>
+- its_associated_with_<something_is_associated_with>_unencrypted
+- its_associated_with_<something_is_associated_with>_unrestricted_cross_account
+- its_associated_with_<something_is_associated_with>_unrestricted_wildcard
+- its_associated_with_<something_is_associated_with>_unencrypted
+- its_associated_with_<something_is_associated_with>_public
 
 ### it_has
 
-> Resources that only exist as part of the affected resources (For example an Instance EC2 IP)
+> Properties that only exist as part of the affected resource
 
 When True returns list of something_it_has...
 
@@ -893,7 +900,7 @@ When True returns list of something_it_has...
 
 ### its_referenced_by
 
-> Resources that are not part but are referencing the affected resource (For example a Security Group referencing the affected Security Group as source/destination)
+> Resources that are independent (they have their own ARN) and are referencing the affected resource without being associated to it
 
 When True returns list of something_that_is_referencing_the_affected_resource...
 
@@ -1031,9 +1038,9 @@ MetaChecks filters runs after AWS Security Hub filters:
 
 Examples:
 
-- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are associated to Network Interfaces (`its_associated_to_network_interfaces=True`):
+- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are associated to Network Interfaces (`its_associated_with_network_interfaces=True`):
 ```sh
-./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_to_network_interfaces=True
+./metahub --list-findings --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_network_interfaces=True
 ```
 
 - Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public (`is_public=True`):

@@ -33,7 +33,7 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def its_associated_to_subnets(self):
+    def its_associated_with_subnets(self):
         Subnets = []
         if self.network_acl:
             for Association in self.network_acl[0]['Associations']:
@@ -48,7 +48,7 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_associated_to_subnets",
+            "its_associated_with_subnets",
             "is_default"
         ]
         return checks
