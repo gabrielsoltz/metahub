@@ -831,7 +831,8 @@ If you want to add your own MetaChecks follow this [guide](metachecks.md). Pull 
 | AwsEc2LaunchTemplate              | it_has_name                                           | Check if the Launch Template has a name configured                                                                             | The `LaunchTemplateName`                                               | False | Enabled  |
 | AwsEc2NetworkAcl                  | its_associated_with_subnets                           | Check if the Network ACL is associated to Subnets                                                                              | The list of `SubnetId`                                                 | False | Enabled  |
 | AwsEc2NetworkAcl                  | is_default                                            | Check if the Network ACL is the default one                                                                                    | True                                                                   | False | Enabled  |
-
+| AwsLambdaFunction                 | it_has_resource_based_policy_statements               | Check if Lambda Function has resource policy statements                                                                        | The `Policy`                                                           | False | Enabled  |
+| AwsLambdaFunction                 | its_associated_with_a_role                            | Check if Lambda Function it's associated with an IAM role (execution role)                                                     | The Role ARN                                                           | False | Enabled  |
 
 ## MetaChecks Naming
 
