@@ -1,3 +1,5 @@
+# https://github.com/marketplace/actions/amazon-ecr-login-action-for-github-actions
+
 name: Deploy to ECR
 
 on:
@@ -34,7 +36,7 @@ jobs:
     - name: Build, tag, and push docker image to Amazon ECR Public
       env:
         REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-        REGISTRY_ALIAS: metahub
+        REGISTRY_ALIAS: n2p8q5p4
         REPOSITORY: metahub
         IMAGE_TAG: ${{ github.sha }}
       run: |
