@@ -18,7 +18,7 @@
 - [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
 - [Outputs](#Outputs)
-- [Write File](#write-file)
+- [Output Modes](#output-modes)
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks-1)
 - [MetaTags](#MetaTags-1)
@@ -64,7 +64,7 @@ You can create a filter on top of these outpus to automate the detection of anot
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
 
-**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `full`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as json, csv and HTML files using the [Write File](#write-file) options.
+**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `full`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as JSON, CSV and HTML files using the [Output Modes](#output-modes) options.
 
 **MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and in your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
 
@@ -1116,3 +1116,38 @@ For example, you want to enrich all AWS Security Hub findings with WorkflowStatu
 <p align="center">
   <img src="docs/imgs/enrich-findings-1.png" alt="update-findings" width="850"/>
 </p>
+
+
+# Run it using Lambda
+
+MetaHub is prepared to run from a Lambda function. Terraform code is provided for deploying the lambda and all it's dependencies. 
+
+- You can invoke the lambda "manually" from any app and read their results/output
+- You can trigger the lambda from any supported AWS service like EventBridge
+
+## Create a zip package
+
+You will need to create a zip package for the lambda with MetaHub code, for doing this:
+
+- `cd metahub`
+- `zip -r terraform/zip/lambda.zip lib`
+
+## Create a layer package
+
+You will need to create a Lambda layer with all MetaHub python dependencies. 
+
+- `cd metahub`
+- `mkdir layer`
+- `cd layer`
+- `mkdir -p python/lib/python3.9/site-packages`
+- `pip3 install -r ../requirements.txt --target python/lib/python3.9/site-packages`
+- `zip -r9 terraform/zip/metahub-layer.zip .`
+- `cd ..`
+- `rm -r layer`
+
+## Deploy Lambda
+
+You can find under `terraform` folder the code needed for deploying the lambda function.
+
+- `terraform init`
+- `terraform apply`
