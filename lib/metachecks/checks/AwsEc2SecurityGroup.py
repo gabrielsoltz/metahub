@@ -2,7 +2,7 @@
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-from metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.Base import MetaChecksBase
 
 
 class Metacheck(MetaChecksBase):

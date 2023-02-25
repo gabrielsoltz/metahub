@@ -45,31 +45,27 @@ def get_boto3_session(Credentials):
 
 
 def get_account_id(logger):
+    account_id = None
     try:
         account_id = boto3.client("sts").get_caller_identity().get("Account")
     except NoCredentialsError as e:
         logger.error("Error Getting Account Id: {}".format(e))
-        exit(1)
     except ClientError as e:
         logger.error("Error Getting Account Id: {}".format(e))
-        exit(1)
     except EndpointConnectionError as e:
         logger.error("Error Getting Account Id: {}".format(e))
-        return False
-        #exit(1)
     return account_id
 
 
 def get_region(logger):
+    my_region = None
     try:
         my_session = boto3.session.Session()
         my_region = my_session.region_name
     except NoCredentialsError as e:
         logger.error("Error Getting Region: {}".format(e))
-        exit(1)
     except ClientError as e:
         logger.error("Error Getting Region: {}".format(e))
-        exit(1)
     return my_region
 
 
@@ -91,15 +87,19 @@ def get_available_regions(logger, aws_service):
 
 
 def get_account_alias(logger, aws_account_number=None, role_name=None):
+    aliases = None
     if not aws_account_number:
         try:
             aliases = boto3.client("iam").list_account_aliases()["AccountAliases"]
+        except NoCredentialsError as e:
+            logger.error("Error Account Alias: {}".format(e))
+            aliases = None
+        except ClientError as e:
+            logger.error("Error Account Alias: {}".format(e))
+            aliases = None
         except EndpointConnectionError as e:
             logger.error("Error Account Alias: {}".format(e))
             aliases = None
-        if aliases:
-            return aliases[0]
-        return ""
     elif aws_account_number and role_name:
         sh_role_assumend = assume_role(logger, aws_account_number, role_name)
         sess = get_boto3_session(sh_role_assumend)
@@ -111,11 +111,9 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         aliases = sess.client(service_name="iam").list_account_aliases()[
             "AccountAliases"
         ]
-        if aliases:
-            return aliases[0]
-        return ""
-    else:
-        return ""
+    if aliases:
+        return aliases[0]
+    return ""
 
 def get_sh_findings_aggregator(logger):
     try:
@@ -123,6 +121,9 @@ def get_sh_findings_aggregator(logger):
             "FindingAggregators"
         ]
     except EndpointConnectionError as e:
+        logger.error("Error Getting SH Aggregators: {}".format(e))
+        return False
+    except Exception as e:
         logger.error("Error Getting SH Aggregators: {}".format(e))
         return False
     if sh_findings_aggregator:

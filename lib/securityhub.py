@@ -4,7 +4,7 @@ from sys import exit
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-from AwsHelpers import assume_role, get_boto3_session
+from lib.AwsHelpers import assume_role, get_boto3_session
 
 
 class SecurityHub:

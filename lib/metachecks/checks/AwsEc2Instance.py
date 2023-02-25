@@ -1,7 +1,7 @@
 """MetaCheck: AwsEc2Instance"""
 
 import boto3
-from metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.Base import MetaChecksBase
 
 
 class Metacheck(MetaChecksBase):

@@ -1,7 +1,7 @@
 """MetaCheck: AwsEc2LaunchTemplate"""
 
 import boto3
-from metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.Base import MetaChecksBase
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):

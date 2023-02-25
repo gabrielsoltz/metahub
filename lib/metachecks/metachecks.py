@@ -1,6 +1,6 @@
-import metachecks.checks
-from AwsHelpers import assume_role, get_boto3_session, get_account_id
-from helpers import print_table
+import lib.metachecks.checks
+from lib.AwsHelpers import assume_role, get_boto3_session, get_account_id
+from lib.helpers import print_table
 
 
 def run_metachecks(logger, finding, mh_filters_checks, mh_role):
@@ -46,7 +46,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
         sess = None
 
     try:
-        hndl = getattr(metachecks.checks, AWSResourceType).Metacheck(
+        hndl = getattr(lib.metachecks.checks, AWSResourceType).Metacheck(
             logger, finding, meta_checks, mh_filters_checks, sess
         )
     except AttributeError as err:
@@ -89,11 +89,11 @@ def list_metachecks(logger):
 
     import inspect
 
-    for name, obj in inspect.getmembers(metachecks.checks, inspect.ismodule):
+    for name, obj in inspect.getmembers(lib.metachecks.checks, inspect.ismodule):
         if name == "Base":
             continue
         try:
-            hndl = getattr(metachecks.checks, name).Metacheck(
+            hndl = getattr(lib.metachecks.checks, name).Metacheck(
                 logger, finding, meta_checks, mh_filters_checks, sess
             )
         except AttributeError as err:

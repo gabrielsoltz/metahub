@@ -1,4 +1,4 @@
-from metachecks.checks import (
+from lib.metachecks.checks import (
     AwsEc2SecurityGroup,
     AwsElasticsearchDomain,
     AwsS3Bucket,

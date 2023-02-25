@@ -1,7 +1,7 @@
 import argparse
 import logging
 import sys
-from AwsHelpers import get_available_regions
+from lib.AwsHelpers import get_available_regions
 
 
 class KeyValueWithList(argparse.Action):
@@ -195,9 +195,9 @@ def get_parser():
     )
     group_output.add_argument(
         "--output-modes",
-        choices=["json", "html", "csv"],
+        choices=["json", "html", "csv", "lambda"],
         default=["json"],
-        nargs="+",
+        nargs="*",
         help="Specify the output mode, by default json. Combine one or more using spaces",
         required=False,
     )
@@ -214,6 +214,13 @@ def get_parser():
         default=[],
         nargs="+",
         required=False,
+    )
+    group_output.add_argument(
+        "--banners",
+        help="Show banners and titles",
+        default=True,
+        required=False,
+        action=argparse.BooleanOptionalAction,
     )
 
     # Group: Debug Options
@@ -260,8 +267,8 @@ color = {
 }
 
 
-def print_banner():
-    print_title_line("")
+def print_banner(banners=True):
+    if not banners: return 
     print(
         r" "
         + color["BOLD"]
@@ -295,21 +302,23 @@ def print_banner():
     print(r"  " + color["DARKCYAN"] + "the command line utility for AWS Security Hub" + color["END"])
 
 
-def print_table(key, value, keycolor=color["DARKCYAN"]):
+def print_table(key, value, keycolor=color["DARKCYAN"], banners=True):
+    if not banners: return 
     #print(keycolor + key + color["END"], " \t", value)
     tabs = "\t\t"
     if (len(key)) > 14:
         tabs = "\t"
     print(keycolor + key + color["END"], tabs, value)
 
-def print_title_line(text, ch="-", length=78):
+def print_title_line(text, ch="-", length=78, banners=True):
+    if not banners: return 
     if text:
         spaced_text = " %s " % text
     else:
         spaced_text = text
     colored_text = color["BOLD"] + spaced_text + color["END"]
     banner = colored_text.center(length, ch)
-    print(banner)
+    print("\n" + banner)
 
 def confirm_choice(message):
     """Simple function to confirm the action, returns True or False based on user entry"""
