@@ -33,6 +33,11 @@
 
 Using **MetaHub**, you can enrich your security findings with **your** context to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. 
 
+<p align="center">
+  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
+</p>
+
+
 **MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
 
 If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk* for Security Group *sg-0880509d75f330c7f*, MetaHub can enrich your finding with the following information from your context:
@@ -109,13 +114,6 @@ If you are investigating the security finding *EC2.19 Security groups should not
   }
 }
 ```
-
-# High Level Architecures
-
-<p align="center">
-  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
-</p>
-
 
 # Features
 
