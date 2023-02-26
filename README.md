@@ -17,6 +17,7 @@
 - [AWS Authentication](#aws-authentication)
 - [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
+- [Inputs](#Inputs)
 - [Outputs](#Outputs)
 - [Output Modes](#output-modes-1)
 - [Findings Aggregation](#findings-aggregation)
@@ -453,6 +454,19 @@ You can use MetaHub to automate some House Keeping tasks that AWS Security Hub i
   ```sh
   ./metahub --log-level INFO
   ```
+
+# Inputs
+
+By default MetaHub will try to fetch from AWS Security Hub. 
+
+You can specify an ASFF file as input using the options `--inputs file-asff --input-asff path/to/the/file.json.asff`
+
+When using a file as input, you can't use the option `--sh-filters`, as this option relies on AWS API for filtering. 
+
+You also can combine AWS Security Hub findings with File ASFF input spefifying `--inputs file-asff securityhub --input-asff path/to/the/file.json.asff`
+
+If you are only reading from ASFF files, you can't use the options `--update-findings` or `--enrich-findings` as those findings are not in AWS Security Hub. If you are reading from both sources, only the findings from AWS Security Hub will be updated.
+
 
 # Outputs
 
