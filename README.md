@@ -18,7 +18,7 @@
 - [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
 - [Outputs](#Outputs)
-- [Output Modes](#output-modes)
+- [Output Modes](#output-modes-1)
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks-1)
 - [MetaTags](#MetaTags-1)
@@ -290,7 +290,7 @@ You can use three options to configure where and how AWS Security Hub is running
 - [MetaTags](#metatags)
 - [Updating Findings Workflow Status](#updating-findings-workflow-status)
 - [Enriching Findings](#enriching-findings-1)
-- [Write Files](#write-files)
+- [Output Modes](#output-modes)
 - [SH House Keeping](#sh-house-keeping)
 - [Debug](#debug)
 
