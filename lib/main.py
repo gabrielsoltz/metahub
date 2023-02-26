@@ -62,7 +62,7 @@ def generate_findings(
         "metachecks": {}
     }
     AwsAccountAliasData = {}
-    
+
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
 
     findings = []
@@ -517,6 +517,13 @@ def validate_arguments(args, logger):
                 sh_region_aggregator,
                 sh_region_aggregator,
             )
+    
+    if "securityhub" in args.inputs:
+        if not sh_region or not sh_account:
+            logger.error(
+                "AWS Region or Account not found, but Security Hub defined as input. Set Credentials and/or use --sh-region and --sh-account."
+            )
+            exit(1)
 
     return asff_findings, sh_filters, mh_filters_checks, mh_filters_tags, sh_account, sh_account_alias_str, sh_region
 
