@@ -2,7 +2,6 @@ import json
 from sys import argv, exit
 
 from lib.helpers import (
-    color,
     get_logger,
     get_parser,
     print_banner,
