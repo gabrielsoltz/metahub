@@ -505,6 +505,7 @@ def validate_arguments(args, logger):
     else:
         sh_region = args.sh_region
 
+    sh_region_aggregator = False
     if sh_region:
         sh_region_aggregator = get_sh_findings_aggregator(logger, sh_region)
         
