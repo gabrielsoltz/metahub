@@ -556,7 +556,7 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
             WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
             templateEnv = jinja2.Environment(loader=templateLoader)
-            TEMPLATE_FILE = "html/template.html"
+            TEMPLATE_FILE = "lib/html/template.html"
             template = templateEnv.get_template(TEMPLATE_FILE)
             with open(WRITE_FILE, "w", encoding="utf-8") as f:
                 html = template.render(
