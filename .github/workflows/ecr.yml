@@ -3,9 +3,17 @@
 name: Deploy to ECR
 
 on:
- 
   push:
-    branches: [ main ]
+    branches:
+      - "master"
+    paths-ignore:
+      - ".github/**"
+      - "README.md"
+      - "docs/**"
+
+env:
+  IMAGE_NAME: metahub
+  TAG: latest
 
 jobs:
   
@@ -14,7 +22,6 @@ jobs:
     name: Build Image
     runs-on: ubuntu-latest
 
-   
     steps:
 
     - name: Checkout repo
@@ -37,8 +44,8 @@ jobs:
       env:
         REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
         REGISTRY_ALIAS: n2p8q5p4
-        REPOSITORY: metahub
-        IMAGE_TAG: ${{ github.sha }}
+        REPOSITORY: ${{ env.IMAGE_NAME }}
+        IMAGE_TAG: ${{ env.TAG }}
       run: |
         docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
