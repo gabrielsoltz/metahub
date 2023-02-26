@@ -110,6 +110,8 @@ If you are investigating the security finding *EC2.19 Security groups should not
 }
 ```
 
+# High Level Architecures
+
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
