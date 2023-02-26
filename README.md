@@ -35,7 +35,7 @@ Using **MetaHub**, you can enrich your security findings with (**your** context)
 
 **MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
 
-If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk*, MetaHub can enrich your finding with the following information from your context:
+If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk* for Security Group *sg-0880509d75f330c7f*, MetaHub can enrich your finding with the following information from your context:
 
 - If there are other security findings for the affected resource
 - If the Security Group is referenced by another Service:
@@ -57,7 +57,6 @@ If you are investigating the security finding *EC2.19 Security groups should not
       "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
       "Security groups should only allow unrestricted incoming traffic for authorized ports",
       "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
-      "EC2.22 Unused EC2 security groups should be removed"
     ],
     "AwsAccountId": "012345678901",
     "AwsAccountAlias": "AccountA",
