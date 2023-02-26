@@ -8,6 +8,10 @@
   <b>MetaHub</b> is the command line utility for ASFF and AWS Security Hub.
 </p>
 
+<p align="center">
+  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
+</p>
+
 # Table of Contents
 
 - [Description](#description)
