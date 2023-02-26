@@ -29,9 +29,9 @@
 
 # Description
 
-**MetaHub** is an [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security context enrichment and command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub).
+**MetaHub** is an [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security context enrichment and command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). 
 
-Using **MetaHub**, you can enrich your security findings with **your** context to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. 
+Using **MetaHub**, you can enrich your security findings with **your** context to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. **MetaHub** interacts with reading/writing from AWS Security Hub API or directly from ASFF files. You can combine these sources as you want to enrich your findings further.
 
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
