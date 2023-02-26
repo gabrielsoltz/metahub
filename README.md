@@ -35,7 +35,7 @@ Using **MetaHub**, you can enrich your security findings with (**your** context)
 
 **MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
 
-If you are investigating a security finding for a Security Group with a port open, MetaHub can enrich your findings with the following information from your context:
+If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk*, MetaHub can enrich your finding with the following information from your context:
 
 - If there are other security findings for the affected resource
 - If the Security Group is referenced by another Service:
@@ -44,20 +44,23 @@ If you are investigating a security finding for a Security Group with a port ope
   - `its_associated_with_network_interfaces`
   - `its_associated_with_ec2_instances`
   - `its_associated_with_managed_services`
-  - `its_associated_with_public_ips`
 - If the Security Group is Public (**MetaChecks**)
+  - `its_associated_with_public_ips`
   - `it_has_rules_unrestricted`
   - `is_public`
-- The Environment, Classification, Owner based on your Tagging (**MetaTags**)
+- The Environment, Classification, Owner or any other Tagging from your affected resource (**MetaTags**)
 - Who created and when (**MetaTrails**)
 
 ```
   "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
     "findings": [
-      "Security groups should only allow unrestricted incoming traffic for authorized ports"
+      "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
+      "Security groups should only allow unrestricted incoming traffic for authorized ports",
+      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
+      "EC2.22 Unused EC2 security groups should be removed"
     ],
     "AwsAccountId": "012345678901",
-    "AwsAccountAlias": "",
+    "AwsAccountAlias": "AccountA",
     "Region": "us-east-1",
     "ResourceType": "AwsEc2SecurityGroup",
     "metachecks": {
