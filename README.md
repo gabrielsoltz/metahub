@@ -90,7 +90,12 @@ If you are investigating the security finding *EC2.19 Security groups should not
       "is_public": true,
       "is_default": false
     },
-    "metatags": {},
+    "metatags": {
+      "Name": "Testing Security Group",
+      "Environment": "Production",
+      "Classification": "Restricted",
+      "Owner": "Security Team"
+    },
     "metatrails": {
       "AuthorizeSecurityGroupIngress": {
         "Username": "root",
