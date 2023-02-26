@@ -115,9 +115,9 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         return aliases[0]
     return ""
 
-def get_sh_findings_aggregator(logger):
+def get_sh_findings_aggregator(logger, region):
     try:
-        sh_findings_aggregator = boto3.client("securityhub").list_finding_aggregators()[
+        sh_findings_aggregator = boto3.client("securityhub", region_name=region).list_finding_aggregators()[
             "FindingAggregators"
         ]
     except EndpointConnectionError as e:
