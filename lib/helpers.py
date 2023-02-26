@@ -161,6 +161,12 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
     group_meta_checks.add_argument(
+        "--meta-trails",
+        help="Use this option to enable Meta Trails",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    group_meta_checks.add_argument(
         "--mh-filters-tags",
         default=None,
         help="Use this option to filter the resources based on Meta Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
