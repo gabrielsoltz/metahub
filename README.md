@@ -8,10 +8,6 @@
   <b>MetaHub</b> is the command line utility for ASFF and AWS Security Hub.
 </p>
 
-<p align="center">
-  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
-</p>
-
 # Table of Contents
 
 - [Description](#description)
@@ -231,6 +227,14 @@ Next time you only need steps 4 and 6 to use the program.
 3. Change to repostiory dir: `cd metahub`
 4. Build docker image: `docker build -t metahub .`
 5. Run: `docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN --rm -ti metahub ./metahub -h`
+
+## Run it using Public Docker Image
+
+<p align="center">
+  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
+</p>
+
+1. Run: `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest`
 
 # AWS Authentication
 
