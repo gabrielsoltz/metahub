@@ -157,7 +157,7 @@ class SecurityHub:
                     response = self.sh_client.batch_update_findings(
                         FindingIdentifiers=[FindingIdentifier],
                         UserDefinedFields=combined,
-                        Note={"Text": "test", "UpdatedBy": "MetaHub"},
+                        Note={"Text": "Enriching Findings", "UpdatedBy": "MetaHub"},
                     )
                     response_multiple.append(response)
                 else:
