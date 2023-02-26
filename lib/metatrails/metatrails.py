@@ -7,6 +7,7 @@ from lib.config.resources import MetaHubResourcesConfig
 
 def run_metatrails(logger, finding, mh_filters_trails, mh_role, sh_region):
     """
+    Executes Trails discover for the AWS Resource Type
     """
 
     AwsAccountId = finding["AwsAccountId"]
