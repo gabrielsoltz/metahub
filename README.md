@@ -22,7 +22,7 @@
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks-1)
 - [MetaTags](#MetaTags-1)
-- [MetaTrails](#MetaTags-1)
+- [MetaTrails](#MetaTrails)
 - [Filtering](#Filtering)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings-1)
