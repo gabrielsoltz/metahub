@@ -39,7 +39,9 @@ def generate_findings(
     mh_role,
     sh_region,
     inputs,
-    asff_findings
+    asff_findings,
+    metatrails,
+    banners
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -67,11 +69,11 @@ def generate_findings(
     findings = []
     if "file-asff" in inputs and asff_findings:
         findings.extend(asff_findings)
-        print_table("Input ASFF findings found: ", len(asff_findings))
+        print_table("Input ASFF findings found: ", len(asff_findings), banners=banners)
     if "securityhub" in inputs:
         sh_findings = sh.get_findings(sh_filters)
         findings.extend(sh_findings)
-        print_table("Security Hub findings found: ", len(sh_findings))
+        print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
     
     with alive_bar(total=len(findings)) as bar:
         for finding in findings:
@@ -88,9 +90,10 @@ def generate_findings(
                 finding["Region"] = region
 
             # MetaChecks and MetaTags:
-            if metachecks or metatags:
+            if metachecks or metatags or metatrails:
                 from lib.metachecks.metachecks import run_metachecks
                 from lib.metatags.metatags import run_metatags
+                from lib.metatrails.metatrails import run_metatrails
 
                 # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
                 if resource_arn in mh_findings:
@@ -123,6 +126,16 @@ def generate_findings(
                     # If both checks are True we show the resource
                     if mh_tags_matched and mh_checks_matched:
                         mh_matched = True
+                    # MetaTrails runs without filters, for now? 
+                    if metatrails:
+                        # We run metatrails only once:
+                        if (
+                            not resource_arn in mh_findings
+                            and not resource_arn in mh_findings_not_matched_findings
+                        ):
+                            mh_trails = run_metatrails(
+                                logger, finding, mh_filters_tags, mh_role, sh_region
+                            )
             else:
                 # If no metachecks and no metatags, we enforce to True the match so we show the resource:
                 mh_matched = True
@@ -234,6 +247,13 @@ def generate_findings(
                         mh_findings_short[resource_arn]["metatags"] = mh_tags
                         # Standard
                         mh_findings[resource_arn]["metatags"] = mh_tags
+
+                    # METATRAILS
+                    if metatrails:
+                        # Short
+                        mh_findings_short[resource_arn]["metatrails"] = mh_trails
+                        # Standard
+                        mh_findings[resource_arn]["metatrails"] = mh_trails
 
                 # FINDINGS
                 mh_findings_short[resource_arn]["findings"].append(
@@ -606,12 +626,13 @@ def main(args):
     print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
     print_table("MetaTags: ", str(args.meta_tags), banners=banners)
     print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
+    print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
     print_table("Output: ", str(args.outputs), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
-    print_table("Log Level: ", str(args.log_level), banners=banners)
+    print_table("Log Level: ", str(args.log_level), banners=banners)    
 
     if args.list_meta_checks:
         from lib.metachecks.metachecks import list_metachecks
@@ -638,7 +659,9 @@ def main(args):
         mh_role=args.mh_assume_role,
         sh_region=sh_region,
         inputs=args.inputs,
-        asff_findings=asff_findings
+        asff_findings=asff_findings,
+        metatrails=args.meta_trails,
+        banners=banners
     )
     
     if args.list_findings:

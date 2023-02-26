@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is the command line utility for AWS Security Hub.
+  <b>MetaHub</b> is the command line utility for ASFF and AWS Security Hub.
 </p>
 
 # Table of Contents
@@ -22,39 +22,101 @@
 - [Findings Aggregation](#findings-aggregation)
 - [MetaChecks](#MetaChecks-1)
 - [MetaTags](#MetaTags-1)
+- [MetaTrails](#MetaTags-1)
 - [Filtering](#Filtering)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings-1)
 
 # Description
 
-**MetaHub** is a command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). Using **MetaHub**, you can perform your investigations on top no matter what amount of product sources, standards, checks, or findings you have for identifying real and false positives, grouping related findings, and enriching them with data about your context.
+**MetaHub** is an [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security context enrichment and command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub).
 
-**MetaHub** provides you with a framework to do this investigation with the help of **MetaChecks** and **MetaTags** (**your** context). **MetaChecks** and **MetaTags** are executed directly on the affected resource on the affected account, letting you fetch the information you need from the resources to then filter and generate enriched outputs or alerts.
+Using **MetaHub**, you can enrich your security findings with (**your** context) to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. 
+
+**MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
+
+If you are investigating a security finding for a Security Group with a port open, MetaHub can enrich your findings with the following information from your context:
+
+- If there are other security findings for the affected resource
+- If the Security Group is referenced by another Service:
+  - `its_referenced_by_another_sg`
+- If the Security Group (**MetaChecks**)
+  - `its_associated_with_network_interfaces`
+  - `its_associated_with_ec2_instances`
+  - `its_associated_with_managed_services`
+  - `its_associated_with_public_ips`
+- If the Security Group is Public (**MetaChecks**)
+  - `it_has_rules_unrestricted`
+  - `is_public`
+- The Environment, Classification, Owner based on your Tagging (**MetaTags**)
+- Who created and when (**MetaTrails**)
+
+```
+  "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
+    "findings": [
+      "Security groups should only allow unrestricted incoming traffic for authorized ports"
+    ],
+    "AwsAccountId": "012345678901",
+    "AwsAccountAlias": "",
+    "Region": "us-east-1",
+    "ResourceType": "AwsEc2SecurityGroup",
+    "metachecks": {
+      "its_associated_with_network_interfaces": [
+        "eni-0722ce7f253e8c9e0"
+      ],
+      "its_associated_with_ec2_instances": [
+        "i-0b57aa16e1d0c6bbd"
+      ],
+      "its_associated_with_ips_public": [
+        "55.93.78.x"
+      ],
+      "its_associated_with_managed_services": false,
+      "its_referenced_by_another_sg": false,
+      "it_has_rules_unrestricted": [
+        {
+          "SecurityGroupRuleId": "sgr-0cb04c3cb0a14df23",
+          "GroupId": "sg-0880509d75f330c7f",
+          "GroupOwnerId": "012345678901",
+          "IsEgress": false,
+          "IpProtocol": "tcp",
+          "FromPort": 22,
+          "ToPort": 22,
+          "CidrIpv4": "0.0.0.0/0",
+          "Tags": []
+        }
+      ],
+      "is_public": true,
+      "is_default": false
+    },
+    "metatags": {},
+    "metatrails": {
+      "AuthorizeSecurityGroupIngress": {
+        "Username": "root",
+        "EventTime": "2023-02-25 15:35:21-03:00"
+      },
+      "CreateSecurityGroup": {
+        "Username": "root",
+        "EventTime": "2023-02-25 15:35:21-03:00"
+      }
+    }
+  }
+}
+```
 
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
-**MetaHub** aggregates by affected resources the information to focus on fixing the real problem, not the findings themselves.
-
-If you are investigating a finding for a Security Group with a port open, you can use MetaHub to investigate and automate the following:
-
-- If there are other findings for this resource
-- If the security group is associated to a Network Interface (`its_associated_with_network_interfaces`)
-- If the associated resource is public (`its_associated_with_public_ips`)
-- If the environment is Production (MetaTags)
-- If the port is answering
 
 # Features
 
 **MetaHub** introduces different **ways of listing AWS Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. MetaHub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** queries the affected resources in the affected account directly to add extra information from your context using **MetaChecks** (`--meta-checks`) and **MetaTags** (`--meta-tags`). 
+**MetaHub** queries the affected resources in the affected account directly to add extra information from your context using: 
 
-You can define your own **MetaChecks** as yes/no questions using python (is public? is encrypted? is production? is accessed from development?).
-
-**MetaTags** let you enrich your findings with the tags that are associated with the resource by using [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html). 
+  - **MetaTags** (`--meta-tags`): MetaTags queries tagging from affected resources 
+  - **MetaTrails** (`--meta-trails`): MetaTrails queries CloudTrail in affected account to identify who and when created the resource and any other related critical event 
+  - **MetaChecks** (`--meta-checks`): MetaChecks fetchs extra information from the affected reosource like, if is public?, is encrypted? is associated with...?, is referenced by...?, it has..?
 
 You can create a filter on top of these outpus to automate the detection of another resources with the same issues. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks-1) and [MetaTags](#MetaTags-1).
 
@@ -685,7 +747,7 @@ Your findings are combined under the ARN of the resource affected, ending in onl
 
 You can now work in MetaHub with all these four findings together as if they were only one. For example you can update these four Workflow Status findings using only one command, See [Updating Workflow Status](#updating-workflow-status)
 
-## MetaChecks
+# MetaChecks
 
 On top of the AWS Security Hub findings, **MetaHub** can run additional checks directly on the affected resource in the affected account. We call these, **MetaChecks**. 
 
@@ -908,7 +970,7 @@ When True returns list of something_that_is_referencing_the_affected_resource...
 - its_referenced_by_<something_that_is_referencing_the_affected_resource>
 
 
-## MetaTags
+# MetaTags
 
 **MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated to your resources by using the option `--meta-tags.`
 
@@ -945,6 +1007,34 @@ If you follow a useful tagging strategy, you will be able to filter and generate
 So now, in addition to the `findings` section we have an extra section `metatags.` Each entry is a combination of Tag and Value for the associated with the affected resource.
 
 You can filter your findings based on MetaTags output using the option `--mh-filters-tags Tag=Value`. See [MetaTags Filtering](#metatags-filtering)
+
+# MetaTrails
+
+MetaTrails queries CloudTrail in the affected account to indentify critical events related to the affected resource, like for example, creation events. 
+
+You can can add/modify the critical events for each resource type by editing the configuration file: `config/resources.py`
+
+```sh
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
+  "findings": [
+  ...
+  ],
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "ofuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup",
+  "metatrails": {
+    "AuthorizeSecurityGroupIngress": {
+      "Username": "root",
+      "EventTime": "2023-02-25 15:35:21-03:00"
+    },
+    "CreateSecurityGroup": {
+      "Username": "root",
+      "EventTime": "2023-02-25 15:35:21-03:00"
+    }
+  }
+}
+```
 
 # Filtering
 
@@ -1118,9 +1208,9 @@ For example, you want to enrich all AWS Security Hub findings with WorkflowStatu
 </p>
 
 
-# Run it using Lambda
+# Run it using a Lambda function
 
-MetaHub is prepared to run from a Lambda function. Terraform code is provided for deploying the lambda and all it's dependencies. 
+MetaHub is prepared to run from a Lambda function. Terraform code is provided for deploying the lambda and all its dependencies. 
 
 - You can invoke the lambda "manually" from any app and read their results/output
 - You can trigger the lambda from any supported AWS service like EventBridge
