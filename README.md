@@ -38,7 +38,7 @@ Using **MetaHub**, you can enrich your security findings with **your** context t
 If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk* for Security Group *sg-0880509d75f330c7f*, MetaHub can enrich your finding with the following information from your context:
 
 - If there are other security findings for the affected resource
-- If the Security Group is referenced by another Service:
+- If another service references the Security Group (**MetaChecks**):
   - `its_referenced_by_another_sg`
 - If the Security Group (**MetaChecks**)
   - `its_associated_with_network_interfaces`
