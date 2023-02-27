@@ -143,72 +143,106 @@ If you are investigating the security finding **EC2.19 Security groups should no
 ## Investigating security findings using Security Hub filters
 
 - List all affected resources by AWS Security Hub findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
-`./metahub --list-findings`
+```
+./metahub --list-findings
+```
 
 - Show the statistics ouptut:
-`./metahub --list-findings --outputs statistics`
+```
+./metahub --list-findings --outputs statistics
+```
 
 - Filter only one resource:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>
+```
 
 - Filter only one AWS Account and show statistics:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --outputs statistics`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --outputs statistics
+```
 
 ## Investigating resources based on MetaTags (Tagging)
 
 - List all affected resources by AWS Security Hub findings and enrich them with MetaTags (Tagging):
-`./metahub --list-findings --meta-tags`
+```
+./metahub --list-findings --meta-tags
+```
 
 - Filter only the affected resources that has a Tag "Environment" with value "Production"
-`./metahub --list-findings --meta-tags --mh-filters-tags Environment=production`
+```
+./metahub --list-findings --meta-tags --mh-filters-tags Environment=production
+```
 
 - Filter only the affected resources that has a Tag "Environment" with value "Production" wich are HIGH severity:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production
+```
 
 ## Investigating resources based on MetaChecks
 
 - List all MetaChecks available:
-`./metahub --list-findings --list-meta-checks`
+```
+./metahub --list-findings --list-meta-checks
+```
 
 - List all affected resources by AWS Security Hub findings and enrich them with MetaChecks:
-`./metahub --list-findings --meta-checks`
+```
+./metahub --list-findings --meta-checks
+```
 
 - Filter only the affected resoruces that are efffectively public:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True`
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_public=True
+```
 
 - Show the previous list of affected resources in inventory output:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --outputs inventory`
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --outputs inventory
+```
 
 - Filter only the affected resoruces that are unencrypted:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True`
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False
+```
 
 - Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI":
-`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI`
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False --meta-tags --mh-fiters-tags Classification=PI
+```
 
 - Filter only the affected resoruces that are unencrypted and has a Tag "Classification" with value "PI" and write a CSV Spreadsheet:
-`./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --output-modes csv`
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --output-modes csv
+```
 
 ## Investigating a finding
 
-- List all affected resources with spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"`
+- List all affected resources with spefific Security Hub finding, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"
+```
 
 - Enable MetaChecks to get more info for those resources:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks
+```
 
 - Filter only the affected resources that are associated to public ips:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True
+```
 
 - Update all related AWS Security Findings to NOTIFIED with a Note:
-`./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"`
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
+```
 
-# Requirements
+# Run with Python
 
 **MetaHub** is a Python3 program. You need to have Python3 installed in your system and the required python modules described in the file `requirements.txt`.
 
 Requirements can be installed in your system manually (using pip3) or using a Python virtual environment (suggested method).
-
-Alternatively you can run this tool using Docker. 
 
 ## Run it using Python Virtual Environment
 
@@ -220,14 +254,18 @@ Alternatively you can run this tool using Docker.
 6. Run: `./metahub -h`
 7. Deactivate your virtaul environment after you finish with: `deactivate`
 
-Next time you only need steps 4 and 6 to use the program. 
+Next time you only need steps 4 and 6 to use the program.
 
-## Run it using Docker
+Alternatively you can run this tool using Docker. 
 
-1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
-3. Change to repostiory dir: `cd metahub`
-4. Build docker image: `docker build -t metahub .`
-5. Run: `docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN --rm -ti metahub ./metahub -h`
+# Run with Docker
+
+You can run MetaHub using Docker, either building the docker image locally or using the public available image from AWS Registry.
+
+You can set your AWS credentials using environemnt adding to your docker run command:
+```
+-e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN
+```
 
 ## Run it using Public Docker Image
 
@@ -235,7 +273,14 @@ Next time you only need steps 4 and 6 to use the program.
   <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
 </p>
 
-1. Run: `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
+1. `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
+ 
+## Build and Run Docker locally
+
+1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
+3. Change to repostiory dir: `cd metahub`
+4. Build docker image: `docker build -t metahub .`
+5. Run: `docker run -ti metahub ./metahub -h`
 
 # AWS Authentication
 
@@ -682,9 +727,9 @@ So now you have in your dashboard four findings for one resource!
 
 Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
 
-## MetaHub Aggregation by Resource
+## MetaHub aggregation by Affected Resource
 
-**MetaHub** aggregates all findings under the affected resource. You have 2 possible outputs, the short one and the default one:
+**MetaHub** aggregates security findings under the affected resource. MetaHub provides four different outpus, two of them includes the findings: `short` (the default one) and `full`. (In adittion you also have `statistics` and `inventory` outputs.)
 
 This is how MetaHub shows the previous example with default options:
 
@@ -780,7 +825,7 @@ You can now work in MetaHub with all these four findings together as if they wer
 
 On top of the AWS Security Hub findings, **MetaHub** can run additional checks directly on the affected resource in the affected account. We call these, **MetaChecks**. 
 
-Think again about that SG. Let's assume it's associated to something, so we have three AWS Security Hub findings combined in one MetaHub result:
+Think again about that Security Group. Let's assume it's associated, so we have three AWS Security Hub findings combined in one MetaHub result:
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -796,7 +841,7 @@ Think again about that SG. Let's assume it's associated to something, so we have
 }
 ```
 
-What if we can go further based on the findings and get more information? For example, check what this SG is associated to, if it's public or not, for how long, and who did it, and get all this information in the same simple output that MetaHub provides and even filter on top of that information.
+What if we can go further based on the findings and get more information? For example, check what this Security Group is associated with, if it's public or not, if it's referenced by any other resource and get all this information together in the same simple output that MetaHub provides and even filter on top of that information.
 
 Let's run MetaHub again for the previous finding with MetaChecks enabled:
 
@@ -854,7 +899,22 @@ Let's run MetaHub again for the previous finding with MetaChecks enabled:
 }
 ```
 
-So now, in addition to the `findings` section we have an extra section `metachecks.` MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. In this example, 6 MetaChecks were executed against the affected resource: `its_associated_with_network_interfaces`, `its_associated_with_ec2_instances`, `its_associated_with_public_ips`, `its_associated_with_managed_services`, `is_public` and `its_referenced_by_another_sg`. Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
+So now, in addition to the `findings` section we have an extra section `metachecks.` 
+
+MetaChecks are defined by ResourceType. For the previous example, the resource type is `AwsEc2SecurityGroup`. 
+
+6 MetaChecks were executed against the affected resource: 
+
+- `its_associated_with_network_interfaces`
+- `its_associated_with_ec2_instances`
+- `its_associated_with_public_ips`
+- `its_associated_with_managed_services`
+- `its_referenced_by_another_sg`
+- `it_has_rules_unrestricted`
+- `is_public` 
+- `is_default`
+
+Each MetaChecks not only answer the MetaCheck question but also provide you with extra information like resources that you can then use for your favorites integrations.
 
 You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
 
