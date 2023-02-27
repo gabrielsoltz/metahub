@@ -1103,9 +1103,8 @@ You can filter your findings based on MetaTags output using the option `--mh-fil
 
 # MetaTrails
 
-MetaTrails queries CloudTrail in the affected account to indentify critical events related to the affected resource, like for example, creation events. 
+MetaTrails queries CloudTrail in the affected account to indentify critical events related to the affected resource, like for example, creation events, using the option `--meta-trails`.
 
-You can can add/modify the critical events for each resource type by editing the configuration file: `config/resources.py`
 
 ```sh
 "arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
@@ -1128,6 +1127,14 @@ You can can add/modify the critical events for each resource type by editing the
   }
 }
 ```
+
+For this resource type, you get 2 critical events:
+
+- `CreateSecurityGroup`: Security Group creation
+- `AuthorizeSecurityGroupIngress`: Security Group Rule Creation
+
+You can can add/modify the critical events for each resource type by editing the configuration file: `config/resources.py`
+
 
 # Filtering
 
