@@ -348,11 +348,11 @@ You can use three options to configure where and how AWS Security Hub is running
 
 ## Listing Findings
 
-### Get findings (--sh-filters are default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW, --outputs is default short and --output-mode is default json)
+Fetch and list findings with default options: `--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`):
 
-  ```sh
-  ./metahub
-  ```
+```sh
+./metahub
+```
 
 ### Get findings and output them in terminal (--sh-filters are default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW, --outputs is default short and --output-mode is default json)
 
