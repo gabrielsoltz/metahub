@@ -705,11 +705,13 @@ def main(args):
     print_table("Total Findings: ", str(count_mh_findings(mh_findings)), banners=banners)
 
     if args.update_findings:
+        UPProcessedFindings = []
+        UPUnprocessedFindings = []
         print_title_line("Update Findings", banners=banners)
         print_table("Findings to update: ", str(count_mh_findings(mh_findings)), banners=banners)
         print_table("Update: ", str(args.update_findings), banners=banners)
         if mh_findings:
-            ProcessedFindings, UnprocessedFindings = update_findings(
+            UPProcessedFindings, UPUnprocessedFindings = update_findings(
                 logger,
                 mh_findings,
                 args.update_findings,
@@ -718,19 +720,21 @@ def main(args):
                 sh_region,
             )
         print_title_line("Results", banners=banners)
-        print_table("ProcessedFindings: ", str(len(ProcessedFindings)), banners=banners)
-        print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)), banners=banners)
+        print_table("ProcessedFindings: ", str(len(UPProcessedFindings)), banners=banners)
+        print_table("UnprocessedFindings: ", str(len(UPUnprocessedFindings)), banners=banners)
 
     if args.enrich_findings:
+        ENProcessedFindings = []
+        ENUnprocessedFindings = []
         print_title_line("Enrich Findings", banners=banners)
         print_table("Findings to enrich: ", str(count_mh_findings(mh_findings)), banners=banners)
         if mh_findings:
-            ProcessedFindings, UnprocessedFindings = enrich_findings(
+            ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
                 logger, mh_findings, sh_account, args.sh_assume_role, sh_region
             )
         print_title_line("Results", banners=banners)
-        print_table("ProcessedFindings: ", str(len(ProcessedFindings)), banners=banners)
-        print_table("UnprocessedFindings: ", str(len(UnprocessedFindings)), banners=banners)
+        print_table("ProcessedFindings: ", str(len(ENProcessedFindings)), banners=banners)
+        print_table("UnprocessedFindings: ", str(len(ENUnprocessedFindings)), banners=banners)
 
 if __name__ == "__main__":
     main(argv[1:])
