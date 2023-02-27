@@ -365,7 +365,7 @@ Fetch and list findings (terminal) with default options (`--sh-filters ProductNa
 Fetch and list findings (terminal) with outputs `full` and output-modes `json` and `html`:
 
 ```sh
-./metahub --list-findings --outputs full and --output-modes json html
+./metahub --list-findings --outputs full --output-modes json html
 ```
 
 Fetch findings with defaulf filters and outputs `inventory` and `statistics`:
