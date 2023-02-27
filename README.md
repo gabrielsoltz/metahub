@@ -342,163 +342,169 @@ You can use three options to configure where and how AWS Security Hub is running
 
 ## Help
 
-  ```sh
-  ./metahub --help
-  ```
+Show help menu:
+
+```sh
+./metahub --help
+```
 
 ## Listing Findings
 
-Fetch and list findings with default options: `--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`):
+Fetch findings with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`):
 
 ```sh
 ./metahub
 ```
 
-### Get findings and output them in terminal (--sh-filters are default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW, --outputs is default short and --output-mode is default json)
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`):
 
-  ```sh
-  ./metahub --list-findings
-  ```
+```sh
+./metahub --list-findings
+```
 
-### Get findings and output them in terminal as output full
+Fetch and list findings (terminal) with outputs `full` and output-modes `json` and `html`:
 
-  ```sh
-  ./metahub --list-findings --outputs full
-  ```
+```sh
+./metahub --list-findings --outputs full and --output-modes json html
+```
 
-### Get findings and output them in terminal as output inventory and statistics
+Fetch findings with defaulf filters and outputs `inventory` and `statistics`:
 
-  ```sh
-  ./metahub --list-findings --outputs inventory statistics
-  ```
+```sh
+./metahub --outputs inventory statistics
+```
 
 ## Security Hub Filters
 
-See more about [filtering](#Filtering)
+Read more about [filtering](#Filtering)
 
-### Get findings with SH filter SeverityLabel=CRITICAL and ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW)
+Fetch findings with SH filters `SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal):
 
-  ```sh
-  ./metahub --list-findings --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
-  ```
+```sh
+./metahub --list-findings --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL ResourceType=AwsEc2SecurityGroup
+```
+
+Fetch findings with SH filters `Id=<<FINDING ARN>>` and list (terminal):
+
+```sh
+./metahub --list-findings --sh-filters Id=Id=arn:aws:securityhub:eu-west-1:0123456790:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.9/finding/5f6cb8eb-1234-1234-aa84-01de254ea42c
+```
 
 ## MetaChecks
 
-## List Metachecks
+Show all available MetaChecks by Resource Type:
 
-  ```sh
-  ./metahub --list-meta-checks
-  ```
+```sh
+./metahub --list-meta-checks
+```
 
-### Get findings with default filters and MetaChecks enabled and list them
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`) with MetaChecks enabled:
 
-  ```sh
-  ./metahub --list-findings --meta-checks
-  ```
+```sh
+./metahub --list-findings --meta-checks
+```
 
-### Get findings with SH filters SeverityLabel=CRITICAL (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters is_public=True
+Fetch findings with SH filters `SeverityLabel=CRITICAL ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `is_public=True`:
 
-  ```sh
-  ./metahub --list-findings --meta-checks -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-checks is_public=True
-  ```
+```sh
+./metahub --list-findings --meta-checks -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-checks is_public=True
+```
 
-### Get findings with SH filters ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters its_associated_with_public_ips=True
+Fetch findings with SH filters `ResourceType=AwsEc2SecurityGroup ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `its_associated_with_public_ips=True` and outputs `short` and `statistics`:
 
-  ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_public_ips=True
-  ```
-
-### Get findings with SH filters ResourceType=AwsS3Bucket (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks enabled with filters is_public=True
-
-  ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --mh-filters-checks is_public=True
-  ```
+```sh
+./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_public_ips=True --outputs short statistics
+```
 
 ## MetaTags
 
-### Get findings with default SH filters and MetaTags enabled and list them
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`) with MetaTags enabled:
 
-  ```sh
-  ./metahub --list-findings --meta-tags
-  ```
+```sh
+./metahub --list-findings --meta-tags
+```
 
-### Get findings with SH filters SeverityLabel=CRITICAL (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaTags enabled with filters Environment=production
+Fetch findings with SH filters `SeverityLabel=CRITICAL ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaTags enabled and MetaTags filters `Environment=production`:
 
-  ```sh
-  ./metahub --list-findings --meta-checks -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-tags Environment=production
-  ```
+```sh
+./metahub --list-findings --meta-tags -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-tags Environment=production
+```
 
-### Get findings with SH filters Title="EC2.22 Unused EC2 security groups should be removed" (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) with MetaTags and MetaChecks enabled, with MetaChecks filters its_referenced_by_another_sg=False
+Fetch findings with SH filters `SeverityLabel=CRITICAL ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaTags and MetaChecks enabled and MetaTags filters `Environment=production`:
 
-  ```sh
-  ./metahub --list-findings --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW Title="EC2.22 Unused EC2 security groups should be removed" --meta-checks --mh-filters-checks its_referenced_by_another_sg=False
-  ```
+```sh
+./metahub --list-findings --meta-tags -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-tags Environment=production --meta-checks
+```
+
+## MetaTrails
+
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`) with MetaTrails enabled:
+
+```sh
+./metahub --list-findings --meta-trails
+```
+
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`) with MetaTrails, MetaChecks and MetaTags enabled:
+
+```sh
+./metahub --list-findings --meta-trails --meta-checks --meta-tags
+```
 
 ## Updating Findings Workflow Status
 
-### List and SUPPRESS all findings for SH filters ResourceType=AWSS3Bucket (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks filters is_public=False with a Note "SUPPRESSING non-public S3 buckets"
+Fetch findings with SH filters `Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" ResourceType=AwsS3Bucket ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `is_public=False` and update Worfklow Satus to `SUPPRESSED` with a Note `Suppressing reason: non-public S3 buckets`:
 
-  ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --mh-filters-checks is_public=False --update-findings Note="SUPPRESSING non-public S3 buckets" Workflow=SUPPRESSED
-  ```
+```sh
+./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" --mh-filters-checks is_public=False --update-findings Note="Suppressing reason: non-public S3 buckets" Workflow=SUPPRESSED
+```
 
-### List and SUPPRESS all findings for SH filters ResourceType=AwsEc2SecurityGroup (and ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW) and MetaChecks filters is_public=False with a Note "SUPRESSING non-public Security Groups"
+> ### Updating Findings Workflow Status (House Keeping Tasks)
+>
+> If your Security Hub is not cleaning up ARCHIVED, PASSED or NOT_AVAILABLE findings, you can use the following commands:
+>
 
-  ```sh
-  ./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks is_public=False --update-findings Note="SUPPRESSING non-public AwsEc2SecurityGroup" Workflow=SUPPRESSED
-  ```
+Fetch findings with SH filters `WorkflowStatus=NEW ComplianceStatus=PASSED` and list (terminal) and update Worfklow Satus to `RESOLVED` with a Note `House Keeping - Move PASSED findings to RESOLVED`:
+
+```sh
+./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --outputs statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
+```
+
+Fetch findings with SH filters `WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE` and list (terminal) and update Worfklow Satus to `RESOLVED` with a Note `Move NOT_AVAILABLE findings to RESOLVED`:
+
+```sh
+./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE --outputs statistics --update-findings Note="House Keeping - Move NOT_AVAILABLE findings to RESOLVED" Workflow=RESOLVED
+```
+
+Fetch findings with SH filters `WorkflowStatus=NEW RecordState=ARCHIVED` and list (terminal) and update Worfklow Satus to `RESOLVED` with a Note `Move ARCHIVED findings to RESOLVED`:
+
+```sh
+./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --outputs statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
+```
 
 ## Enriching Findings
 
-### Get findings with default SH filters and MetaTags enabled, list them and enrich them (with MetaTags)
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short`, `--output-mode json` and `--input securityhub`) with MetaTags enabled and enrich them back in AWS Security Hub:
 
-  ```sh
-  ./metahub --list-findings --meta-tags
-  ```
-
-### Get findings with default SH filters and MetaTags enabled, list them and enrich them (with MetaTags and MetaChecks)
-
-  ```sh
-  ./metahub --list-findings --meta-tags --meta-checks
-  ```
+```sh
+./metahub --list-findings --meta-tags --enrich-findings
+```
 
 ## Output Modes
 
-### Get and list findings with default filters and MetaTags enabled with filters Owner=Security and output in json, html and csv formats
+Fetch and list findings (terminal) with default options (`--sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`, `--outputs short` and `--input securityhub`) with MetaTags and MetaTags filters `Owner=Security` with output-modes `json html csv`
 
-  ```sh
-  ./metahub --list-findings --meta-tags --mh-filters-tags Owner=Security --output-modes json html csv
-  ```
-
-## SH House Keeping
-
-You can use MetaHub to automate some House Keeping tasks that AWS Security Hub in some cases is not handling correctly, like Resolving findings in an automated way. 
-
-### Move findings with Workflow Status NEW that has Compliance Status PASSED
-
-  ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=PASSED --outputs statistics --update-findings Note="House Keeping - Move PASSED findings to RESOLVED" Workflow=RESOLVED
-  ```
-
-### Move findings with Workflow Status NEW that has Compliance Status NOT_AVAILABLE
-
-  ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW ComplianceStatus=NOT_AVAILABLE --outputs statistics --update-findings Note="House Keeping - Move NOT_AVAILABLE findings to RESOLVED" Workflow=RESOLVED
-  ```
-
-### Move findings with Workflow Status NEW that has RecordState ARCHIVED
-
-  ```sh
-  ./metahub --list-findings --sh-filters WorkflowStatus=NEW RecordState=ARCHIVED --outputs statistics --update-findings Note="House Keeping - Move ARCHIVED findings to RESOLVED" Workflow=RESOLVED
-  ```
+```sh
+./metahub --list-findings --meta-tags --mh-filters-tags Owner=Security --output-modes json html csv
+```
 
 ## Debug
 
-### Set Log Level (INFO, WARNING, ERROR or DEBUG. Default: ERROR)
+Set Log Level: INFO. 
+Options: WARNING, ERROR or DEBUG (Default: ERROR)
 
-  ```sh
-  ./metahub --log-level INFO
-  ```
+```sh
+./metahub --log-level INFO
+```
 
 # Inputs
 
