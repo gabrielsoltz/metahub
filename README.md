@@ -41,21 +41,21 @@ Using **MetaHub**, you can enrich your security findings with **your** context t
 
 **MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
 
-If you are investigating the security finding *EC2.19 Security groups should not allow unrestricted access to ports with high risk* for Security Group *sg-0880509d75f330c7f*, MetaHub can enrich your finding with the following information from your context:
+If you are investigating the security finding **EC2.19 Security groups should not allow unrestricted access to ports with high risk** for Security Group **sg-0880509d75f330c7f**, MetaHub can enrich your finding with the following information from your context:
 
 - If there are other security findings for the affected resource
+- The Environment, Classification, Owner or any other Tagging from your affected resource (**MetaTags**)
+- Who created and when (**MetaTrails**)
 - If another service references the Security Group (**MetaChecks**):
   - `its_referenced_by_another_sg`
-- If the Security Group (**MetaChecks**)
+- What is the Security Group associated with (**MetaChecks**):
   - `its_associated_with_network_interfaces`
   - `its_associated_with_ec2_instances`
   - `its_associated_with_managed_services`
-- If the Security Group is Public (**MetaChecks**)
+- If the Security Group is Public and how (**MetaChecks**):
   - `its_associated_with_public_ips`
   - `it_has_rules_unrestricted`
   - `is_public`
-- The Environment, Classification, Owner or any other Tagging from your affected resource (**MetaTags**)
-- Who created and when (**MetaTrails**)
 
 ```
   "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
@@ -126,11 +126,11 @@ If you are investigating the security finding *EC2.19 Security groups should not
   - **MetaTrails** (`--meta-trails`): MetaTrails queries CloudTrail in affected account to identify who and when created the resource and any other related critical event 
   - **MetaChecks** (`--meta-checks`): MetaChecks fetchs extra information from the affected reosource like, if is public?, is encrypted? is associated with...?, is referenced by...?, it has..?
 
-You can create a filter on top of these outpus to automate the detection of another resources with the same issues. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production`. See [MetaChecks](#MetaChecks-1) and [MetaTags](#MetaTags-1).
+**MetaHub** supports filters on top of these Meta* outputs to automate the detection of another resources with the same issues. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production Service="My Insecure Service"`. See [MetaChecks](#MetaChecks-1) and [MetaTags](#MetaTags-1). You can use **MetaChecks filters** using the option `--mh-filters-checks` and **MetaTags filters** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
 
-**MetaHub** supports **AWS Security Hub filtering** the same way you would work with CLI utility using the option `--sh-filters` or using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. In addition and combination, it supports **MetaChecks filtering** using the option `--mh-filters-checks` and **MetaTags filtering** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
+**MetaHub** also supports **AWS Security Hub filtering** the same way you would work with AWS CLI utility using the option `--sh-filters` and using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and reuse them when you need them for any integration. You can combine Security Hub filters with Meta Filters all together. See [Filtering](#Filtering). 
 
-**MetaHub** lets you enrich your AWS Security Hub findings directly in AWS Security Hub using the option `--enrich-findings`. This action will update your Security Hub findings using the field `UserDefinedFields`. You can then create filters or insights direclty in AWS Security Hub. See [Enriching Findings](#enriching-findings)
+**MetaHub** lets you back enrich your findings directly in AWS Security Hub using the option `--enrich-findings`. This action will update your AWS Security Hub findings using the field `UserDefinedFields`. You can then create filters or insights direclty in AWS Security Hub. See [Enriching Findings](#enriching-findings)
 
 **MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you are also updating the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
 
