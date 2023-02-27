@@ -268,11 +268,8 @@ You can set your AWS credentials using environemnt adding to your docker run com
 -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN
 ```
 
-## Run it using Public Docker Image
+## Run it using Public Docker Image [<img src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png">](https://gallery.ecr.aws/n2p8q5p4/metahub)
 
-<p align="center">
-  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
-</p>
 
 1. Run: `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
  
