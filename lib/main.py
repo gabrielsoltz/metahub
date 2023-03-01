@@ -125,6 +125,7 @@ def generate_findings(
                     # If both checks are True we show the resource
                     if mh_tags_matched and mh_checks_matched:
                         mh_matched = True
+                        
                     # MetaTrails runs without filters, for now? 
                     if metatrails:
                         # We run metatrails only once:
@@ -400,29 +401,27 @@ def set_sh_filters(sh_filters):
 
 def validate_arguments(args, logger):
 
+    # Validate no filters when using file-asff only
     if "file-asff" in args.inputs and not "securityhub" in args.inputs:
         if args.sh_template or args.sh_filters:
             logger.error("--sh-filters not supported for file-asff... If you want to fetch from securityhub and file-asff at the same time use --inputs file-asff securityhub")
             exit(1)
 
-    # Parameter Validation: --inputs and --input-asff
+    # Validate file-asff
     if "file-asff" in args.inputs:
         if not args.input_asff:
             logger.error("file-asff input specified but not --input-asff, specify the input file with --input-asff")
             exit(1)
-        file = args.input_asff
         try:
-            with open(file) as f:
+            with open(args.input_asff) as f:
                 asff_findings = json.load(f)
-        except json.decoder.JSONDecodeError:
-            logger.error("--input-asff file %s invalid format!", file)
-            exit(1)
-        except FileNotFoundError:
-            logger.error("--input-asff file %s not found!", file)
+        except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
+            logger.error("--input-asff file %s %s!", args.input_asff, str(err))
             exit(1)
     else:
         asff_findings = False
 
+    # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
         default_sh_filters = {
             "RecordState": ["ACTIVE"],
@@ -437,26 +436,17 @@ def validate_arguments(args, logger):
             yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
             dict_values = next(iter(yaml_to_dict.values()))
             sh_filters = dict_values
-        except yaml.scanner.ScannerError as err:
-            logger.error("SH Template reading error: %s", err)
-            exit(1)
-        except FileNotFoundError:
-            logger.error("SH Template file not found: %s", args.sh_template)
+        except (yaml.scanner.ScannerError, FileNotFoundError) as err:
+            logger.error("SH Template %s reading error: %s", args.sh_template, str(err))
             exit(1)
     else:
         sh_filters = args.sh_filters
         sh_filters = set_sh_filters(sh_filters)
 
-    # Parameter Validation: --mh-filters-checks
+    # Validate MetaChecks filters
     if args.mh_filters_checks and not args.meta_checks:
-        logger.error(
-            "--mh-filters-checks provided but --meta-checks are disabled, ignoring..."
-        )
-    if not args.mh_filters_checks:
-        default_mh_filters_checks = {}
-        mh_filters_checks = default_mh_filters_checks
-    else:
-        mh_filters_checks = args.mh_filters_checks
+        logger.error("--mh-filters-checks provided but --meta-checks are disabled, ignoring...")
+    mh_filters_checks = args.mh_filters_checks or {}
     for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
         if mh_filters_checks[mh_filter_check_key].lower() == "true":
             mh_filters_checks[mh_filter_check_key] = bool(True)
@@ -468,27 +458,17 @@ def validate_arguments(args, logger):
             )
             exit(1)
 
-    # Parameter Validation: --mh-filters-tags
+    # Validate MetaTags filters
     if args.mh_filters_tags and not args.meta_tags:
-        logger.error(
-            "--mh-filters-tags provided but --meta-tags are disabled, ignoring..."
-        )
-    if not args.mh_filters_tags:
-        default_mh_filters_tags = {}
-        mh_filters_tags = default_mh_filters_tags
-    else:
-        mh_filters_tags = args.mh_filters_tags
+        logger.error("--mh-filters-tags provided but --meta-tags are disabled, ignoring...")
+    mh_filters_tags = args.mh_filters_tags or {}
 
     # Parameter Validation: --sh-account and --sh-assume-role
-    if (args.sh_account and not args.sh_assume_role) or (
-        not args.sh_account and args.sh_assume_role
-    ):
-        logger.error(
-            "Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided."
-        )
+    if bool(args.sh_account) != bool(args.sh_assume_role):
+        logger.error("Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided.")
         exit(1)
 
-    # AWS DATA
+    # AWS Account
     if not args.sh_account:
         sh_account = get_account_id(logger)
         sh_account_alias = get_account_alias(logger)
@@ -499,16 +479,13 @@ def validate_arguments(args, logger):
         " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
     )
 
-    # Parameter Validation: --sh-region
-    if not args.sh_region:
-        sh_region = get_region(logger)
-    else:
-        sh_region = args.sh_region
+    # AWS Region
+    sh_region = args.sh_region or get_region(logger)
 
+    # SH Aggregator
     sh_region_aggregator = False
     if sh_region:
         sh_region_aggregator = get_sh_findings_aggregator(logger, sh_region)
-        
     if sh_region_aggregator:
         if sh_region_aggregator != sh_region:
             logger.error(
@@ -518,51 +495,42 @@ def validate_arguments(args, logger):
                 sh_region_aggregator,
             )
     
-    if "securityhub" in args.inputs:
-        if not sh_region or not sh_account:
-            logger.error(
-                "AWS Region or Account not found, but Security Hub defined as input. Set Credentials and/or use --sh-region and --sh-account."
-            )
-            exit(1)
+    # Validate Security Hub input
+    if "securityhub" in args.inputs and (not sh_region or not sh_account):
+        logger.error(
+            "AWS Region or Account not found, but Security Hub defined as input. Set Credentials and/or use --sh-region and --sh-account."
+        )
+        exit(1)
 
     return asff_findings, sh_filters, mh_filters_checks, mh_filters_tags, sh_account, sh_account_alias_str, sh_region
 
 def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings):
 
     # Columns for CSV and HTML
-    if args.output_meta_checks_columns:
-        metachecks_columns = args.output_meta_checks_columns
-    else:
-        metachecks_columns = mh_statistics['metachecks']
-    if args.output_meta_tags_columns:
-        metatags_columns = args.output_meta_tags_columns
-    else: 
-        metatags_columns = mh_statistics['metatags']
+    metachecks_columns = args.output_meta_checks_columns or mh_statistics['metachecks']
+    metatags_columns = args.output_meta_tags_columns or mh_statistics['metatags']
 
+    # Output JSON files
     if "json" in args.output_modes:
         if mh_findings:
             for out in args.outputs:
                 print_title_line("Output JSON: " + out)
-                WRITE_FILE = OUTPUT_DIR + "metahub-" + out + "-" + TIMESTRF + ".json"
-                if out == "short":
-                    with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                        json.dump(mh_findings_short, f, indent=2)
-                if out == "inventory":
-                    with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                        json.dump(mh_inventory, f, indent=2)
-                if out == "statistics":
-                    with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                        json.dump(mh_statistics, f, indent=2)
-                if out == "full":
-                    with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                        json.dump(mh_findings, f, indent=2)
+                WRITE_FILE = f"{OUTPUT_DIR}metahub-{out}-{TIMESTRF}.json"
+                with open(WRITE_FILE, "w", encoding="utf-8") as f:
+                    json.dump({
+                        'short': mh_findings_short,
+                        'inventory': mh_inventory,
+                        'statistics': mh_statistics,
+                        'full': mh_findings
+                    }[out], f, indent=2)
                 print_table("File: ", WRITE_FILE)
 
+    # Output HTML files
     if "html" in args.output_modes:
         print_title_line("Output HTML")
         import jinja2
         if mh_findings:
-            WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".html"
+            WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
             templateEnv = jinja2.Environment(loader=templateLoader)
             TEMPLATE_FILE = "lib/html/template.html"
@@ -578,6 +546,7 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
                 f.write(html)
             print_table("File: ", WRITE_FILE)
 
+    # Output CSV files
     if "csv" in args.output_modes:
         print_title_line("Output CSV")
         import csv
@@ -588,23 +557,19 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
                 for column in metatags_columns:
                     try:
                         dictionary[column] = dictionary["metatags"][column]
-                    except KeyError:
-                        dictionary[column] = ""
-                    except TypeError:
+                    except (KeyError, TypeError):
                         dictionary[column] = ""
                 for column in metachecks_columns:
                     try:
                         dictionary[column] = dictionary["metachecks"][column]
-                    except KeyError:
-                        dictionary[column] = ""
-                    except TypeError:
+                    except (KeyError, TypeError):
                         dictionary[column] = ""
                 new_dict.update(dictionary)
                 new_list.append(new_dict)
             columns = new_list[0].keys()
             return columns, new_list
         if mh_findings:
-            WRITE_FILE = OUTPUT_DIR + "metahub-" + TIMESTRF + ".csv"
+            WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
             with open(
                 WRITE_FILE, "w", encoding="utf-8", newline=""
             ) as output_file:
@@ -672,19 +637,17 @@ def main(args):
         metatrails=args.meta_trails,
         banners=banners
     )
-    
+
     if args.list_findings:
         if mh_findings:
             for out in args.outputs:
                 print_title_line("List Findings: " + out, banners=banners)
-                if out == "short":
-                    print(json.dumps(mh_findings_short, indent=2))
-                if out == "inventory":
-                    print(json.dumps(mh_inventory, indent=2))
-                if out == "statistics":
-                    print(json.dumps(mh_statistics, indent=2))
-                if out == "full":
-                    print(json.dumps(mh_findings, indent=2))
+                print(json.dumps({
+                    'short': mh_findings_short,
+                    'inventory': mh_inventory,
+                    'statistics': mh_statistics,
+                    'full': mh_findings
+                }[out], indent=2))
 
     if "lambda" in args.output_modes:
         if mh_findings:
