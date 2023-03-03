@@ -6,5 +6,6 @@ from lib.metachecks.checks import (
     AwsEc2NetworkAcl,
     AwsAutoScalingLaunchConfiguration,
     AwsEc2LaunchTemplate,
-    AwsLambdaFunction
+    AwsLambdaFunction,
+    AwsElastiCacheCacheCluster
 )
