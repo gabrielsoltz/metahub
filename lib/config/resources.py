@@ -54,5 +54,12 @@ MetaHubResourcesConfig = {
             "parsing_char": "/",
             "parsing_pos": -1
         }
-    }    
+    },
+    "AwsElastiCacheCacheCluster": {
+        "metatrails_events": ["CreateCacheCluster"],
+        "ResourceName": {
+            "parsing_char": "/",
+            "parsing_pos": -1
+        }
+    }
 }
