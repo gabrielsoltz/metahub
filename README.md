@@ -15,6 +15,7 @@
 - [Examples](#investigations-examples)
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
+- [Run with Lambda](#run-with-lambda)
 - [AWS Authentication](#aws-authentication)
 - [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
@@ -281,6 +282,62 @@ You can set your AWS credentials using environment adding to your docker run com
 3. Change to repostiory dir: `cd metahub`
 4. Build docker image: `docker build -t metahub .`
 5. Run: `docker run -ti metahub ./metahub -h`
+
+
+# Run with Lambda
+
+MetaHub is Lambda/Serverless ready! You can run MetaHub directly on a Lambda function without any other Infra required. 
+
+Running MetaHub in a Lambda function lets you automate its execution based on your defined triggers or even manually. 
+
+Terraform code is provided for deploying the lambda and all its dependencies. 
+
+## Lambda use-cases
+
+- Trigger MetaHub lambda function each time there is a new AWS Security Hub finding to enrich that finding back in AWS Security Hub
+- Trigger MetaHub lambda function each time there is a new AWS Security Hub finding for suppressing based on MetaChecks or MetaTags
+- Trigger MetaHub lambda for identifying AWS Security Finding affected-owner based on MetaTags or MetaTrails and assign that finding to your internal systems
+- Trigger MetaHub lambda function for creating a ticket with enriched context
+
+## Customize behaviour
+
+You can customize Lambda behaviour by editing the file `lib/lambda.py`, for example adding your filters.
+
+## Deploying Lambda
+
+For deploying the Lambda function:
+
+1. Create a MetaHub Zip package
+2. Create a MetaHub layer package
+3. Deploy Lambda function
+
+### Create a MetaHub Zip package
+
+You will need to create a zip package for the lambda with MetaHub code, for doing this:
+
+- `cd metahub`
+- `zip -r terraform/zip/lambda.zip lib`
+
+### Create a MetaHub layer package
+
+You will need to create a Lambda layer with all MetaHub python dependencies. 
+
+- `cd metahub`
+- `mkdir layer`
+- `cd layer`
+- `mkdir -p python/lib/python3.9/site-packages`
+- `pip3 install -r ../requirements.txt --target python/lib/python3.9/site-packages`
+- `zip -r9 terraform/zip/metahub-layer.zip .`
+- `cd ..`
+- `rm -r layer`
+
+### Deploy Lambda
+
+You can find the code for deploying the lambda function under the `terraform/` folder.
+
+- `terraform init`
+- `terraform apply`
+
 
 # AWS Authentication
 
@@ -1315,38 +1372,3 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 <p align="center">
   <img src="docs/imgs/enrich-findings-1.png" alt="update-findings" width="850"/>
 </p>
-
-
-# Run it using a Lambda function
-
-MetaHub is prepared to run from a Lambda function. Terraform code is provided for deploying the lambda and all its dependencies. 
-
-- You can invoke the lambda "manually" from any app and read their results/output
-- You can trigger the lambda from any supported AWS service like EventBridge
-
-## Create a zip package
-
-You will need to create a zip package for the lambda with MetaHub code, for doing this:
-
-- `cd metahub`
-- `zip -r terraform/zip/lambda.zip lib`
-
-## Create a layer package
-
-You will need to create a Lambda layer with all MetaHub python dependencies. 
-
-- `cd metahub`
-- `mkdir layer`
-- `cd layer`
-- `mkdir -p python/lib/python3.9/site-packages`
-- `pip3 install -r ../requirements.txt --target python/lib/python3.9/site-packages`
-- `zip -r9 terraform/zip/metahub-layer.zip .`
-- `cd ..`
-- `rm -r layer`
-
-## Deploy Lambda
-
-You can find the code for deploying the lambda function under the `terraform/` folder.
-
-- `terraform init`
-- `terraform apply`
