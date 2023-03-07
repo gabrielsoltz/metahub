@@ -576,7 +576,7 @@ You also can combine AWS Security Hub findings with an input ASFF file specifyin
 
 # Outputs
 
-**MetaHub** supports different data outputs using the option `--output`. By default, the output is `short`. You can combine more than one output by using spaces between them, for example: `--outputs full inventory`. The outputs you choose will be written to a json file by default (`--output-mode json`), or you can specify other modes. You can enrich these outputs by using [`--meta-checks`](#metachecks) and [`--meta-tags`](#metatags) options.
+**MetaHub** supports different data outputs using the option `--outputs`. By default, the output is `short`. You can combine more than one output by using spaces between them, for example: `--outputs full inventory`. The outputs you choose will be written to a json file by default (`--output-mode json`), or you can specify other modes. You can enrich these outputs by using [`--meta-checks`](#MetaChecks-1), [`--meta-tags`](#metatags-1) and [`--meta-trails`](#metatrails-1) options.
 
 - [Short](#short)
 - [Full](#Full)
