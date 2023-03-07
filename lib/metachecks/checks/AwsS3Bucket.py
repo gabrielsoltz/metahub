@@ -267,11 +267,11 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            # "it_has_bucket_acl",
+            "it_has_bucket_acl",
             "it_has_bucket_acl_cross_account",
             "it_has_bucket_acl_public",
-            # "it_has_bucket_policy",
-            # "it_has_bucket_policy_principal_wildcard",
+            "it_has_bucket_policy",
+            "it_has_bucket_policy_principal_wildcard",
             "it_has_bucket_policy_principal_cross_account",
             "it_has_bucket_policy_actions_wildcard",
             "it_has_bucket_policy_public",
