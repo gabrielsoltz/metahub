@@ -171,13 +171,13 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_unrestricted(self):
-        if self.it_has_bucket_policy_public() or self.it_has_bucket_acl_public():
+        if self.it_has_policy_public() or self.it_has_bucket_acl_public():
             return True
         return False
 
     def is_public(self):
         if self.it_has_website_enabled():
-            if self.it_has_bucket_policy_public() or self.it_has_bucket_acl_public():
+            if self.it_has_policy_public() or self.it_has_bucket_acl_public():
                 self.it_has_website_enabled()
         return False
 
