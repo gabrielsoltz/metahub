@@ -1041,427 +1041,365 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
+    <td rowspan="13">AwsS3Bucket</td>
     <td>it_has_bucket_acl</td>
     <td>Check if the S3 Bucket has a bucket ACL.</td>
     <td>The Bucket ACL</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_bucket_acl_public</td>
     <td>Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)</td>
     <td>The Bucket ACL Grant which is Public</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_bucket_acl_cross_account</td>
     <td>Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser</td>
     <td>The Bucket ACL Grant which is Granted cross-account</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_policy</td>
     <td>Check if the resource has a resource policy.</td>
     <td>The policy</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_policy_principal_cross_account</td>
     <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_policy_principal_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) principal</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_policy_public</td>
     <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_policy_actions_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) actions</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_public_access_block_enabled</td>
     <td>Check if the S3 Bucket Public Access Block is enabled</td>
     <td>The bucket Public Access Block</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>is_public</td>
     <td>Check if bucket is `it_has_website_enabled` and `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>is_unrestricted</td>
     <td>Check if either `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
     <td></td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>is_encrypted</td>
     <td>Check if the S3 Bucket is encrypted (SSE)</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsS3Bucket</td>
     <td>it_has_website_enabled</td>
     <td>Check if the S3 Bucket is configured as website</td>
     <td>Endpoint URL</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
+    <td rowspan="10">AwsElasticsearchDomain</td>
     <td>it_has_policy</td>
     <td>Check if the resource has a resource policy.</td>
     <td>The policy</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>it_has_policy_principal_cross_account</td>
     <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>it_has_policy_principal_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) principal</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>it_has_policy_public</td>
     <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>it_has_policy_actions_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) actions</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>it_has_public_endpoint</td>
     <td>Check if the Elastic Search Domain has a public endpoint</td>
     <td>The public endpoint</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>is_public</td>
     <td>Check if the Elastic Search Domain is public based on is_access_policies_public and it_has_public_endpoint</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>is_rest_encrypted</td>
     <td>Check if the Elastic Search Domain is configured with `EncryptionAtRestOptions`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>is_transit_encrypted</td>
     <td>Check if the Elastic Search Domain is configured with `NodeToNodeEncryptionOptions`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElasticsearchDomain</td>
     <td>is_encrypted</td>
     <td>Check if the Elastic Search Domain is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
+    <td rowspan="19">AwsEc2Instance</td>
     <td>it_has_public_ip</td>
     <td>Check if the EC2 Instance has a Public Ip</td>
     <td>List of Public Ips</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_private_ip</td>
     <td>Check if the EC2 Instance has a Private Ip</td>
     <td>List of Private Ips</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_public_dns</td>
     <td>Check if the EC2 Instance has a Public DNS</td>
     <td>The public DNS</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_private_dns</td>
     <td>Check if the EC2 Instance has a Private DNS</td>
     <td>The private DNS</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_key</td>
     <td>Check if the EC2 Instance has key pair</td>
     <td>The name of the key pair</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>is_running</td>
     <td>Check if the EC2 Instance is in "running" state</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_security_groups</td>
     <td>Check if the EC2 Instance is associated to Security Groups</td>
     <td>The List of Security Groups Ids</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_security_group_rules_unrestricted</td>
     <td>Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)</td>
     <td>The list of unrestricted rules</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>is_public</td>
     <td>Check if the EC2 Instance is public by checking if `it_has_public_ip` and `is_associated_to_security_group_rules_unrestricted`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_instance_profile</td>
     <td>Check if the EC2 Instance has an Instance Profile</td>
     <td>The ARN of the instance profile</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>it_has_instance_profile_roles</td>
     <td>Check if the EC2 Instance has an Instance Profile and is related to a Role</td>
     <td>The ARN of the role</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>is_instance_metadata_v2</td>
     <td>Check if the EC2 Instance is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>is_instance_metadata_hop_limit_1</td>
     <td>Check if the EC2 Instance Metadata is limited to 1 hop</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_ebs</td>
     <td>Check if the EC2 Instance has EBS associated</td>
     <td>The list of `VolumeId` associated to the instance</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_ebs_unencrypted</td>
     <td>Check if the EC2 Instance has EBS associated that are unencrypted</td>
     <td>The list of `VolumeId` associated to the instance that are unencrypted</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>is_encrypted</td>
     <td>Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_an_asg</td>
     <td>Check if the EC2 Instance it's part of an Auto Scaling Group</td>
     <td>The `AutoScalingGroupName`</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_an_asg_launch_configuration</td>
     <td>Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Configuration</td>
     <td>The `LaunchConfigurationName`</td>
   </tr>
   <tr>
-    <td>AwsEc2Instance</td>
     <td>its_associated_with_an_asg_launch_template</td>
     <td>Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Template</td>
     <td>The `LaunchTemplate`</td>
   </tr>
   <tr>
-    <td>AwsAutoScalingLaunchConfiguration</td>
+    <td rowspan="4">AwsAutoScalingLaunchConfiguration</td>
     <td>is_instance_metadata_v2</td>
     <td>Check if the Launch Configuration is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsAutoScalingLaunchConfiguration</td>
     <td>is_instance_metadata_hop_limit_1</td>
     <td>Check if the Launch Configuration Instance Metadata is limited to 1 hop</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsAutoScalingLaunchConfiguration</td>
     <td>its_associated_with_an_asg</td>
     <td>Check if the Launch Configuration It's associated with an Auto Scaling Group</td>
     <td>The `AutoScalingGroupARN`</td>
   </tr>
   <tr>
-    <td>AwsAutoScalingLaunchConfiguration</td>
     <td>its_associated_with_asg_instances</td>
     <td>Check if the Launch Configuration It's associated with an Auto Scaling Group with EC2 Instances</td>
     <td>The list of `InstanceId`</td>
   </tr>
   <tr>
-    <td>AwsEc2LaunchTemplate</td>
+    <td rowspan="5">AwsEc2LaunchTemplate</td>
     <td>is_instance_metadata_v2</td>
     <td>Check if the Launch Template is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2LaunchTemplate</td>
     <td>is_instance_metadata_hop_limit_1</td>
     <td>Check if the Launch Template Instance Metadata is limited to 1 hop</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsEc2LaunchTemplate</td>
     <td>its_associated_with_an_asg</td>
     <td>Check if the Launch Template It's associated with an Auto Scaling Group</td>
     <td>The `AutoScalingGroupARN`</td>
   </tr>
   <tr>
-    <td>AwsEc2LaunchTemplate</td>
     <td>its_associated_with_asg_instances</td>
     <td>Check if the Launch Template It's associated with an Auto Scaling Group with EC2 Instances</td>
     <td>The list of `InstanceId`</td>
   </tr>
   <tr>
-    <td>AwsEc2LaunchTemplate</td>
     <td>it_has_name</td>
     <td>Check if the Launch Template has a name configured</td>
     <td>The `LaunchTemplateName`</td>
   </tr>
   <tr>
-    <td>AwsEc2NetworkAcl</td>
+    <td rowspan="2">AwsEc2NetworkAcl</td>
     <td>its_associated_with_subnets</td>
     <td>Check if the Network ACL is associated to Subnets</td>
     <td>The list of `SubnetId`</td>
   </tr>
   <tr>
-    <td>AwsEc2NetworkAcl</td>
     <td>is_default</td>
     <td>Check if the Network ACL is the default one</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
+    <td rowspan="6">AwsLambdaFunction</td>
     <td>it_has_policy</td>
     <td>Check if the resource has a resource policy.</td>
     <td>The policy</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
     <td>it_has_policy_principal_cross_account</td>
     <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
     <td>it_has_policy_principal_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) principal</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
     <td>it_has_policy_public</td>
     <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
     <td>it_has_policy_actions_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) actions</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsLambdaFunction</td>
     <td>its_associated_with_a_role</td>
     <td>Check if Lambda Function it's associated with an IAM role (execution role)</td>
     <td>The Role ARN</td>
   </tr>
   <tr>
-    <td>AwsElastiCacheCacheCluster</td>
+    <td rowspan="5">AwsElastiCacheCacheCluster</td>
     <td>is_rest_encrypted</td>
     <td>Check if the Elastic Cache is configured with `AtRestEncryptionEnabled`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElastiCacheCacheCluster</td>
     <td>is_transit_encrypted</td>
     <td>Check if the Elastic Cache is configured with `TransitEncryptionEnabled`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElastiCacheCacheCluster</td>
     <td>is_encrypted</td>
     <td>Check if the Elastic Cache is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
     <td>True</td>
   </tr>
   <tr>
-    <td>AwsElastiCacheCacheCluster</td>
     <td>its_associated_with_security_groups</td>
     <td>Check if the Elastic Cache is associated to Security Groups</td>
     <td>The list of `SecurityGroups`</td>
   </tr>
   <tr>
-    <td>AwsElastiCacheCacheCluster</td>
     <td>its_associated_with_security_group_rules_unrestricted</td>
     <td>Check if the Elastic Cache is associated with Security Groups rules that are unrestricted (open to 0.0.0.0/0 or ::/0)</td>
     <td>The list of unrestricted rules</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
+    <td rowspan="7">AwsSqsQueue</td>
     <td>is_encrypted</td>
     <td>Check if the resource is encrypted checking `SqsManagedSseEnabled`</td>
     <td>The `SqsManagedSseEnabled`</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>it_has_policy</td>
     <td>Check if the resource has a resource policy.</td>
     <td>The policy</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>it_has_policy_principal_cross_account</td>
     <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>it_has_policy_principal_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) principal</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>it_has_policy_public</td>
     <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>it_has_policy_actions_wildcard</td>
     <td>Check if the resource policy has a wildcard (*) actions</td>
     <td>The offending statements</td>
   </tr>
   <tr>
-    <td>AwsSqsQueue</td>
     <td>is_public</td>
     <td>Check if the resource is public by checking if `it_has_policy_public`</td>
     <td>True</td>
