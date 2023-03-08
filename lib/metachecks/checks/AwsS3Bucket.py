@@ -4,7 +4,9 @@ import json
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
 from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -22,6 +24,8 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.bucket_acl = self._get_bucket_acl()
             self.bucket_policy = self._get_bucket_policy()
+            if self.bucket_policy:
+                self.checked_bucket_policy = ResourcePolicyChecker(self.logger, finding, self.bucket_policy).check_policy()
             self.cannonical_user_id = self._get_canonical_user_id()
             self.bucket_website = self._get_bucket_website()
             self.bucket_public_access_block = self._get_bucket_public_access_block()
@@ -126,113 +130,30 @@ class Metacheck(MetaChecksBase):
             return public_acls
         return False
 
-    def it_has_bucket_policy(self):
+    def it_has_policy(self):
         bucket_policy = False
         if self.bucket_policy:
             bucket_policy = self.bucket_policy
         return bucket_policy
 
-    def it_has_bucket_policy_public(self):
-        public_policy = []
+    def it_has_policy_public(self):
         if self.bucket_policy:
-            for statement in self.bucket_policy["Statement"]:
-                effect = statement["Effect"]
-                principal = statement.get("Principal", {})
-                not_principal = statement.get("NotPrincipal", None)
-                condition = statement.get("Condition", None)
-                suffix = "/0"
-                if effect == "Allow" and (
-                    principal == "*" or principal.get("AWS") == "*"
-                ):
-                    if condition is not None:
-                        if suffix in str(condition.get("IpAddress")):
-                            public_policy.append(statement)
-                    else:
-                        public_policy.append(statement)
-                if effect == "Allow" and not_principal is not None:
-                    public_policy.append(statement)
-        if public_policy:
-            return public_policy
+            return self.checked_bucket_policy["is_public"]
         return False
 
-    def it_has_bucket_policy_principal_wildcard(self):
-        policy_with_allow_and_wildcard_principal = []
+    def it_has_policy_principal_wildcard(self):
         if self.bucket_policy:
-            for statement in self.bucket_policy["Statement"]:
-                effect = statement["Effect"]
-                principal = statement.get("Principal", {})
-                not_principal = statement.get("NotPrincipal", None)
-                condition = statement.get("Condition", None)
-                suffix = "/0"
-                if effect == "Allow":
-                    if principal == "*" or principal.get("AWS") == "*":
-                        policy_with_allow_and_wildcard_principal.append(statement)
-        if policy_with_allow_and_wildcard_principal:
-            return policy_with_allow_and_wildcard_principal
+            return self.checked_bucket_policy["is_principal_wildcard"]
         return False
 
-    def it_has_bucket_policy_actions_wildcard(self):
-        policy_with_allow_and_wildcard_actions = []
+    def it_has_policy_principal_cross_account(self):
         if self.bucket_policy:
-            for statement in self.bucket_policy["Statement"]:
-                effect = statement["Effect"]
-                try:
-                    action = statement["Action"]
-                except KeyError:
-                    action = ""
-                principal = statement.get("Principal", {})
-                not_principal = statement.get("NotPrincipal", None)
-                condition = statement.get("Condition", None)
-                suffix = "/0"
-                if effect == "Allow":
-                    if action == "*" or action == "s3:*":
-                        policy_with_allow_and_wildcard_actions.append(statement)
-        if policy_with_allow_and_wildcard_actions:
-            return policy_with_allow_and_wildcard_actions
+            return self.checked_bucket_policy["is_principal_cross_account"]
         return False
 
-    def it_has_bucket_policy_principal_cross_account(self):
-        policy_allow_with_cross_account_principal = []
+    def it_has_policy_actions_wildcard(self):
         if self.bucket_policy:
-            for statement in self.bucket_policy["Statement"]:
-                effect = statement["Effect"]
-                principal = statement.get("Principal", {})
-                not_principal = statement.get("NotPrincipal", None)
-                condition = statement.get("Condition", None)
-                suffix = "/0"
-                if effect == "Allow":
-                    if principal == "*" or principal.get("AWS") == "*":
-                        # We pass this one as is already included in metacheck it_has_bucket_policy_principal_wildcard
-                        pass
-                    else:
-                        if "AWS" in principal:
-                            principals = principal["AWS"]
-                        elif "Service" in principal:
-                            principals = []
-                        else:
-                            principals = principal
-                        if type(principals) is not list:
-                            principals = [principals]
-                        for p in principals:
-                            try:
-                                account_id = p.split(":")[4]
-                                if account_id != self.account_id:
-                                    if account_id not in ("cloudfront"):
-                                        policy_allow_with_cross_account_principal.append(
-                                            statement
-                                        )
-                                        # If matched, we don't continue analyzing other pincipals
-                                        break
-                            except IndexError:
-                                self.logger.error(
-                                    "Parsing principal %s for bucket %s doesn't looks like ARN, ignoring.. ",
-                                    p,
-                                    self.resource_id,
-                                )
-                                # To DO: check identifiers-unique-ids
-                                # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
-            if policy_allow_with_cross_account_principal:
-                return policy_allow_with_cross_account_principal
+            return self.checked_bucket_policy["is_actions_wildcard"]
         return False
 
     def it_has_public_access_block_enabled(self):
@@ -270,11 +191,11 @@ class Metacheck(MetaChecksBase):
             "it_has_bucket_acl",
             "it_has_bucket_acl_cross_account",
             "it_has_bucket_acl_public",
-            "it_has_bucket_policy",
-            "it_has_bucket_policy_principal_wildcard",
-            "it_has_bucket_policy_principal_cross_account",
-            "it_has_bucket_policy_actions_wildcard",
-            "it_has_bucket_policy_public",
+            "it_has_policy",
+            "it_has_policy_principal_cross_account",
+            "it_has_policy_principal_wildcard",
+            "it_has_policy_public",
+            "it_has_policy_actions_wildcard",
             "it_has_public_access_block_enabled",
             "is_public",
             "is_unrestricted",
