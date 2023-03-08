@@ -68,5 +68,12 @@ MetaHubResourcesConfig = {
             "parsing_char": ":",
             "parsing_pos": -1
         }
+    },
+    "AwsSnsTopic": {
+        "metatrails_events": ["CreateTopic"],
+        "ResourceName": {
+            "parsing_char": ":",
+            "parsing_pos": -1
+        }
     }
 }
