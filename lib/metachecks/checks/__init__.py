@@ -7,5 +7,6 @@ from lib.metachecks.checks import (
     AwsAutoScalingLaunchConfiguration,
     AwsEc2LaunchTemplate,
     AwsLambdaFunction,
-    AwsElastiCacheCacheCluster
+    AwsElastiCacheCacheCluster,
+    AwsSqsQueue
 )
