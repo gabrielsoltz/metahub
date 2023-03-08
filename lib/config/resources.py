@@ -61,5 +61,12 @@ MetaHubResourcesConfig = {
             "parsing_char": "/",
             "parsing_pos": -1
         }
+    },
+    "AwsSqsQueue": {
+        "metatrails_events": ["CreateQueue"],
+        "ResourceName": {
+            "parsing_char": ":",
+            "parsing_pos": -1
+        }
     }
 }
