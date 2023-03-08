@@ -4,7 +4,9 @@ import json
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
 from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -20,6 +22,9 @@ class Metacheck(MetaChecksBase):
             self.resource_arn = finding["Resources"][0]["Id"]
             self.mh_filters_checks = mh_filters_checks
             self.elasticsearch_domain = self._describe_elasticsearch_domain()
+            self.elasticsearch_policy = self._describe_elasticsearch_domain_policy()
+            if self.elasticsearch_policy:
+                self.checked_elasticsearch_policy = ResourcePolicyChecker(self.logger, finding, self.elasticsearch_policy).check_policy()
 
     # Describe Functions
 
@@ -45,6 +50,17 @@ class Metacheck(MetaChecksBase):
                 return False
         return response["DomainStatus"]
     
+    def _describe_elasticsearch_domain_policy(self):
+        if self.elasticsearch_domain:
+            try:
+                access_policies = json.loads(
+                    self.elasticsearch_domain["AccessPolicies"]
+                )
+                return access_policies
+            except KeyError:
+                return False
+        return False
+    
     # MetaChecks
 
     def it_has_public_endpoint(self):
@@ -56,44 +72,33 @@ class Metacheck(MetaChecksBase):
             return public_endpoints
         return False
 
-    def it_has_access_policies(self):
-        access_policies = {}
-        if self.elasticsearch_domain:
-            if "AccessPolicies" in self.elasticsearch_domain:
-                access_policies = json.loads(
-                    self.elasticsearch_domain["AccessPolicies"]
-                )["Statement"]
-        if access_policies:
-            return access_policies
+    def it_has_policy(self):
+        return self.elasticsearch_policy
+
+    def it_has_policy_principal_cross_account(self):
+        if self.elasticsearch_policy:
+            return self.checked_elasticsearch_policy["is_principal_cross_account"]
         return False
 
-    def it_has_access_policies_public(self):
-        public_policy = []
-        if self.it_has_access_policies:
-            for statement in self.it_has_access_policies():
-                effect = statement["Effect"]
-                principal = statement.get("Principal", {})
-                not_principal = statement.get("NotPrincipal", None)
-                condition = statement.get("Condition", None)
-                suffix = "/0"
-                if effect == "Allow" and (
-                    principal == "*" or principal.get("AWS") == "*"
-                ):
-                    if condition is not None:
-                        if suffix in str(condition.get("IpAddress")):
-                            public_policy.append(statement)
-                    else:
-                        public_policy.append(statement)
-                if effect == "Allow" and not_principal is not None:
-                    public_policy.append(statement)
-        if public_policy:
-            return public_policy
+    def it_has_policy_principal_wildcard(self):
+        if self.elasticsearch_policy:
+            return self.checked_elasticsearch_policy["is_principal_wildcard"]
+        return False
+
+    def it_has_policy_public(self):
+        if self.elasticsearch_policy:
+            return self.checked_elasticsearch_policy["is_public"]
+        return False
+
+    def it_has_policy_actions_wildcard(self):
+        if self.elasticsearch_policy:
+            return self.checked_elasticsearch_policy["is_actions_wildcard"]
         return False
 
     def is_public(self):
         if self.elasticsearch_domain:
-            if self.it_has_access_policies_public() and self.it_has_public_endpoint():
-                self.it_has_public_endpoint()
+            if self.it_has_policy_public() and self.it_has_public_endpoint():
+                return self.it_has_public_endpoint()
         return False
 
     def is_rest_encrypted(self):
@@ -116,11 +121,12 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "it_has_access_policies",
+            "it_has_policy",
+            "it_has_policy_principal_cross_account",
+            "it_has_policy_principal_wildcard",
+            "it_has_policy_public",
+            "it_has_policy_actions_wildcard",
             "it_has_public_endpoint",
-            "it_has_access_policies_public",
-            "is_network_public",
-            "is_iam_public",
             "is_public",
             "is_rest_encrypted",
             "is_transit_encrypted",
