@@ -3,7 +3,10 @@
 import json
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+
 from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -20,6 +23,8 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.function = self._get_function()
             self.function_policy = self._describe_function_policy()
+            if self.function_policy:
+                self.checked_function_policy = ResourcePolicyChecker(self.logger, finding, self.function_policy).check_policy()
 
     # Describe Functions
 
@@ -33,21 +38,46 @@ class Metacheck(MetaChecksBase):
         return False
 
     def _describe_function_policy(self):
-        response = self.client.get_policy(
-            FunctionName=self.resource_arn
-#            Qualifier='string'
-        )
-        if response["Policy"]:
-            return json.loads(response["Policy"])
+        if self.function:
+            try:
+                response = self.client.get_policy(
+                    FunctionName=self.resource_arn
+        #            Qualifier='string'
+                )
+            except ClientError as err:
+                if err.response["Error"]["Code"] == "ResourceNotFoundException":
+                    return False
+                else:
+                    self.logger.error("Failed to get_policy {}, {}".format(self.resource_id, err))
+                    return False
+            if response["Policy"]:
+                return json.loads(response["Policy"])
         return False
 
     # MetaChecks
 
-    def it_has_resource_based_policy_statements(self):
-        policy = False
+    def it_has_policy(self):
+        return self.function_policy
+
+    def it_has_policy_public(self):
         if self.function_policy:
-            policy = self.function_policy
-        return policy
+            return self.checked_function_policy["is_public"]
+        return False
+
+    def it_has_policy_principal_wildcard(self):
+        if self.function_policy:
+            return self.checked_function_policy["is_principal_wildcard"]
+        return False
+
+    def it_has_policy_principal_cross_account(self):
+        if self.function_policy:
+            return self.checked_function_policy["is_principal_cross_account"]
+        return False
+
+    def it_has_policy_actions_wildcard(self):
+        if self.function_policy:
+            return self.checked_function_policy["is_actions_wildcard"]
+        return False
 
     def its_associated_with_a_role(self):
         role = False
@@ -60,7 +90,11 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "it_has_resource_based_policy_statements",
+            "it_has_policy",
+            "it_has_policy_principal_cross_account",
+            "it_has_policy_principal_wildcard",
+            "it_has_policy_public",
+            "it_has_policy_actions_wildcard",
             "its_associated_with_a_role"
         ]
         return checks
