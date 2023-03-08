@@ -989,491 +989,482 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
 
 ## List of MetaChecks
 
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-.tg .tg-nnwx{border-color:inherit;font-size:18px;font-weight:bold;text-align:center;vertical-align:middle}
-</style>
-<table class="tg">
+<table>
 <thead>
   <tr>
-    <th class="tg-0pky">ResourceType</th>
-    <th class="tg-0pky">MetaCheck</th>
-    <th class="tg-0pky">Description</th>
-    <th class="tg-0pky">If True returns</th>
+    <th>ResourceType</th>
+    <th>MetaCheck</th>
+    <th>Description</th>
+    <th>If True returns</th>
   </tr>
 </thead>
 <tbody>
   <tr>
-    <td class="tg-nnwx" rowspan="8">AwsEc2SecurityGroup</td>
-    <td class="tg-0pky">its_associated_with_network_interfaces</td>
-    <td class="tg-0pky">Check if the Security Group is associated to Network Interfaces (ENIs).</td>
-    <td class="tg-0pky">List of associated  `NetworkInterfaceId`</td>
+    <td rowspan="8">AwsEc2SecurityGroup</td>
+    <td>its_associated_with_network_interfaces</td>
+    <td>Check if the Security Group is associated to Network Interfaces (ENIs).</td>
+    <td>List of associated  `NetworkInterfaceId`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">its_associated_with_ec2_instances</td>
-    <td class="tg-0pky">Check if the Security Group is associated to EC2 Instances.</td>
-    <td class="tg-0pky">List of associated&nbsp;&nbsp;`InstanceId`</td>
+    <td>its_associated_with_ec2_instances</td>
+    <td>Check if the Security Group is associated to EC2 Instances.</td>
+    <td>List of associated&nbsp;&nbsp;`InstanceId`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">its_associated_with_managed_services</td>
-    <td class="tg-0pky">Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).</td>
-    <td class="tg-0pky">List of associated&nbsp;&nbsp;`Descriptions`</td>
+    <td>its_associated_with_managed_services</td>
+    <td>Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).</td>
+    <td>List of associated&nbsp;&nbsp;`Descriptions`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">its_associated_with_ips_public</td>
-    <td class="tg-0pky">Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.</td>
-    <td class="tg-0pky">List of associated&nbsp;&nbsp;`Public Ips`</td>
+    <td>its_associated_with_ips_public</td>
+    <td>Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.</td>
+    <td>List of associated&nbsp;&nbsp;`Public Ips`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">it_has_rules_unrestricted</td>
-    <td class="tg-0pky">Check if the Security Group has unerestricted rules</td>
-    <td class="tg-0pky">List of unrestricted `SecurityGroupRules`</td>
+    <td>it_has_rules_unrestricted</td>
+    <td>Check if the Security Group has unerestricted rules</td>
+    <td>List of unrestricted `SecurityGroupRules`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">is_public</td>
-    <td class="tg-0pky">Check if the Security Group is Public based `is_associated_to_public_ips.` and `it_has_rules_unrestricted`</td>
-    <td class="tg-0pky">True</td>
+    <td>is_public</td>
+    <td>Check if the Security Group is Public based `is_associated_to_public_ips.` and `it_has_rules_unrestricted`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">its_referenced_by_another_sg</td>
-    <td class="tg-0pky">Check if the Security Group is referenced by another Security Group.</td>
-    <td class="tg-0pky">List of SG&nbsp;&nbsp;`GroupId` referencing the SG</td>
+    <td>its_referenced_by_another_sg</td>
+    <td>Check if the Security Group is referenced by another Security Group.</td>
+    <td>List of SG&nbsp;&nbsp;`GroupId` referencing the SG</td>
   </tr>
   <tr>
-    <td class="tg-0pky">is_default</td>
-    <td class="tg-0pky">Check if the Security Group is the default one.</td>
-    <td class="tg-0pky">True</td>
+    <td>is_default</td>
+    <td>Check if the Security Group is the default one.</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_bucket_acl</td>
-    <td class="tg-0pky">Check if the S3 Bucket has a bucket ACL.</td>
-    <td class="tg-0pky">The Bucket ACL</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_bucket_acl</td>
+    <td>Check if the S3 Bucket has a bucket ACL.</td>
+    <td>The Bucket ACL</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_bucket_acl_public</td>
-    <td class="tg-0pky">Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)</td>
-    <td class="tg-0pky">The Bucket ACL Grant which is Public</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_bucket_acl_public</td>
+    <td>Check if the S3 Bucket ACL contains at least one public statement (`AllUsers` or `AuthenticatedUsers`)</td>
+    <td>The Bucket ACL Grant which is Public</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_bucket_acl_cross_account</td>
-    <td class="tg-0pky">Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser</td>
-    <td class="tg-0pky">The Bucket ACL Grant which is Granted cross-account</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_bucket_acl_cross_account</td>
+    <td>Check if the S3 Bucket ACL is granted to another AWS Account based on CanonicalUser</td>
+    <td>The Bucket ACL Grant which is Granted cross-account</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_policy</td>
-    <td class="tg-0pky">Check if the resource has a resource policy.</td>
-    <td class="tg-0pky">The policy</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_policy_principal_cross_account</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a </span>cross-account (from another AWS account) principal </td>
-    <td class="tg-0pky">The offending statements</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_policy_principal_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_policy_public</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal with any restricting condition</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_policy_actions_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) actions</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_public_access_block_enabled</td>
-    <td class="tg-0pky">Check if the S3 Bucket Public Access Block is enabled</td>
-    <td class="tg-0pky">The bucket Public Access Block</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_public_access_block_enabled</td>
+    <td>Check if the S3 Bucket Public Access Block is enabled</td>
+    <td>The bucket Public Access Block</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">is_public</td>
-    <td class="tg-0pky">Check if bucket is `it_has_website_enabled` and `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsS3Bucket</td>
+    <td>is_public</td>
+    <td>Check if bucket is `it_has_website_enabled` and `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">is_unrestricted</td>
-    <td class="tg-0pky">Check if either `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
-    <td class="tg-0pky"></td>
+    <td>AwsS3Bucket</td>
+    <td>is_unrestricted</td>
+    <td>Check if either `it_has_bucket_policy_public` or `it_has_bucket_acl_public` is True.</td>
+    <td></td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">is_encrypted</td>
-    <td class="tg-0pky">Check if the S3 Bucket is encrypted (SSE)</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsS3Bucket</td>
+    <td>is_encrypted</td>
+    <td>Check if the S3 Bucket is encrypted (SSE)</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsS3Bucket</td>
-    <td class="tg-0pky">it_has_website_enabled</td>
-    <td class="tg-0pky">Check if the S3 Bucket is configured as website</td>
-    <td class="tg-0pky">Endpoint URL</td>
+    <td>AwsS3Bucket</td>
+    <td>it_has_website_enabled</td>
+    <td>Check if the S3 Bucket is configured as website</td>
+    <td>Endpoint URL</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">it_has_policy</td>
-    <td class="tg-0pky">Check if the resource has a resource policy.</td>
-    <td class="tg-0pky">The policy</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsElasticsearchDomain</span></td>
-    <td class="tg-0pky">it_has_policy_principal_cross_account</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a </span>cross-account (from another AWS account) principal </td>
-    <td class="tg-0pky">The offending statements</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsElasticsearchDomain</span></td>
-    <td class="tg-0pky">it_has_policy_principal_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">it_has_policy_public</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal with any restricting condition</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsElasticsearchDomain</span></td>
-    <td class="tg-0pky">it_has_policy_actions_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) actions</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">it_has_public_endpoint</td>
-    <td class="tg-0pky">Check if the Elastic Search Domain has a public endpoint</td>
-    <td class="tg-0pky">The public endpoint</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>it_has_public_endpoint</td>
+    <td>Check if the Elastic Search Domain has a public endpoint</td>
+    <td>The public endpoint</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">is_public</td>
-    <td class="tg-0pky">Check if the Elastic Search Domain is public based on is_access_policies_public and it_has_public_endpoint</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>is_public</td>
+    <td>Check if the Elastic Search Domain is public based on is_access_policies_public and it_has_public_endpoint</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">is_rest_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Search Domain is configured with `EncryptionAtRestOptions`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>is_rest_encrypted</td>
+    <td>Check if the Elastic Search Domain is configured with `EncryptionAtRestOptions`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">is_transit_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Search Domain is configured with `NodeToNodeEncryptionOptions`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>is_transit_encrypted</td>
+    <td>Check if the Elastic Search Domain is configured with `NodeToNodeEncryptionOptions`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElasticsearchDomain</td>
-    <td class="tg-0pky">is_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Search Domain is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElasticsearchDomain</td>
+    <td>is_encrypted</td>
+    <td>Check if the Elastic Search Domain is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_public_ip</td>
-    <td class="tg-0pky">Check if the EC2 Instance has a Public Ip</td>
-    <td class="tg-0pky">List of Public Ips</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_public_ip</td>
+    <td>Check if the EC2 Instance has a Public Ip</td>
+    <td>List of Public Ips</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_private_ip</td>
-    <td class="tg-0pky">Check if the EC2 Instance has a Private Ip</td>
-    <td class="tg-0pky">List of Private Ips</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_private_ip</td>
+    <td>Check if the EC2 Instance has a Private Ip</td>
+    <td>List of Private Ips</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_public_dns</td>
-    <td class="tg-0pky">Check if the EC2 Instance has a Public DNS</td>
-    <td class="tg-0pky">The public DNS</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_public_dns</td>
+    <td>Check if the EC2 Instance has a Public DNS</td>
+    <td>The public DNS</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_private_dns</td>
-    <td class="tg-0pky">Check if the EC2 Instance has a Private DNS</td>
-    <td class="tg-0pky">The private DNS</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_private_dns</td>
+    <td>Check if the EC2 Instance has a Private DNS</td>
+    <td>The private DNS</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_key</td>
-    <td class="tg-0pky">Check if the EC2 Instance has key pair</td>
-    <td class="tg-0pky">The name of the key pair</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_key</td>
+    <td>Check if the EC2 Instance has key pair</td>
+    <td>The name of the key pair</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">is_running</td>
-    <td class="tg-0pky">Check if the EC2 Instance is in "running" state</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2Instance</td>
+    <td>is_running</td>
+    <td>Check if the EC2 Instance is in "running" state</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_security_groups</td>
-    <td class="tg-0pky">Check if the EC2 Instance is associated to Security Groups</td>
-    <td class="tg-0pky">The List of Security Groups Ids</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_security_groups</td>
+    <td>Check if the EC2 Instance is associated to Security Groups</td>
+    <td>The List of Security Groups Ids</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_security_group_rules_unrestricted</td>
-    <td class="tg-0pky">Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)</td>
-    <td class="tg-0pky">The list of unrestricted rules</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_security_group_rules_unrestricted</td>
+    <td>Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">is_public</td>
-    <td class="tg-0pky">Check if the EC2 Instance is public by checking if `it_has_public_ip` and `is_associated_to_security_group_rules_unrestricted`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2Instance</td>
+    <td>is_public</td>
+    <td>Check if the EC2 Instance is public by checking if `it_has_public_ip` and `is_associated_to_security_group_rules_unrestricted`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_instance_profile</td>
-    <td class="tg-0pky">Check if the EC2 Instance has an Instance Profile</td>
-    <td class="tg-0pky">The ARN of the instance profile</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_instance_profile</td>
+    <td>Check if the EC2 Instance has an Instance Profile</td>
+    <td>The ARN of the instance profile</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">it_has_instance_profile_roles</td>
-    <td class="tg-0pky">Check if the EC2 Instance has an Instance Profile and is related to a Role</td>
-    <td class="tg-0pky">The ARN of the role</td>
+    <td>AwsEc2Instance</td>
+    <td>it_has_instance_profile_roles</td>
+    <td>Check if the EC2 Instance has an Instance Profile and is related to a Role</td>
+    <td>The ARN of the role</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">is_instance_metadata_v2</td>
-    <td class="tg-0pky">Check if the EC2 Instance is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2Instance</td>
+    <td>is_instance_metadata_v2</td>
+    <td>Check if the EC2 Instance is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">is_instance_metadata_hop_limit_1</td>
-    <td class="tg-0pky">Check if the EC2 Instance Metadata is limited to 1 hop</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2Instance</td>
+    <td>is_instance_metadata_hop_limit_1</td>
+    <td>Check if the EC2 Instance Metadata is limited to 1 hop</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_ebs</td>
-    <td class="tg-0pky">Check if the EC2 Instance has EBS associated</td>
-    <td class="tg-0pky">The list of `VolumeId` associated to the instance</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_ebs</td>
+    <td>Check if the EC2 Instance has EBS associated</td>
+    <td>The list of `VolumeId` associated to the instance</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_ebs_unencrypted</td>
-    <td class="tg-0pky">Check if the EC2 Instance has EBS associated that are unencrypted</td>
-    <td class="tg-0pky">The list of `VolumeId` associated to the instance that are unencrypted</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_ebs_unencrypted</td>
+    <td>Check if the EC2 Instance has EBS associated that are unencrypted</td>
+    <td>The list of `VolumeId` associated to the instance that are unencrypted</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">is_encrypted</td>
-    <td class="tg-0pky">Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2Instance</td>
+    <td>is_encrypted</td>
+    <td>Check if the EC2 Instance is encrypted by checking if `it_has_unencrypted_ebs`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_an_asg</td>
-    <td class="tg-0pky">Check if the EC2 Instance it's part of an Auto Scaling Group</td>
-    <td class="tg-0pky">The `AutoScalingGroupName`</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_an_asg</td>
+    <td>Check if the EC2 Instance it's part of an Auto Scaling Group</td>
+    <td>The `AutoScalingGroupName`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_an_asg_launch_configuration</td>
-    <td class="tg-0pky">Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Configuration</td>
-    <td class="tg-0pky">The `LaunchConfigurationName`</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_an_asg_launch_configuration</td>
+    <td>Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Configuration</td>
+    <td>The `LaunchConfigurationName`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2Instance</td>
-    <td class="tg-0pky">its_associated_with_an_asg_launch_template</td>
-    <td class="tg-0pky">Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Template</td>
-    <td class="tg-0pky">The `LaunchTemplate`</td>
+    <td>AwsEc2Instance</td>
+    <td>its_associated_with_an_asg_launch_template</td>
+    <td>Check if the EC2 Instance it's part of an Auto Scaling Group with a Launch Template</td>
+    <td>The `LaunchTemplate`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsAutoScalingLaunchConfiguration</td>
-    <td class="tg-0pky">is_instance_metadata_v2</td>
-    <td class="tg-0pky">Check if the Launch Configuration is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsAutoScalingLaunchConfiguration</td>
+    <td>is_instance_metadata_v2</td>
+    <td>Check if the Launch Configuration is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsAutoScalingLaunchConfiguration</td>
-    <td class="tg-0pky">is_instance_metadata_hop_limit_1</td>
-    <td class="tg-0pky">Check if the Launch Configuration Instance Metadata is limited to 1 hop</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsAutoScalingLaunchConfiguration</td>
+    <td>is_instance_metadata_hop_limit_1</td>
+    <td>Check if the Launch Configuration Instance Metadata is limited to 1 hop</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsAutoScalingLaunchConfiguration</td>
-    <td class="tg-0pky">its_associated_with_an_asg</td>
-    <td class="tg-0pky">Check if the Launch Configuration It's associated with an Auto Scaling Group</td>
-    <td class="tg-0pky">The `AutoScalingGroupARN`</td>
+    <td>AwsAutoScalingLaunchConfiguration</td>
+    <td>its_associated_with_an_asg</td>
+    <td>Check if the Launch Configuration It's associated with an Auto Scaling Group</td>
+    <td>The `AutoScalingGroupARN`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsAutoScalingLaunchConfiguration</td>
-    <td class="tg-0pky">its_associated_with_asg_instances</td>
-    <td class="tg-0pky">Check if the Launch Configuration It's associated with an Auto Scaling Group with EC2 Instances</td>
-    <td class="tg-0pky">The list of `InstanceId`</td>
+    <td>AwsAutoScalingLaunchConfiguration</td>
+    <td>its_associated_with_asg_instances</td>
+    <td>Check if the Launch Configuration It's associated with an Auto Scaling Group with EC2 Instances</td>
+    <td>The list of `InstanceId`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2LaunchTemplate</td>
-    <td class="tg-0pky">is_instance_metadata_v2</td>
-    <td class="tg-0pky">Check if the Launch Template is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2LaunchTemplate</td>
+    <td>is_instance_metadata_v2</td>
+    <td>Check if the Launch Template is configured with Instance Metadata Service Version 2 (IMDSv2)</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2LaunchTemplate</td>
-    <td class="tg-0pky">is_instance_metadata_hop_limit_1</td>
-    <td class="tg-0pky">Check if the Launch Template Instance Metadata is limited to 1 hop</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2LaunchTemplate</td>
+    <td>is_instance_metadata_hop_limit_1</td>
+    <td>Check if the Launch Template Instance Metadata is limited to 1 hop</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2LaunchTemplate</td>
-    <td class="tg-0pky">its_associated_with_an_asg</td>
-    <td class="tg-0pky">Check if the Launch Template It's associated with an Auto Scaling Group</td>
-    <td class="tg-0pky">The `AutoScalingGroupARN`</td>
+    <td>AwsEc2LaunchTemplate</td>
+    <td>its_associated_with_an_asg</td>
+    <td>Check if the Launch Template It's associated with an Auto Scaling Group</td>
+    <td>The `AutoScalingGroupARN`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2LaunchTemplate</td>
-    <td class="tg-0pky">its_associated_with_asg_instances</td>
-    <td class="tg-0pky">Check if the Launch Template It's associated with an Auto Scaling Group with EC2 Instances</td>
-    <td class="tg-0pky">The list of `InstanceId`</td>
+    <td>AwsEc2LaunchTemplate</td>
+    <td>its_associated_with_asg_instances</td>
+    <td>Check if the Launch Template It's associated with an Auto Scaling Group with EC2 Instances</td>
+    <td>The list of `InstanceId`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2LaunchTemplate</td>
-    <td class="tg-0pky">it_has_name</td>
-    <td class="tg-0pky">Check if the Launch Template has a name configured</td>
-    <td class="tg-0pky">The `LaunchTemplateName`</td>
+    <td>AwsEc2LaunchTemplate</td>
+    <td>it_has_name</td>
+    <td>Check if the Launch Template has a name configured</td>
+    <td>The `LaunchTemplateName`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2NetworkAcl</td>
-    <td class="tg-0pky">its_associated_with_subnets</td>
-    <td class="tg-0pky">Check if the Network ACL is associated to Subnets</td>
-    <td class="tg-0pky">The list of `SubnetId`</td>
+    <td>AwsEc2NetworkAcl</td>
+    <td>its_associated_with_subnets</td>
+    <td>Check if the Network ACL is associated to Subnets</td>
+    <td>The list of `SubnetId`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsEc2NetworkAcl</td>
-    <td class="tg-0pky">is_default</td>
-    <td class="tg-0pky">Check if the Network ACL is the default one</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsEc2NetworkAcl</td>
+    <td>is_default</td>
+    <td>Check if the Network ACL is the default one</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsLambdaFunction</td>
-    <td class="tg-0pky">it_has_policy</td>
-    <td class="tg-0pky">Check if the resource has a resource policy.</td>
-    <td class="tg-0pky">The policy</td>
+    <td>AwsLambdaFunction</td>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsLambdaFunction</span></td>
-    <td class="tg-0pky">it_has_policy_principal_cross_account</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a </span>cross-account (from another AWS account) principal </td>
-    <td class="tg-0pky">The offending statements</td>
+    <td>AwsLambdaFunction</td>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsLambdaFunction</span></td>
-    <td class="tg-0pky">it_has_policy_principal_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsLambdaFunction</td>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsLambdaFunction</span></td>
-    <td class="tg-0pky">it_has_policy_public</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal with any restricting condition</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsLambdaFunction</td>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">AwsLambdaFunction</span></td>
-    <td class="tg-0pky">it_has_policy_actions_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) actions</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsLambdaFunction</td>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsLambdaFunction</td>
-    <td class="tg-0pky">its_associated_with_a_role</td>
-    <td class="tg-0pky">Check if Lambda Function it's associated with an IAM role (execution role)</td>
-    <td class="tg-0pky">The Role ARN</td>
+    <td>AwsLambdaFunction</td>
+    <td>its_associated_with_a_role</td>
+    <td>Check if Lambda Function it's associated with an IAM role (execution role)</td>
+    <td>The Role ARN</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElastiCacheCacheCluster</td>
-    <td class="tg-0pky">is_rest_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Cache is configured with `AtRestEncryptionEnabled`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElastiCacheCacheCluster</td>
+    <td>is_rest_encrypted</td>
+    <td>Check if the Elastic Cache is configured with `AtRestEncryptionEnabled`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElastiCacheCacheCluster</td>
-    <td class="tg-0pky">is_transit_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Cache is configured with `TransitEncryptionEnabled`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElastiCacheCacheCluster</td>
+    <td>is_transit_encrypted</td>
+    <td>Check if the Elastic Cache is configured with `TransitEncryptionEnabled`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElastiCacheCacheCluster</td>
-    <td class="tg-0pky">is_encrypted</td>
-    <td class="tg-0pky">Check if the Elastic Cache is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsElastiCacheCacheCluster</td>
+    <td>is_encrypted</td>
+    <td>Check if the Elastic Cache is encrypted by checking `is_rest_encrypted` and `is_node_to_node_encrypted`</td>
+    <td>True</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElastiCacheCacheCluster</td>
-    <td class="tg-0pky">its_associated_with_security_groups</td>
-    <td class="tg-0pky">Check if the Elastic Cache is associated to Security Groups</td>
-    <td class="tg-0pky">The list of `SecurityGroups`</td>
+    <td>AwsElastiCacheCacheCluster</td>
+    <td>its_associated_with_security_groups</td>
+    <td>Check if the Elastic Cache is associated to Security Groups</td>
+    <td>The list of `SecurityGroups`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsElastiCacheCacheCluster</td>
-    <td class="tg-0pky">its_associated_with_security_group_rules_unrestricted</td>
-    <td class="tg-0pky">Check if the Elastic Cache is associated with Security Groups rules that are unrestricted (open to 0.0.0.0/0 or ::/0)</td>
-    <td class="tg-0pky">The list of unrestricted rules</td>
+    <td>AwsElastiCacheCacheCluster</td>
+    <td>its_associated_with_security_group_rules_unrestricted</td>
+    <td>Check if the Elastic Cache is associated with Security Groups rules that are unrestricted (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">is_encrypted</td>
-    <td class="tg-0pky">Check if the resource is encrypted checking `SqsManagedSseEnabled`</td>
-    <td class="tg-0pky">The `SqsManagedSseEnabled`</td>
+    <td>AwsSqsQueue</td>
+    <td>is_encrypted</td>
+    <td>Check if the resource is encrypted checking `SqsManagedSseEnabled`</td>
+    <td>The `SqsManagedSseEnabled`</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">it_has_policy</td>
-    <td class="tg-0pky">Check if the resource has a resource policy.</td>
-    <td class="tg-0pky">The policy</td>
+    <td>AwsSqsQueue</td>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">it_has_policy_principal_cross_account</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a </span>cross-account (from another AWS account) principal </td>
-    <td class="tg-0pky">The offending statements</td>
+    <td>AwsSqsQueue</td>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">it_has_policy_principal_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsSqsQueue</td>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">it_has_policy_public</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) principal with any restricting condition</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsSqsQueue</td>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">it_has_policy_actions_wildcard</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource policy has a wildcard (*) actions</span></td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">The offending statements</span></td>
+    <td>AwsSqsQueue</td>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
   <tr>
-    <td class="tg-0pky">AwsSqsQueue</td>
-    <td class="tg-0pky">is_public</td>
-    <td class="tg-0pky"><span style="font-weight:400;font-style:normal">Check if the resource is public by checking if `</span>it_has_policy_public`</td>
-    <td class="tg-0pky">True</td>
+    <td>AwsSqsQueue</td>
+    <td>is_public</td>
+    <td>Check if the resource is public by checking if `it_has_policy_public`</td>
+    <td>True</td>
   </tr>
 </tbody>
 </table>
