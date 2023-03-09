@@ -1003,22 +1003,22 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td rowspan="8">AwsEc2SecurityGroup</td>
     <td>its_associated_with_network_interfaces</td>
     <td>Check if the Security Group is associated to Network Interfaces (ENIs).</td>
-    <td>List of associated  `NetworkInterfaceId`</td>
+    <td>List of associated&nbsp;&nbsp;`NetworkInterfaceId`</td>
   </tr>
   <tr>
     <td>its_associated_with_ec2_instances</td>
     <td>Check if the Security Group is associated to EC2 Instances.</td>
-    <td>List of associated&nbsp;&nbsp;`InstanceId`</td>
+    <td>List of associated  `InstanceId`</td>
   </tr>
   <tr>
     <td>its_associated_with_managed_services</td>
     <td>Check if the Security Group is associated to AWS Managed Services (like ELB, ALB, EFS, etc.).</td>
-    <td>List of associated&nbsp;&nbsp;`Descriptions`</td>
+    <td>List of associated  `Descriptions`</td>
   </tr>
   <tr>
     <td>its_associated_with_ips_public</td>
     <td>Check if the Security Group is associated to Network Interfaces (ENIs) with Public IPs.</td>
-    <td>List of associated&nbsp;&nbsp;`Public Ips`</td>
+    <td>List of associated  `Public Ips`</td>
   </tr>
   <tr>
     <td>it_has_rules_unrestricted</td>
@@ -1033,7 +1033,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
   <tr>
     <td>its_referenced_by_another_sg</td>
     <td>Check if the Security Group is referenced by another Security Group.</td>
-    <td>List of SG&nbsp;&nbsp;`GroupId` referencing the SG</td>
+    <td>List of SG  `GroupId` referencing the SG</td>
   </tr>
   <tr>
     <td>is_default</td>
@@ -1403,6 +1403,78 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>is_public</td>
     <td>Check if the resource is public by checking if `it_has_policy_public`</td>
     <td>True</td>
+  </tr>
+  <tr>
+    <td>AwsIamPolicy</td>
+    <td>it_has_name</td>
+    <td>Check if the resource has a name</td>
+    <td>The name</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_description</td>
+    <td>Check if the resource has a description</td>
+    <td>The description</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>is_attached</td>
+    <td>Check if the resource is attached</td>
+    <td>The amount of resources (&gt; 0)</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>is_customer_managed</td>
+    <td>Check if the resource is customer managed (instead of aws managed)</td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>its_associated_with_iam_groups</td>
+    <td>Check if the resource is associated with iam groups</td>
+    <td>The list of groups</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>its_associated_with_iam_users</td>
+    <td>Check if the resource is associated with iam users</td>
+    <td>The list of users</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>its_associated_with_iam_roles</td>
+    <td>Check if the resource is associated with iam roles</td>
+    <td>The list of roles</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
 </tbody>
 </table>

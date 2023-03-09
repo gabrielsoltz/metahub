@@ -8,6 +8,7 @@ class ResourcePolicyChecker():
     
     def check_policy(self):
         self.logger.info("Checking policy for resource: %s", self.resource)
+        print (self.policy)
         failed_statements = {
             "is_principal_wildcard": [],
             "is_principal_cross_account": [],
@@ -16,7 +17,7 @@ class ResourcePolicyChecker():
             "is_actions_wildcard": []
         }
         for statement in self.policy["Statement"]:
-            effect, principal, not_principal, condition, action = self.parse_statement(statement)
+            effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
             if effect == "Allow":
                 if self.is_principal_wildcard(statement):
                     failed_statements["is_principal_wildcard"].append(statement)
@@ -36,13 +37,14 @@ class ResourcePolicyChecker():
         not_principal = statement.get("NotPrincipal", None)
         condition = statement.get("Condition", None)
         action = statement.get("Action", None)
-        return effect, principal, not_principal, condition, action
+        not_action = statement.get("NotAction", None)
+        return effect, principal, not_principal, condition, action, not_action
     
     def is_principal_wildcard(self, statement):
         '''
         Check if resource policy (S3, SQS) is allowed for principal wildcard
         '''
-        effect, principal, not_principal, condition, action = self.parse_statement(statement)
+        effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
         if principal == "*" or principal.get("AWS") == "*":
             return statement
         return False
@@ -51,7 +53,7 @@ class ResourcePolicyChecker():
         '''
         Check if resource policy (S3, SQS) is allowed for principal cross account
         '''
-        effect, principal, not_principal, condition, action = self.parse_statement(statement)
+        effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
         if principal and principal != "*" and principal.get("AWS") != "*":
             if "AWS" in principal:
                 principals = principal["AWS"]
@@ -83,7 +85,7 @@ class ResourcePolicyChecker():
     def is_public(self, statement):
         '''
         '''
-        effect, principal, not_principal, condition, action = self.parse_statement(statement)
+        effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
         suffix = "/0"
         if principal == "*" or principal.get("AWS") == "*":
             if condition is not None:
@@ -102,8 +104,12 @@ class ResourcePolicyChecker():
     def is_actions_wildcard(self, statement):
         '''
         '''
-        effect, principal, not_principal, condition, action = self.parse_statement(statement)
-        if "*" in action:
+        effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
+        if action:
+            if "*" in action:
+                return statement
+        # Not Action (all other actions)
+        if not_action:
             return statement
         return False
         

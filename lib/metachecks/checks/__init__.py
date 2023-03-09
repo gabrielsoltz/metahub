@@ -8,5 +8,6 @@ from lib.metachecks.checks import (
     AwsEc2LaunchTemplate,
     AwsLambdaFunction,
     AwsElastiCacheCacheCluster,
-    AwsSqsQueue
+    AwsSqsQueue,
+    AwsIamPolicy
 )
