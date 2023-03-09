@@ -9,5 +9,6 @@ from lib.metachecks.checks import (
     AwsLambdaFunction,
     AwsElastiCacheCacheCluster,
     AwsSqsQueue,
+    AwsSnsTopic,
     AwsIamPolicy
 )
