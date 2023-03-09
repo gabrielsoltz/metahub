@@ -1417,7 +1417,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
   </tr>
   <tr>
     <td>it_has_policy_principal_cross_account</td>
-    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal</td>
     <td>The offending statements</td>
   </tr>
   <tr>
@@ -1439,6 +1439,67 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>is_public</td>
     <td>Check if the resource is public by checking if `it_has_policy_public`</td>
     <td>True</td>
+  </tr>
+  <tr>
+    <td rowspan="12">AwsIamPolicy</td>
+    <td>it_has_name</td>
+    <td>Check if the resource has a name</td>
+    <td>The name</td>
+  </tr>
+  <tr>
+    <td>it_has_description</td>
+    <td>Check if the resource has a description</td>
+    <td>The description</td>
+  </tr>
+  <tr>
+    <td>is_attached</td>
+    <td>Check if the resource is attached</td>
+    <td>The amount of resources (&gt; 0)</td>
+  </tr>
+  <tr>
+    <td>is_customer_managed</td>
+    <td>Check if the resource is customer managed (instead of aws managed)</td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_iam_groups</td>
+    <td>Check if the resource is associated with iam groups</td>
+    <td>The list of groups</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_iam_users</td>
+    <td>Check if the resource is associated with iam users</td>
+    <td>The list of users</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_iam_roles</td>
+    <td>Check if the resource is associated with iam roles</td>
+    <td>The list of roles</td>
+  </tr>
+  <tr>
+    <td>it_has_policy</td>
+    <td>Check if the resource has a resource policy.</td>
+    <td>The policy</td>
+  </tr>
+  <tr>
+    <td>it_has_policy_principal_cross_account</td>
+    <td>Check if the resource policy has a cross-account (from another AWS account) principal </td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td>it_has_policy_principal_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) principal</td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td>it_has_policy_public</td>
+    <td>Check if the resource policy has a wildcard (*) principal with any restricting condition</td>
+    <td>The offending statements</td>
+  </tr>
+  <tr>
+    <td>it_has_policy_actions_wildcard</td>
+    <td>Check if the resource policy has a wildcard (*) actions</td>
+    <td>The offending statements</td>
   </tr>
 </tbody>
 </table>

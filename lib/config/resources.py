@@ -75,5 +75,12 @@ MetaHubResourcesConfig = {
             "parsing_char": ":",
             "parsing_pos": -1
         }
+    },
+    "AwsIamPolicy": {
+        "metatrails_events": ["CreatePolicyVersion", "CreatePolicy"],
+        "ResourceName": {
+            "parsing_char": "/",
+            "parsing_pos": -1
+        }
     }
 }
