@@ -587,6 +587,12 @@ def main(args):
     test_python_version()
     logger = get_logger(args.log_level)
 
+    if args.list_meta_checks:
+        from lib.metachecks.metachecks import list_metachecks
+        print_title_line("List MetaChecks", banners=banners)
+        list_metachecks(logger)
+        return
+
     asff_findings, sh_filters, mh_filters_checks, mh_filters_tags, sh_account, sh_account_alias_str, sh_region = validate_arguments(args, logger)
     
     print_title_line("Options", banners=banners)
@@ -606,13 +612,7 @@ def main(args):
     print_table("Output: ", str(args.outputs), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
-    print_table("Log Level: ", str(args.log_level), banners=banners)    
-
-    if args.list_meta_checks:
-        from lib.metachecks.metachecks import list_metachecks
-        print_title_line("List MetaChecks", banners=banners)
-        list_metachecks(logger)
-        return
+    print_table("Log Level: ", str(args.log_level), banners=banners)
 
     # Generate Findings
     print_title_line("Generating Findings", banners=banners)
