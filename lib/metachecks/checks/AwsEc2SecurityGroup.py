@@ -2,8 +2,9 @@
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-from lib.metachecks.checks.Base import MetaChecksBase
 
+from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
@@ -18,7 +19,7 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.security_groups = self._describe_security_group()
             self.network_interfaces = self._describe_network_interfaces()
-            self.rules = self._describe_security_group_rules()
+            self.checked_sg = SecurityGroupChecker(self.logger, finding, [self.resource_id], sess).check_security_group()
 
     # Describe Functions
 
@@ -119,24 +120,18 @@ class Metacheck(MetaChecksBase):
             return references
         return False
 
-    def it_has_rules_unrestricted(self):
-        UnrestrictedRule = []
-        if self.rules:
-            for rule in self.rules:
-                if "CidrIpv4" in rule:
-                    if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-                if "CidrIpv6" in rule:
-                    if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-        if UnrestrictedRule:
-            return UnrestrictedRule
+    def its_associated_with_security_group_rules_ingress_unrestricted(self):
+        if self.checked_sg["is_ingress_rules_unrestricted"]:
+            return self.checked_sg["is_ingress_rules_unrestricted"]
+        return False
+
+    def its_associated_with_security_group_rules_egress_unrestricted(self):
+        if self.checked_sg["is_egress_rule_unrestricted"]:
+            return self.checked_sg["is_egress_rule_unrestricted"]
         return False
 
     def is_public(self):
-        if self.its_associated_with_ips_public() and self.it_has_rules_unrestricted():
+        if self.its_associated_with_ips_public() and self.its_associated_with_security_group_rules_ingress_unrestricted():
             return True
         return False
 
@@ -155,7 +150,8 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_ips_public",
             "its_associated_with_managed_services",
             "its_referenced_by_another_sg",
-            "it_has_rules_unrestricted",
+            "its_associated_with_security_group_rules_ingress_unrestricted",
+            "its_associated_with_security_group_rules_egress_unrestricted",
             "is_public",
             "is_default"
         ]

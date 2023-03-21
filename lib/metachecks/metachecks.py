@@ -90,7 +90,7 @@ def list_metachecks(logger):
     import inspect
 
     for name, obj in inspect.getmembers(lib.metachecks.checks, inspect.ismodule):
-        if name == "Base":
+        if name == "Base" or name == "MetaChecksHelpers":
             continue
         try:
             hndl = getattr(lib.metachecks.checks, name).Metacheck(
