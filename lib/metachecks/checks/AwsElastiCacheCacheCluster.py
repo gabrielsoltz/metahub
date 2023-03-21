@@ -2,7 +2,9 @@
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+
 from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
@@ -11,15 +13,20 @@ class Metacheck(MetaChecksBase):
             region = finding["Region"]
             if not sess:
                 self.client = boto3.client("elasticache", region_name=region)
-                self.ec2_client = boto3.client("ec2", region_name=region)
             else:
                 self.client = sess.client(service_name="elasticache", region_name=region)
-                self.ec2_client = sess.client(service_name="ec2", region_name=region)
             self.resource_arn = finding["Resources"][0]["Id"]
-            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
+            if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
+                self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
+            elif finding["Resources"][0]["Id"].split(":")[5] == "cluster":
+                self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+            else:
+                self.logger.error("Error parsing elasticache cluster resource id: %s", self.resource_arn)
             self.mh_filters_checks = mh_filters_checks
             self.elasticcache_cluster = self._describe_cache_clusters()
-            self.elasticcache_cluster_security_groups_rules = self._describe_security_group_rules()
+            self.elasticcache_cluster_sg = self._describe_cache_clusters_security_groups()
+            if self.elasticcache_cluster_sg:
+                self.checked_elasticcache_cluster_sg = SecurityGroupChecker(self.logger, finding, self.elasticcache_cluster_sg, sess).check_security_group()
     
     # Describe functions
 
@@ -36,20 +43,13 @@ class Metacheck(MetaChecksBase):
             return response["CacheClusters"][0]
         return False
 
-    def _describe_security_group_rules(self):
-        Rules = []
-        if self.its_associated_with_security_groups():
-            response = self.ec2_client.describe_security_group_rules(
-                Filters=[
-                    {
-                        "Name": "group-id",
-                        "Values": self.its_associated_with_security_groups(),
-                    },
-                ],
-            )
-            Rules.append(response["SecurityGroupRules"])
-        if Rules:
-            return Rules
+    def _describe_cache_clusters_security_groups(self):
+        SG = []
+        if self.elasticcache_cluster:
+            for sg in self.elasticcache_cluster["SecurityGroups"]:
+                SG.append(sg["SecurityGroupId"])
+        if SG:
+            return SG
         return False
 
     # MetaChecks
@@ -73,28 +73,20 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_security_groups(self):
-        SG = []
-        if self.elasticcache_cluster:
-            for sg in self.elasticcache_cluster["SecurityGroups"]:
-                SG.append(sg["SecurityGroupId"])
-        if SG:
-            return SG
+        if self.elasticcache_cluster_sg:
+            return self.elasticcache_cluster_sg
         return False
 
-    def its_associated_with_security_group_rules_unrestricted(self):
-        UnrestrictedRule = []
-        if self.elasticcache_cluster_security_groups_rules:
-            for rule in self.elasticcache_cluster_security_groups_rules:
-                if "CidrIpv4" in rule:
-                    if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-                if "CidrIpv6" in rule:
-                    if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-        if UnrestrictedRule:
-            return UnrestrictedRule
+    def its_associated_with_security_group_rules_ingress_unrestricted(self):
+        if self.elasticcache_cluster_sg:
+            if self.checked_elasticcache_cluster_sg["is_ingress_rules_unrestricted"]:
+                return self.checked_elasticcache_cluster_sg["is_ingress_rules_unrestricted"]
+        return False
+
+    def its_associated_with_security_group_rules_egress_unrestricted(self):
+        if self.elasticcache_cluster_sg:
+            if self.checked_elasticcache_cluster_sg["is_egress_rule_unrestricted"]:
+                return self.checked_elasticcache_cluster_sg["is_egress_rule_unrestricted"]
         return False
 
     def checks(self):
@@ -103,6 +95,7 @@ class Metacheck(MetaChecksBase):
             "is_transit_encrypted",
             "is_encrypted",
             "its_associated_with_security_groups",
-            "its_associated_with_security_group_rules_unrestricted"
+            "its_associated_with_security_group_rules_ingress_unrestricted",
+            "its_associated_with_security_group_rules_egress_unrestricted"
         ]
         return checks

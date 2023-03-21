@@ -8,7 +8,6 @@ class ResourcePolicyChecker():
     
     def check_policy(self):
         self.logger.info("Checking policy for resource: %s", self.resource)
-        print (self.policy)
         failed_statements = {
             "is_principal_wildcard": [],
             "is_principal_cross_account": [],
@@ -51,7 +50,7 @@ class ResourcePolicyChecker():
 
     def is_principal_cross_account(self, statement):
         '''
-        Check if resource policy (S3, SQS) is allowed for principal cross account
+        Check if policy is allowed for principal cross account
         '''
         effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
         if principal and principal != "*" and principal.get("AWS") != "*":
@@ -70,7 +69,7 @@ class ResourcePolicyChecker():
                         if account_id not in ("cloudfront"):
                             return statement
                 except IndexError:
-                    self.logger.error(
+                    self.logger.warning(
                         "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
                         p,
                         self.resource,
@@ -80,6 +79,33 @@ class ResourcePolicyChecker():
         return False
     
     def is_principal_external(self, statement):
+        '''
+        '''
+        internal_accounts = ("1", "2", "3")
+        amazon_accounts = ("cloudfront")
+        effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
+        if principal and principal != "*" and principal.get("AWS") != "*":
+            if "AWS" in principal:
+                principals = principal["AWS"]
+            elif "Service" in principal:
+                return False
+            else:
+                principals = principal
+            if type(principals) is not list:
+                principals = [principals]
+            for p in principals:
+                try:
+                    account_id = p.split(":")[4]
+                    if account_id not in internal_accounts and account_id not in amazon_accounts:
+                        return statement
+                except IndexError:
+                    self.logger.warning(
+                        "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
+                        p,
+                        self.resource,
+                    )
+                    # To DO: check identifiers-unique-ids
+                    # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
     def is_public(self, statement):
@@ -112,4 +138,68 @@ class ResourcePolicyChecker():
         if not_action:
             return statement
         return False
-        
+
+import boto3
+
+class SecurityGroupChecker():
+
+    def __init__(self, logger, finding, sg, sess):
+        self.logger = logger
+        self.resource = finding["Resources"][0]["Id"]
+        self.account_id = finding["AwsAccountId"]
+        self.sg = sg
+        region = finding["Region"]
+        if not sess:
+            self.ec2_client = boto3.client("ec2", region_name=region)
+        else:
+            self.ec2_client = sess.client(service_name="ec2", region_name=region)
+        self.security_group_rules = self._describe_security_group_rules()
+
+    def _describe_security_group_rules(self):
+        response = self.ec2_client.describe_security_group_rules(
+            Filters=[
+                {
+                    "Name": "group-id",
+                    "Values": self.sg,
+                },
+            ],
+        )
+        if response["SecurityGroupRules"]:
+            return response["SecurityGroupRules"]
+        return False
+
+    def check_security_group(self):
+        self.logger.info("Checking SG %s for resource: %s", self.sg, self.resource)
+        failed_rules = {
+            "is_ingress_rules_unrestricted": [],
+            "is_egress_rule_unrestricted": []
+        }
+        if self.security_group_rules:
+            for rule in self.security_group_rules:
+                if self.is_ingress_rules_unrestricted(rule) and rule not in failed_rules["is_ingress_rules_unrestricted"]:
+                    failed_rules["is_ingress_rules_unrestricted"].append(rule)
+                if self.is_egress_rule_unrestricted(rule) and rule not in failed_rules["is_egress_rule_unrestricted"]:
+                    failed_rules["is_egress_rule_unrestricted"].append(rule)
+        return failed_rules
+
+    def is_ingress_rules_unrestricted(self, rule):
+        '''
+        '''
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
+                return True
+        return False
+
+    def is_egress_rule_unrestricted(self, rule):
+        '''
+        '''
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and rule["IsEgress"]:
+                return True
+        return False

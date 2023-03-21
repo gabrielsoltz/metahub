@@ -1,8 +1,10 @@
 """MetaCheck: AwsEc2Instance"""
 
 import boto3
-from lib.metachecks.checks.Base import MetaChecksBase
+from botocore.exceptions import BotoCoreError, ClientError
 
+from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
@@ -19,21 +21,40 @@ class Metacheck(MetaChecksBase):
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
             self.instance = self._describe_instance()
+            self.instance_sg = self._describe_instance_security_groups()
+            if self.instance_sg:
+                self.checked_instance_sg = SecurityGroupChecker(self.logger, finding, self.instance_sg, sess).check_security_group()
             self.instance_volumes = self._describe_volumes()
-            self.instance_security_groups_rules = self._describe_security_group_rules()
             self.instance_profile_roles = self._describe_instance_profile(sess)
             self.instance_auto_scaling_group = self._describe_auto_scaling_instances()
 
     # Describe Functions
 
     def _describe_instance(self):
-        response = self.client.describe_instances(
-            InstanceIds=[
-                self.resource_id,
-            ]
-        )
+        try:
+            response = self.client.describe_instances(
+                InstanceIds=[
+                    self.resource_id,
+                ]
+            )
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":
+                return False
+            else:
+                self.logger.error("Failed to describe_instance: {}, {}".format(self.resource_id, err))
+                return False
         if response["Reservations"]:
             return response["Reservations"][0]["Instances"][0]
+        return False
+
+    def _describe_instance_security_groups(self):
+        SG = []
+        if self.instance:
+            if self.instance["SecurityGroups"]:
+                for sg in self.instance["SecurityGroups"]:
+                    SG.append(sg["GroupId"])
+        if SG:
+            return SG
         return False
 
     def _describe_volumes(self):
@@ -45,24 +66,6 @@ class Metacheck(MetaChecksBase):
         if BlockDeviceMappings:
             response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
             return response["Volumes"]
-        return False
-
-    def _describe_security_group_rules(self):
-        SG = []
-        if self.instance:
-            if self.instance["SecurityGroups"]:
-                for sg in self.instance["SecurityGroups"]:
-                    SG.append(sg["GroupId"])
-        if SG:
-            response = self.client.describe_security_group_rules(
-                Filters=[
-                    {
-                        "Name": "group-id",
-                        "Values": SG,
-                    },
-                ],
-            )
-            return response["SecurityGroupRules"]
         return False
 
     def _describe_instance_profile(self, sess):
@@ -154,29 +157,20 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_security_groups(self):
-        SG = []
-        if self.instance_security_groups_rules:
-            for rule in self.instance_security_groups_rules:
-                if rule["GroupId"] not in SG:
-                    SG.append(rule["GroupId"])
-        if SG:
-            return SG
+        if self.instance_sg:
+            return self.instance_sg
         return False
 
-    def its_associated_with_security_group_rules_unrestricted(self):
-        UnrestrictedRule = []
-        if self.instance_security_groups_rules:
-            for rule in self.instance_security_groups_rules:
-                if "CidrIpv4" in rule:
-                    if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-                if "CidrIpv6" in rule:
-                    if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
-                        if rule not in UnrestrictedRule:
-                            UnrestrictedRule.append(rule)
-        if UnrestrictedRule:
-            return UnrestrictedRule
+    def its_associated_with_security_group_rules_ingress_unrestricted(self):
+        if self.instance_sg:
+            if self.checked_instance_sg["is_ingress_rules_unrestricted"]:
+                return self.checked_instance_sg["is_ingress_rules_unrestricted"]
+        return False
+
+    def its_associated_with_security_group_rules_egress_unrestricted(self):
+        if self.instance_sg:
+            if self.checked_instance_sg["is_egress_rule_unrestricted"]:
+                return self.checked_instance_sg["is_egress_rule_unrestricted"]
         return False
 
     def it_has_instance_profile(self):
@@ -261,7 +255,7 @@ class Metacheck(MetaChecksBase):
     def is_public(self):
         if (
             self.it_has_public_ip()
-            and self.its_associated_with_security_group_rules_unrestricted()
+            and self.its_associated_with_security_group_rules_ingress_unrestricted()
         ):
             return self.it_has_public_ip()
         return False
@@ -281,7 +275,8 @@ class Metacheck(MetaChecksBase):
             "it_has_instance_profile",
             "it_has_instance_profile_roles",
             "its_associated_with_security_groups",
-            "its_associated_with_security_group_rules_unrestricted",
+            "its_associated_with_security_group_rules_ingress_unrestricted",
+            "its_associated_with_security_group_rules_egress_unrestricted",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
             "its_associated_with_ebs",

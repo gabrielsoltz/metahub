@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker, SecurityGroupChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -22,6 +22,9 @@ class Metacheck(MetaChecksBase):
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
             self.function = self._get_function()
+            self.function_vpc = self._get_function_vpc()
+            if self.function_vpc["SecurityGroupIds"]:
+                self.chcked_function_sg = SecurityGroupChecker(self.logger, finding, self.function_vpc["SecurityGroupIds"], sess).check_security_group()
             self.function_policy = self._describe_function_policy()
             if self.function_policy:
                 self.checked_function_policy = ResourcePolicyChecker(self.logger, finding, self.function_policy).check_policy()
@@ -35,6 +38,14 @@ class Metacheck(MetaChecksBase):
         )
         if response["Configuration"]:
             return response["Configuration"]
+        return False
+
+    def _get_function_vpc(self):
+        if self.function:
+            try:
+                return self.function["VpcConfig"]
+            except KeyError:
+                return False
         return False
 
     def _describe_function_policy(self):
@@ -88,6 +99,36 @@ class Metacheck(MetaChecksBase):
                 role = False
         return role
 
+    def its_associated_with_vpc(self):
+        if self.function_vpc:
+            if self.function_vpc["VpcId"]:
+                return self.function_vpc["VpcId"]
+        return False
+
+    def its_associated_with_security_groups(self):
+        if self.function_vpc:
+            if self.function_vpc["SecurityGroupIds"]:
+                return self.function_vpc["SecurityGroupIds"]
+        return False
+
+    def its_associated_with_subnets(self):
+        if self.function_vpc:
+            if self.function_vpc["SubnetIds"]:
+                return self.function_vpc["SubnetIds"]
+        return False
+
+    def its_associated_with_security_group_rules_ingress_unrestricted(self):
+        if self.function_vpc["SecurityGroupIds"]:
+            if self.chcked_function_sg["is_ingress_rules_unrestricted"]:
+                return self.chcked_function_sg["is_ingress_rules_unrestricted"]
+        return False
+
+    def its_associated_with_security_group_rules_egress_unrestricted(self):
+        if self.function_vpc["SecurityGroupIds"]:
+            if self.chcked_function_sg["is_egress_rule_unrestricted"]:
+                return self.chcked_function_sg["is_egress_rule_unrestricted"]
+        return False
+
     def checks(self):
         checks = [
             "it_has_policy",
@@ -95,6 +136,11 @@ class Metacheck(MetaChecksBase):
             "it_has_policy_principal_wildcard",
             "it_has_policy_public",
             "it_has_policy_actions_wildcard",
-            "its_associated_with_a_role"
+            "its_associated_with_a_role",
+            "its_associated_with_vpc",
+            "its_associated_with_security_groups",
+            "its_associated_with_subnets",
+            "its_associated_with_security_group_rules_ingress_unrestricted",
+            "its_associated_with_security_group_rules_egress_unrestricted"
         ]
         return checks
