@@ -1000,10 +1000,10 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
 </thead>
 <tbody>
   <tr>
-    <td rowspan="8">AwsEc2SecurityGroup</td>
+    <td rowspan="9">AwsEc2SecurityGroup</td>
     <td>its_associated_with_network_interfaces</td>
     <td>Check if the Security Group is associated to Network Interfaces (ENIs).</td>
-    <td>List of associated&nbsp;&nbsp;`NetworkInterfaceId`</td>
+    <td>List of associated  `NetworkInterfaceId`</td>
   </tr>
   <tr>
     <td>its_associated_with_ec2_instances</td>
@@ -1021,8 +1021,13 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>List of associated  `Public Ips`</td>
   </tr>
   <tr>
-    <td>it_has_rules_unrestricted</td>
-    <td>Check if the Security Group has unerestricted rules</td>
+    <td>its_associated_with_security_group_rules_ingress_unrestricted</td>
+    <td>Check if the Security Group has unrestricted ingress rules</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_group_rules_egress_unrestricted</td>
+    <td>Check if the Security Group has unrestricted egress rules</td>
     <td>List of unrestricted `SecurityGroupRules`</td>
   </tr>
   <tr>
@@ -1158,7 +1163,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>True</td>
   </tr>
   <tr>
-    <td rowspan="19">AwsEc2Instance</td>
+    <td rowspan="20">AwsEc2Instance</td>
     <td>it_has_public_ip</td>
     <td>Check if the EC2 Instance has a Public Ip</td>
     <td>List of Public Ips</td>
@@ -1190,12 +1195,17 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
   </tr>
   <tr>
     <td>its_associated_with_security_groups</td>
-    <td>Check if the EC2 Instance is associated to Security Groups</td>
+    <td>Check if the resource is associated with Security Groups</td>
     <td>The List of Security Groups Ids</td>
   </tr>
   <tr>
-    <td>its_associated_with_security_group_rules_unrestricted</td>
-    <td>Check if the EC2 Instance is associated to Security Groups rules that has unrestricted rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>its_associated_with_security_group_rules_ingress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted ingress rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_group_rules_egress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted egress rules (open to 0.0.0.0/0 or ::/0)</td>
     <td>The list of unrestricted rules</td>
   </tr>
   <tr>
@@ -1312,7 +1322,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>True</td>
   </tr>
   <tr>
-    <td rowspan="6">AwsLambdaFunction</td>
+    <td rowspan="11">AwsLambdaFunction</td>
     <td>it_has_policy</td>
     <td>Check if the resource has a resource policy.</td>
     <td>The policy</td>
@@ -1343,7 +1353,32 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>The Role ARN</td>
   </tr>
   <tr>
-    <td rowspan="5">AwsElastiCacheCacheCluster</td>
+    <td>its_associated_with_vpc</td>
+    <td>Check if the resource its associated with a VPC</td>
+    <td>The VPC</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_subnets</td>
+    <td>Check if the resource its associated with Subnets</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_groups</td>
+    <td>Check if the resource is associated with Security Groups</td>
+    <td>The List of Security Groups Ids</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_group_rules_ingress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted ingress rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_group_rules_egress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted egress rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
+  </tr>
+  <tr>
+    <td rowspan="6">AwsElastiCacheCacheCluster</td>
     <td>is_rest_encrypted</td>
     <td>Check if the Elastic Cache is configured with `AtRestEncryptionEnabled`</td>
     <td>True</td>
@@ -1360,12 +1395,17 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
   </tr>
   <tr>
     <td>its_associated_with_security_groups</td>
-    <td>Check if the Elastic Cache is associated to Security Groups</td>
-    <td>The list of `SecurityGroups`</td>
+    <td>Check if the resource is associated with Security Groups</td>
+    <td>The List of Security Groups Ids</td>
   </tr>
   <tr>
-    <td>its_associated_with_security_group_rules_unrestricted</td>
-    <td>Check if the Elastic Cache is associated with Security Groups rules that are unrestricted (open to 0.0.0.0/0 or ::/0)</td>
+    <td>its_associated_with_security_group_rules_ingress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted ingress rules (open to 0.0.0.0/0 or ::/0)</td>
+    <td>The list of unrestricted rules</td>
+  </tr>
+  <tr>
+    <td>its_associated_with_security_group_rules_egress_unrestricted</td>
+    <td>Check if the resource is associated with Security Groups that have unrestricted egress rules (open to 0.0.0.0/0 or ::/0)</td>
     <td>The list of unrestricted rules</td>
   </tr>
   <tr>
