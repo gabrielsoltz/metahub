@@ -40,14 +40,146 @@ Using **MetaHub**, you can enrich your security findings with **your** context t
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
-
 **MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
+
+If you are investigating the security finding **EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)** for Instance **i-0c721c63f74a2863a**, MetaHub can enrich your finding with the following information from your context:
+
+- If there are other security findings for the affected resource
+- The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
+- Who created it and when (**MetaTrails**)
+- Which Security Groups is this instance associated with, and if they have unrestricted rules (**MetaChecks**):
+  - `its_associated_with_security_groups`
+  - `its_associated_with_security_group_rules_ingress_unrestricted`
+  - `its_associated_with_security_group_rules_egress_unrestricted`
+- Which EBSs is this instance associated with, and if they are encrypted (**MetaChecks**):
+  - `its_associated_with_ebs`
+  - `its_associated_with_ebs_unencrypted`
+- If the instance is associated wih Auto Scaling Groups and how (**MetaChecks**):
+  - `its_associated_with_an_asg`
+  - `its_associated_with_an_asg_launch_configuration`
+  - `its_associated_with_an_asg_launch_template`
+- If the instance is associated IAM roles (**MetaChecks**):
+  - `it_has_instance_profile`
+  - `it_has_instance_profile_roles`
+- IPs, DNS domains, and other useful information (**MetaChecks**):
+  - `it_has_public_ip`
+  - `it_has_private_ip`
+  - `it_has_public_dns`
+  - `it_has_private_dns`
+  - `it_has_key`
+  - `is_instance_metadata_v2`
+  - `is_instance_metadata_hop_limit_1`
+  - `is_running`
+- And based on all the previous checks if... (**MetaChecks**):
+  - `is_public` --> If `it_has_public_ip` AND `its_associated_with_security_group_rules_ingress_unrestricted`
+  - `is_encrypted` --> If NOT `its_associated_with_ebs_unencrypted`
+
+```
+  "arn:aws:ec2:eu-west-1:012345678901:instance/i-0c721c63f74a2863a": {
+    "findings": [
+      "SSM.1 EC2 instances should be managed by AWS Systems Manager",
+      "EC2.24 EC2 paravirtual instance types should not be used",
+      "EC2.9 EC2 instances should not have a public IPv4 address",
+      "EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)",
+      "EC2.17 EC2 instances should not use multiple ENIs"
+    ],
+    "AwsAccountId": "012345678901",
+    "AwsAccountAlias": "",
+    "Region": "eu-west-1",
+    "ResourceType": "AwsEc2Instance",
+    "metachecks": {
+      "it_has_public_ip": "54.54.54.54",
+      "it_has_private_ip": "172.111.111.111",
+      "it_has_key": "eu-west-prd-env",
+      "it_has_private_dns": "ip-172-111-111-111.eu-west-1.compute.internal",
+      "it_has_public_dns": "ec2-54-54-54-54.eu-west-1.compute.amazonaws.com",
+      "it_has_instance_profile": "arn:aws:iam::012345678901:instance-profile/prd-iam-profile",
+      "it_has_instance_profile_roles": "arn:aws:iam::012345678901:role/prd-iam-profile",
+      "its_associated_with_security_groups": [
+        "sg-0f0fd5bfaead08313",
+        "sg-00956ef2b9e016aac",
+        "sg-0ac758f269fa225cb",
+        "sg-004362951aa0d4c57",
+        "sg-0be8ea81524e9a912"
+      ],
+      "its_associated_with_security_group_rules_ingress_unrestricted": [
+        {
+          "SecurityGroupRuleId": "sgr-009c500ad2fe5a753",
+          "GroupId": "sg-00956ef2b9e016aac",
+          "GroupOwnerId": "012345678901",
+          "IsEgress": false,
+          "IpProtocol": "tcp",
+          "FromPort": 22,
+          "ToPort": 22,
+          "CidrIpv4": "0.0.0.0/0",
+          "Tags": []
+        }
+      ],
+      "its_associated_with_security_group_rules_egress_unrestricted": [
+        {
+          "SecurityGroupRuleId": "sgr-05dd7a9ed0382b9bb",
+          "GroupId": "sg-004362951aa0d4c57",
+          "GroupOwnerId": "012345678901",
+          "IsEgress": true,
+          "IpProtocol": "-1",
+          "FromPort": -1,
+          "ToPort": -1,
+          "CidrIpv4": "0.0.0.0/0",
+          "Tags": []
+        },
+        {
+          "SecurityGroupRuleId": "sgr-03a508db4542d9a34",
+          "GroupId": "sg-00956ef2b9e016aac",
+          "GroupOwnerId": "012345678901",
+          "IsEgress": true,
+          "IpProtocol": "-1",
+          "FromPort": -1,
+          "ToPort": -1,
+          "CidrIpv4": "0.0.0.0/0",
+          "Tags": []
+        }
+      ],
+      "is_instance_metadata_v2": false,
+      "is_instance_metadata_hop_limit_1": true,
+      "its_associated_with_ebs": [
+        "vol-05cb569665d1d99fe",
+        "vol-0ef0dba14bd29f4a2"
+      ],
+      "its_associated_with_ebs_unencrypted": [
+        "vol-05cb569665d1d99fe"
+      ],
+      "its_associated_with_an_asg": "asg-prd",
+      "its_associated_with_an_asg_launch_configuration": false,
+      "its_associated_with_an_asg_launch_template": {
+        "LaunchTemplateId": "lt-0ed52117841a1be2c",
+        "LaunchTemplateName": "asg-prd-20221112182842062900000007",
+        "Version": "1"
+      },
+      "is_public": "54.54.54.54",
+      "is_encrypted": false,
+      "is_running": true
+    }
+    "metatags": {
+      "Name": "Testing Security Group",
+      "Environment": "Production",
+      "Classification": "Restricted",
+      "Owner": "Security Team"
+    },
+    "metatrails": {
+      "RunInstances": {
+        "Username": "root",
+        "EventTime": "2023-02-25 15:35:21-03:00"
+      }
+    }
+  }
+}
+```
 
 If you are investigating the security finding **EC2.19 Security groups should not allow unrestricted access to ports with high risk** for Security Group **sg-0880509d75f330c7f**, MetaHub can enrich your finding with the following information from your context:
 
 - If there are other security findings for the affected resource
 - The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
-- Who created and when (**MetaTrails**)
+- Who created it and when (**MetaTrails**)
 - If another service references the Security Group (**MetaChecks**):
   - `its_referenced_by_another_sg`
 - What is the Security Group associated with (**MetaChecks**):
@@ -56,7 +188,8 @@ If you are investigating the security finding **EC2.19 Security groups should no
   - `its_associated_with_managed_services`
 - If the Security Group is Public and how (**MetaChecks**):
   - `its_associated_with_public_ips`
-  - `it_has_rules_unrestricted`
+  - `its_associated_with_security_group_rules_ingress_unrestricted`
+  - `its_associated_with_security_group_rules_egress_unrestricted`
   - `is_public`
 
 ```
@@ -82,7 +215,7 @@ If you are investigating the security finding **EC2.19 Security groups should no
       ],
       "its_associated_with_managed_services": false,
       "its_referenced_by_another_sg": false,
-      "it_has_rules_unrestricted": [
+      "its_associated_with_security_group_rules_ingress_unrestricted": [
         {
           "SecurityGroupRuleId": "sgr-0cb04c3cb0a14df23",
           "GroupId": "sg-0880509d75f330c7f",
@@ -95,6 +228,7 @@ If you are investigating the security finding **EC2.19 Security groups should no
           "Tags": []
         }
       ],
+      "its_associated_with_security_group_rules_egress_unrestricted": [],
       "is_public": true,
       "is_default": false
     },
