@@ -70,9 +70,9 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
   - `is_instance_metadata_v2`
   - `is_instance_metadata_hop_limit_1`
   - `is_running`
-- And based on all the previous checks if... (**MetaChecks**):
-  - `is_public` --> If `it_has_public_ip` AND `its_associated_with_security_group_rules_ingress_unrestricted`
-  - `is_encrypted` --> If NOT `its_associated_with_ebs_unencrypted`
+- If it's effectively public and effectively encrytped (**MetaChecks**):
+  - `is_public`
+  - `is_encrypted`
 
 ```
   "arn:aws:ec2:eu-west-1:012345678901:instance/i-0c721c63f74a2863a": {
@@ -1691,31 +1691,20 @@ MetaChecks are defined in the form of:
 
 > Refers to the affected resource itself.
 
-#### Public
+- is_rest_encrypted
+- is_transit_encrypted
+- is_running
+- is_default
 
-Public refers to Network Layer. It must be effectively Public, meaning that if a resource has a Public IP, but the Security Group is closed, the resource is not Public. 
+### is_public
 
-- is_public
+This is a magic MetaCheck, it's deployed across all ResourceTypes. It must be effectively Public, meaning that if a resource has a Public IP, but the Security Group is closed, the resource is not Public. This MetaCheck it's populated based no others MetaChecks, but it's useful for filering across any ResourceType the same way (is_public=True/False).
 
-#### Unrestricted
-
-Unrestricted refer to Policies Layer (API, IAM, Resources Policies, Rules, etc.). 
-
-- is_unrestricted
+This MetaCheck will always answer a network element, like an IP, a domain or an URI. You can connect the output of this MetaCheck with network scanners like Nmap.
 
 #### Encryption
 
-- is_encrypted
-- is_rest_encrypted
-- is_transit_encrypted
-
-#### Default
-
-- is_default
-
-#### Status
-
-- is_running
+This is a magic MetaCheck, it's deployed across all ResourceTypes. It must be effectively encrypted. If a resource is encrypted at rest but not in-transit, the resource is not encrypted. This MetaCheck it's populated based no others MetaChecks, but it's useful for filering across any ResourceType the same way (is_encrypted=True/False).
 
 ### its_associated_with
 
