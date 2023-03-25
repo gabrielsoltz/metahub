@@ -60,7 +60,7 @@
     "metachecks": { ------> MetaChecks for the EC2 Instance
       "it_has_public_ip": "54.54.54.54",
       "it_has_private_ip": "172.111.111.111",
-      "it_has_key": "eu-west-prd-env",
+      "it_has_key": "eu-west-key",
       "it_has_private_dns": "ip-172-111-111-111.eu-west-1.compute.internal",
       "it_has_public_dns": "ec2-54-54-54-54.eu-west-1.compute.amazonaws.com",
       "it_has_instance_profile": "arn:aws:iam::012345678901:instance-profile/prd-iam-profile",
@@ -152,7 +152,7 @@
 
 ```
   "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
-    "findings": [
+    "findings": [ ------> All related findings together for the affected resource
       "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
       "Security groups should only allow unrestricted incoming traffic for authorized ports",
       "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
@@ -161,7 +161,7 @@
     "AwsAccountAlias": "AccountA",
     "Region": "us-east-1",
     "ResourceType": "AwsEc2SecurityGroup",
-    "metachecks": {
+    "metachecks": { ------> MetaChecks for the Security Group
       "its_associated_with_network_interfaces": [
         "eni-0722ce7f253e8c9e0"
       ],
@@ -190,13 +190,13 @@
       "is_public": true,
       "is_default": false
     },
-    "metatags": {
+    "metatags": { ------> MetaTags for the Security Group
       "Name": "Testing Security Group",
       "Environment": "Production",
       "Classification": "Restricted",
       "Owner": "Security Team"
     },
-    "metatrails": {
+    "metatrails": { ------> MetaTrails for the Security Group
       "AuthorizeSecurityGroupIngress": {
         "Username": "root",
         "EventTime": "2023-02-25 15:35:21-03:00"
