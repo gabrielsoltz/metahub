@@ -32,51 +32,19 @@
 
 # Description
 
-**MetaHub** is an [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security context enrichment and command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). 
-
-Using **MetaHub**, you can enrich your security findings with **your** context to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. **MetaHub** interacts with reading/writing from AWS Security Hub API or directly from ASFF files. You can combine these sources as you want to enrich your findings further.
+**MetaHub** is a powerful security context enrichment command line utility designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html). With MetaHub, you can enhance your security findings with contextual information for the purpose of filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment, all within AWS Security Hub. MetaHub interacts with AWS Security Hub API or ASFF files, and you can combine these sources in any way you choose to further enrich your findings.
 
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
-**MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
+**MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
 
-If you are investigating the security finding **EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)** for Instance **i-0c721c63f74a2863a**, MetaHub can enrich your finding with the following information from your context:
-
-- If there are other security findings for the affected resource
-- The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
-- Who created it and when (**MetaTrails**)
-- Which Security Groups is this instance associated with, and if they have unrestricted rules (**MetaChecks**):
-  - `its_associated_with_security_groups`
-  - `its_associated_with_security_group_rules_ingress_unrestricted`
-  - `its_associated_with_security_group_rules_egress_unrestricted`
-- Which EBSs is this instance associated with, and if they are encrypted (**MetaChecks**):
-  - `its_associated_with_ebs`
-  - `its_associated_with_ebs_unencrypted`
-- If the instance is associated wih Auto Scaling Groups and how (**MetaChecks**):
-  - `its_associated_with_an_asg`
-  - `its_associated_with_an_asg_launch_configuration`
-  - `its_associated_with_an_asg_launch_template`
-- If the instance is associated IAM roles (**MetaChecks**):
-  - `it_has_instance_profile`
-  - `it_has_instance_profile_roles`
-- IPs, DNS domains, and other useful information (**MetaChecks**):
-  - `it_has_public_ip`
-  - `it_has_private_ip`
-  - `it_has_public_dns`
-  - `it_has_private_dns`
-  - `it_has_key`
-  - `is_instance_metadata_v2`
-  - `is_instance_metadata_hop_limit_1`
-  - `is_running`
-- If it's effectively public and effectively encrytped (**MetaChecks**):
-  - `is_public`
-  - `is_encrypted`
+If you are investigating the security finding **EC2.8** for Instance **i-0c721c63f74a2863a**, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks), and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
 
 ```
   "arn:aws:ec2:eu-west-1:012345678901:instance/i-0c721c63f74a2863a": {
-    "findings": [
+    "findings": [  ------> All related findings together for the affected resource
       "SSM.1 EC2 instances should be managed by AWS Systems Manager",
       "EC2.24 EC2 paravirtual instance types should not be used",
       "EC2.9 EC2 instances should not have a public IPv4 address",
@@ -87,7 +55,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
     "AwsAccountAlias": "",
     "Region": "eu-west-1",
     "ResourceType": "AwsEc2Instance",
-    "metachecks": {
+    "metachecks": { ------> MetaChecks for the EC2 Instance
       "it_has_public_ip": "54.54.54.54",
       "it_has_private_ip": "172.111.111.111",
       "it_has_key": "eu-west-prd-env",
@@ -95,7 +63,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       "it_has_public_dns": "ec2-54-54-54-54.eu-west-1.compute.amazonaws.com",
       "it_has_instance_profile": "arn:aws:iam::012345678901:instance-profile/prd-iam-profile",
       "it_has_instance_profile_roles": "arn:aws:iam::012345678901:role/prd-iam-profile",
-      "its_associated_with_security_groups": [
+      "its_associated_with_security_groups": [ ------> The instance is associated with Security Groups, we analyze them as part of this finding
         "sg-0f0fd5bfaead08313",
         "sg-00956ef2b9e016aac",
         "sg-0ac758f269fa225cb",
@@ -141,7 +109,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       ],
       "is_instance_metadata_v2": false,
       "is_instance_metadata_hop_limit_1": true,
-      "its_associated_with_ebs": [
+      "its_associated_with_ebs": [ ------> The instance is associated with EBS, we analyze them as part of this finding
         "vol-05cb569665d1d99fe",
         "vol-0ef0dba14bd29f4a2"
       ],
@@ -159,91 +127,14 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       "is_encrypted": false,
       "is_running": true
     }
-    "metatags": {
+    "metatags": { ------> MetaTags for the EC2 Instance
       "Name": "Testing Security Group",
       "Environment": "Production",
       "Classification": "Restricted",
       "Owner": "Security Team"
     },
-    "metatrails": {
+    "metatrails": { ------> MetaTrails for the EC2 Instance
       "RunInstances": {
-        "Username": "root",
-        "EventTime": "2023-02-25 15:35:21-03:00"
-      }
-    }
-  }
-}
-```
-
-If you are investigating the security finding **EC2.19 Security groups should not allow unrestricted access to ports with high risk** for Security Group **sg-0880509d75f330c7f**, MetaHub can enrich your finding with the following information from your context:
-
-- If there are other security findings for the affected resource
-- The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
-- Who created it and when (**MetaTrails**)
-- If another service references the Security Group (**MetaChecks**):
-  - `its_referenced_by_another_sg`
-- What is the Security Group associated with (**MetaChecks**):
-  - `its_associated_with_network_interfaces`
-  - `its_associated_with_ec2_instances`
-  - `its_associated_with_managed_services`
-- If the Security Group is Public and how (**MetaChecks**):
-  - `its_associated_with_public_ips`
-  - `its_associated_with_security_group_rules_ingress_unrestricted`
-  - `its_associated_with_security_group_rules_egress_unrestricted`
-  - `is_public`
-
-```
-  "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
-    "findings": [
-      "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
-      "Security groups should only allow unrestricted incoming traffic for authorized ports",
-      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
-    ],
-    "AwsAccountId": "012345678901",
-    "AwsAccountAlias": "AccountA",
-    "Region": "us-east-1",
-    "ResourceType": "AwsEc2SecurityGroup",
-    "metachecks": {
-      "its_associated_with_network_interfaces": [
-        "eni-0722ce7f253e8c9e0"
-      ],
-      "its_associated_with_ec2_instances": [
-        "i-0b57aa16e1d0c6bbd"
-      ],
-      "its_associated_with_ips_public": [
-        "55.93.78.x"
-      ],
-      "its_associated_with_managed_services": false,
-      "its_referenced_by_another_sg": false,
-      "its_associated_with_security_group_rules_ingress_unrestricted": [
-        {
-          "SecurityGroupRuleId": "sgr-0cb04c3cb0a14df23",
-          "GroupId": "sg-0880509d75f330c7f",
-          "GroupOwnerId": "012345678901",
-          "IsEgress": false,
-          "IpProtocol": "tcp",
-          "FromPort": 22,
-          "ToPort": 22,
-          "CidrIpv4": "0.0.0.0/0",
-          "Tags": []
-        }
-      ],
-      "its_associated_with_security_group_rules_egress_unrestricted": [],
-      "is_public": true,
-      "is_default": false
-    },
-    "metatags": {
-      "Name": "Testing Security Group",
-      "Environment": "Production",
-      "Classification": "Restricted",
-      "Owner": "Security Team"
-    },
-    "metatrails": {
-      "AuthorizeSecurityGroupIngress": {
-        "Username": "root",
-        "EventTime": "2023-02-25 15:35:21-03:00"
-      },
-      "CreateSecurityGroup": {
         "Username": "root",
         "EventTime": "2023-02-25 15:35:21-03:00"
       }
