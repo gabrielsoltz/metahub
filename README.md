@@ -32,51 +32,21 @@
 
 # Description
 
-**MetaHub** is an [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security context enrichment and command line utility for [AWS Security Hub](https://aws.amazon.com/security-hub). 
-
-Using **MetaHub**, you can enrich your security findings with **your** context to use that context for filtering, deduplicating, grouping, reporting, automating, suppressing, or updating and enrichment directly in AWS Security Hub. **MetaHub** interacts with reading/writing from AWS Security Hub API or directly from ASFF files. You can combine these sources as you want to enrich your findings further.
+**MetaHub** is a powerful security context enrichment command line utility designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html). With MetaHub, you can enhance your security findings with contextual information for the purpose of filtering, deduplicating, grouping, reporting, automating, suppressing, or updating. MetaHub interacts with AWS Security Hub API or ASFF files, and you can combine these sources in any way you choose to further enrich your findings.
 
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
-**MetaHub** aggregates and deduplicates your findings by affected resources, no matter what amount of scanners, to focus on fixing the real problems, not the findings themselves.
+**MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
 
-If you are investigating the security finding **EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)** for Instance **i-0c721c63f74a2863a**, MetaHub can enrich your finding with the following information from your context:
-
-- If there are other security findings for the affected resource
-- The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
-- Who created it and when (**MetaTrails**)
-- Which Security Groups is this instance associated with, and if they have unrestricted rules (**MetaChecks**):
-  - `its_associated_with_security_groups`
-  - `its_associated_with_security_group_rules_ingress_unrestricted`
-  - `its_associated_with_security_group_rules_egress_unrestricted`
-- Which EBSs is this instance associated with, and if they are encrypted (**MetaChecks**):
-  - `its_associated_with_ebs`
-  - `its_associated_with_ebs_unencrypted`
-- If the instance is associated wih Auto Scaling Groups and how (**MetaChecks**):
-  - `its_associated_with_an_asg`
-  - `its_associated_with_an_asg_launch_configuration`
-  - `its_associated_with_an_asg_launch_template`
-- If the instance is associated IAM roles (**MetaChecks**):
-  - `it_has_instance_profile`
-  - `it_has_instance_profile_roles`
-- IPs, DNS domains, and other useful information (**MetaChecks**):
-  - `it_has_public_ip`
-  - `it_has_private_ip`
-  - `it_has_public_dns`
-  - `it_has_private_dns`
-  - `it_has_key`
-  - `is_instance_metadata_v2`
-  - `is_instance_metadata_hop_limit_1`
-  - `is_running`
-- If it's effectively public and effectively encrytped (**MetaChecks**):
-  - `is_public`
-  - `is_encrypted`
+<details>
+<summary>If you are investigating the security finding <b>EC2.8</b> for <b>EC2 Instance i-0c721c63f74a2863a</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks), and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
+</summary>
 
 ```
   "arn:aws:ec2:eu-west-1:012345678901:instance/i-0c721c63f74a2863a": {
-    "findings": [
+    "findings": [  ------> All related findings together for the affected resource
       "SSM.1 EC2 instances should be managed by AWS Systems Manager",
       "EC2.24 EC2 paravirtual instance types should not be used",
       "EC2.9 EC2 instances should not have a public IPv4 address",
@@ -87,7 +57,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
     "AwsAccountAlias": "",
     "Region": "eu-west-1",
     "ResourceType": "AwsEc2Instance",
-    "metachecks": {
+    "metachecks": { ------> MetaChecks for the EC2 Instance
       "it_has_public_ip": "54.54.54.54",
       "it_has_private_ip": "172.111.111.111",
       "it_has_key": "eu-west-prd-env",
@@ -95,7 +65,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       "it_has_public_dns": "ec2-54-54-54-54.eu-west-1.compute.amazonaws.com",
       "it_has_instance_profile": "arn:aws:iam::012345678901:instance-profile/prd-iam-profile",
       "it_has_instance_profile_roles": "arn:aws:iam::012345678901:role/prd-iam-profile",
-      "its_associated_with_security_groups": [
+      "its_associated_with_security_groups": [ ------> The instance is associated with Security Groups, we analyze them as part of this finding
         "sg-0f0fd5bfaead08313",
         "sg-00956ef2b9e016aac",
         "sg-0ac758f269fa225cb",
@@ -141,7 +111,7 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       ],
       "is_instance_metadata_v2": false,
       "is_instance_metadata_hop_limit_1": true,
-      "its_associated_with_ebs": [
+      "its_associated_with_ebs": [ ------> The instance is associated with EBS, we analyze them as part of this finding
         "vol-05cb569665d1d99fe",
         "vol-0ef0dba14bd29f4a2"
       ],
@@ -159,13 +129,13 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
       "is_encrypted": false,
       "is_running": true
     }
-    "metatags": {
+    "metatags": { ------> MetaTags for the EC2 Instance
       "Name": "Testing Security Group",
       "Environment": "Production",
       "Classification": "Restricted",
       "Owner": "Security Team"
     },
-    "metatrails": {
+    "metatrails": { ------> MetaTrails for the EC2 Instance
       "RunInstances": {
         "Username": "root",
         "EventTime": "2023-02-25 15:35:21-03:00"
@@ -174,23 +144,11 @@ If you are investigating the security finding **EC2.8 EC2 instances should use I
   }
 }
 ```
+</details>
 
-If you are investigating the security finding **EC2.19 Security groups should not allow unrestricted access to ports with high risk** for Security Group **sg-0880509d75f330c7f**, MetaHub can enrich your finding with the following information from your context:
-
-- If there are other security findings for the affected resource
-- The Environment, Classification, Owner, or any other Tagging from your affected resource (**MetaTags**)
-- Who created it and when (**MetaTrails**)
-- If another service references the Security Group (**MetaChecks**):
-  - `its_referenced_by_another_sg`
-- What is the Security Group associated with (**MetaChecks**):
-  - `its_associated_with_network_interfaces`
-  - `its_associated_with_ec2_instances`
-  - `its_associated_with_managed_services`
-- If the Security Group is Public and how (**MetaChecks**):
-  - `its_associated_with_public_ips`
-  - `its_associated_with_security_group_rules_ingress_unrestricted`
-  - `its_associated_with_security_group_rules_egress_unrestricted`
-  - `is_public`
+<details>
+<summary>If you are investigating the security finding <b>EC2.19</b> for <b>Security Group sg-0880509d75f330c7f</b>, which indicates that Security groups should not allow unrestricted access to ports with high risk, MetaHub can provide context about other related security issues for this Security Group, tags, creation details, and associations with network interfaces, EC2 instances, public IPs, and managed services. Additionally, MetaChecks indicate the Security Group is public and associated with a single network interface and EC2 instance, and has one public IP. MetaTags indicate that the Security Group is named "Testing Security Group," is classified as "Restricted," and is owned by the Security Team in the Production environment. Finally, MetaTrails show that the Security Group was created and authorized for ingress by the root user on February 25th, 2023.
+</summary>
 
 ```
   "arn:aws:ec2:us-east-1:012345678901:security-group/sg-0880509d75f330c7f": {
@@ -251,28 +209,31 @@ If you are investigating the security finding **EC2.19 Security groups should no
   }
 }
 ```
+</details>
+
 
 # Features
 
-**MetaHub** introduces different **ways of listing AWS Security Hub findings** for investigation, suppression, updating, and integrating with other tools or alerting systems. MetaHub focuses on avoiding **Shadowing** and **Duplication** by organizing the findings together when they are related to the same resource. See [Findings Aggregation](#findings-aggregation)
+**MetaHub** provides a range of ways to list and manage AWS Security Hub findings, including investigation, suppression, updating, and integration with other tools or alerting systems. To avoid *Shadowing* and *Duplication*, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
 
-**MetaHub** queries the affected resources in the affected account directly to add extra information from your context using: 
+**MetaHub** queries the affected resources directly in the affected account to provide additional context using the following options:
 
-  - **MetaTags** (`--meta-tags`): MetaTags queries tagging from affected resources 
-  - **MetaTrails** (`--meta-trails`): MetaTrails queries CloudTrail in affected account to identify who and when created the resource and any other related critical event 
-  - **MetaChecks** (`--meta-checks`): MetaChecks fetches extra information from the affected resource like, if it is public?, is encrypted? is associated with...?, is referenced by...?, it has..?
+- **MetaTags** (`--meta-tags`): Queries tagging from affected resources
+- **MetaTrails** (`--meta-trails`): Queries CloudTrail in the affected account to identify who created the resource and when, as well as any other related critical events
+- **MetaChecks** (`--meta-checks`): Fetches extra information from the affected resource, such as whether it is public, encrypted, associated with, or referenced by other resources.
   
-**MetaHub** supports filters on top of these Meta* outputs to automate detecting other resources with the same issues. For example, listing all resources that are effectively public, not encrypted, and are tagged as `Environment=production Service="My Insecure Service"`. See [MetaChecks](#MetaChecks-1) and [MetaTags](#MetaTags-1). You can use **MetaChecks filters** using the option `--mh-filters-checks` and **MetaTags filters** using the option `--mh-filters-tags`. The result of your filters is then managed in an aggregate way that lets you update your findings all together when it's necessary or send them to other tools like ticketing or alerting systems. See [Filtering](#Filtering)
+MetaHub supports filters on top of these Meta* outputs to automate the detection of other resources with the same issues. For instance, you can list all resources that are effectively public, not encrypted, and tagged as `Environment=production` `Service="My Insecure Service"`. You can use **[MetaChecks](#MetaChecks-1) filters** using the option `--mh-filters-checks` and **[MetaTags](#MetaTags-1) filters** using the option `--mh-filters-tags`. The results of your filters are managed in an aggregate way that allows you to update your findings together when necessary or send them to other tools, such as ticketing or alerting systems. Refer to [Filtering](#Filtering) for more information.
 
-**MetaHub** also supports **AWS Security Hub filtering** the same way you would work with AWS CLI utility using the option `--sh-filters` and using YAML templates with the option `--sh-template`. YAML templates let you save your favorite filters and re-use them when you need them for any integration. You can combine Security Hub filters with Meta Filters together. See [Filtering](#Filtering). 
+**MetaHub** also supports **AWS Security Hub filtering** the same way you would work with AWS CLI utility using the option `--sh-filters` and using YAML templates with the option `--sh-template`. You can save your favorite filters in YAML templates and reuse them for any integration. You can combine Security Hub filters with Meta Filters together. For more information, refer to [Filtering](#Filtering).
 
-**MetaHub** lets you back enrich your findings directly in AWS Security Hub using the option `--enrich-findings`. This action will update your AWS Security Hub findings using the field `UserDefinedFields`. You can then create filters or insights directly in AWS Security Hub. See [Enriching Findings](#enriching-findings)
 
-**MetaHub** lets you execute **bulk updates** to AWS Security Hub findings, like changing Workflow Status using the option (`--update-findings`). You can update your queries' output altogether instead of by one-by-one findings. When updating findings using MetaHub, you also update the field `Note` of your finding with a custom text for future reference. See [Updating Workflow Status](#updating-workflow-status)
+With **MetaHub**, you can back **enrich your findings directly in AWS Security Hub** using the option `--enrich-findings`. This action will update your AWS Security Hub findings using the field `UserDefinedFields`. You can then create filters or [Insights](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-insights.html) directly in AWS Security Hub. Refer to [Enriching Findings](#enriching-findings) for more information.
 
-**MetaHub** supports different **outputs** like `inventory`, `statistics`, `short`, or `full`. All outputs are programmatically usable to be integrated with your favorite tools. See [Outputs](#Outputs). Outputs can be exported as JSON, CSV, and HTML files using the [Output Modes](#output-modes) options.
+**MetaHub** also allows you to execute **bulk updates** to AWS Security Hub findings, such as changing Workflow Status using the option `--update-findings`. You can update your queries' output altogether instead of updating each finding individually. When updating findings using MetaHub, you also update the field `Note` of your finding with a custom text for future reference. Refer to [Updating Workflow Status](#updating-workflow-status) for more information.
 
-**MetaHub** supports **multi-account setups**, letting you run the tool from any environment by assuming roles in your AWS Security Hub master account and your child/service accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub master implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. See [Configuring Security Hub](#configuring-security-hub)
+**MetaHub** supports different **outputs** like **inventory**, **statistics**, **short**, or **full**. All outputs are programmatically usable to be integrated with your favorite tools. Refer to [Outputs](#Outputs). You can export outputs as **JSON**, **CSV**, and **HTML** files using the [Output Modes](#output-modes) options.
+
+**MetaHub** supports **multi-account setups**. You can run the tool from any environment by assuming roles in your AWS Security Hub `master` account and your `child/service` accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub multi-account implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. Refer to [Configuring Security Hub](#configuring-security-hub) for more information.
 
 # Investigations Examples
 
