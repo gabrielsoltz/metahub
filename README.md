@@ -211,6 +211,15 @@
 ```
 </details>
 
+# Use Cases
+
+You can read the following articles on MetaHub practical use-cases:
+
+- [MetaHub integration with Prowler as a local scanner for context enrichment](https://medium.com/@gabriel_87/metahub-use-cases-part-i-metahub-integration-with-prowler-as-a-local-scanner-for-context-f3540e18eaa1)
+- Automatic Security Hub findings suppression using MetaTags
+- Utilizing MetaHub as an AWS Security Hub Custom Action
+- Generating Custom Enriched Dashboards
+- AWS Security Hub Insights based on MetaChecks and MetaTags.
 
 # Features
 
