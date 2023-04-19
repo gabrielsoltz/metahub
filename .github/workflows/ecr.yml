@@ -14,6 +14,7 @@ on:
 env:
   IMAGE_NAME: metahub
   TAG: latest
+  LAMBDA_TAG: lambda
 
 jobs:
   
@@ -48,4 +49,14 @@ jobs:
         IMAGE_TAG: ${{ env.TAG }}
       run: |
         docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
+        docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+
+    - name: Build, tag, and push docker image to Amazon ECR Public Lambda
+      env:
+        REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+        REGISTRY_ALIAS: n2p8q5p4
+        REPOSITORY: ${{ env.IMAGE_NAME }}
+        IMAGE_TAG: ${{ env.LAMBDA_TAG }}
+      run: |
+        docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
         docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
