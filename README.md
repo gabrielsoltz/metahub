@@ -41,7 +41,7 @@
 **MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
 
 <details>
-<summary>If you are investigating the security finding <b>[EC2.8](https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-8)</b> for <b>EC2 Instance i-0c721c63f74a2863a</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks), and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
+<summary>If you are investigating the security finding <b>[EC2.8]</b> for <b>EC2 Instance i-0c721c63f74a2863a</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks), and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
 </summary>
 
 ```
@@ -1482,7 +1482,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>The list of unrestricted rules</td>
   </tr>
   <tr>
-    <td rowspan="6">AwsElastiCacheCacheCluster</td>
+    <td rowspan="7">AwsElastiCacheCacheCluster</td>
     <td>is_rest_encrypted</td>
     <td>Check if the Elastic Cache is configured with `AtRestEncryptionEnabled`</td>
     <td>True</td>
@@ -1511,6 +1511,12 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
     <td>its_associated_with_security_group_rules_egress_unrestricted</td>
     <td>Check if the resource is associated with Security Groups that have unrestricted egress rules (open to 0.0.0.0/0 or ::/0)</td>
     <td>The list of unrestricted rules</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>its_associated_with_replication_group</td>
+    <td>Check if it's associated with a replication group</td>
+    <td>The list of `ReplicationGroupId`</td>
   </tr>
   <tr>
     <td rowspan="7">AwsSqsQueue</td>

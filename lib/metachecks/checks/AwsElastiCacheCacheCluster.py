@@ -89,6 +89,12 @@ class Metacheck(MetaChecksBase):
                 return self.checked_elasticcache_cluster_sg["is_egress_rule_unrestricted"]
         return False
 
+    def its_associated_with_replication_group(self):
+        if self.elasticcache_cluster:
+            if self.elasticcache_cluster["ReplicationGroupId"]:
+                return self.elasticcache_cluster["ReplicationGroupId"]
+        return False
+
     def checks(self):
         checks = [
             "is_rest_encrypted",
@@ -96,6 +102,7 @@ class Metacheck(MetaChecksBase):
             "is_encrypted",
             "its_associated_with_security_groups",
             "its_associated_with_security_group_rules_ingress_unrestricted",
-            "its_associated_with_security_group_rules_egress_unrestricted"
+            "its_associated_with_security_group_rules_egress_unrestricted",
+            "its_associated_with_replication_group"
         ]
         return checks
