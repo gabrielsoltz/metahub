@@ -59,7 +59,8 @@ def generate_findings(
         "Region": {},
         "ResourceId": {},
         "metatags": {},
-        "metachecks": {}
+        "metachecks": {},
+        "StandardsControlArn": {},
     }
     AwsAccountAliasData = {}
 
@@ -180,6 +181,9 @@ def generate_findings(
                                 mh_statistics[v][value[v]["Status"]] += 1
                                 continue
                         if v == "Id":
+                            continue
+                        # It's not consitent per controls :facepalm:
+                        if v == "StandardsControlArn":
                             continue
                         if not value[v] in mh_statistics[v]:
                             mh_statistics[v][value[v]] = 0

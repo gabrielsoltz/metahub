@@ -84,6 +84,7 @@ class SecurityHub:
                 "Compliance": compliance,
                 "Id": finding["Id"],
                 "ProductArn": finding["ProductArn"],
+                "StandardsControlArn": finding.get("ProductFields").get("StandardsControlArn"),
             },
         }
         return finding["Resources"][0]["Id"], findings
