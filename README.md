@@ -431,7 +431,7 @@ You will need to create a Lambda layer with all MetaHub python dependencies.
 - `cd layer`
 - `mkdir -p python/lib/python3.9/site-packages`
 - `pip3 install -r ../requirements.txt --target python/lib/python3.9/site-packages`
-- `zip -r9 terraform/zip/metahub-layer.zip .`
+- `zip -r9 ../terraform/zip/metahub-layer.zip .`
 - `cd ..`
 - `rm -r layer`
 
