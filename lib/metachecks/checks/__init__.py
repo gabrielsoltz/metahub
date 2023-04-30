@@ -10,5 +10,8 @@ from lib.metachecks.checks import (
     AwsElastiCacheCacheCluster,
     AwsSqsQueue,
     AwsSnsTopic,
-    AwsIamPolicy
+    AwsIamPolicy,
+    AwsEksCluster,
+    AwsRdsDbInstance,
+    AwsRdsDbCluster
 )

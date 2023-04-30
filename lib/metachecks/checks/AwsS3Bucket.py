@@ -23,12 +23,11 @@ class Metacheck(MetaChecksBase):
             self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
             self.bucket_acl = self._get_bucket_acl()
-            self.bucket_policy = self._get_bucket_policy()
-            if self.bucket_policy:
-                self.checked_bucket_policy = ResourcePolicyChecker(self.logger, finding, self.bucket_policy).check_policy()
             self.cannonical_user_id = self._get_canonical_user_id()
             self.bucket_website = self._get_bucket_website()
             self.bucket_public_access_block = self._get_bucket_public_access_block()
+            # Resource Policy
+            self.resource_policy = self.describe_resource_policy(finding)
     
     # Describe Functions
 
@@ -59,7 +58,9 @@ class Metacheck(MetaChecksBase):
             return False
         return response["Grants"]
 
-    def _get_bucket_policy(self):
+    # Resource Policy
+
+    def describe_resource_policy(self, finding):
         try:
             response = self.client.get_bucket_policy(Bucket=self.resource_id)
         except ClientError as err:
@@ -68,7 +69,12 @@ class Metacheck(MetaChecksBase):
             else:
                 self.logger.error("Failed to get_bucket_policy {}, {}".format(self.resource_id, err))
                 return False
-        return json.loads(response["Policy"])
+        
+        if response["Policy"]:
+            policy_json = json.loads(response["Policy"])
+            details = ResourcePolicyChecker(self.logger, finding, policy_json).check_policy()
+            policy = {"policy_checks": details, "policy": policy_json}
+            return policy
 
     def _get_bucket_website(self):
         try:
@@ -130,31 +136,8 @@ class Metacheck(MetaChecksBase):
             return public_acls
         return False
 
-    def it_has_policy(self):
-        bucket_policy = False
-        if self.bucket_policy:
-            bucket_policy = self.bucket_policy
-        return bucket_policy
-
-    def it_has_policy_public(self):
-        if self.bucket_policy:
-            return self.checked_bucket_policy["is_public"]
-        return False
-
-    def it_has_policy_principal_wildcard(self):
-        if self.bucket_policy:
-            return self.checked_bucket_policy["is_principal_wildcard"]
-        return False
-
-    def it_has_policy_principal_cross_account(self):
-        if self.bucket_policy:
-            return self.checked_bucket_policy["is_principal_cross_account"]
-        return False
-
-    def it_has_policy_actions_wildcard(self):
-        if self.bucket_policy:
-            return self.checked_bucket_policy["is_actions_wildcard"]
-        return False
+    def it_has_resource_policy(self):
+        return self.resource_policy
 
     def it_has_public_access_block_enabled(self):
         if self.bucket_public_access_block:
@@ -171,14 +154,16 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_unrestricted(self):
-        if self.it_has_policy_public() or self.it_has_bucket_acl_public():
-            return True
+        if self.resource_policy:
+            if self.resource_policy["policy_checks"]["is_public"] or self.it_has_bucket_acl_public():
+                return True
         return False
 
     def is_public(self):
         if self.it_has_website_enabled():
-            if self.it_has_policy_public() or self.it_has_bucket_acl_public():
-                self.it_has_website_enabled()
+            if self.resource_policy:
+                if self.resource_policy["policy_checks"]["is_public"] or self.it_has_bucket_acl_public():
+                    self.it_has_website_enabled()
         return False
 
     def is_encrypted(self):
@@ -191,11 +176,7 @@ class Metacheck(MetaChecksBase):
             "it_has_bucket_acl",
             "it_has_bucket_acl_cross_account",
             "it_has_bucket_acl_public",
-            "it_has_policy",
-            "it_has_policy_principal_cross_account",
-            "it_has_policy_principal_wildcard",
-            "it_has_policy_public",
-            "it_has_policy_actions_wildcard",
+            "it_has_resource_policy",
             "it_has_public_access_block_enabled",
             "is_public",
             "is_unrestricted",

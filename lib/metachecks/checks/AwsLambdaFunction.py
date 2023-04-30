@@ -4,6 +4,7 @@ import json
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+from aws_arn import generate_arn
 
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker, SecurityGroupChecker
@@ -13,29 +14,37 @@ class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client("lambda", region_name=region)
+                self.client = boto3.client("lambda", region_name=self.region)
             else:
-                self.client = sess.client(service_name="lambda", region_name=region)
+                self.client = sess.client(service_name="lambda", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
             self.function = self._get_function()
             self.function_vpc = self._get_function_vpc()
-            if self.function_vpc["SecurityGroupIds"]:
-                self.chcked_function_sg = SecurityGroupChecker(self.logger, finding, self.function_vpc["SecurityGroupIds"], sess).check_security_group()
-            self.function_policy = self._describe_function_policy()
-            if self.function_policy:
-                self.checked_function_policy = ResourcePolicyChecker(self.logger, finding, self.function_policy).check_policy()
+            # Resource Policy
+            self.resource_policy = self.describe_resource_policy(finding, sess)
+            # Security Groups
+            self.security_groups = self.describe_security_groups(finding, sess)
 
     # Describe Functions
 
     def _get_function(self):
-        response = self.client.get_function(
-            FunctionName=self.resource_arn
-#            Qualifier='string'
-        )
+        try:
+            response = self.client.get_function(
+                FunctionName=self.resource_arn
+    #            Qualifier='string'
+            )
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "ResourceNotFoundException":
+                return False
+            else:
+                self.logger.error("Failed to get_function {}, {}".format(self.resource_id, err))
+                return False
         if response["Configuration"]:
             return response["Configuration"]
         return False
@@ -48,7 +57,22 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    def _describe_function_policy(self):
+    # Security Groups
+
+    def describe_security_groups(self, finding, sess):
+        sgs = {}
+        if self.function_vpc.get("SecurityGroupIds"):
+            for sg in self.function_vpc["SecurityGroupIds"]:
+                arn = generate_arn(sg, "ec2", "security_group", self.region, self.account, self.partition)
+                details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
+                sgs[arn] = details
+        if sgs:
+            return sgs
+        return False
+
+    # Resource Policy
+
+    def describe_resource_policy(self, finding, sess):
         if self.function:
             try:
                 response = self.client.get_policy(
@@ -62,33 +86,16 @@ class Metacheck(MetaChecksBase):
                     self.logger.error("Failed to get_policy {}, {}".format(self.resource_id, err))
                     return False
             if response["Policy"]:
-                return json.loads(response["Policy"])
+                details = ResourcePolicyChecker(self.logger, finding, json.loads(response["Policy"])).check_policy()
+                policy = {"policy_checks": details, "policy": json.loads(response["Policy"])}
+                return policy
         return False
+
 
     # MetaChecks
 
-    def it_has_policy(self):
-        return self.function_policy
-
-    def it_has_policy_public(self):
-        if self.function_policy:
-            return self.checked_function_policy["is_public"]
-        return False
-
-    def it_has_policy_principal_wildcard(self):
-        if self.function_policy:
-            return self.checked_function_policy["is_principal_wildcard"]
-        return False
-
-    def it_has_policy_principal_cross_account(self):
-        if self.function_policy:
-            return self.checked_function_policy["is_principal_cross_account"]
-        return False
-
-    def it_has_policy_actions_wildcard(self):
-        if self.function_policy:
-            return self.checked_function_policy["is_actions_wildcard"]
-        return False
+    def it_has_resource_policy(self):
+        return self.resource_policy
 
     def its_associated_with_a_role(self):
         role = False
@@ -106,9 +113,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_security_groups(self):
-        if self.function_vpc:
-            if self.function_vpc["SecurityGroupIds"]:
-                return self.function_vpc["SecurityGroupIds"]
+        if self.security_groups:
+            return self.security_groups
         return False
 
     def its_associated_with_subnets(self):
@@ -117,30 +123,19 @@ class Metacheck(MetaChecksBase):
                 return self.function_vpc["SubnetIds"]
         return False
 
-    def its_associated_with_security_group_rules_ingress_unrestricted(self):
-        if self.function_vpc["SecurityGroupIds"]:
-            if self.chcked_function_sg["is_ingress_rules_unrestricted"]:
-                return self.chcked_function_sg["is_ingress_rules_unrestricted"]
-        return False
-
-    def its_associated_with_security_group_rules_egress_unrestricted(self):
-        if self.function_vpc["SecurityGroupIds"]:
-            if self.chcked_function_sg["is_egress_rule_unrestricted"]:
-                return self.chcked_function_sg["is_egress_rule_unrestricted"]
+    def is_public(self):
+        if self.resource_policy:
+            if self.resource_policy["policy_checks"]["is_public"]:
+                return True
         return False
 
     def checks(self):
         checks = [
-            "it_has_policy",
-            "it_has_policy_principal_cross_account",
-            "it_has_policy_principal_wildcard",
-            "it_has_policy_public",
-            "it_has_policy_actions_wildcard",
+            "it_has_resource_policy",
             "its_associated_with_a_role",
             "its_associated_with_vpc",
             "its_associated_with_security_groups",
             "its_associated_with_subnets",
-            "its_associated_with_security_group_rules_ingress_unrestricted",
-            "its_associated_with_security_group_rules_egress_unrestricted"
+            "is_public",
         ]
         return checks

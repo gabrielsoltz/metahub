@@ -19,7 +19,7 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.security_groups = self._describe_security_group()
             self.network_interfaces = self._describe_network_interfaces()
-            self.checked_sg = SecurityGroupChecker(self.logger, finding, [self.resource_id], sess).check_security_group()
+            self.checked_sg = SecurityGroupChecker(self.logger, finding, [finding["Resources"][0]["Id"]], sess).check_security_group()
 
     # Describe Functions
 

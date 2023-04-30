@@ -1,3 +1,7 @@
+from aws_arn import generate_arn
+import json
+from botocore.exceptions import BotoCoreError, ClientError
+
 class ResourcePolicyChecker():
 
     def __init__(self, logger, finding, policy):
@@ -160,7 +164,7 @@ class SecurityGroupChecker():
             Filters=[
                 {
                     "Name": "group-id",
-                    "Values": self.sg,
+                    "Values": [sg.split("/")[1] for sg in self.sg]
                 },
             ],
         )
@@ -203,3 +207,71 @@ class SecurityGroupChecker():
             if "::/0" in rule["CidrIpv6"] and rule["IsEgress"]:
                 return True
         return False
+
+class ResourceIamRoleChecker():
+
+    def __init__(self, logger, finding, role, sess):
+        self.logger = logger
+        self.resource = finding["Resources"][0]["Id"]
+        self.account_id = finding["AwsAccountId"]
+        self.role = role
+        self.region = finding["Region"]
+        self.partition = "aws"
+        self.sess=sess
+        self.finding = finding
+        if not sess:
+            self.iam_client = boto3.client("iam", region_name=self.region)
+        else:
+            self.iam_client = sess.client(service_name="iam", region_name=self.region)
+        self.role_policies = self.describe_role_policies()
+
+    def describe_role_policies(self):
+        policies = []
+
+        list_role_policies = self.iam_client.list_role_policies(
+            RoleName=self.role.split("/")[-1]
+        )
+        if list_role_policies["PolicyNames"]:
+            for policy_name in list_role_policies["PolicyNames"]:                
+                arn = generate_arn(policy_name, "iam", "policy", self.region, self.account_id, self.partition)
+                policies.append(arn)
+
+        list_attached_role_policies = self.iam_client.list_attached_role_policies(
+            RoleName=self.role.split("/")[-1]
+        )
+        if list_attached_role_policies["AttachedPolicies"]:
+            for attached_policy in list_attached_role_policies["AttachedPolicies"]:
+                policies.append(attached_policy["PolicyArn"])
+
+        return policies
+
+    def get_policy(self, policy_arn):
+        try:
+            policy_version_id = self.iam_client.get_policy(
+                PolicyArn=policy_arn
+            )["Policy"]["DefaultVersionId"]
+            response = self.iam_client.get_policy_version(
+                PolicyArn=policy_arn,
+                VersionId=policy_version_id
+            )
+            return response["PolicyVersion"]["Document"]
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "NoSuchEntity":
+                response = self.iam_client.get_role_policy(
+                    RoleName=self.role.split("/")[-1],
+                    PolicyName=policy_arn.split("/")[-1]
+                )
+                return response["PolicyDocument"]
+
+        
+
+    def check_role_policies(self):
+        self.logger.info("Checking role %s for resource: %s", self.role, self.resource)
+        roles_checks = {
+            "iam_policies": {},
+        }
+        for policy in self.role_policies:
+            policy_doc = self.get_policy(policy)
+            check_policy = ResourcePolicyChecker(self.logger, self.finding, policy_doc).check_policy()
+            roles_checks["iam_policies"][policy] = {"policy_checks": check_policy, "policy": policy_doc}
+        return roles_checks

@@ -2,31 +2,35 @@
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+from aws_arn import generate_arn
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
+from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker, ResourceIamRoleChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client("ec2", region_name=region)
-                self.asg_client = boto3.client("autoscaling", region_name=region)
+                self.client = boto3.client("ec2", region_name=self.region)
+                self.asg_client = boto3.client("autoscaling", region_name=self.region)
             else:
-                self.client = sess.client(service_name="ec2", region_name=region)
-                self.asg_client = sess.client(service_name="autoscaling", region_name=region)
+                self.client = sess.client(service_name="ec2", region_name=self.region)
+                self.asg_client = sess.client(service_name="autoscaling", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
             self.instance = self._describe_instance()
-            self.instance_sg = self._describe_instance_security_groups()
-            if self.instance_sg:
-                self.checked_instance_sg = SecurityGroupChecker(self.logger, finding, self.instance_sg, sess).check_security_group()
+            # Security Groups
+            self.security_groups = self.describe_security_groups(finding, sess)
             self.instance_volumes = self._describe_volumes()
-            self.instance_profile_roles = self._describe_instance_profile(sess)
             self.instance_auto_scaling_group = self._describe_auto_scaling_instances()
+            # Roles
+            self.instance_profile_roles = self._describe_instance_profile(sess)
+            self.iam_roles = self.describe_iam_roles(finding, sess)
 
     # Describe Functions
 
@@ -47,25 +51,32 @@ class Metacheck(MetaChecksBase):
             return response["Reservations"][0]["Instances"][0]
         return False
 
-    def _describe_instance_security_groups(self):
-        SG = []
+    # Security Groups
+
+    def describe_security_groups(self, finding, sess):
+        sgs = {}
         if self.instance:
             if self.instance["SecurityGroups"]:
                 for sg in self.instance["SecurityGroups"]:
-                    SG.append(sg["GroupId"])
-        if SG:
-            return SG
+                    arn = generate_arn(sg["GroupId"], "ec2", "security_group", self.region, self.account, self.partition)
+                    sgs[arn] = {}
+                    details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
+                    sgs[arn] = details
+        if sgs:
+            return sgs
         return False
 
-    def _describe_volumes(self):
-        BlockDeviceMappings = []
-        if self.instance:
-            if self.instance["BlockDeviceMappings"]:
-                for ebs in self.instance["BlockDeviceMappings"]:
-                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
-        if BlockDeviceMappings:
-            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
-            return response["Volumes"]
+    # IAM Roles
+
+    def describe_iam_roles(self, finding, sess):
+        roles = {}
+        if self.instance_profile_roles:
+            for role in self.instance_profile_roles["Roles"]:
+                role_arn = role["Arn"]
+                details = ResourceIamRoleChecker(self.logger, finding, role_arn, sess).check_role_policies()
+                roles[role_arn] = details
+        if roles:
+            return roles
         return False
 
     def _describe_instance_profile(self, sess):
@@ -84,6 +95,17 @@ class Metacheck(MetaChecksBase):
                 InstanceProfileName=IamInstanceProfile.split("/")[1]
             )
             return response["InstanceProfile"]
+        return False
+
+    def _describe_volumes(self):
+        BlockDeviceMappings = []
+        if self.instance:
+            if self.instance["BlockDeviceMappings"]:
+                for ebs in self.instance["BlockDeviceMappings"]:
+                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
+        if BlockDeviceMappings:
+            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
+            return response["Volumes"]
         return False
 
     def _describe_auto_scaling_instances(self):
@@ -157,20 +179,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_security_groups(self):
-        if self.instance_sg:
-            return self.instance_sg
-        return False
-
-    def its_associated_with_security_group_rules_ingress_unrestricted(self):
-        if self.instance_sg:
-            if self.checked_instance_sg["is_ingress_rules_unrestricted"]:
-                return self.checked_instance_sg["is_ingress_rules_unrestricted"]
-        return False
-
-    def its_associated_with_security_group_rules_egress_unrestricted(self):
-        if self.instance_sg:
-            if self.checked_instance_sg["is_egress_rule_unrestricted"]:
-                return self.checked_instance_sg["is_egress_rule_unrestricted"]
+        if self.security_groups:
+            return self.security_groups
         return False
 
     def it_has_instance_profile(self):
@@ -180,13 +190,8 @@ class Metacheck(MetaChecksBase):
             return IamInstanceProfile
         return False
 
-    def it_has_instance_profile_roles(self):
-        IamInstanceProfileRoles = False
-        if self.instance_profile_roles:
-            for role in self.instance_profile_roles["Roles"]:
-                IamInstanceProfileRoles = role["Arn"]
-            return IamInstanceProfileRoles
-        return False
+    def its_assoaciated_with_iam_roles(self):
+        return self.iam_roles
 
     def is_instance_metadata_v2(self):
         HttpTokens = False
@@ -253,9 +258,14 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
+        ingress = False
+        if self.security_groups:
+            for sg in self.security_groups:
+                if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
+                    ingress = True
         if (
             self.it_has_public_ip()
-            and self.its_associated_with_security_group_rules_ingress_unrestricted()
+            and ingress
         ):
             return self.it_has_public_ip()
         return False
@@ -273,10 +283,8 @@ class Metacheck(MetaChecksBase):
             "it_has_private_dns",
             "it_has_public_dns",
             "it_has_instance_profile",
-            "it_has_instance_profile_roles",
+            "its_assoaciated_with_iam_roles",
             "its_associated_with_security_groups",
-            "its_associated_with_security_group_rules_ingress_unrestricted",
-            "its_associated_with_security_group_rules_egress_unrestricted",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
             "its_associated_with_ebs",

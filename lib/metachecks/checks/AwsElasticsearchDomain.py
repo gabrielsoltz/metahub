@@ -13,18 +13,19 @@ class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client("es", region_name=region)
+                self.client = boto3.client("es", region_name=self.region)
             else:
-                self.client = sess.client(service_name="es", region_name=region)
+                self.client = sess.client(service_name="es", region_name=self.region)
             self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
             self.resource_arn = finding["Resources"][0]["Id"]
             self.mh_filters_checks = mh_filters_checks
             self.elasticsearch_domain = self._describe_elasticsearch_domain()
-            self.elasticsearch_policy = self._describe_elasticsearch_domain_policy()
-            if self.elasticsearch_policy:
-                self.checked_elasticsearch_policy = ResourcePolicyChecker(self.logger, finding, self.elasticsearch_policy).check_policy()
+            # Resource Policy
+            self.resource_policy = self.describe_resource_policy(finding, sess)
 
     # Describe Functions
 
@@ -50,12 +51,18 @@ class Metacheck(MetaChecksBase):
                 return False
         return response["DomainStatus"]
     
-    def _describe_elasticsearch_domain_policy(self):
+    # Resource Policy
+
+    def describe_resource_policy(self, finding, sess):
         if self.elasticsearch_domain:
             try:
                 access_policies = json.loads(
                     self.elasticsearch_domain["AccessPolicies"]
                 )
+                if access_policies:
+                    details = ResourcePolicyChecker(self.logger, finding, access_policies).check_policy()
+                    policy = {"policy_checks": details, "policy": access_policies}
+                    return policy
                 return access_policies
             except KeyError:
                 return False
@@ -72,32 +79,12 @@ class Metacheck(MetaChecksBase):
             return public_endpoints
         return False
 
-    def it_has_policy(self):
-        return self.elasticsearch_policy
-
-    def it_has_policy_principal_cross_account(self):
-        if self.elasticsearch_policy:
-            return self.checked_elasticsearch_policy["is_principal_cross_account"]
-        return False
-
-    def it_has_policy_principal_wildcard(self):
-        if self.elasticsearch_policy:
-            return self.checked_elasticsearch_policy["is_principal_wildcard"]
-        return False
-
-    def it_has_policy_public(self):
-        if self.elasticsearch_policy:
-            return self.checked_elasticsearch_policy["is_public"]
-        return False
-
-    def it_has_policy_actions_wildcard(self):
-        if self.elasticsearch_policy:
-            return self.checked_elasticsearch_policy["is_actions_wildcard"]
-        return False
+    def it_has_resource_policy(self):
+        return self.resource_policy
 
     def is_public(self):
-        if self.elasticsearch_domain:
-            if self.it_has_policy_public() and self.it_has_public_endpoint():
+        if self.resource_policy:
+            if self.resource_policy["policy_checks"]["is_public"] and self.it_has_public_endpoint():
                 return self.it_has_public_endpoint()
         return False
 
@@ -121,11 +108,7 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "it_has_policy",
-            "it_has_policy_principal_cross_account",
-            "it_has_policy_principal_wildcard",
-            "it_has_policy_public",
-            "it_has_policy_actions_wildcard",
+            "it_has_resource_policy",
             "it_has_public_endpoint",
             "is_public",
             "is_rest_encrypted",

@@ -2,23 +2,29 @@
 
 import boto3
 from lib.metachecks.checks.Base import MetaChecksBase
+from aws_arn import generate_arn
+from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client("ec2", region_name=region)
-                self.asg_client = boto3.client("autoscaling", region_name=region)
+                self.client = boto3.client("ec2", region_name=self.region)
+                self.asg_client = boto3.client("autoscaling", region_name=self.region)
             else:
-                self.client = sess.client(service_name="ec2", region_name=region)
-                self.asg_client = sess.client(service_name="autoscaling", region_name=region)
+                self.client = sess.client(service_name="ec2", region_name=self.region)
+                self.asg_client = sess.client(service_name="autoscaling", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
             self.launch_template = self._describe_launch_template_versions()
             self.auto_scaling_groups = self._describe_auto_scaling_groups()
+            # Security Groups
+            self.security_groups = self.describe_security_groups(finding, sess)
 
     # Describe functions
 
@@ -39,6 +45,19 @@ class Metacheck(MetaChecksBase):
             return response["AutoScalingGroups"]
         return False
 
+    # Security Groups
+
+    def describe_security_groups(self, finding, sess):
+        sgs = {}
+        if self.launch_template:
+            if self.launch_template.get("SecurityGroupIds"):
+                for sg in self.launch_template["SecurityGroupIds"]:
+                    arn = generate_arn(sg, "ec2", "security_group", self.region, self.account, self.partition)
+                    details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
+                    sgs[arn] = details
+        if sgs:
+            return sgs
+        return False
 
     # MetaChecks
 
@@ -100,12 +119,18 @@ class Metacheck(MetaChecksBase):
                 Name = False
         return Name
 
+    def its_associated_with_security_groups(self):
+        if self.security_groups:
+            return self.security_groups
+        return False
+
     def checks(self):
         checks = [
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
             "its_associated_with_an_asg",
             "its_associated_with_asg_instances",
-            "it_has_name"
+            "it_has_name",
+            "its_associated_with_security_groups",
         ]
         return checks

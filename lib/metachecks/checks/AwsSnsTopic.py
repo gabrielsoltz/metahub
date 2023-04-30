@@ -11,20 +11,21 @@ class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client("sns", region_name=region)
+                self.client = boto3.client("sns", region_name=self.region)
             else:
-                self.client = sess.client(service_name="sns", region_name=region)
+                self.client = sess.client(service_name="sns", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
             self.topic_atributes = self._get_topic_attributes()
-            self.topic_policy = self._get_topic_atributes_policy()
-            if self.topic_policy:
-                self.checked_topic_policy = ResourcePolicyChecker(self.logger, finding, self.topic_policy).check_policy()
             self.topic_kms_master_key_id = self._get_topic_atributes_kms_master_key_id()
+            # Resource Policy
+            self.resource_policy = self.describe_resource_policy(finding, sess)
             
     # Describe Functions
 
@@ -36,10 +37,15 @@ class Metacheck(MetaChecksBase):
             return response["Attributes"]
         return False
 
-    def _get_topic_atributes_policy(self):
+    # Resource Policy
+
+    def describe_resource_policy(self, finding, sess):
         if self.topic_atributes:
             try:
-                return json.loads(self.topic_atributes["Policy"])
+                if self.topic_atributes["Policy"]:
+                    details = ResourcePolicyChecker(self.logger, finding, json.loads(self.topic_atributes["Policy"])).check_policy()
+                    policy = {"policy_checks": details, "policy": json.loads(self.topic_atributes["Policy"])}
+                    return policy
             except KeyError:
                 return False
         return False
@@ -54,32 +60,12 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def it_has_policy(self):
-        return self.topic_policy
-
-    def it_has_policy_principal_cross_account(self):
-        if self.topic_policy:
-            return self.checked_topic_policy["is_principal_cross_account"]
-        return False
-
-    def it_has_policy_principal_wildcard(self):
-        if self.topic_policy:
-            return self.checked_topic_policy["is_principal_wildcard"]
-        return False
-
-    def it_has_policy_public(self):
-        if self.topic_policy:
-            return self.checked_topic_policy["is_public"]
-        return False
-
-    def it_has_policy_actions_wildcard(self):
-        if self.topic_policy:
-            return self.checked_topic_policy["is_actions_wildcard"]
-        return False
+    def it_has_resource_policy(self):
+        return self.resource_policy
 
     def is_public(self):
-        if self.topic_policy:
-            if self.it_has_policy_public():
+        if self.resource_policy:
+            if self.resource_policy["policy_checks"]["is_public"]:
                 return True
         return False
 
@@ -90,11 +76,7 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "it_has_policy",
-            "it_has_policy_principal_cross_account",
-            "it_has_policy_principal_wildcard",
-            "it_has_policy_public",
-            "it_has_policy_actions_wildcard",
+            "it_has_resource_policy",
             "is_public",
             "is_encrypted"
         ]
