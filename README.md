@@ -1018,6 +1018,20 @@ For every resource that can be associatd with a Security Group, **MetaHub** will
 -  "is_egress_rule_unrestricted": You get a list of the egress rules that are unrestricted.
 
 ```
+├── affected-resource
+│   ├── ...
+│   ├── metachecks
+│   │   ├── its_associated_with_security_groups
+│   │   │   ├── sg-1
+│   │   │   │   └── is_ingress_rules_unrestricted
+│   │   │   │       ├── rule-1 (open port 22 from...)
+│   │   │   │   └── is_ingress_rules_unrestricted.tfvars
+│   │   │   │   └── secrets.tfvars
+│   │   │   ├── sg-2
+│   │   │   └── sg-3
+```
+
+```
   "its_associated_with_security_groups": {
     "arn:aws:ec2:eu-west-1:012345678901:security-group/sg-012345678901": {
       "is_ingress_rules_unrestricted": [],
@@ -1046,6 +1060,30 @@ For every resource that can be associatd with an IAM Role, **MetaHub** will list
 - "is_principal_cross_account": If the policy principal is defined as a cross account
 - "is_principal_external": If the policy principal is defined as an external account (not in the same organization)
 - "is_actions_wildcard": If the policy actions are defined as a wildcard (*)
+
+```
+├── affected-resource
+│   ├── ...
+│   ├── metachecks
+│   │   ├── its_associated_with_iam_roles
+│   │   │   ├── role-1
+│   │   │   │   └── iam_policies
+│   │   │   │       ├── policy-a
+│   │   │   │       │   └── policy_checks
+│   │   │   │       │       ├── is_principal_wildcard
+│   │   │   │       │       │   ├── statement-1
+│   │   │   │       │       ├── is_principal_cross_account
+│   │   │   │       │       │   ├── statement-cross-account
+│   │   │   │       │       ├── is_principal_external
+│   │   │   │       │       │   ├── statement-external
+│   │   │   │       │       ├── is_public
+│   │   │   │       │       │   ├── statement-public
+│   │   │   │       │       ├── is_actions_wildcard
+│   │   │   │       │       │   ├── statement-actions-wildcard
+│   │   │   │       │   └── policy
+│   │   │   ├── role-2
+│   │   │   └── role-3
+```
 
 ```
   "its_associated_with_iam_roles": {
@@ -1117,6 +1155,25 @@ For every resource that can have a resource policy, **MetaHub** will fetch the r
 - "is_principal_cross_account": If the policy principal is defined as a cross account
 - "is_principal_external": If the policy principal is defined as an external account (not in the same organization)
 - "is_actions_wildcard": If the policy actions are defined as a wildcard (*)
+
+```
+├── affected-resource
+│   ├── ...
+│   ├── metachecks
+│   │   ├── it_has_resource_policy
+│   │   │   ├── policy_checks
+│   │   │   │   └── is_principal_wildcard
+│   │   │   │       ├── statement-wildcard
+│   │   │   │   └── is_principal_cross_account
+│   │   │   │       ├── statement-cross-account
+│   │   │   │   └── is_principal_external
+│   │   │   │       ├── statement-external
+│   │   │   │   └── is_public
+│   │   │   │       ├── statement-public
+│   │   │   │   └── is_actions_wildcard
+│   │   │   │       ├── statement-actions-wildcard
+│   │   │   └── policy
+```
 
 ```
       "it_has_resource_policy": {
