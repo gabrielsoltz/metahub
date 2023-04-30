@@ -69,7 +69,7 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def its_assoaciated_with_iam_roles(self):
+    def its_associated_with_iam_roles(self):
         if self.rds_cluster:
             return self.iam_roles
         return False
@@ -93,7 +93,7 @@ class Metacheck(MetaChecksBase):
     
     def checks(self):
         checks = [
-            "its_assoaciated_with_iam_roles",
+            "its_associated_with_iam_roles",
             "its_associated_with_security_groups",
             "is_public"
         ]

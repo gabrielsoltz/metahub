@@ -7,7 +7,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from aws_arn import generate_arn
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker, SecurityGroupChecker
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker, SecurityGroupChecker, ResourceIamRoleChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -30,6 +30,8 @@ class Metacheck(MetaChecksBase):
             self.resource_policy = self.describe_resource_policy(finding, sess)
             # Security Groups
             self.security_groups = self.describe_security_groups(finding, sess)
+            # Roles
+            self.iam_roles = self.describe_iam_roles(finding, sess)
 
     # Describe Functions
 
@@ -92,19 +94,27 @@ class Metacheck(MetaChecksBase):
         return False
 
 
+    # IAM Roles
+
+    def describe_iam_roles(self, finding, sess):
+        roles = {}
+        if self.function:
+            try:
+                role_arn = self.function["Role"]
+                details = ResourceIamRoleChecker(self.logger, finding, role_arn, sess).check_role_policies()
+                roles[role_arn] = details
+            except KeyError:
+                pass
+                
+        return roles
+
+
     # MetaChecks
 
     def it_has_resource_policy(self):
         return self.resource_policy
 
-    def its_associated_with_a_role(self):
-        role = False
-        if self.function:
-            try:
-                role = self.function["Role"]
-            except KeyError:
-                role = False
-        return role
+
 
     def its_associated_with_vpc(self):
         if self.function_vpc:
@@ -129,10 +139,13 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def its_associated_with_iam_roles(self):
+        return self.iam_roles
+
     def checks(self):
         checks = [
             "it_has_resource_policy",
-            "its_associated_with_a_role",
+            "its_associated_with_iam_roles",
             "its_associated_with_vpc",
             "its_associated_with_security_groups",
             "its_associated_with_subnets",

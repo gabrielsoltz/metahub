@@ -190,7 +190,7 @@ class Metacheck(MetaChecksBase):
             return IamInstanceProfile
         return False
 
-    def its_assoaciated_with_iam_roles(self):
+    def its_associated_with_iam_roles(self):
         return self.iam_roles
 
     def is_instance_metadata_v2(self):
@@ -283,7 +283,7 @@ class Metacheck(MetaChecksBase):
             "it_has_private_dns",
             "it_has_public_dns",
             "it_has_instance_profile",
-            "its_assoaciated_with_iam_roles",
+            "its_associated_with_iam_roles",
             "its_associated_with_security_groups",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",

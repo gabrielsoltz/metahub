@@ -67,11 +67,11 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks Functions
 
-    def its_assoaciated_with_iam_roles(self):
+    def its_associated_with_iam_roles(self):
         if self.eks_cluster:
             return self.iam_roles
 
-    def its_assoaciated_with_security_groups(self):
+    def its_associated_with_security_groups(self):
         if self.eks_cluster:
             return self.security_groups
 
@@ -81,8 +81,8 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_assoaciated_with_iam_roles",
-            "its_assoaciated_with_security_groups",
+            "its_associated_with_iam_roles",
+            "its_associated_with_security_groups",
             "it_has_endpoint"
         ]
         return checks

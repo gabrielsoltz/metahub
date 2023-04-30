@@ -1,6 +1,7 @@
 from aws_arn import generate_arn
 import json
 from botocore.exceptions import BotoCoreError, ClientError
+from lib.config import configuration
 
 class ResourcePolicyChecker():
 
@@ -85,7 +86,7 @@ class ResourcePolicyChecker():
     def is_principal_external(self, statement):
         '''
         '''
-        internal_accounts = ("1", "2", "3")
+        internal_accounts = configuration.trusted_accounts
         amazon_accounts = ("cloudfront")
         effect, principal, not_principal, condition, action, not_action = self.parse_statement(statement)
         if principal and principal != "*" and principal.get("AWS") != "*":
