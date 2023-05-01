@@ -1294,42 +1294,37 @@ MetaChecks are defined in the form of:
 
 > Refers to the affected resource itself.
 
-- is_rest_encrypted
-- is_transit_encrypted
+Examples:
+
 - is_running
 - is_default
 
 ### its_associated_with
 
-> Resources that are independent (they have their own ARN) and are associated with the affected resource
+> Resources that are independent (they have their own ARN) and are associated with the affected resource. When `True` returns `something_its_associated_with` in the form of a list of ARNs or a dictionary if there is a drilled MetaCheck available which is checking the associated resource.
 
-When True returns a list of something_is_associated_with...
+Examples:
 
-- its_associated_with_<something_is_associated_with>
-- its_associated_with_<something_is_associated_with>_unencrypted
-- its_associated_with_<something_is_associated_with>_unrestricted_cross_account
-- its_associated_with_<something_is_associated_with>_unrestricted_wildcard
-- its_associated_with_<something_is_associated_with>_public
+- its_associated_with_subnets
+- its_associated_with_security_groups
+- its_associated_with_its_associated_with_vpc
 
 ### it_has
 
-> Properties that only exist as part of the affected resource
+> Properties that only exist as part of the affected resource. When `True` returns a list of `something_it_has`.
 
-When True returns a list of something_it_has...
+Examples:
 
-- it_has_<something_it_has>
-- it_has_<something_it_has>_unencrypted
-- it_has_<something_it_has>_unrestricted_cross_account
-- it_has_<something_it_has>_unrestricted_wildcard
-- it_has_<something_it_has>_public
+- it_has_bucket_acl_cross_account
+- it_has_public_endpoint
 
 ### its_referenced_by
 
-> Resources that are independent (they have their own ARN) and are referencing the affected resource without being associated to it
+> These are resources that have their own ARN and reference the affected resource without being directly associated with it. When `True` returns a list of `something_that_is_referencing_the_affected_resource`...
 
-When True returns a list of something_that_is_referencing_the_affected_resource...
+Examples:
 
-- its_referenced_by_<something_that_is_referencing_the_affected_resource>
+- its_referenced_by_a_security_group
 
 
 # MetaTags
