@@ -34,13 +34,13 @@
 
 **MetaHub** is a powerful security context enrichment command line utility designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html). With MetaHub, you can enhance your security findings with contextual information for the purpose of filtering, deduplicating, grouping, reporting, automating, suppressing, or updating. MetaHub interacts with AWS Security Hub API or ASFF files, and you can combine these sources in any way you choose to further enrich your findings.
 
+MetaHub provides contextual information not only about the affected resource but also about any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
+
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
 </p>
 
 **MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
-
-Everything that it's associated with the affected resource is analyzed and included in the output, including for example the security groups that the affected resource is associated with or the IAM roles that the affected resource is using and the policies of those roles.
 
 <details>
 <summary>If you are investigating the security finding <b>[EC2.8]</b> for <b>EC2 Instance i-0c721c63f74a2863a</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks) and if any of the policies of that role has an issue, and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
