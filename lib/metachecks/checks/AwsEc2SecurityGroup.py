@@ -101,7 +101,7 @@ class Metacheck(MetaChecksBase):
                 return PublicIPs
         return False
 
-    def its_referenced_by_another_sg(self):
+    def its_referenced_by_a_security_group(self):
         references = []
         if self.security_groups:
             for sg in self.security_groups:
@@ -149,7 +149,7 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_ec2_instances",
             "its_associated_with_ips_public",
             "its_associated_with_managed_services",
-            "its_referenced_by_another_sg",
+            "its_referenced_by_a_security_group",
             "its_associated_with_security_group_rules_ingress_unrestricted",
             "its_associated_with_security_group_rules_egress_unrestricted",
             "is_public",
