@@ -998,7 +998,8 @@ You can now work in MetaHub with all these four findings together as if they wer
 
 On top of the AWS Security Hub findings, **MetaHub** can run additional checks directly on the affected resource in the affected account. We call these, **MetaChecks**. 
 
-MetaChecks can fetch information from every related resource to the affected resource. For example, if you are checking an EC2 Instance, MetaChecks can fetch information from the associated Security Groups, including wich ports are open and from where, and from the IAM roles associated with the EC2 Instance, including the permissions that the role has. 
+**MetaChecks** has the capability to retrieve information from every related resource associated with the affected resource. For instance, when checking an EC2 Instance, MetaChecks can gather information from its associated Security Groups, including details about which ports are open and from where. Additionally, MetaChecks can fetch information from the IAM roles that are linked to the EC2 Instance, including the permissions granted to those roles. 
+
 
 Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, like resources that you can use for your favorite integrations.
 
@@ -1006,13 +1007,15 @@ You can filter your findings based on MetaChecks output using the option `--mh-f
 
 If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull requests are more than welcome.
 
-# Drilled MetaChecks
+## Drilled MetaChecks
 
-**MetaHub** can run MetaChecks on the resources related to the affected resource. We call these, **Drilled MetaChecks**.
+**MetaHub** can run MetaChecks on the resources associated to the affected resource. We call these, **Drilled MetaChecks**. This is one of the most powerful features of **MetaHub** because it allows you to get a comprehensive view of the affected resource and its associated resources to define the impact of a finding.
 
-## its_associated_with_security_groups
+The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `it_has_resource_policy` and more in the future.
 
-For every resource that can be associatd with a Security Group, **MetaHub** will list the security groups associacted and it will fetch from the security groups the rules to answer the following questions:
+### its_associated_with_security_groups
+
+Resources that can be associated with Security Groups are checked by this MetaCheck to provide a comprehensive list of all associated Security Groups. MetaHub will then fetch the rules from these Security Groups to answer the following questions:
 
 -  "is_ingress_rules_unrestricted": You get a list of the ingress rules that are unrestricted.
 -  "is_egress_rule_unrestricted": You get a list of the egress rules that are unrestricted.
@@ -1022,13 +1025,14 @@ For every resource that can be associatd with a Security Group, **MetaHub** will
 │   ├── ...
 │   ├── metachecks
 │   │   ├── its_associated_with_security_groups
-│   │   │   ├── sg-1
+│   │   │   ├── security-group-1
 │   │   │   │   └── is_ingress_rules_unrestricted
-│   │   │   │       ├── rule-1 (open port 22 from...)
-│   │   │   │   └── is_ingress_rules_unrestricted.tfvars
-│   │   │   │   └── secrets.tfvars
-│   │   │   ├── sg-2
-│   │   │   └── sg-3
+│   │   │   │       ├── rule-1 (port X open 0.0.0.0/0)
+│   │   │   │   └── is_egress_rule_unrestricted
+│   │   │   ├── security-group-2
+│   │   │   │   └── is_ingress_rules_unrestricted
+│   │   │   │   └── is_egress_rule_unrestricted
+│   │   │   └── security-group-3
 ```
 
 ```
@@ -1054,7 +1058,7 @@ For every resource that can be associatd with a Security Group, **MetaHub** will
 
 ### its_associated_with_iam_roles
 
-For every resource that can be associatd with an IAM Role, **MetaHub** will list the IAM Roles associacted and it will fetch from the IAM Roles the policies to answer the following questions:
+Resources that can be associated with IAM Roles are checked by this MetaCheck to provide all the associated IAM Roles, and from every role it will fetch the IAM policies to answer the following questions:
 
 - "is_principal_wildcard": If the policy principal is defined as a wildcard (*)
 - "is_principal_cross_account": If the policy principal is defined as a cross account
@@ -1080,7 +1084,7 @@ For every resource that can be associatd with an IAM Role, **MetaHub** will list
 │   │   │   │       │       │   ├── statement-public
 │   │   │   │       │       ├── is_actions_wildcard
 │   │   │   │       │       │   ├── statement-actions-wildcard
-│   │   │   │       │   └── policy
+│   │   │   │       │   └── policy-document
 │   │   │   ├── role-2
 │   │   │   └── role-3
 ```
@@ -1149,7 +1153,7 @@ For every resource that can be associatd with an IAM Role, **MetaHub** will list
 
 ### it_has_resource_policy
 
-For every resource that can have a resource policy, **MetaHub** will fetch the resource policy to answer the following questions:
+Resources that can have a resource policy are checked by this MetaCheck to analyze it policy to answer the following questions:
 
 - "is_principal_wildcard": If the policy principal is defined as a wildcard (*)
 - "is_principal_cross_account": If the policy principal is defined as a cross account
@@ -1172,7 +1176,7 @@ For every resource that can have a resource policy, **MetaHub** will fetch the r
 │   │   │   │       ├── statement-public
 │   │   │   │   └── is_actions_wildcard
 │   │   │   │       ├── statement-actions-wildcard
-│   │   │   └── policy
+│   │   │   └── policy-document
 ```
 
 ```
@@ -1239,9 +1243,9 @@ For every resource that can have a resource policy, **MetaHub** will fetch the r
 
 ## Generic MetaChecks
 
-There are some metachecks called generic that are defined across all resources in with the same name. You can use them to filter across all resource types. For example, you can filter all resources that are public using the MetaCheck `is_public=True`.
+**MetaHub** provides a set of **MetaChecks** called "generic" that are defined across all resources with the same name. You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the MetaCheck `is_public=True`.
 
-These includes is_public, is_encrypted, is_running.
+The generic **MetaChecks** are: is_public, is_encrypted, is_running.
 
 ### is_public
 
