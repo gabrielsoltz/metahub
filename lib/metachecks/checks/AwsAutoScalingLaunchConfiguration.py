@@ -8,7 +8,14 @@ from lib.metachecks.checks.Base import MetaChecksBase
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -30,7 +37,8 @@ class Metacheck(MetaChecksBase):
             self.auto_scaling_groups = self._describe_auto_scaling_groups()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            self.execute_drilled_metachecks()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe functions
 

@@ -8,7 +8,14 @@ from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -27,7 +34,8 @@ class Metacheck(MetaChecksBase):
                 self.checked_policy_version = ResourcePolicyChecker(
                     self.logger, finding, self.policy_version
                 ).check_policy()
-            self.policy_entities = self._list_entities_for_policy()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 

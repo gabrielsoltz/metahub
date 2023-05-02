@@ -1,10 +1,6 @@
 import boto3
 import botocore
-from botocore.exceptions import (
-    ClientError,
-    EndpointConnectionError,
-    NoCredentialsError,
-)
+from botocore.exceptions import ClientError, EndpointConnectionError, NoCredentialsError
 
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):

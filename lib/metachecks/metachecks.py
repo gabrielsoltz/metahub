@@ -3,7 +3,7 @@ from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session
 from lib.helpers import print_table
 
 
-def run_metachecks(logger, finding, mh_filters_checks, mh_role):
+def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     """
     Executes MetaChecks for the AWS Resource Type
     :param logger: logger configuration
@@ -47,7 +47,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role):
 
     try:
         hndl = getattr(lib.metachecks.checks, AWSResourceType).Metacheck(
-            logger, finding, meta_checks, mh_filters_checks, sess
+            logger, finding, meta_checks, mh_filters_checks, sess, drilled_down
         )
     except AttributeError as err:
         logger.info(
@@ -86,6 +86,7 @@ def list_metachecks(logger):
     mh_filters_checks = False
     sess = False
     finding = False
+    drilled_down = False
 
     import inspect
 
@@ -94,7 +95,7 @@ def list_metachecks(logger):
             continue
         try:
             hndl = getattr(lib.metachecks.checks, name).Metacheck(
-                logger, finding, meta_checks, mh_filters_checks, sess
+                logger, finding, meta_checks, mh_filters_checks, sess, drilled_down
             )
         except AttributeError as err:
             logger.debug("No MetaChecks for AWSResourceType: %s (%s)", name, err)

@@ -170,6 +170,13 @@ def get_parser():
         help="Specify the AWS IAM role role to be assumed where the affected resources are running",
         required=False,
     )
+    group_meta_checks.add_argument(
+        "--drilled-down",
+        help="Use this option to execute MetaChecks in drilled down mode. This option will be used only if you are using --meta-checks",
+        default=True,
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
 
     # Group: Output Options
     group_output = parser.add_argument_group("Output Options")

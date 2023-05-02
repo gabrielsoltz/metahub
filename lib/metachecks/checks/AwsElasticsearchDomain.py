@@ -7,14 +7,19 @@ from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import (
-    ResourcePolicyChecker,
-)
+from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -36,7 +41,8 @@ class Metacheck(MetaChecksBase):
             self.resource_policy = self.describe_resource_policy(finding, sess)
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            self.execute_drilled_metachecks()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 
@@ -48,12 +54,16 @@ class Metacheck(MetaChecksBase):
         except ClientError as err:
             if err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.info(
-                    "Failed to describe_elasticsearch_domain: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_elasticsearch_domain: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
             else:
                 self.logger.error(
-                    "Failed to describe_elasticsearch_domain: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_elasticsearch_domain: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
         return response["DomainStatus"]

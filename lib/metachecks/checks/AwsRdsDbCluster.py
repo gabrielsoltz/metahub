@@ -5,14 +5,19 @@ from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import (
-    ResourceIamRoleChecker,
-)
+from lib.metachecks.checks.MetaChecksHelpers import ResourceIamRoleChecker
 
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -34,7 +39,8 @@ class Metacheck(MetaChecksBase):
             self.iam_roles = self.describe_iam_roles(finding, sess)
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            self.execute_drilled_metachecks()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 

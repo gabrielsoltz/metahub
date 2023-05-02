@@ -9,7 +9,14 @@ from lib.metachecks.checks.Base import MetaChecksBase
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -38,7 +45,8 @@ class Metacheck(MetaChecksBase):
             self.elasticcache_cluster = self._describe_cache_clusters()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            self.execute_drilled_metachecks()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe functions
 
@@ -52,12 +60,16 @@ class Metacheck(MetaChecksBase):
         except ClientError as err:
             if err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
                 self.logger.info(
-                    "Failed to describe_cache_clusters: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_cache_clusters: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
             else:
                 self.logger.error(
-                    "Failed to describe_cache_clusters: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_cache_clusters: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
         if response["CacheClusters"]:

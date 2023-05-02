@@ -1,6 +1,13 @@
 class MetaChecksBase:
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
 
@@ -54,8 +61,9 @@ class MetaChecksBase:
                 self.logger.info(
                     "Drilling metachecks for security group: {}".format(sg)
                 )
+                # We only drill down one level, so here we set drilled_down to False
                 self.security_groups[sg] = SecurityGroupMetacheck(
-                    self.logger, self.finding, True, False, self.sess, drilled=sg
+                    self.logger, self.finding, True, False, self.sess, False, drilled=sg
                 ).output_checks_drilled()
 
     def output_checks_drilled(self):

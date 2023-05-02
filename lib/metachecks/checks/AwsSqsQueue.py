@@ -10,7 +10,14 @@ from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -32,6 +39,8 @@ class Metacheck(MetaChecksBase):
             self.queue_attributes = self._get_queue_atributes()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy(finding, sess)
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 

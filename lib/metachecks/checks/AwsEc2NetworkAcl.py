@@ -7,7 +7,14 @@ from lib.metachecks.checks.Base import MetaChecksBase
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -24,7 +31,8 @@ class Metacheck(MetaChecksBase):
                 self.client = sess.client(service_name="ec2", region_name=region)
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
-            self.network_acl = self._describe_network_acls()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 

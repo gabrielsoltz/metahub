@@ -9,7 +9,14 @@ from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 class Metacheck(MetaChecksBase):
     def __init__(
-        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled_down,
+        drilled=False,
     ):
         self.logger = logger
         if metachecks:
@@ -30,26 +37,32 @@ class Metacheck(MetaChecksBase):
                 self.resource_id = drilled.split("/")[1]
                 self.resource_arn = drilled
             self.mh_filters_checks = mh_filters_checks
-            self.security_groups = self._describe_security_group()
+            self.all_security_group = self._describe_security_groups()
             self.network_interfaces = self._describe_network_interfaces()
             self.checked_security_group = SecurityGroupChecker(
                 self.logger, finding, {self.resource_arn}, sess
             ).check_security_group()
+            if drilled_down:
+                self.execute_drilled_metachecks()
 
     # Describe Functions
 
-    def _describe_security_group(self):
+    def _describe_security_groups(self):
         try:
             response = self.client.describe_security_groups()
         except ClientError as err:
             if err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.info(
-                    "Failed to describe_security_groups: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_security_groups: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
             else:
                 self.logger.error(
-                    "Failed to describe_security_groups: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_security_groups: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
         if response["SecurityGroups"]:
@@ -119,8 +132,8 @@ class Metacheck(MetaChecksBase):
 
     def its_referenced_by_a_security_group(self):
         references = []
-        if self.security_groups:
-            for sg in self.security_groups:
+        if self.all_security_group:
+            for sg in self.all_security_group:
                 GroupId = sg["GroupId"]
                 IpPermissions = sg["IpPermissions"]
                 IpPermissionsEgress = sg["IpPermissionsEgress"]
@@ -155,8 +168,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_default(self):
-        if self.security_groups:
-            for sg in self.security_groups:
+        if self.all_security_group:
+            for sg in self.all_security_group:
                 if sg["GroupId"] == self.resource_id:
                     if sg["GroupName"] == "default":
                         return True
