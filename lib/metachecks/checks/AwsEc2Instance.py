@@ -1,36 +1,44 @@
 """MetaCheck: AwsEc2Instance"""
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_arn import generate_arn
+from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker, ResourceIamRoleChecker
+from lib.metachecks.checks.MetaChecksHelpers import ResourceIamRoleChecker
+
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
             if not sess:
                 self.client = boto3.client("ec2", region_name=self.region)
                 self.asg_client = boto3.client("autoscaling", region_name=self.region)
             else:
                 self.client = sess.client(service_name="ec2", region_name=self.region)
-                self.asg_client = sess.client(service_name="autoscaling", region_name=self.region)
+                self.asg_client = sess.client(
+                    service_name="autoscaling", region_name=self.region
+                )
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
             self.instance = self._describe_instance()
-            # Security Groups
-            self.security_groups = self.describe_security_groups(finding, sess)
             self.instance_volumes = self._describe_volumes()
             self.instance_auto_scaling_group = self._describe_auto_scaling_instances()
             # Roles
             self.instance_profile_roles = self._describe_instance_profile(sess)
             self.iam_roles = self.describe_iam_roles(finding, sess)
+            # Drilled MetaChecks
+            self.security_groups = self.describe_security_groups()
+            self.execute_drilled_metachecks()
 
     # Describe Functions
 
@@ -43,27 +51,38 @@ class Metacheck(MetaChecksBase):
             )
         except ClientError as err:
             if err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":
+                self.logger.info(
+                    "Failed to describe_instance: {}, {}".format(self.resource_id, err)
+                )
                 return False
             else:
-                self.logger.error("Failed to describe_instance: {}, {}".format(self.resource_id, err))
+                self.logger.error(
+                    "Failed to describe_instance: {}, {}".format(self.resource_id, err)
+                )
                 return False
         if response["Reservations"]:
             return response["Reservations"][0]["Instances"][0]
         return False
 
-    # Security Groups
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
-    def describe_security_groups(self, finding, sess):
-        sgs = {}
+    def describe_security_groups(self):
+        security_groups = {}
         if self.instance:
             if self.instance["SecurityGroups"]:
                 for sg in self.instance["SecurityGroups"]:
-                    arn = generate_arn(sg["GroupId"], "ec2", "security_group", self.region, self.account, self.partition)
-                    sgs[arn] = {}
-                    details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
-                    sgs[arn] = details
-        if sgs:
-            return sgs
+                    arn = generate_arn(
+                        sg["GroupId"],
+                        "ec2",
+                        "security_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    security_groups[arn] = {}
+        if security_groups:
+            return security_groups
         return False
 
     # IAM Roles
@@ -73,7 +92,9 @@ class Metacheck(MetaChecksBase):
         if self.instance_profile_roles:
             for role in self.instance_profile_roles["Roles"]:
                 role_arn = role["Arn"]
-                details = ResourceIamRoleChecker(self.logger, finding, role_arn, sess).check_role_policies()
+                details = ResourceIamRoleChecker(
+                    self.logger, finding, role_arn, sess
+                ).check_role_policies()
                 roles[role_arn] = details
         if roles:
             return roles
@@ -116,7 +137,7 @@ class Metacheck(MetaChecksBase):
                     self.resource_id,
                 ],
             )
-            return response['AutoScalingInstances']
+            return response["AutoScalingInstances"]
         return False
 
     # MetaChecks
@@ -245,7 +266,7 @@ class Metacheck(MetaChecksBase):
         if self.instance_auto_scaling_group:
             try:
                 return self.instance_auto_scaling_group[0]["LaunchConfigurationName"]
-            except:
+            except (KeyError, TypeError):
                 return False
         return False
 
@@ -253,20 +274,17 @@ class Metacheck(MetaChecksBase):
         if self.instance_auto_scaling_group:
             try:
                 return self.instance_auto_scaling_group[0]["LaunchTemplate"]
-            except:
+            except (KeyError, TypeError):
                 return False
         return False
 
     def is_public(self):
-        ingress = False
+        ingress_unrestricted = False
         if self.security_groups:
             for sg in self.security_groups:
-                if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
-                    ingress = True
-        if (
-            self.it_has_public_ip()
-            and ingress
-        ):
+                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                    ingress_unrestricted = True
+        if self.it_has_public_ip() and ingress_unrestricted:
             return self.it_has_public_ip()
         return False
 

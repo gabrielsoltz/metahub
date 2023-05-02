@@ -1,9 +1,9 @@
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError, ParamValidationError
-from datetime import datetime
+from botocore.exceptions import ClientError, ParamValidationError
 
-from lib.AwsHelpers import assume_role, get_boto3_session, get_account_id
+from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session
 from lib.config.resources import MetaHubResourcesConfig
+
 
 def run_metatrails(logger, finding, mh_filters_trails, mh_role, sh_region):
     """
@@ -44,29 +44,36 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role, sh_region):
     if not sess:
         client = boto3.client("cloudtrail", region_name=sh_region)
     else:
-        client = sess.client(
-            service_name="cloudtrail", region_name=sh_region
-        )
+        client = sess.client(service_name="cloudtrail", region_name=sh_region)
 
     trails = {}
     try:
-        paginator = client.get_paginator('lookup_events')
+        paginator = client.get_paginator("lookup_events")
 
         try:
-            ResourceName = finding["Resources"][0]["Id"].split(MetaHubResourcesConfig[AWSResourceType]["ResourceName"]["parsing_char"])[MetaHubResourcesConfig[AWSResourceType]["ResourceName"]["parsing_pos"]]
+            ResourceName = finding["Resources"][0]["Id"].split(
+                MetaHubResourcesConfig[AWSResourceType]["ResourceName"]["parsing_char"]
+            )[MetaHubResourcesConfig[AWSResourceType]["ResourceName"]["parsing_pos"]]
             event_names = MetaHubResourcesConfig[AWSResourceType]["metatrails_events"]
         except KeyError:
             # No Config Defined
             return False
 
-        page_iterator = paginator.paginate(LookupAttributes=[{'AttributeKey': 'ResourceName', 'AttributeValue': ResourceName}])
+        page_iterator = paginator.paginate(
+            LookupAttributes=[
+                {"AttributeKey": "ResourceName", "AttributeValue": ResourceName}
+            ]
+        )
 
         if event_names:
             for page in page_iterator:
-                for event in page['Events']:
+                for event in page["Events"]:
                     for event_name in event_names:
                         if event["EventName"] == event_name:
-                            trails[event["EventName"]] = {"Username": event["Username"], "EventTime": str(event["EventTime"])}
+                            trails[event["EventName"]] = {
+                                "Username": event["Username"],
+                                "EventTime": str(event["EventTime"]),
+                            }
 
     except ClientError as err:
         logger.warning("Error Fetching Trails %s: %s", AWSResourceId, err)

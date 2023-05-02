@@ -7,7 +7,9 @@ from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             region = finding["Region"]
@@ -22,30 +24,27 @@ class Metacheck(MetaChecksBase):
             self.policy = self._get_policy()
             self.policy_version = self._get_policy_version()
             if self.policy_version:
-                self.checked_policy_version = ResourcePolicyChecker(self.logger, finding, self.policy_version).check_policy()
+                self.checked_policy_version = ResourcePolicyChecker(
+                    self.logger, finding, self.policy_version
+                ).check_policy()
             self.policy_entities = self._list_entities_for_policy()
-            
+
     # Describe Functions
 
     def _get_policy(self):
-        response = self.client.get_policy(
-            PolicyArn=self.resource_arn
-        )
+        response = self.client.get_policy(PolicyArn=self.resource_arn)
         if response["Policy"]:
             return response["Policy"]
         return False
 
     def _get_policy_version(self):
         response = self.client.get_policy_version(
-            PolicyArn=self.resource_arn,
-            VersionId=self.policy["DefaultVersionId"]
+            PolicyArn=self.resource_arn, VersionId=self.policy["DefaultVersionId"]
         )
         return response["PolicyVersion"]["Document"]
 
     def _list_entities_for_policy(self):
-        response = self.client.list_entities_for_policy(
-            PolicyArn=self.resource_arn
-        )
+        response = self.client.list_entities_for_policy(PolicyArn=self.resource_arn)
         return response
 
     # MetaChecks
@@ -74,7 +73,7 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_customer_managed(self):
-        if not self.resource_arn.startswith('arn:aws:iam::aws:policy/'):
+        if not self.resource_arn.startswith("arn:aws:iam::aws:policy/"):
             return True
         return False
 
@@ -129,6 +128,6 @@ class Metacheck(MetaChecksBase):
             "it_has_policy_principal_cross_account",
             "it_has_policy_principal_wildcard",
             "it_has_policy_public",
-            "it_has_policy_actions_wildcard"
+            "it_has_policy_actions_wildcard",
         ]
         return checks

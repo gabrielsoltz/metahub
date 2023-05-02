@@ -1,19 +1,25 @@
 """MetaCheck: AwsSqsQueue"""
 
-import boto3
 import json
+
+import boto3
 
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
+            self.mh_filters_checks = mh_filters_checks
             if not sess:
                 self.client = boto3.client("sqs", region_name=self.region)
             else:
@@ -26,21 +32,16 @@ class Metacheck(MetaChecksBase):
             self.queue_attributes = self._get_queue_atributes()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy(finding, sess)
-            
+
     # Describe Functions
 
     def _get_queue_url(self):
-        response = self.client.get_queue_url(
-            QueueName=self.resource_id
-        )
+        response = self.client.get_queue_url(QueueName=self.resource_id)
         return response["QueueUrl"]
 
     def _get_queue_atributes(self):
         response = self.client.get_queue_attributes(
-            QueueUrl=self.queue_url,
-            AttributeNames=[
-                'All'
-            ]
+            QueueUrl=self.queue_url, AttributeNames=["All"]
         )
         if response["Attributes"]:
             return response["Attributes"]
@@ -52,8 +53,15 @@ class Metacheck(MetaChecksBase):
         if self.queue_attributes:
             try:
                 if self.queue_attributes["Policy"]:
-                    details = ResourcePolicyChecker(self.logger, finding, json.loads(self.queue_attributes["Policy"])).check_policy()
-                    policy = {"policy_checks": details, "policy": json.loads(self.queue_attributes["Policy"])}
+                    details = ResourcePolicyChecker(
+                        self.logger,
+                        finding,
+                        json.loads(self.queue_attributes["Policy"]),
+                    ).check_policy()
+                    policy = {
+                        "policy_checks": details,
+                        "policy": json.loads(self.queue_attributes["Policy"]),
+                    }
                     return policy
             except KeyError:
                 return False
@@ -64,7 +72,7 @@ class Metacheck(MetaChecksBase):
     def is_encrypted(self):
         if self.queue_attributes:
             return self.queue_attributes["SqsManagedSseEnabled"]
-    
+
     def it_has_resource_policy(self):
         return self.resource_policy
 
@@ -75,9 +83,5 @@ class Metacheck(MetaChecksBase):
         return False
 
     def checks(self):
-        checks = [
-            "is_encrypted",
-            "it_has_resource_policy",
-            "is_public"
-        ]
+        checks = ["is_encrypted", "it_has_resource_policy", "is_public"]
         return checks

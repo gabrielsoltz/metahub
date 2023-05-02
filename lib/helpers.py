@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+
 from lib.AwsHelpers import get_available_regions
 
 
@@ -47,13 +48,6 @@ class Dictlist(dict):
             super(Dictlist, self).__setitem__(key, [])
         self[key].append(value)
 
-    def __setitem__(self, key, value):
-        try:
-            self[key]
-        except KeyError:
-            super(Dictlist, self).__setitem__(key, [])
-        self[key].append(value)
-
 
 def get_parser():
     """Configure Parser"""
@@ -64,14 +58,12 @@ def get_parser():
     """,
     )
 
-    # Group: Security Hub 
-    group_security_hub = parser.add_argument_group(
-        "Security Hub Options"
-    )
+    # Group: Security Hub
+    group_security_hub = parser.add_argument_group("Security Hub Options")
     group_security_hub.add_argument(
         "--sh-filters",
         default=None,
-        help="Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName=\"Security Hub\" RecordState=ACTIVE WorkflowStatus=NEW",
+        help='Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW',
         required=False,
         nargs="*",
         action=KeyValueWithList,
@@ -104,7 +96,7 @@ def get_parser():
     group_security_hub.add_argument(
         "--update-findings",
         default=None,
-        help="Use this option to update the result findings Workflow Status (with a Note). Use --update-findings Workflow=NOTIFIED|RESOLVED|SUPPRESSED|NEW Note=\"You can whatever you like here, like a ticket ID, you will see this Note on your SH \"Updated at\" colum",
+        help='Use this option to update the result findings Workflow Status (with a Note). Use --update-findings Workflow=NOTIFIED|RESOLVED|SUPPRESSED|NEW Note="You can whatever you like here, like a ticket ID, you will see this Note on your SH "Updated at" colum',
         required=False,
         nargs="*",
         action=KeyValue,
@@ -131,9 +123,7 @@ def get_parser():
     )
 
     # Group: Meta Checks and Meta Tags Options
-    group_meta_checks = parser.add_argument_group(
-        "Meta Checks and Meta Tags Options"
-    )
+    group_meta_checks = parser.add_argument_group("Meta Checks and Meta Tags Options")
     group_meta_checks.add_argument(
         "--list-meta-checks",
         help="Use this option to list all available Meta Checks",
@@ -182,9 +172,7 @@ def get_parser():
     )
 
     # Group: Output Options
-    group_output = parser.add_argument_group(
-        "Output Options"
-    )
+    group_output = parser.add_argument_group("Output Options")
     group_output.add_argument(
         "--outputs",
         choices=["short", "full", "inventory", "statistics"],
@@ -230,9 +218,7 @@ def get_parser():
     )
 
     # Group: Debug Options
-    group_debug = parser.add_argument_group(
-        "Debug Options"
-    )
+    group_debug = parser.add_argument_group("Debug Options")
     group_debug.add_argument(
         "--log-level",
         choices=["ERROR", "WARNING", "INFO", "DEBUG"],
@@ -242,6 +228,7 @@ def get_parser():
     )
 
     return parser
+
 
 def get_logger(log_level):
     """Configure Logger"""
@@ -274,7 +261,8 @@ color = {
 
 
 def print_banner(banners=True):
-    if not banners: return 
+    if not banners:
+        return
     print(
         r" "
         + color["BOLD"]
@@ -305,19 +293,27 @@ def print_banner(banners=True):
         + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ "
         + color["END"]
     )
-    print(r"  " + color["DARKCYAN"] + "the command line utility for AWS Security Hub" + color["END"])
+    print(
+        r"  "
+        + color["DARKCYAN"]
+        + "the command line utility for AWS Security Hub"
+        + color["END"]
+    )
 
 
 def print_table(key, value, keycolor=color["DARKCYAN"], banners=True):
-    if not banners: return 
-    #print(keycolor + key + color["END"], " \t", value)
+    if not banners:
+        return
+    # print(keycolor + key + color["END"], " \t", value)
     tabs = "\t\t"
     if (len(key)) > 14:
         tabs = "\t"
     print(keycolor + key + color["END"], tabs, value)
 
+
 def print_title_line(text, ch="-", length=78, banners=True):
-    if not banners: return 
+    if not banners:
+        return
     if text:
         spaced_text = " %s " % text
     else:
@@ -325,6 +321,7 @@ def print_title_line(text, ch="-", length=78, banners=True):
     colored_text = color["BOLD"] + spaced_text + color["END"]
     banner = colored_text.center(length, ch)
     print("\n" + banner)
+
 
 def confirm_choice(message):
     """Simple function to confirm the action, returns True or False based on user entry"""
@@ -336,9 +333,13 @@ def confirm_choice(message):
         return True
     return False
 
+
 def test_python_version():
     """Check Python Version"""
     logger = get_logger("ERROR")
     if sys.version_info < (3, 9):
-        logger.error("Python Version must be Python 3.9 or above. Please update your Python version: %s", sys.version)
+        logger.error(
+            "Python Version must be Python 3.9 or above. Please update your Python version: %s",
+            sys.version,
+        )
         sys.exit(1)

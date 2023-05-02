@@ -1,6 +1,10 @@
 import boto3
 import botocore
-from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError, EndpointConnectionError
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    NoCredentialsError,
+)
 
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):
@@ -115,11 +119,12 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         return aliases[0]
     return ""
 
+
 def get_sh_findings_aggregator(logger, region):
     try:
-        sh_findings_aggregator = boto3.client("securityhub", region_name=region).list_finding_aggregators()[
-            "FindingAggregators"
-        ]
+        sh_findings_aggregator = boto3.client(
+            "securityhub", region_name=region
+        ).list_finding_aggregators()["FindingAggregators"]
     except EndpointConnectionError as e:
         logger.error("Error Getting SH Aggregators: {}".format(e))
         return False

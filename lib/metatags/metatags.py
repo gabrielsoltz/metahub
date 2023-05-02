@@ -1,7 +1,7 @@
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError, ParamValidationError
+from botocore.exceptions import ClientError, ParamValidationError
 
-from lib.AwsHelpers import assume_role, get_boto3_session, get_account_id
+from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session
 
 
 def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):

@@ -1,35 +1,45 @@
 """MetaCheck: AwsElastiCacheCacheCluster"""
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_arn import generate_arn
+from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
+
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
+            self.mh_filters_checks = mh_filters_checks
             if not sess:
                 self.client = boto3.client("elasticache", region_name=self.region)
             else:
-                self.client = sess.client(service_name="elasticache", region_name=self.region)
+                self.client = sess.client(
+                    service_name="elasticache", region_name=self.region
+                )
             self.resource_arn = finding["Resources"][0]["Id"]
             if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
                 self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             elif finding["Resources"][0]["Id"].split(":")[5] == "cluster":
                 self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             else:
-                self.logger.error("Error parsing elasticache cluster resource id: %s", self.resource_arn)
-            self.mh_filters_checks = mh_filters_checks
+                self.logger.error(
+                    "Error parsing elasticache cluster resource id: %s",
+                    self.resource_arn,
+                )
             self.elasticcache_cluster = self._describe_cache_clusters()
-            # Security Groups
-            self.security_groups = self.describe_security_groups(finding, sess)
-    
+            # Drilled MetaChecks
+            self.security_groups = self.describe_security_groups()
+            self.execute_drilled_metachecks()
+
     # Describe functions
 
     def _describe_cache_clusters(self):
@@ -39,25 +49,41 @@ class Metacheck(MetaChecksBase):
                 ShowCacheNodeInfo=True,
                 # ShowCacheClustersNotInReplicationGroups=True|False
             )
-        except ClientError as e:
-            return False
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
+                self.logger.info(
+                    "Failed to describe_cache_clusters: {}, {}".format(self.resource_id, err)
+                )
+                return False
+            else:
+                self.logger.error(
+                    "Failed to describe_cache_clusters: {}, {}".format(self.resource_id, err)
+                )
+                return False
         if response["CacheClusters"]:
             return response["CacheClusters"][0]
-            
+
         return False
 
-    # Security Groups
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
-    def describe_security_groups(self, finding, sess):
-        sgs = {}
+    def describe_security_groups(self):
+        security_groups = {}
         if self.elasticcache_cluster:
             if self.elasticcache_cluster["SecurityGroups"]:
                 for sg in self.elasticcache_cluster["SecurityGroups"]:
-                    arn = generate_arn(sg["SecurityGroupId"], "ec2", "security_group", self.region, self.account, self.partition)
-                    details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
-                    sgs[arn] = details
-        if sgs:
-            return sgs
+                    arn = generate_arn(
+                        sg["SecurityGroupId"],
+                        "ec2",
+                        "security_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    security_groups[arn] = {}
+        if security_groups:
+            return security_groups
         return False
 
     # MetaChecks
@@ -94,23 +120,23 @@ class Metacheck(MetaChecksBase):
     def it_has_endpoint(self):
         endpoints = []
         if self.elasticcache_cluster:
-            if self.elasticcache_cluster['CacheNodes']:
-                for node in self.elasticcache_cluster['CacheNodes']:
-                    if node['Endpoint']:
-                        endpoints.append(node['Endpoint']['Address'])
+            if self.elasticcache_cluster["CacheNodes"]:
+                for node in self.elasticcache_cluster["CacheNodes"]:
+                    if node["Endpoint"]:
+                        endpoints.append(node["Endpoint"]["Address"])
         if endpoints:
             return endpoints
         return False
 
     def is_public(self):
         ingress = False
-        for sg in self.security_groups:
-            if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
-                ingress = True
+        if self.security_groups:
+            for sg in self.security_groups:
+                if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
+                    ingress = True
         if ingress:
             return True
         return False
-
 
     def checks(self):
         checks = [
@@ -120,6 +146,6 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_security_groups",
             "its_associated_with_replication_group",
             "it_has_endpoint",
-            "is_public"
+            "is_public",
         ]
         return checks

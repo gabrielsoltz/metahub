@@ -1,19 +1,27 @@
 """MetaCheck: AwsRdsDbCluster"""
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_arn import generate_arn
+from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker, ResourceIamRoleChecker
+from lib.metachecks.checks.MetaChecksHelpers import (
+    ResourceIamRoleChecker,
+)
+
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
+            self.mh_filters_checks = mh_filters_checks
             if not sess:
                 self.client = boto3.client("rds", region_name=self.region)
             else:
@@ -24,8 +32,9 @@ class Metacheck(MetaChecksBase):
             self.rds_cluster = self._describe_db_clusters()
             # Roles
             self.iam_roles = self.describe_iam_roles(finding, sess)
-            # Security Groups
-            self.security_groups = self.describe_security_groups(finding, sess)
+            # Drilled MetaChecks
+            self.security_groups = self.describe_security_groups()
+            self.execute_drilled_metachecks()
 
     # Describe Functions
 
@@ -35,8 +44,10 @@ class Metacheck(MetaChecksBase):
                 DBClusterIdentifier=self.resource_id
             )
         except ClientError as err:
-                self.logger.error("Failed to describe_db_clusters: {}, {}".format(self.resource_id, err))
-                return False
+            self.logger.error(
+                "Failed to describe_db_clusters: {}, {}".format(self.resource_id, err)
+            )
+            return False
         if response["DBClusters"]:
             return response["DBClusters"][0]
         return False
@@ -49,23 +60,33 @@ class Metacheck(MetaChecksBase):
             if self.rds_cluster["AssociatedRoles"]:
                 for role in self.rds_cluster["AssociatedRoles"]:
                     role_arn = role["RoleArn"]
-                    details = ResourceIamRoleChecker(self.logger, finding, role_arn, sess).check_role_policies()
+                    details = ResourceIamRoleChecker(
+                        self.logger, finding, role_arn, sess
+                    ).check_role_policies()
                     roles[role_arn] = details
         return roles
 
-    # Security Groups
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
-    def describe_security_groups(self, finding, sess):
+    def describe_security_groups(self):
         security_groups = {}
         if self.rds_cluster:
             if self.rds_cluster["VpcSecurityGroups"]:
                 for sg in self.rds_cluster["VpcSecurityGroups"]:
                     sg_id = sg["VpcSecurityGroupId"]
-                    arn = generate_arn(sg_id, "ec2", "security_group", self.region, self.account, self.partition)
+                    arn = generate_arn(
+                        sg_id,
+                        "ec2",
+                        "security_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
                     security_groups[arn] = {}
-                    details = SecurityGroupChecker(self.logger, finding, security_groups, sess).check_security_group()
-                    security_groups[arn] = details
-        return security_groups
+        if security_groups:
+            return security_groups
+        return False
 
     # MetaChecks
 
@@ -90,11 +111,17 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    
+    def is_encrypted(self):
+        if self.rds_cluster:
+            if self.rds_cluster.get("StorageEncrypted"):
+                return True
+        return False
+
     def checks(self):
         checks = [
             "its_associated_with_iam_roles",
             "its_associated_with_security_groups",
-            "is_public"
+            "is_public",
+            "is_encrypted",
         ]
         return checks

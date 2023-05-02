@@ -1,6 +1,8 @@
 class MetaChecksBase:
-    def __init__(self):
-        pass
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
+        self.logger = logger
 
     def output_checks(self):
         """
@@ -40,3 +42,26 @@ class MetaChecksBase:
             mh_matched_checks = False
 
         return mh_values_checks, mh_matched_checks
+
+    def execute_drilled_metachecks(self):
+        # Security Groups
+        if self.security_groups:
+            from lib.metachecks.checks.AwsEc2SecurityGroup import (
+                Metacheck as SecurityGroupMetacheck,
+            )
+
+            for sg in self.security_groups:
+                self.logger.info(
+                    "Drilling metachecks for security group: {}".format(sg)
+                )
+                self.security_groups[sg] = SecurityGroupMetacheck(
+                    self.logger, self.finding, True, False, self.sess, drilled=sg
+                ).output_checks_drilled()
+
+    def output_checks_drilled(self):
+        mh_values_checks = {}
+        for check in self.checks():
+            hndl = getattr(self, check)()
+            mh_values_checks.update({check: hndl})
+
+        return mh_values_checks

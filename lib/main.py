@@ -1,26 +1,25 @@
 import json
 from sys import argv, exit
+from time import strftime
 
+from alive_progress import alive_bar
+
+from lib.AwsHelpers import (
+    get_account_alias,
+    get_account_id,
+    get_region,
+    get_sh_findings_aggregator,
+)
 from lib.helpers import (
+    confirm_choice,
     get_logger,
     get_parser,
     print_banner,
     print_table,
     print_title_line,
-    confirm_choice,
     test_python_version,
 )
-from lib.AwsHelpers import (
-    get_account_id,
-    get_account_alias,
-    get_region,
-    get_sh_findings_aggregator,
-)
 from lib.securityhub import SecurityHub
-
-from alive_progress import alive_bar
-
-from time import strftime
 
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
@@ -40,7 +39,7 @@ def generate_findings(
     inputs,
     asff_findings,
     metatrails,
-    banners
+    banners,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -74,10 +73,10 @@ def generate_findings(
         sh_findings = sh.get_findings(sh_filters)
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
-    
+
     with alive_bar(total=len(findings)) as bar:
         for finding in findings:
-            bar.title = f"-> Analyzing findings..."
+            bar.title = "-> Analyzing findings..."
 
             mh_matched = False
             resource_arn, finding_parsed = sh.parse_finding(finding)
@@ -104,8 +103,8 @@ def generate_findings(
                     if metachecks:
                         # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
                         if (
-                            not resource_arn in mh_findings
-                            and not resource_arn in mh_findings_not_matched_findings
+                            resource_arn not in mh_findings
+                            and resource_arn not in mh_findings_not_matched_findings
                         ):
                             mh_values, mh_checks_matched = run_metachecks(
                                 logger, finding, mh_filters_checks, mh_role
@@ -115,8 +114,8 @@ def generate_findings(
                     if metatags:
                         # We run metatags only once:
                         if (
-                            not resource_arn in mh_findings
-                            and not resource_arn in mh_findings_not_matched_findings
+                            resource_arn not in mh_findings
+                            and resource_arn not in mh_findings_not_matched_findings
                         ):
                             mh_tags, mh_tags_matched = run_metatags(
                                 logger, finding, mh_filters_tags, mh_role, sh_region
@@ -126,13 +125,13 @@ def generate_findings(
                     # If both checks are True we show the resource
                     if mh_tags_matched and mh_checks_matched:
                         mh_matched = True
-                        
-                    # MetaTrails runs without filters, for now? 
+
+                    # MetaTrails runs without filters, for now?
                     if metatrails:
                         # We run metatrails only once:
                         if (
-                            not resource_arn in mh_findings
-                            and not resource_arn in mh_findings_not_matched_findings
+                            resource_arn not in mh_findings
+                            and resource_arn not in mh_findings_not_matched_findings
                         ):
                             mh_trails = run_metatrails(
                                 logger, finding, mh_filters_tags, mh_role, sh_region
@@ -144,7 +143,7 @@ def generate_findings(
             # We keep a dict with no matched resources so we don't run MetaChecks again
             if not mh_matched:
                 # We add the resource in our output only once:
-                if not resource_arn in mh_findings_not_matched_findings:
+                if resource_arn not in mh_findings_not_matched_findings:
                     mh_findings_not_matched_findings[resource_arn] = {}
 
             # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
@@ -163,13 +162,13 @@ def generate_findings(
                 # STATISTICS (we count by matched finding)
 
                 # Resource ARN
-                if not resource_arn in mh_statistics["ResourceId"]:
+                if resource_arn not in mh_statistics["ResourceId"]:
                     mh_statistics["ResourceId"][resource_arn] = 0
                 mh_statistics["ResourceId"][resource_arn] += 1
 
                 for key, value in finding_parsed.items():
                     # Title
-                    if not key in mh_statistics["Title"]:
+                    if key not in mh_statistics["Title"]:
                         mh_statistics["Title"][key] = 0
                     mh_statistics["Title"][key] += 1
                     # Values
@@ -189,21 +188,24 @@ def generate_findings(
                             mh_statistics[v][value[v]] = 0
                         mh_statistics[v][value[v]] += 1
                     # AwsAccountId
-                    if not finding["AwsAccountId"] in mh_statistics["AwsAccountId"]:
+                    if finding["AwsAccountId"] not in mh_statistics["AwsAccountId"]:
                         mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
                     mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
                     # AwsAccountAlias
-                    if not finding["AwsAccountAlias"] in mh_statistics["AwsAccountAlias"]:
+                    if (
+                        finding["AwsAccountAlias"] not
+                        in mh_statistics["AwsAccountAlias"]
+                    ):
                         mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] = 0
                     mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] += 1
                     # Region
-                    if not finding["Region"] in mh_statistics["Region"]:
+                    if finding["Region"] not in mh_statistics["Region"]:
                         mh_statistics["Region"][finding["Region"]] = 0
                     mh_statistics["Region"][finding["Region"]] += 1
                     # ResourceType
                     if (
-                        not finding["Resources"][0]["Type"]
-                        in mh_statistics["ResourceType"]
+                        finding["Resources"][0]["Type"]
+                        not in mh_statistics["ResourceType"]
                     ):
                         mh_statistics["ResourceType"][
                             finding["Resources"][0]["Type"]
@@ -211,7 +213,7 @@ def generate_findings(
                     mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
 
                 # RESOURCE (we add the resource only once)
-                if not resource_arn in mh_findings:
+                if resource_arn not in mh_findings:
                     # Short
                     mh_findings[resource_arn] = {"findings": []}
                     mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
@@ -265,7 +267,7 @@ def generate_findings(
                 )
                 mh_findings[resource_arn]["findings"].append(finding_parsed)
             bar()
-        bar.title = f"-> Completed"
+        bar.title = "-> Completed"
 
     # Sort Statistics
     for key_to_sort in mh_statistics:
@@ -276,39 +278,42 @@ def generate_findings(
                 reverse=True,
             )
         )
-    
+
     def statistics_metatags(mh_findings_short):
         metatags_statistics = {}
         for d in mh_findings_short:
-            if 'metatags' in mh_findings_short[d]:
-                if mh_findings_short[d]['metatags']:
-                    for tag, value in mh_findings_short[d]['metatags'].items():
-                        if not tag in metatags_statistics:
+            if "metatags" in mh_findings_short[d]:
+                if mh_findings_short[d]["metatags"]:
+                    for tag, value in mh_findings_short[d]["metatags"].items():
+                        if tag not in metatags_statistics:
                             metatags_statistics[tag] = {}
                         if value not in metatags_statistics[tag]:
                             metatags_statistics[tag][value] = 1
                         else:
                             metatags_statistics[tag][value] += 1
         return metatags_statistics
-    mh_statistics['metatags'] = statistics_metatags(mh_findings_short)
+
+    mh_statistics["metatags"] = statistics_metatags(mh_findings_short)
 
     def statistics_metachecks(mh_findings_short):
         metachecks_statistics = {}
         for d in mh_findings_short:
-            if 'metachecks' in mh_findings_short[d]:
-                if mh_findings_short[d]['metachecks']:
-                    for check, value in mh_findings_short[d]['metachecks'].items():
-                        if not check in metachecks_statistics:
+            if "metachecks" in mh_findings_short[d]:
+                if mh_findings_short[d]["metachecks"]:
+                    for check, value in mh_findings_short[d]["metachecks"].items():
+                        if check not in metachecks_statistics:
                             metachecks_statistics[check] = {False: 0, True: 0}
-                        if bool(mh_findings_short[d]['metachecks'][check]):
+                        if bool(mh_findings_short[d]["metachecks"][check]):
                             metachecks_statistics[check][True] += 1
                         else:
                             metachecks_statistics[check][False] += 1
 
         return metachecks_statistics
-    mh_statistics['metachecks'] = statistics_metachecks(mh_findings_short)
+
+    mh_statistics["metachecks"] = statistics_metachecks(mh_findings_short)
 
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
+
 
 def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region):
     UpdateFilters = {}
@@ -386,11 +391,13 @@ def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region):
         return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
     return [], []
 
+
 def count_mh_findings(mh_findings):
     count = 0
     for resource in mh_findings:
         count += len(mh_findings[resource]["findings"])
     return count
+
 
 def set_sh_filters(sh_filters):
     """Return filters for AWS Security Hub get_findings Call"""
@@ -403,18 +410,23 @@ def set_sh_filters(sh_filters):
                 filters[key].append(value_to_append)
     return filters
 
+
 def validate_arguments(args, logger):
 
     # Validate no filters when using file-asff only
-    if "file-asff" in args.inputs and not "securityhub" in args.inputs:
+    if "file-asff" in args.inputs and "securityhub" not in args.inputs:
         if args.sh_template or args.sh_filters:
-            logger.error("--sh-filters not supported for file-asff... If you want to fetch from securityhub and file-asff at the same time use --inputs file-asff securityhub")
+            logger.error(
+                "--sh-filters not supported for file-asff... If you want to fetch from securityhub and file-asff at the same time use --inputs file-asff securityhub"
+            )
             exit(1)
 
     # Validate file-asff
     if "file-asff" in args.inputs:
         if not args.input_asff:
-            logger.error("file-asff input specified but not --input-asff, specify the input file with --input-asff")
+            logger.error(
+                "file-asff input specified but not --input-asff, specify the input file with --input-asff"
+            )
             exit(1)
         try:
             with open(args.input_asff) as f:
@@ -434,8 +446,10 @@ def validate_arguments(args, logger):
         }
         sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
-        import yaml
         from pathlib import Path
+
+        import yaml
+
         try:
             yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
             dict_values = next(iter(yaml_to_dict.values()))
@@ -449,7 +463,9 @@ def validate_arguments(args, logger):
 
     # Validate MetaChecks filters
     if args.mh_filters_checks and not args.meta_checks:
-        logger.error("--mh-filters-checks provided but --meta-checks are disabled, ignoring...")
+        logger.error(
+            "--mh-filters-checks provided but --meta-checks are disabled, ignoring..."
+        )
     mh_filters_checks = args.mh_filters_checks or {}
     for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
         if mh_filters_checks[mh_filter_check_key].lower() == "true":
@@ -464,12 +480,16 @@ def validate_arguments(args, logger):
 
     # Validate MetaTags filters
     if args.mh_filters_tags and not args.meta_tags:
-        logger.error("--mh-filters-tags provided but --meta-tags are disabled, ignoring...")
+        logger.error(
+            "--mh-filters-tags provided but --meta-tags are disabled, ignoring..."
+        )
     mh_filters_tags = args.mh_filters_tags or {}
 
     # Parameter Validation: --sh-account and --sh-assume-role
     if bool(args.sh_account) != bool(args.sh_assume_role):
-        logger.error("Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided.")
+        logger.error(
+            "Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided."
+        )
         exit(1)
 
     # AWS Account
@@ -498,7 +518,7 @@ def validate_arguments(args, logger):
                 sh_region_aggregator,
                 sh_region_aggregator,
             )
-    
+
     # Validate Security Hub input
     if "securityhub" in args.inputs and (not sh_region or not sh_account):
         logger.error(
@@ -506,13 +526,22 @@ def validate_arguments(args, logger):
         )
         exit(1)
 
-    return asff_findings, sh_filters, mh_filters_checks, mh_filters_tags, sh_account, sh_account_alias_str, sh_region
+    return (
+        asff_findings,
+        sh_filters,
+        mh_filters_checks,
+        mh_filters_tags,
+        sh_account,
+        sh_account_alias_str,
+        sh_region,
+    )
+
 
 def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings):
 
     # Columns for CSV and HTML
-    metachecks_columns = args.output_meta_checks_columns or mh_statistics['metachecks']
-    metatags_columns = args.output_meta_tags_columns or mh_statistics['metatags']
+    metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
+    metatags_columns = args.output_meta_tags_columns or mh_statistics["metatags"]
 
     # Output JSON files
     if "json" in args.output_modes:
@@ -521,18 +550,23 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
                 print_title_line("Output JSON: " + out)
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{out}-{TIMESTRF}.json"
                 with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    json.dump({
-                        'short': mh_findings_short,
-                        'inventory': mh_inventory,
-                        'statistics': mh_statistics,
-                        'full': mh_findings
-                    }[out], f, indent=2)
+                    json.dump(
+                        {
+                            "short": mh_findings_short,
+                            "inventory": mh_inventory,
+                            "statistics": mh_statistics,
+                            "full": mh_findings,
+                        }[out],
+                        f,
+                        indent=2,
+                    )
                 print_table("File: ", WRITE_FILE)
 
     # Output HTML files
     if "html" in args.output_modes:
         print_title_line("Output HTML")
         import jinja2
+
         if mh_findings:
             WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
             templateLoader = jinja2.FileSystemLoader(searchpath="./")
@@ -554,6 +588,7 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
     if "csv" in args.output_modes:
         print_title_line("Output CSV")
         import csv
+
         def output_csv(output):
             new_list = []
             for key, dictionary in output.items():
@@ -572,16 +607,16 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
                 new_list.append(new_dict)
             columns = new_list[0].keys()
             return columns, new_list
+
         if mh_findings:
             WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
-            with open(
-                WRITE_FILE, "w", encoding="utf-8", newline=""
-            ) as output_file:
+            with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
                 columns, csv_list = output_csv(mh_findings_short)
                 dict_writer = csv.DictWriter(output_file, columns)
                 dict_writer.writeheader()
                 dict_writer.writerows(csv_list)
             print_table("File: ", WRITE_FILE)
+
 
 def main(args):
     parser = get_parser()
@@ -593,14 +628,27 @@ def main(args):
 
     if args.list_meta_checks:
         from lib.metachecks.metachecks import list_metachecks
+
         print_title_line("List MetaChecks", banners=banners)
         list_metachecks(logger)
         return
 
-    asff_findings, sh_filters, mh_filters_checks, mh_filters_tags, sh_account, sh_account_alias_str, sh_region = validate_arguments(args, logger)
-    
+    (
+        asff_findings,
+        sh_filters,
+        mh_filters_checks,
+        mh_filters_tags,
+        sh_account,
+        sh_account_alias_str,
+        sh_region,
+    ) = validate_arguments(args, logger)
+
     print_title_line("Options", banners=banners)
-    print_table("Security Hub Account: ", str(sh_account) + sh_account_alias_str, banners=banners)
+    print_table(
+        "Security Hub Account: ",
+        str(sh_account) + sh_account_alias_str,
+        banners=banners,
+    )
     print_table("Security Hub Role: ", str(args.sh_assume_role), banners=banners)
     print_table("Security Hub Region: ", sh_region, banners=banners)
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
@@ -620,12 +668,7 @@ def main(args):
 
     # Generate Findings
     print_title_line("Generating Findings", banners=banners)
-    (
-        mh_findings,
-        mh_findings_short,
-        mh_inventory,
-        mh_statistics,
-    ) = generate_findings(
+    (mh_findings, mh_findings_short, mh_inventory, mh_statistics,) = generate_findings(
         logger,
         sh_filters,
         metachecks=args.meta_checks,
@@ -639,43 +682,52 @@ def main(args):
         inputs=args.inputs,
         asff_findings=asff_findings,
         metatrails=args.meta_trails,
-        banners=banners
+        banners=banners,
     )
 
     if args.list_findings:
         if mh_findings:
             for out in args.outputs:
                 print_title_line("List Findings: " + out, banners=banners)
-                print(json.dumps({
-                    'short': mh_findings_short,
-                    'inventory': mh_inventory,
-                    'statistics': mh_statistics,
-                    'full': mh_findings
-                }[out], indent=2))
+                print(
+                    json.dumps(
+                        {
+                            "short": mh_findings_short,
+                            "inventory": mh_inventory,
+                            "statistics": mh_statistics,
+                            "full": mh_findings,
+                        }[out],
+                        indent=2,
+                    )
+                )
 
     if "lambda" in args.output_modes:
         if mh_findings:
             for out in args.outputs:
                 if out == "short":
-                    return(mh_findings_short)
+                    return mh_findings_short
                 if out == "inventory":
-                    return(mh_inventory)
+                    return mh_inventory
                 if out == "statistics":
-                    return(mh_inventory)
+                    return mh_inventory
                 if out == "full":
-                    return(mh_findings)
+                    return mh_findings
 
     generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings)
 
     print_title_line("Results", banners=banners)
     print_table("Total Resources: ", str(len(mh_findings)), banners=banners)
-    print_table("Total Findings: ", str(count_mh_findings(mh_findings)), banners=banners)
+    print_table(
+        "Total Findings: ", str(count_mh_findings(mh_findings)), banners=banners
+    )
 
     if args.update_findings:
         UPProcessedFindings = []
         UPUnprocessedFindings = []
         print_title_line("Update Findings", banners=banners)
-        print_table("Findings to update: ", str(count_mh_findings(mh_findings)), banners=banners)
+        print_table(
+            "Findings to update: ", str(count_mh_findings(mh_findings)), banners=banners
+        )
         print_table("Update: ", str(args.update_findings), banners=banners)
         if mh_findings:
             UPProcessedFindings, UPUnprocessedFindings = update_findings(
@@ -687,21 +739,32 @@ def main(args):
                 sh_region,
             )
         print_title_line("Results", banners=banners)
-        print_table("ProcessedFindings: ", str(len(UPProcessedFindings)), banners=banners)
-        print_table("UnprocessedFindings: ", str(len(UPUnprocessedFindings)), banners=banners)
+        print_table(
+            "ProcessedFindings: ", str(len(UPProcessedFindings)), banners=banners
+        )
+        print_table(
+            "UnprocessedFindings: ", str(len(UPUnprocessedFindings)), banners=banners
+        )
 
     if args.enrich_findings:
         ENProcessedFindings = []
         ENUnprocessedFindings = []
         print_title_line("Enrich Findings", banners=banners)
-        print_table("Findings to enrich: ", str(count_mh_findings(mh_findings)), banners=banners)
+        print_table(
+            "Findings to enrich: ", str(count_mh_findings(mh_findings)), banners=banners
+        )
         if mh_findings:
             ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
                 logger, mh_findings, sh_account, args.sh_assume_role, sh_region
             )
         print_title_line("Results", banners=banners)
-        print_table("ProcessedFindings: ", str(len(ENProcessedFindings)), banners=banners)
-        print_table("UnprocessedFindings: ", str(len(ENUnprocessedFindings)), banners=banners)
+        print_table(
+            "ProcessedFindings: ", str(len(ENProcessedFindings)), banners=banners
+        )
+        print_table(
+            "UnprocessedFindings: ", str(len(ENUnprocessedFindings)), banners=banners
+        )
+
 
 if __name__ == "__main__":
     main(argv[1:])

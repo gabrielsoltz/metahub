@@ -3,19 +3,27 @@
 import json
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from aws_arn import generate_arn
+from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import (
+    ResourcePolicyChecker,
+)
 
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self, logger, finding, metachecks, mh_filters_checks, sess, drilled=False
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
+            self.mh_filters_checks = mh_filters_checks
             if not sess:
                 self.client = boto3.client("es", region_name=self.region)
             else:
@@ -26,6 +34,9 @@ class Metacheck(MetaChecksBase):
             self.elasticsearch_domain = self._describe_elasticsearch_domain()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy(finding, sess)
+            # Drilled MetaChecks
+            self.security_groups = self.describe_security_groups()
+            self.execute_drilled_metachecks()
 
     # Describe Functions
 
@@ -35,22 +46,43 @@ class Metacheck(MetaChecksBase):
                 DomainName=self.resource_id
             )
         except ClientError as err:
-            if err.response["Error"]["Code"] in [
-                "AccessDenied",
-                "UnauthorizedOperation",
-            ]:
-                self.logger.error(
-                    "Access denied for describe_elasticsearch_domain: "
-                    + self.resource_id
+            if err.response["Error"]["Code"] == "ResourceNotFoundException":
+                self.logger.info(
+                    "Failed to describe_elasticsearch_domain: {}, {}".format(self.resource_id, err)
                 )
                 return False
             else:
                 self.logger.error(
-                    "Failed to describe_elasticsearch_domain: " + self.resource_id
+                    "Failed to describe_elasticsearch_domain: {}, {}".format(self.resource_id, err)
                 )
                 return False
         return response["DomainStatus"]
-    
+
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
+
+    def describe_security_groups(
+        self,
+    ):
+        security_groups = {}
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("VPCOptions").get("SecurityGroupIds"):
+                for sg in self.elasticsearch_domain.get("VPCOptions").get(
+                    "SecurityGroupIds"
+                ):
+                    arn = generate_arn(
+                        sg,
+                        "ec2",
+                        "security_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    security_groups[arn] = {}
+        if security_groups:
+            return security_groups
+        return False
+
     # Resource Policy
 
     def describe_resource_policy(self, finding, sess):
@@ -60,23 +92,21 @@ class Metacheck(MetaChecksBase):
                     self.elasticsearch_domain["AccessPolicies"]
                 )
                 if access_policies:
-                    details = ResourcePolicyChecker(self.logger, finding, access_policies).check_policy()
+                    details = ResourcePolicyChecker(
+                        self.logger, finding, access_policies
+                    ).check_policy()
                     policy = {"policy_checks": details, "policy": access_policies}
                     return policy
                 return access_policies
             except KeyError:
                 return False
         return False
-    
+
     # MetaChecks
 
-    def it_has_public_endpoint(self):
-        public_endpoints = []
+    def it_has_endpoint(self):
         if self.elasticsearch_domain:
-            if "Endpoint" in self.elasticsearch_domain:
-                public_endpoints.append(self.elasticsearch_domain["Endpoint"])
-        if public_endpoints:
-            return public_endpoints
+            return self.elasticsearch_domain.get("Endpoints")
         return False
 
     def it_has_resource_policy(self):
@@ -84,8 +114,11 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         if self.resource_policy:
-            if self.resource_policy["policy_checks"]["is_public"] and self.it_has_public_endpoint():
-                return self.it_has_public_endpoint()
+            if (
+                self.resource_policy["policy_checks"]["is_public"]
+                and self.it_has_endpoint()
+            ):
+                return self.it_has_endpoint()
         return False
 
     def is_rest_encrypted(self):
@@ -106,13 +139,33 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def its_associated_with_security_groups(self):
+        if self.security_groups:
+            return self.security_groups
+        return False
+
+    def its_associated_with_vpc(self):
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("VPCOptions").get("VPCId"):
+                return self.elasticsearch_domain.get("VPCOptions").get("VPCId")
+        return False
+
+    def its_associated_with_subnets(self):
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("VPCOptions").get("SubnetIds"):
+                return self.elasticsearch_domain.get("VPCOptions").get("SubnetIds")
+        return False
+
     def checks(self):
         checks = [
             "it_has_resource_policy",
-            "it_has_public_endpoint",
+            "it_has_endpoint",
             "is_public",
             "is_rest_encrypted",
             "is_transit_encrypted",
             "is_encrypted",
+            "its_associated_with_security_groups",
+            "its_associated_with_vpc",
+            "its_associated_with_subnets",
         ]
         return checks

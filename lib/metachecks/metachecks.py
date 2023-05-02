@@ -1,5 +1,5 @@
 import lib.metachecks.checks
-from lib.AwsHelpers import assume_role, get_boto3_session, get_account_id
+from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session
 from lib.helpers import print_table
 
 

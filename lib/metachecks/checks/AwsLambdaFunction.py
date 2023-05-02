@@ -3,11 +3,14 @@
 import json
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_arn import generate_arn
+from botocore.exceptions import ClientError
 
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker, SecurityGroupChecker, ResourceIamRoleChecker
+from lib.metachecks.checks.MetaChecksHelpers import (
+    ResourceIamRoleChecker,
+    ResourcePolicyChecker,
+)
 
 
 class Metacheck(MetaChecksBase):
@@ -16,11 +19,16 @@ class Metacheck(MetaChecksBase):
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
+            self.mh_filters_checks = mh_filters_checks
             if not sess:
                 self.client = boto3.client("lambda", region_name=self.region)
             else:
-                self.client = sess.client(service_name="lambda", region_name=self.region)
+                self.client = sess.client(
+                    service_name="lambda", region_name=self.region
+                )
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
@@ -28,10 +36,11 @@ class Metacheck(MetaChecksBase):
             self.function_vpc = self._get_function_vpc()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy(finding, sess)
-            # Security Groups
-            self.security_groups = self.describe_security_groups(finding, sess)
             # Roles
             self.iam_roles = self.describe_iam_roles(finding, sess)
+            # Drilled MetaChecks
+            self.security_groups = self.describe_security_groups()
+            self.execute_drilled_metachecks()
 
     # Describe Functions
 
@@ -39,13 +48,15 @@ class Metacheck(MetaChecksBase):
         try:
             response = self.client.get_function(
                 FunctionName=self.resource_arn
-    #            Qualifier='string'
+                #            Qualifier='string'
             )
         except ClientError as err:
             if err.response["Error"]["Code"] == "ResourceNotFoundException":
                 return False
             else:
-                self.logger.error("Failed to get_function {}, {}".format(self.resource_id, err))
+                self.logger.error(
+                    "Failed to get_function {}, {}".format(self.resource_id, err)
+                )
                 return False
         if response["Configuration"]:
             return response["Configuration"]
@@ -59,17 +70,24 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    # Security Groups
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
-    def describe_security_groups(self, finding, sess):
-        sgs = {}
+    def describe_security_groups(self):
+        security_groups = {}
         if self.function_vpc.get("SecurityGroupIds"):
             for sg in self.function_vpc["SecurityGroupIds"]:
-                arn = generate_arn(sg, "ec2", "security_group", self.region, self.account, self.partition)
-                details = SecurityGroupChecker(self.logger, finding, sgs, sess).check_security_group()
-                sgs[arn] = details
-        if sgs:
-            return sgs
+                arn = generate_arn(
+                    sg,
+                    "ec2",
+                    "security_group",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                security_groups[arn] = {}
+        if security_groups:
+            return security_groups
         return False
 
     # Resource Policy
@@ -79,20 +97,26 @@ class Metacheck(MetaChecksBase):
             try:
                 response = self.client.get_policy(
                     FunctionName=self.resource_arn
-        #            Qualifier='string'
+                    #            Qualifier='string'
                 )
             except ClientError as err:
                 if err.response["Error"]["Code"] == "ResourceNotFoundException":
                     return False
                 else:
-                    self.logger.error("Failed to get_policy {}, {}".format(self.resource_id, err))
+                    self.logger.error(
+                        "Failed to get_policy {}, {}".format(self.resource_id, err)
+                    )
                     return False
             if response["Policy"]:
-                details = ResourcePolicyChecker(self.logger, finding, json.loads(response["Policy"])).check_policy()
-                policy = {"policy_checks": details, "policy": json.loads(response["Policy"])}
+                details = ResourcePolicyChecker(
+                    self.logger, finding, json.loads(response["Policy"])
+                ).check_policy()
+                policy = {
+                    "policy_checks": details,
+                    "policy": json.loads(response["Policy"]),
+                }
                 return policy
         return False
-
 
     # IAM Roles
 
@@ -101,20 +125,19 @@ class Metacheck(MetaChecksBase):
         if self.function:
             try:
                 role_arn = self.function["Role"]
-                details = ResourceIamRoleChecker(self.logger, finding, role_arn, sess).check_role_policies()
+                details = ResourceIamRoleChecker(
+                    self.logger, finding, role_arn, sess
+                ).check_role_policies()
                 roles[role_arn] = details
             except KeyError:
                 pass
-                
-        return roles
 
+        return roles
 
     # MetaChecks
 
     def it_has_resource_policy(self):
         return self.resource_policy
-
-
 
     def its_associated_with_vpc(self):
         if self.function_vpc:
