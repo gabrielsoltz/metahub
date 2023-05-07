@@ -1,9 +1,9 @@
 """MetaCheck: AwsElastiCacheCacheCluster"""
 
-import boto3
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 
 
@@ -15,7 +15,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -25,13 +24,6 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("elasticache", region_name=self.region)
-            else:
-                self.client = sess.client(
-                    service_name="elasticache", region_name=self.region
-                )
             self.resource_arn = finding["Resources"][0]["Id"]
             if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
                 self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
@@ -42,15 +34,18 @@ class Metacheck(MetaChecksBase):
                     "Error parsing elasticache cluster resource id: %s",
                     self.resource_arn,
                 )
-            self.elasticcache_cluster = self._describe_cache_clusters()
+            self.mh_filters_checks = mh_filters_checks
+            self.client = get_boto3_client(
+                self.logger, "elasticache", self.region, self.sess
+            )
+            # Describe
+            self.elasticcache_cluster = self.describe_cache_clusters()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe functions
 
-    def _describe_cache_clusters(self):
+    def describe_cache_clusters(self):
         try:
             response = self.client.describe_cache_clusters(
                 CacheClusterId=self.resource_id,
@@ -141,13 +136,19 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
-        ingress = False
-        if self.security_groups:
-            for sg in self.security_groups:
-                if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
-                    ingress = True
-        if ingress:
-            return True
+        public_dict = {}
+        if self.it_has_endpoint():
+            for endpoint in self.it_has_endpoint():
+                for sg in self.security_groups:
+                    if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                        public_dict[endpoint] = []
+                        for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                            from_port = rule.get("FromPort")
+                            to_port = rule.get("ToPort")
+                            ip_protocol = rule.get("IpProtocol")
+                            public_dict[endpoint].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def checks(self):

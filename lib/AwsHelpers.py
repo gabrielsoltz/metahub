@@ -133,3 +133,10 @@ def get_sh_findings_aggregator(logger, region):
         ].split(":")[3]
         return sh_findings_aggregator_region
     return False
+
+
+def get_boto3_client(logger, service, region, sess):
+    if not sess:
+        return boto3.client(service, region_name=region)
+    else:
+        return sess.client(service_name=service, region_name=region)

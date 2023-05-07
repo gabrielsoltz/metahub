@@ -1,10 +1,9 @@
 """MetaCheck: AwsEc2SecurityGroup"""
 
-import boto3
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import SecurityGroupChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -15,7 +14,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -25,29 +23,25 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
+            self.resource_id = (
+                finding["Resources"][0]["Id"].split("/")[1]
+                if not drilled
+                else drilled.split("/")[1]
+            )
+            self.resource_arn = (
+                finding["Resources"][0]["Id"] if not drilled else drilled
+            )
             self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("ec2", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="ec2", region_name=self.region)
-            if not drilled:
-                self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
-                self.resource_arn = finding["Resources"][0]["Id"]
-            if drilled:
-                self.resource_id = drilled.split("/")[1]
-                self.resource_arn = drilled
-            self.mh_filters_checks = mh_filters_checks
-            self.all_security_group = self._describe_security_groups()
-            self.network_interfaces = self._describe_network_interfaces()
-            self.checked_security_group = SecurityGroupChecker(
-                self.logger, finding, {self.resource_arn}, sess
-            ).check_security_group()
-            if drilled_down:
-                self.execute_drilled_metachecks()
+            self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
+            # Describe
+            self.all_security_group = self.describe_security_groups()
+            self.network_interfaces = self.describe_network_interfaces()
+            self.security_group_rules = self.describe_security_group_rules()
+            # Drilled MetaChecks
 
     # Describe Functions
 
-    def _describe_security_groups(self):
+    def describe_security_groups(self):
         try:
             response = self.client.describe_security_groups()
         except ClientError as err:
@@ -69,7 +63,7 @@ class Metacheck(MetaChecksBase):
             return response["SecurityGroups"]
         return False
 
-    def _describe_network_interfaces(self):
+    def describe_network_interfaces(self):
         response = self.client.describe_network_interfaces(
             Filters=[
                 {
@@ -81,6 +75,16 @@ class Metacheck(MetaChecksBase):
             ],
         )
         return response["NetworkInterfaces"]
+
+    def describe_security_group_rules(self):
+        response = self.client.describe_security_group_rules(
+            Filters=[
+                {"Name": "group-id", "Values": [self.resource_id]},
+            ],
+        )
+        if response["SecurityGroupRules"]:
+            return response["SecurityGroupRules"]
+        return False
 
     # MetaChecks
 
@@ -149,22 +153,74 @@ class Metacheck(MetaChecksBase):
             return references
         return False
 
+    def is_ingress_rule_unrestricted(self, rule):
+        """ """
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
+                return True
+        return False
+
+    def is_egress_rule_unrestricted(self, rule):
+        """ """
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and rule["IsEgress"]:
+                return True
+        return False
+
+    def check_security_group(self):
+        failed_rules = {
+            "is_ingress_rules_unrestricted": [],
+            "is_egress_rules_unrestricted": [],
+        }
+        if self.security_group_rules:
+            for rule in self.security_group_rules:
+                if (
+                    self.is_ingress_rule_unrestricted(rule)
+                    and rule not in failed_rules["is_ingress_rules_unrestricted"]
+                ):
+                    failed_rules["is_ingress_rules_unrestricted"].append(rule)
+                if (
+                    self.is_egress_rule_unrestricted(rule)
+                    and rule not in failed_rules["is_egress_rules_unrestricted"]
+                ):
+                    failed_rules["is_egress_rules_unrestricted"].append(rule)
+        return failed_rules
+
     def is_ingress_rules_unrestricted(self):
-        if self.checked_security_group["is_ingress_rules_unrestricted"]:
-            return self.checked_security_group["is_ingress_rules_unrestricted"]
+        is_ingress_rules_unrestricted = self.check_security_group()[
+            "is_ingress_rules_unrestricted"
+        ]
+        if is_ingress_rules_unrestricted:
+            return is_ingress_rules_unrestricted
         return False
 
     def is_egress_rules_unrestricted(self):
-        if self.checked_security_group["is_egress_rule_unrestricted"]:
-            return self.checked_security_group["is_egress_rule_unrestricted"]
+        is_egress_rules_unrestricted = self.check_security_group()[
+            "is_egress_rules_unrestricted"
+        ]
+        if is_egress_rules_unrestricted:
+            return is_egress_rules_unrestricted
         return False
 
     def is_public(self):
-        if (
-            self.its_associated_with_ips_public()
-            and self.is_ingress_rules_unrestricted()
-        ):
-            return True
+        public_dict = {}
+        if self.its_associated_with_ips_public() and self.is_ingress_rules_unrestricted():
+            for ip in self.its_associated_with_ips_public():
+                public_dict[ip] = []
+                if self.is_ingress_rules_unrestricted():
+                    for rule in self.is_ingress_rules_unrestricted():
+                        from_port = rule.get("FromPort")
+                        to_port = rule.get("ToPort")
+                        ip_protocol = rule.get("IpProtocol")
+                        public_dict[ip].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def is_default(self):

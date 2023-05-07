@@ -2,15 +2,12 @@
 
 import json
 
-import boto3
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import (
-    ResourceIamRoleChecker,
-    ResourcePolicyChecker,
-)
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -21,7 +18,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -31,30 +27,25 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("lambda", region_name=self.region)
-            else:
-                self.client = sess.client(
-                    service_name="lambda", region_name=self.region
-                )
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
-            self.function = self._get_function()
-            self.function_vpc = self._get_function_vpc()
+            self.client = get_boto3_client(
+                self.logger, "lambda", self.region, self.sess
+            )
+            # Describe
+            self.function = self.get_function()
+            self.function_vpc = self.get_function_vpc()
+            self.function_url_config = self.get_function_url_config()
             # Resource Policy
-            self.resource_policy = self.describe_resource_policy(finding, sess)
-            # Roles
-            self.iam_roles = self.describe_iam_roles(finding, sess)
+            self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
+            self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe Functions
 
-    def _get_function(self):
+    def get_function(self):
         try:
             response = self.client.get_function(
                 FunctionName=self.resource_arn
@@ -72,7 +63,7 @@ class Metacheck(MetaChecksBase):
             return response["Configuration"]
         return False
 
-    def _get_function_vpc(self):
+    def get_function_vpc(self):
         if self.function:
             try:
                 return self.function["VpcConfig"]
@@ -80,29 +71,25 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    # Drilled MetaChecks
-    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
-
-    def describe_security_groups(self):
-        security_groups = {}
-        if self.function_vpc.get("SecurityGroupIds"):
-            for sg in self.function_vpc["SecurityGroupIds"]:
-                arn = generate_arn(
-                    sg,
-                    "ec2",
-                    "security_group",
-                    self.region,
-                    self.account,
-                    self.partition,
+    def get_function_url_config(self):
+        try:
+            function_url_config = self.client.get_function_url_config(
+                            FunctionName=self.resource_arn
+                        )
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "ResourceNotFoundException":
+                return False
+            else:
+                self.logger.error(
+                    "Failed to get_function_url_config {}, {}".format(self.resource_id, err)
                 )
-                security_groups[arn] = {}
-        if security_groups:
-            return security_groups
-        return False
+                return False
+
+        return function_url_config
 
     # Resource Policy
 
-    def describe_resource_policy(self, finding, sess):
+    def describe_resource_policy(self):
         if self.function:
             try:
                 response = self.client.get_policy(
@@ -118,31 +105,43 @@ class Metacheck(MetaChecksBase):
                     )
                     return False
             if response["Policy"]:
-                details = ResourcePolicyChecker(
-                    self.logger, finding, json.loads(response["Policy"])
+                checked_policy = PolicyHelper(
+                    self.logger, self.finding, json.loads(response["Policy"])
                 ).check_policy()
-                policy = {
-                    "policy_checks": details,
-                    "policy": json.loads(response["Policy"]),
-                }
-                return policy
+                # policy = {
+                #     "policy_checks": checked_policy,
+                #     "policy": json.loads(response["Policy"]),
+                # }
+                return checked_policy
         return False
 
-    # IAM Roles
+    # Drilled MetaChecks
+    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
-    def describe_iam_roles(self, finding, sess):
-        roles = {}
+    def describe_security_groups(self):
+        security_groups = {}
+        if self.function_vpc:
+            if self.function_vpc.get("SecurityGroupIds"):
+                for sg in self.function_vpc["SecurityGroupIds"]:
+                    arn = generate_arn(
+                        sg,
+                        "ec2",
+                        "security_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    security_groups[arn] = {}
+
+        return security_groups
+
+    def describe_iam_roles(self):
+        iam_roles = {}
         if self.function:
-            try:
+            if self.function.get("Role"):
                 role_arn = self.function["Role"]
-                details = ResourceIamRoleChecker(
-                    self.logger, finding, role_arn, sess
-                ).check_role_policies()
-                roles[role_arn] = details
-            except KeyError:
-                pass
-
-        return roles
+                iam_roles[role_arn] = {}
+        return iam_roles
 
     # MetaChecks
 
@@ -166,14 +165,21 @@ class Metacheck(MetaChecksBase):
                 return self.function_vpc["SubnetIds"]
         return False
 
-    def is_public(self):
+    def is_unrestricted(self):
         if self.resource_policy:
-            if self.resource_policy["policy_checks"]["is_public"]:
+            if self.resource_policy["is_unrestricted"]:
                 return True
         return False
 
     def its_associated_with_iam_roles(self):
         return self.iam_roles
+
+    def it_has_endpoint(self):
+        if self.function_vpc:
+            if self.function_url_config:
+                if self.function_url_config["FunctionUrl"]:
+                    return self.function_url_config["FunctionUrl"]
+        return False
 
     def checks(self):
         checks = [
@@ -182,6 +188,7 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_vpc",
             "its_associated_with_security_groups",
             "its_associated_with_subnets",
-            "is_public",
+            "is_unrestricted",
+            "it_has_endpoint"
         ]
         return checks

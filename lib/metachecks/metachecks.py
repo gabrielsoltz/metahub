@@ -21,9 +21,15 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     AWSResourceType = finding["Resources"][0]["Type"]
     resource_arn = finding["Resources"][0]["Id"]
 
-    # If the resources lives in another account, you need to provide a role for running MetaChecks
+    logger.info(
+        "Running MetaChecks for AWSResourceType: %s (%s)",
+        AWSResourceType,
+        finding["Resources"][0]["Id"],
+    )
+
+    # If the resources lives in another account, we need the --mh-assume-role
     if AwsAccountId != current_account_id and not mh_role:
-        logger.error(
+        logger.warning(
             "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not --mh-assume-role was provided. Ignoring MetaChecks...",
             resource_arn,
             AwsAccountId,
@@ -45,26 +51,32 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     else:
         sess = None
 
+    # Create MetaChecks Handler
     try:
         hndl = getattr(lib.metachecks.checks, AWSResourceType).Metacheck(
-            logger, finding, meta_checks, mh_filters_checks, sess, drilled_down
+            logger, finding, meta_checks, mh_filters_checks, sess
         )
     except AttributeError as err:
-        logger.info(
-            "No MetaChecks Handler for AWSResourceType: %s (%s)", AWSResourceType, err
-        )
+        if "has no attribute '" + AWSResourceType in str(err):
+            logger.info("No MetaChecks for ResourceType: %s", AWSResourceType)
+        else:
+            logger.error(
+                "Error running MetaChecks for ResourceType: %s (%s)",
+                AWSResourceType,
+                err,
+            )
         if mh_filters_checks:
             return False, False
         return False, True
 
-    logger.info(
-        "Running MetaChecks for AWSResourceType: %s (%s)",
-        AWSResourceType,
-        finding["Resources"][0]["Id"],
-    )
+    # Execute MetaChecks
+    if drilled_down:
+        hndl.execute_drilled_metachecks()
+
+    # Get MetaChecks Outputs
     execute = hndl.output_checks()
-    logger.info(
-        "MetaChecks Result for AWSResourceType: %s (%s): \nExecute: %s",
+    logger.debug(
+        "MetaChecks Result for ResourceType: %s (%s): \nExecute: %s",
         AWSResourceType,
         finding["Resources"][0]["Id"],
         execute,
@@ -74,7 +86,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
         return execute
     else:
         logger.error(
-            "Error running MetaChecks output_checks() for AWSResourceType: %s",
+            "Error running MetaChecks output_checks() for ResourceType: %s",
             AWSResourceType,
         )
 
@@ -86,7 +98,6 @@ def list_metachecks(logger):
     mh_filters_checks = False
     sess = False
     finding = False
-    drilled_down = False
 
     import inspect
 
@@ -95,7 +106,7 @@ def list_metachecks(logger):
             continue
         try:
             hndl = getattr(lib.metachecks.checks, name).Metacheck(
-                logger, finding, meta_checks, mh_filters_checks, sess, drilled_down
+                logger, finding, meta_checks, mh_filters_checks, sess
             )
         except AttributeError as err:
             logger.debug("No MetaChecks for AWSResourceType: %s (%s)", name, err)

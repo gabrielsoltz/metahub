@@ -1,11 +1,11 @@
 """MetaCheck: AwsEc2Instance"""
 
-import boto3
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourceIamRoleChecker
+from lib.metachecks.checks.MetaChecksHelpers import IamHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -16,7 +16,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -26,31 +25,24 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            if not sess:
-                self.client = boto3.client("ec2", region_name=self.region)
-                self.asg_client = boto3.client("autoscaling", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="ec2", region_name=self.region)
-                self.asg_client = sess.client(
-                    service_name="autoscaling", region_name=self.region
-                )
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
-            self.instance = self._describe_instance()
-            self.instance_volumes = self._describe_volumes()
-            self.instance_auto_scaling_group = self._describe_auto_scaling_instances()
-            # Roles
-            self.instance_profile_roles = self._describe_instance_profile(sess)
-            self.iam_roles = self.describe_iam_roles(finding, sess)
+            self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
+            self.asg_client = get_boto3_client(
+                self.logger, "autoscaling", self.region, self.sess
+            )
+            # Describe
+            self.instance = self.describe_instance()
+            self.instance_volumes = self.describe_volumes()
+            self.instance_auto_scaling_group = self.describe_auto_scaling_instances()
             # Drilled MetaChecks
+            self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe Functions
 
-    def _describe_instance(self):
+    def describe_instance(self):
         try:
             response = self.client.describe_instances(
                 InstanceIds=[
@@ -72,6 +64,28 @@ class Metacheck(MetaChecksBase):
             return response["Reservations"][0]["Instances"][0]
         return False
 
+    def describe_volumes(self):
+        BlockDeviceMappings = []
+        if self.instance:
+            if self.instance["BlockDeviceMappings"]:
+                for ebs in self.instance["BlockDeviceMappings"]:
+                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
+        if BlockDeviceMappings:
+            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
+            return response["Volumes"]
+        return False
+
+    def describe_auto_scaling_instances(self):
+        # AutoScaling Group is also defined as Tag aws:autoscaling:groupName, but using this endpoint we can also get the launch configuration.
+        if self.instance:
+            response = self.asg_client.describe_auto_scaling_instances(
+                InstanceIds=[
+                    self.resource_id,
+                ],
+            )
+            return response["AutoScalingInstances"]
+        return False
+
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
@@ -89,64 +103,19 @@ class Metacheck(MetaChecksBase):
                         self.partition,
                     )
                     security_groups[arn] = {}
-        if security_groups:
-            return security_groups
-        return False
 
-    # IAM Roles
+        return security_groups
 
-    def describe_iam_roles(self, finding, sess):
-        roles = {}
-        if self.instance_profile_roles:
-            for role in self.instance_profile_roles["Roles"]:
-                role_arn = role["Arn"]
-                details = ResourceIamRoleChecker(
-                    self.logger, finding, role_arn, sess
-                ).check_role_policies()
-                roles[role_arn] = details
-        if roles:
-            return roles
-        return False
-
-    def _describe_instance_profile(self, sess):
-        IamInstanceProfile = False
+    def describe_iam_roles(self):
+        iam_roles = {}
         if self.instance:
-            try:
-                IamInstanceProfile = self.instance["IamInstanceProfile"]["Arn"]
-            except KeyError:
-                IamInstanceProfile = False
-        if IamInstanceProfile:
-            if not sess:
-                client = boto3.client("iam")
-            else:
-                client = sess.client(service_name="iam")
-            response = client.get_instance_profile(
-                InstanceProfileName=IamInstanceProfile.split("/")[1]
-            )
-            return response["InstanceProfile"]
-        return False
+            instance_profile = self.instance.get("IamInstanceProfile").get("Arn")
+            arn = IamHelper(
+                self.logger, self.finding, False, self.sess, instance_profile
+            ).get_role_from_instance_profile(instance_profile)
+            iam_roles[arn] = {}
 
-    def _describe_volumes(self):
-        BlockDeviceMappings = []
-        if self.instance:
-            if self.instance["BlockDeviceMappings"]:
-                for ebs in self.instance["BlockDeviceMappings"]:
-                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
-        if BlockDeviceMappings:
-            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
-            return response["Volumes"]
-        return False
-
-    def _describe_auto_scaling_instances(self):
-        # AutoScaling Group is also defined as Tag aws:autoscaling:groupName, but using this endpoint we can also get the launch configuration.
-        if self.instance:
-            response = self.asg_client.describe_auto_scaling_instances(
-                InstanceIds=[
-                    self.resource_id,
-                ],
-            )
-            return response["AutoScalingInstances"]
-        return False
+        return iam_roles
 
     # MetaChecks
 
@@ -287,13 +256,18 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
-        ingress_unrestricted = False
-        if self.security_groups:
+        public_dict = {}
+        if self.it_has_public_ip():
             for sg in self.security_groups:
                 if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    ingress_unrestricted = True
-        if self.it_has_public_ip() and ingress_unrestricted:
-            return self.it_has_public_ip()
+                    public_dict[self.it_has_public_ip()] = []
+                    for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                        from_port = rule.get("FromPort")
+                        to_port = rule.get("ToPort")
+                        ip_protocol = rule.get("IpProtocol")
+                        public_dict[self.it_has_public_ip()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def is_encrypted(self):
@@ -308,7 +282,6 @@ class Metacheck(MetaChecksBase):
             "it_has_key",
             "it_has_private_dns",
             "it_has_public_dns",
-            "it_has_instance_profile",
             "its_associated_with_iam_roles",
             "its_associated_with_security_groups",
             "is_instance_metadata_v2",

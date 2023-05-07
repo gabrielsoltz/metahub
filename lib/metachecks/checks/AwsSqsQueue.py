@@ -2,10 +2,9 @@
 
 import json
 
-import boto3
-
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -16,7 +15,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -26,29 +24,24 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("sqs", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="sqs", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
-            self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
-            self.queue_url = self._get_queue_url()
-            self.queue_attributes = self._get_queue_atributes()
+            self.client = get_boto3_client(self.logger, "sqs", self.region, self.sess)
+            # Describe
+            self.queue_url = self.get_queue_url()
+            self.queue_attributes = self.get_queue_atributes()
             # Resource Policy
-            self.resource_policy = self.describe_resource_policy(finding, sess)
-            if drilled_down:
-                self.execute_drilled_metachecks()
+            self.resource_policy = self.describe_resource_policy()
+            # Drilled Metachecks
 
     # Describe Functions
 
-    def _get_queue_url(self):
+    def get_queue_url(self):
         response = self.client.get_queue_url(QueueName=self.resource_id)
         return response["QueueUrl"]
 
-    def _get_queue_atributes(self):
+    def get_queue_atributes(self):
         response = self.client.get_queue_attributes(
             QueueUrl=self.queue_url, AttributeNames=["All"]
         )
@@ -58,20 +51,20 @@ class Metacheck(MetaChecksBase):
 
     # Resource Policy
 
-    def describe_resource_policy(self, finding, sess):
+    def describe_resource_policy(self):
         if self.queue_attributes:
             try:
                 if self.queue_attributes["Policy"]:
-                    details = ResourcePolicyChecker(
+                    checked_policy = PolicyHelper(
                         self.logger,
-                        finding,
+                        self.finding,
                         json.loads(self.queue_attributes["Policy"]),
                     ).check_policy()
-                    policy = {
-                        "policy_checks": details,
-                        "policy": json.loads(self.queue_attributes["Policy"]),
-                    }
-                    return policy
+                    # policy = {
+                    #     "policy_checks": checked_policy,
+                    #     "policy": json.loads(self.queue_attributes["Policy"]),
+                    # }
+                    return checked_policy
             except KeyError:
                 return False
         return False
@@ -87,7 +80,7 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         if self.resource_policy:
-            if self.resource_policy["policy_checks"]["is_public"]:
+            if self.resource_policy["is_unrestricted"]:
                 return True
         return False
 

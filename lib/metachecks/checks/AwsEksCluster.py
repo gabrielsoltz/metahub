@@ -1,11 +1,10 @@
 """MetaCheck: AwsEksCluster"""
 
-import boto3
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourceIamRoleChecker
 
 
 class Metacheck(MetaChecksBase):
@@ -16,7 +15,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -26,25 +24,19 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("eks", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="eks", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
-            self.eks_cluster = self._describe_cluster()
-            # Roles
-            self.iam_roles = self.describe_iam_roles(finding, sess)
+            self.client = get_boto3_client(self.logger, "eks", self.region, self.sess)
+            # Describe
+            self.eks_cluster = self.describe_cluster()
             # Drilled MetaChecks
+            self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe Functions
 
-    def _describe_cluster(self):
+    def describe_cluster(self):
         try:
             response = self.client.describe_cluster(name=self.resource_id)
         except ClientError as err:
@@ -61,19 +53,6 @@ class Metacheck(MetaChecksBase):
         if response["cluster"]:
             return response["cluster"]
         return False
-
-    # Roles
-
-    def describe_iam_roles(self, finding, sess):
-        roles = {}
-        if self.eks_cluster:
-            if self.eks_cluster["roleArn"]:
-                role_arn = self.eks_cluster["roleArn"]
-                details = ResourceIamRoleChecker(
-                    self.logger, finding, role_arn, sess
-                ).check_role_policies()
-                roles[role_arn] = details
-        return roles
 
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
@@ -107,9 +86,17 @@ class Metacheck(MetaChecksBase):
                     self.partition,
                 )
                 security_groups[arn] = {}
-        if security_groups:
-            return security_groups
-        return False
+
+        return security_groups
+
+    def describe_iam_roles(self):
+        iam_roles = {}
+        if self.eks_cluster:
+            if self.eks_cluster["roleArn"]:
+                role_arn = self.eks_cluster["roleArn"]
+                iam_roles[role_arn] = {}
+
+        return iam_roles
 
     # MetaChecks Functions
 
@@ -130,9 +117,20 @@ class Metacheck(MetaChecksBase):
             if self.eks_cluster["resourcesVpcConfig"]["endpointPublicAccess"]:
                 return self.eks_cluster.get("endpoint")
 
+
     def is_public(self):
+        public_dict = {}
         if self.it_has_public_endpoint():
-            return self.it_has_public_endpoint()
+            for sg in self.security_groups:
+                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                    public_dict[self.it_has_public_endpoint()] = []
+                    for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                        from_port = rule.get("FromPort")
+                        to_port = rule.get("ToPort")
+                        ip_protocol = rule.get("IpProtocol")
+                        public_dict[self.it_has_public_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def checks(self):

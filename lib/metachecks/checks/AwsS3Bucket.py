@@ -2,11 +2,11 @@
 
 import json
 
-import boto3
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -17,7 +17,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -27,25 +26,32 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("s3", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="s3", region_name=self.region)
+            self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
-            self.bucket_acl = self._get_bucket_acl()
-            self.cannonical_user_id = self._get_canonical_user_id()
-            self.bucket_website = self._get_bucket_website()
-            self.bucket_public_access_block = self._get_bucket_public_access_block()
+            self.client = get_boto3_client(self.logger, "s3", self.region, self.sess)
+            # Describe
+            self.bucket_acl = self.get_bucket_acl()
+            self.cannonical_user_id = self.get_canonical_user_id()
+            self.bucket_website = self.get_bucket_website()
+            self.bucket_public_access_block = self.get_bucket_public_access_block()
             # Resource Policy
-            self.resource_policy = self.describe_resource_policy(finding)
-            if drilled_down:
-                self.execute_drilled_metachecks()
+            self.resource_policy = self.describe_resource_policy()
+            # Drilled MetaChecks
 
     # Describe Functions
 
-    def _get_canonical_user_id(self):
+    def get_bucket_acl(self):
+        try:
+            response = self.client.get_bucket_acl(Bucket=self.resource_id)
+        except ClientError as err:
+            self.logger.error(
+                "Failed to get_bucket_acl {}, {}".format(self.resource_id, err)
+            )
+            return False
+        return response["Grants"]
+
+    def get_canonical_user_id(self):
         try:
             response = self.client.list_buckets()
         except ClientError as err:
@@ -55,7 +61,35 @@ class Metacheck(MetaChecksBase):
             return False
         return response["Owner"]["ID"]
 
-    def _get_bucket_encryption(self):
+    def get_bucket_website(self):
+        try:
+            response = self.client.get_bucket_website(Bucket=self.resource_id)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "NoSuchWebsiteConfiguration":
+                return False
+            else:
+                self.logger.error(
+                    "Failed to get_bucket_website {}, {}".format(self.resource_id, err)
+                )
+                return False
+        return response
+
+    def get_bucket_public_access_block(self):
+        try:
+            response = self.client.get_public_access_block(Bucket=self.resource_id)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
+                return False
+            else:
+                self.logger.error(
+                    "Failed to get_public_access_block {}, {}".format(
+                        self.resource_id, err
+                    )
+                )
+                return False
+        return response["PublicAccessBlockConfiguration"]
+
+    def get_bucket_encryption(self):
         try:
             response = self.client.get_bucket_encryption(Bucket=self.resource_id)
         except ClientError as err:
@@ -73,19 +107,9 @@ class Metacheck(MetaChecksBase):
                 return False
         return response["ServerSideEncryptionConfiguration"]["Rules"]
 
-    def _get_bucket_acl(self):
-        try:
-            response = self.client.get_bucket_acl(Bucket=self.resource_id)
-        except ClientError as err:
-            self.logger.error(
-                "Failed to get_bucket_acl {}, {}".format(self.resource_id, err)
-            )
-            return False
-        return response["Grants"]
-
     # Resource Policy
 
-    def describe_resource_policy(self, finding):
+    def describe_resource_policy(self):
         try:
             response = self.client.get_bucket_policy(Bucket=self.resource_id)
         except ClientError as err:
@@ -99,39 +123,13 @@ class Metacheck(MetaChecksBase):
 
         if response["Policy"]:
             policy_json = json.loads(response["Policy"])
-            details = ResourcePolicyChecker(
-                self.logger, finding, policy_json
+            checked_policy = PolicyHelper(
+                self.logger, self.finding, policy_json
             ).check_policy()
-            policy = {"policy_checks": details, "policy": policy_json}
-            return policy
+            # policy = {"policy_checks": checked_policy, "policy": policy_json}
+            return checked_policy
 
-    def _get_bucket_website(self):
-        try:
-            response = self.client.get_bucket_website(Bucket=self.resource_id)
-        except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchWebsiteConfiguration":
-                return False
-            else:
-                self.logger.error(
-                    "Failed to get_bucket_website {}, {}".format(self.resource_id, err)
-                )
-                return False
-        return response
-
-    def _get_bucket_public_access_block(self):
-        try:
-            response = self.client.get_public_access_block(Bucket=self.resource_id)
-        except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
-                return False
-            else:
-                self.logger.error(
-                    "Failed to get_public_access_block {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-        return response["PublicAccessBlockConfiguration"]
+        return False
 
     # MetaChecks
 
@@ -197,7 +195,7 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.resource_policy:
             if (
-                self.resource_policy["policy_checks"]["is_public"]
+                self.resource_policy["is_unrestricted"]
                 or self.it_has_bucket_acl_public()
             ):
                 return True
@@ -207,14 +205,14 @@ class Metacheck(MetaChecksBase):
         if self.it_has_website_enabled():
             if self.resource_policy:
                 if (
-                    self.resource_policy["policy_checks"]["is_public"]
+                    self.resource_policy["is_unrestricted"]
                     or self.it_has_bucket_acl_public()
                 ):
                     self.it_has_website_enabled()
         return False
 
     def is_encrypted(self):
-        if self._get_bucket_encryption():
+        if self.get_bucket_encryption():
             return True
         return False
 

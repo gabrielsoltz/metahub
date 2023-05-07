@@ -8,6 +8,7 @@ from lib.metachecks.checks import (
     AwsElastiCacheCacheCluster,
     AwsElasticsearchDomain,
     AwsIamPolicy,
+    AwsIamRole,
     AwsLambdaFunction,
     AwsRdsDbCluster,
     AwsRdsDbInstance,

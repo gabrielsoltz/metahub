@@ -1,9 +1,10 @@
 """MetaCheck: AwsAutoScalingLaunchConfiguration"""
 
-import boto3
 from aws_arn import generate_arn
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import IamHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -14,7 +15,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -24,25 +24,22 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            if not sess:
-                self.client = boto3.client("autoscaling", region_name=self.region)
-            else:
-                self.client = sess.client(
-                    service_name="autoscaling", region_name=self.region
-                )
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
-            self.launch_configuration = self._describe_launch_configuration()
-            self.auto_scaling_groups = self._describe_auto_scaling_groups()
+            self.client = get_boto3_client(
+                self.logger, "autoscaling", self.region, self.sess
+            )
+            # Describe
+            self.launch_configuration = self.describe_launch_configuration()
+            self.auto_scaling_groups = self.describe_auto_scaling_groups()
             # Drilled MetaChecks
+            self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe functions
 
-    def _describe_launch_configuration(self):
+    def describe_launch_configuration(self):
         response = self.client.describe_launch_configurations(
             LaunchConfigurationNames=[
                 self.resource_id,
@@ -52,7 +49,7 @@ class Metacheck(MetaChecksBase):
             return response["LaunchConfigurations"][0]
         return False
 
-    def _describe_auto_scaling_groups(self):
+    def describe_auto_scaling_groups(self):
         response = self.client.describe_auto_scaling_groups()
         if response["AutoScalingGroups"]:
             return response["AutoScalingGroups"]
@@ -75,9 +72,19 @@ class Metacheck(MetaChecksBase):
                         self.partition,
                     )
                     security_groups[arn] = {}
-        if security_groups:
-            return security_groups
-        return False
+
+        return security_groups
+
+    def describe_iam_roles(self):
+        iam_roles = {}
+        if self.launch_configuration:
+            instance_profile = self.launch_configuration.get("IamInstanceProfile")
+            arn = IamHelper(
+                self.logger, self.finding, False, self.sess, instance_profile
+            ).get_role_from_instance_profile(instance_profile)
+            iam_roles[arn] = {}
+
+        return iam_roles
 
     # MetaChecks
 
@@ -136,7 +143,12 @@ class Metacheck(MetaChecksBase):
             return self.security_groups
         return False
 
-    def it_has_public_ip(self):
+    def its_associated_with_iam_roles(self):
+        if self.iam_roles:
+            return self.iam_roles
+        return False
+
+    def it_associates_public_ip(self):
         PublicIp = False
         if self.launch_configuration:
             try:
@@ -146,13 +158,12 @@ class Metacheck(MetaChecksBase):
         return PublicIp
 
     def is_public(self):
-        ingress_unrestricted = False
-        if self.security_groups:
-            for sg in self.security_groups:
-                if self.security_groups[sg]["is_ingress_rules_unrestricted"]:
-                    ingress_unrestricted = True
-        if self.it_has_public_ip() and ingress_unrestricted:
-            return self.it_has_public_ip()
+        sg_ingress_unrestricted = False
+        for sg in self.security_groups:
+            if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                sg_ingress_unrestricted = True
+        if self.it_associates_public_ip() and sg_ingress_unrestricted:
+            return True
         return False
 
     def is_encrypted(self):
@@ -175,7 +186,8 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_an_asg",
             "its_associated_with_asg_instances",
             "its_associated_with_security_groups",
-            "it_has_public_ip",
+            "its_associated_with_iam_roles",
+            "it_associates_public_ip",
             "is_public",
             "is_encrypted",
         ]

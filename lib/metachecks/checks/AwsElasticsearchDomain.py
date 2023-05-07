@@ -2,12 +2,12 @@
 
 import json
 
-import boto3
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -18,7 +18,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -28,25 +27,20 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("es", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="es", region_name=self.region)
-            self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
             self.resource_arn = finding["Resources"][0]["Id"]
+            self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
             self.mh_filters_checks = mh_filters_checks
-            self.elasticsearch_domain = self._describe_elasticsearch_domain()
+            self.client = get_boto3_client(self.logger, "es", self.region, self.sess)
+            # Descrbe
+            self.elasticsearch_domain = self.describe_elasticsearch_domain()
             # Resource Policy
-            self.resource_policy = self.describe_resource_policy(finding, sess)
+            self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
-            if drilled_down:
-                self.execute_drilled_metachecks()
 
     # Describe Functions
 
-    def _describe_elasticsearch_domain(self):
+    def describe_elasticsearch_domain(self):
         try:
             response = self.client.describe_elasticsearch_domain(
                 DomainName=self.resource_id
@@ -76,59 +70,73 @@ class Metacheck(MetaChecksBase):
     ):
         security_groups = {}
         if self.elasticsearch_domain:
-            if self.elasticsearch_domain.get("VPCOptions").get("SecurityGroupIds"):
-                for sg in self.elasticsearch_domain.get("VPCOptions").get(
-                    "SecurityGroupIds"
-                ):
-                    arn = generate_arn(
-                        sg,
-                        "ec2",
-                        "security_group",
-                        self.region,
-                        self.account,
-                        self.partition,
-                    )
-                    security_groups[arn] = {}
-        if security_groups:
-            return security_groups
-        return False
+            if self.elasticsearch_domain.get("VPCOptions"):
+                if self.elasticsearch_domain.get("VPCOptions").get("SecurityGroupIds"):
+                    for sg in self.elasticsearch_domain.get("VPCOptions").get(
+                        "SecurityGroupIds"
+                    ):
+                        arn = generate_arn(
+                            sg,
+                            "ec2",
+                            "security_group",
+                            self.region,
+                            self.account,
+                            self.partition,
+                        )
+                        security_groups[arn] = {}
+
+        return security_groups
 
     # Resource Policy
 
-    def describe_resource_policy(self, finding, sess):
+    def describe_resource_policy(self):
         if self.elasticsearch_domain:
             try:
                 access_policies = json.loads(
                     self.elasticsearch_domain["AccessPolicies"]
                 )
                 if access_policies:
-                    details = ResourcePolicyChecker(
-                        self.logger, finding, access_policies
+                    checked_policy = PolicyHelper(
+                        self.logger, self.finding, access_policies
                     ).check_policy()
-                    policy = {"policy_checks": details, "policy": access_policies}
-                    return policy
-                return access_policies
+                    # policy = {"policy_checks": checked_policy, "policy": access_policies}
+                    return checked_policy
             except KeyError:
                 return False
         return False
 
     # MetaChecks
 
-    def it_has_endpoint(self):
+    def it_has_private_endpoint(self):
         if self.elasticsearch_domain:
-            return self.elasticsearch_domain.get("Endpoints")
+            if self.elasticsearch_domain.get("Endpoints"):
+                return self.elasticsearch_domain.get("Endpoints").get("vpc")
+        return False
+
+    def it_has_public_endpoint(self):
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("Endpoint"):
+                return self.elasticsearch_domain.get("Endpoint")
         return False
 
     def it_has_resource_policy(self):
         return self.resource_policy
 
     def is_public(self):
-        if self.resource_policy:
-            if (
-                self.resource_policy["policy_checks"]["is_public"]
-                and self.it_has_endpoint()
-            ):
-                return self.it_has_endpoint()
+        public_dict = {}
+        if self.it_has_public_endpoint() and self.resource_policy["is_unrestricted"]:
+            public_dict[self.it_has_public_endpoint()] = [{"from_port": "443", "to_port": "443", "ip_protocol": "tcp"}]
+        if self.it_has_private_endpoint():
+            for sg in self.security_groups:
+                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                    public_dict[self.it_has_private_endpoint()] = []
+                    for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                        from_port = rule.get("FromPort")
+                        to_port = rule.get("ToPort")
+                        ip_protocol = rule.get("IpProtocol")
+                        public_dict[self.it_has_private_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def is_rest_encrypted(self):
@@ -156,20 +164,23 @@ class Metacheck(MetaChecksBase):
 
     def its_associated_with_vpc(self):
         if self.elasticsearch_domain:
-            if self.elasticsearch_domain.get("VPCOptions").get("VPCId"):
-                return self.elasticsearch_domain.get("VPCOptions").get("VPCId")
+            if self.elasticsearch_domain.get("VPCOptions"):
+                if self.elasticsearch_domain.get("VPCOptions").get("VPCId"):
+                    return self.elasticsearch_domain.get("VPCOptions").get("VPCId")
         return False
 
     def its_associated_with_subnets(self):
         if self.elasticsearch_domain:
-            if self.elasticsearch_domain.get("VPCOptions").get("SubnetIds"):
-                return self.elasticsearch_domain.get("VPCOptions").get("SubnetIds")
+            if self.elasticsearch_domain.get("VPCOptions"):
+                if self.elasticsearch_domain.get("VPCOptions").get("SubnetIds"):
+                    return self.elasticsearch_domain.get("VPCOptions").get("SubnetIds")
         return False
 
     def checks(self):
         checks = [
             "it_has_resource_policy",
-            "it_has_endpoint",
+            "it_has_private_endpoint",
+            "it_has_public_endpoint",
             "is_public",
             "is_rest_encrypted",
             "is_transit_encrypted",

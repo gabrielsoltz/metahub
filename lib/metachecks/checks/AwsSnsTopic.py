@@ -2,10 +2,9 @@
 
 import json
 
-import boto3
-
+from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import ResourcePolicyChecker
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -16,7 +15,6 @@ class Metacheck(MetaChecksBase):
         metachecks,
         mh_filters_checks,
         sess,
-        drilled_down,
         drilled=False,
     ):
         self.logger = logger
@@ -26,52 +24,49 @@ class Metacheck(MetaChecksBase):
             self.partition = finding["Resources"][0]["Id"].split(":")[1]
             self.finding = finding
             self.sess = sess
-            self.mh_filters_checks = mh_filters_checks
-            if not sess:
-                self.client = boto3.client("sns", region_name=self.region)
-            else:
-                self.client = sess.client(service_name="sns", region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
-            self.account_id = finding["AwsAccountId"]
             self.mh_filters_checks = mh_filters_checks
-            self.topic_atributes = self._get_topic_attributes()
-            self.topic_kms_master_key_id = self._get_topic_atributes_kms_master_key_id()
+            self.client = get_boto3_client(self.logger, "sns", self.region, self.sess)
+            # Describe
+            self.topic_atributes = self.get_topic_attributes()
+            self.topic_kms_master_key_id = self.get_topic_atributes_kms_master_key_id()
             # Resource Policy
-            self.resource_policy = self.describe_resource_policy(finding, sess)
-            if drilled_down:
-                self.execute_drilled_metachecks()
+            self.resource_policy = self.describe_resource_policy()
+            # Drilled Metachecks
 
     # Describe Functions
 
-    def _get_topic_attributes(self):
+    def get_topic_attributes(self):
         response = self.client.get_topic_attributes(TopicArn=self.resource_arn)
         if response["Attributes"]:
             return response["Attributes"]
         return False
 
-    # Resource Policy
-
-    def describe_resource_policy(self, finding, sess):
+    def get_topic_atributes_kms_master_key_id(self):
         if self.topic_atributes:
             try:
-                if self.topic_atributes["Policy"]:
-                    details = ResourcePolicyChecker(
-                        self.logger, finding, json.loads(self.topic_atributes["Policy"])
-                    ).check_policy()
-                    policy = {
-                        "policy_checks": details,
-                        "policy": json.loads(self.topic_atributes["Policy"]),
-                    }
-                    return policy
+                return self.topic_atributes["KmsMasterKeyId"]
             except KeyError:
                 return False
         return False
 
-    def _get_topic_atributes_kms_master_key_id(self):
+    # Resource Policy
+
+    def describe_resource_policy(self):
         if self.topic_atributes:
             try:
-                return self.topic_atributes["KmsMasterKeyId"]
+                if self.topic_atributes["Policy"]:
+                    checked_policy = PolicyHelper(
+                        self.logger,
+                        self.finding,
+                        json.loads(self.topic_atributes["Policy"]),
+                    ).check_policy()
+                    # policy = {
+                    #     "policy_checks": details,
+                    #     "policy": json.loads(self.topic_atributes["Policy"]),
+                    # }
+                    return checked_policy
             except KeyError:
                 return False
         return False
@@ -83,7 +78,7 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         if self.resource_policy:
-            if self.resource_policy["policy_checks"]["is_public"]:
+            if self.resource_policy["is_unrestricted"]:
                 return True
         return False
 
