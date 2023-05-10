@@ -33,25 +33,25 @@
 
 # Description
 
-**MetaHub** is a powerful security findings **context** and **ownership** enrichment tool designed to be used with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanner. It helps you to automate the process of contextualizing your findings with information from your environment, such as tags, trails, associations, other related findings, and more. MetaHub can also be used to filter, deduplicate, group, report, suppress, or update your findings in automated workflows.
+**MetaHub** is a powerful security findings **context** and **ownership** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanner. It helps automate the process of contextualizing your findings with information from your environment, such as tags, trails, associations, related findings, and more. MetaHub can also be used to filter, deduplicate, group, report, suppress, or update your findings in automated workflows.
 
-When analyzing a security finding, the severity of the finding may not be enough to determine the impact of the issue. You need to gather additional information about the affected resource from your context to understand how important the finding is. This information is not available in the finding itself, so you need to manually gather it from other sources. This process is time-consuming and error-prone, especially when you have to do it for multiple findings. MetaHub automates this process for you, so you can focus on the real issues, reduce noise and false positives, and improve the time to detect and respond to real security issues in your environment.
+When analyzing a security finding, the severity alone is not sufficient to determine the issue's impact. To understand the importance of the finding, you need to gather additional information about the affected resource from your context, which is not available in the finding itself. Manually collecting this information from other sources can be time-consuming and error-prone, especially when dealing with multiple findings. **MetaHub** automates this process for you, allowing you to focus on the real issues, reduce noise and false positives, and improve the time it takes to detect and respond to genuine security issues in your environment.
 
-MetaHub is designed to be used as a CLI tool or in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions.
+MetaHub is designed for use as a CLI tool or within automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions.
 
-Using MetaHub you can combine security findings from any amount of security scanners regardless if security findings are being duplicated between them or not, taking advantage of the best of each scanners, as it possible that one scanner detects a finding that another one doesn't. MetaHub will automatically group and deduplicate your findings by affected resources and you can work with them as a single finding, for example, changing the workflow status of all of them at once.
+With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them or not. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings at once.
 
 # Context
 
-In **MetaHub** context is the information that is not available in the finding itself but is required to understand it. For instance, if you are investigating a security finding for an EC2 Instance, you may need to know if the instance is effectively public and effectively encrypted, what is this instance associated with, if it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, so you can decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
+In MetaHub, context refers to information not available in the finding itself but necessary to understand it. For example, when investigating a security finding for an EC2 Instance, you may need to know if the instance is effectively public and encrypted, its associations, whether it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, enabling you to make informed decisions or automate alerting, ownership assignment, forwarding, suppression, severity vs impact definitions, or any other required action.
 
-MetaHub doesn't stop in the affected resource itsef, it also analyzes any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
+MetaHub doesn't stop at the affected resource itself; it also analyzes any associated or attached resources. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will examine the IAM roles that the affected resource is using and the policies attached to those roles.
 
 # Ownership
 
-MetaHub also focus on ownership detection. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or take decistions based on this information like automated remediations.
+MetaHub also focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information, such as automated remediations.
 
-MetaHub can determine the owner of the affected resource in different ways:
+MetaHub can determine the owner of the affected resource through different methods:
 
   - With MetaTags (AWS tags)
   - With MetaTrails (AWS CloudTrail)
@@ -253,7 +253,6 @@ MetaHub supports filters on top of these Meta* outputs to automate the detection
 
 **MetaHub** also supports **AWS Security Hub filtering** the same way you would work with AWS CLI utility using the option `--sh-filters` and using YAML templates with the option `--sh-template`. You can save your favorite filters in YAML templates and reuse them for any integration. You can combine Security Hub filters with Meta Filters together. For more information, refer to [Filtering](#Filtering).
 
-
 With **MetaHub**, you can back **enrich your findings directly in AWS Security Hub** using the option `--enrich-findings`. This action will update your AWS Security Hub findings using the field `UserDefinedFields`. You can then create filters or [Insights](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-insights.html) directly in AWS Security Hub. Refer to [Enriching Findings](#enriching-findings) for more information.
 
 **MetaHub** also allows you to execute **bulk updates** to AWS Security Hub findings, such as changing Workflow Status using the option `--update-findings`. You can update your queries' output altogether instead of updating each finding individually. When updating findings using MetaHub, you also update the field `Note` of your finding with a custom text for future reference. Refer to [Updating Workflow Status](#updating-workflow-status) for more information.
@@ -308,22 +307,22 @@ You can set your AWS credentials using environment adding to your docker run com
 
 # Run with Lambda
 
-MetaHub is Lambda/Serverless ready! You can run MetaHub directly on a Lambda function without any other Infra required. 
+**MetaHub** is Lambda/Serverless ready! You can run MetaHub directly on an AWS Lambda function without any additional infrastructure required.
 
-Running MetaHub in a Lambda function lets you automate its execution based on your defined triggers or even manually. 
+Running MetaHub in a Lambda function allows you to automate its execution based on your defined triggers.
 
-Terraform code is provided for deploying the lambda and all its dependencies. 
+Terraform code is provided for deploying the Lambda function and all its dependencies.
 
 ## Lambda use-cases
 
-- Trigger MetaHub lambda function each time there is a new AWS Security Hub finding to enrich that finding back in AWS Security Hub
-- Trigger MetaHub lambda function each time there is a new AWS Security Hub finding for suppressing based on MetaChecks or MetaTags
-- Trigger MetaHub lambda for identifying AWS Security Finding affected-owner based on MetaTags or MetaTrails and assign that finding to your internal systems
-- Trigger MetaHub lambda function for creating a ticket with enriched context
+- Trigger the MetaHub Lambda function each time there is a new AWS Security Hub finding to enrich that finding back in AWS Security Hub.
+- Trigger the MetaHub Lambda function each time there is a new AWS Security Hub finding for suppression based on MetaChecks or MetaTags.
+- Trigger the MetaHub Lambda function to identify the affected owner of an AWS Security Finding based on MetaTags or MetaTrails and assign that finding to your internal systems.
+- Trigger the MetaHub Lambda function to create a ticket with enriched context.
 
 ## Customize behaviour
 
-You can customize Lambda behaviour by editing the file `lib/lambda.py`, for example adding your filters.
+You can customize the Lambda behavior by editing the `lib/lambda.py` file, for example, by adding your filters.
 
 ## Deploying Lambda
 
@@ -381,10 +380,10 @@ Or you can export your credentials to the environment.
 
 # Configuring Security Hub
 
-You can use three options to configure where and how AWS Security Hub is running:
+You have three options to configure where and how AWS Security Hub is running:
 
-- `--sh-region`: The AWS Region where Security Hub is running. If you don't specify any region, it will use the one configured in your environment. If you are using [AWS Security Hub Cross-Region aggregation](https://docs.aws.amazon.com/securityhub/latest/userguide/finding-aggregation.html), you should use that region as the `--sh-region` option so that you can fetch all findings together. 
-- `--sh-account` and `--sh-assume-role`: The AWS Account ID where Security Hub is running (`--sh-account`) and the AWS IAM role to assume in that account (`--sh-assume-role`). These options are helpful when you are logged in to a different AWS Account than the one where AWS Security Hub is running or when running AWS Security Hub in a multiple AWS Account setup. Both options must be used together. The role provided needs to have enough policies to get and update findings in AWS Security Hub (if needed). If you don't specify a `--sh-account`, MetaHub will assume the one you are logged in.
+- `--sh-region`: The AWS Region where Security Hub is running. If you don't specify a region, it will use the one configured in your environment. If you are using AWS Security Hub Cross-Region aggregation, you should use that region as the --sh-region option so that you can fetch all findings together.
+- `--sh-account` and `--sh-assume-role`: The AWS Account ID where Security Hub is running and the AWS IAM role to assume in that account. These options are helpful when you are logged in to a different AWS Account than the one where AWS Security Hub is running or when running AWS Security Hub in a multiple AWS Account setup. Both options must be used together. The role provided needs to have enough policies to get and update findings in AWS Security Hub (if needed). If you don't specify a `--sh-account`, MetaHub will assume the one you are logged in.
 - You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
 
 ## Configuring MetaChecks and MetaTags
@@ -1197,15 +1196,15 @@ TBD
 
 ## Magic MetaChecks
 
-**MetaHub** provides a set of **MetaChecks** called "magic" that are defined across all resources. These **MetaChecks** are useful for filtering across all resources the same way. The magic **MetaChecks** are: `is_public`, `is_unrestricted`, `is_encrypted` and `is_attached`. If for some resource, the magic **MetaChecks** are not applicable, they will be `False`.
+**MetaHub** provides a set of **MetaChecks** called "magic" that are defined across all resources. These **MetaChecks** are useful for filtering all resources in the same way. The magic **MetaChecks** are: `is_public`, `is_unrestricted`, `is_encrypted`, and `is_attached`. If any of these magic MetaChecks are not applicable for a particular resource, they will be `False`.
 
-You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the MetaCheck `--mh-filters-checks is_public=True`, or you can filter all resources that are public not encrypted using the MetaCheck `--mh-filters-checks is_public=True is_encrypted=False`.
+You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the **MetaCheck** `is_public` (`./metahub --mh-filters-checks is_public=True`), or you can filter all resources that are public and not encrypted using the **MetaCheck** `is_public` and `is_encrypted` (`./metahub --mh-filters-checks is_public=True is_encrypted=False`).
 
 ### is_public
 
-This MetaChecks refers to the network accessibility of a resource. It must be effectively Public, meaning that if a resource has a Public IP, but the Security Group is closed, the resource is not Public.
+This **MetaCheck** refers to the network accessibility of a resource. A resource must be effectively public, meaning that if a resource has a public IP, but the security group is closed, the resource is not considered public.
 
-Because we know exactly how the resource is public, this MetaCheck answer with the public endpoint of the resource and the ports that are open.
+This **MetaCheck** answer with the public endpoint of the resource and the ports that are open.
 
 For example: 
 
@@ -1228,17 +1227,17 @@ You can use the output of this MetaCheck to integrate with other network scannin
 
 ### is_unrestricted
 
-This MetaCheck refers to the policy of a resource. It must be effectively unrestricted, meaning that if a resource has a policy that allows all actions, but it has a condition that restricts the actions, the resource is not unrestricted. Examples of unrestricted resources are: S3 Buckets, SQS Queues, SNS Topics, etc.
+This **MetaCheck** refers to the policy of a resource. A resource must be effectively unrestricted, meaning that if a resource has a policy that allows all actions and all principals, but it has a condition, the resource is not considered unrestricted. Examples of unrestricted resources include S3 Buckets, SQS Queues, SNS Topics, and more.
 
 ### is_encrypted
 
-This MetaCheck refers to the encryption of a resource. If the resource supports rest and in-transit encryption, both must be effectively encrypted. For example, if an S3 Bucket is encrypted at rest but not in-transit, the resource is not encrypted. 
+This **MetaCheck** refers to the encryption of a resource. If the resource supports both at-rest and in-transit encryption, both must be effectively encrypted. For example, if an ElasticSearch cluster is encrypted at rest but not in transit, the resource is not considered encrypted.
 
-If a resource is associated to another resource like an EBS Volume to an EC2 Instance, the resource is encrypted if the associated resource is encrypted. 
+If a resource is associated with another resource, such as an EC2 Instance attached to an EBS Volume, the resource is considered encrypted if the associated resource is encrypted.
 
 ### is_attached
 
-This metachecks refers to the attachment of a resource. If the resource supports attachments, it must be effectively attached. For example, if an EBS Volume is attached to an EC2 Instance, the resource is attached.
+This **MetaCheck** refers to the attachment of a resource. If the resource supports attachments, it must be effectively attached. Examples of attached resources include Security Groups, IAM Roles, and Subnets.
 
 ## List of MetaChecks
 
