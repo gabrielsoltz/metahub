@@ -175,10 +175,24 @@ class Metacheck(MetaChecksBase):
         return self.iam_roles
 
     def it_has_endpoint(self):
-        if self.function_vpc:
+        if self.function:
             if self.function_url_config:
                 if self.function_url_config["FunctionUrl"]:
                     return self.function_url_config["FunctionUrl"]
+        return False
+
+    def is_public(self):
+        public_dict = {}
+        if self.function:
+            if self.function_url_config:
+                if self.it_has_endpoint() and self.function_url_config["AuthType"] == "NONE":
+                    public_dict[self.it_has_endpoint()] = []
+                    from_port = "443"
+                    to_port = "443"
+                    ip_protocol = "tcp"
+                    public_dict[self.it_has_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def checks(self):
@@ -189,6 +203,7 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_security_groups",
             "its_associated_with_subnets",
             "is_unrestricted",
-            "it_has_endpoint"
+            "it_has_endpoint",
+            "is_public"
         ]
         return checks

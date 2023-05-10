@@ -101,19 +101,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
-        sg_ingress_unrestricted = False
-        for sg in self.security_groups:
-            if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                sg_ingress_unrestricted = True
-        if self.rds_cluster:
-            if self.rds_cluster.get("PubliclyAccessible") and sg_ingress_unrestricted:
-                return True
-        return False
-
-
-    def is_public(self):
         public_dict = {}
-        if self.rds_cluster.get("PubliclyAccessible") is True:
+        if self.it_has_endpoint():
             for sg in self.security_groups:
                 if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
                     public_dict[self.it_has_endpoint()] = []
@@ -122,18 +111,8 @@ class Metacheck(MetaChecksBase):
                         to_port = rule.get("ToPort")
                         ip_protocol = rule.get("IpProtocol")
                         public_dict[self.it_has_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
-        else:
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.it_has_endpoint()] = []
-                    for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.it_has_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
-
-        if public_dict:
-            return public_dict
+            if public_dict:
+                return public_dict
         return False
 
     def is_encrypted(self):

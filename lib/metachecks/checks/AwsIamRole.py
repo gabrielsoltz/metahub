@@ -1,10 +1,9 @@
 """MetaCheck: AwsIamRole"""
 
-from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-
+from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 class Metacheck(MetaChecksBase):
     def __init__(
@@ -57,15 +56,12 @@ class Metacheck(MetaChecksBase):
                 return False
         if list_role_policies["PolicyNames"]:
             for policy_name in list_role_policies["PolicyNames"]:
-                arn = generate_arn(
-                    policy_name,
-                    "iam",
-                    "policy",
-                    self.region,
-                    self.account,
-                    self.partition,
-                )
-                iam_inline_policies[arn] = {}
+                policy_document = self.client.get_role_policy(PolicyName=policy_name, RoleName=self.resource_id).get('PolicyDocument')
+                checked_policy = PolicyHelper(
+                    self.logger, self.finding, policy_document
+                ).check_policy()
+                # policy = {"policy_checks": checked_policy, "policy": access_policies}
+                iam_inline_policies[policy_name] = checked_policy
 
         return iam_inline_policies
 
@@ -107,9 +103,21 @@ class Metacheck(MetaChecksBase):
             return self.iam_inline_policies
         return False
 
+    def is_unrestricted(self):
+        if self.iam_policies:
+            for policy in self.iam_policies:
+                if self.iam_policies[policy].get("is_unrestricted"):
+                    return True
+        if self.iam_inline_policies:
+            for policy in self.iam_inline_policies:
+                if self.iam_inline_policies[policy].get("is_unrestricted"):
+                    return True
+        return False
+
     def checks(self):
         checks = [
             "its_associated_with_iam_policies",
             "it_has_iam_inline_policies",
+            "is_unrestricted"
         ]
         return checks

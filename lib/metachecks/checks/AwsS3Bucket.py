@@ -202,13 +202,20 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_public(self):
+        public_dict = {}
         if self.it_has_website_enabled():
             if self.resource_policy:
                 if (
                     self.resource_policy["is_unrestricted"]
                     or self.it_has_bucket_acl_public()
                 ):
-                    self.it_has_website_enabled()
+                    public_dict[self.it_has_website_enabled()] = []
+                    from_port = "443"
+                    to_port = "443"
+                    ip_protocol = "tcp"
+                    public_dict[self.it_has_website_enabled()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+        if public_dict:
+            return public_dict
         return False
 
     def is_encrypted(self):

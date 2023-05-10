@@ -53,10 +53,6 @@ class MetaChecksBase:
 
     def execute_drilled_metachecks(self):
 
-        self.logger.info(
-            "Running Drilled MetaChecks for resource: {}".format(self.resource_arn)
-        )
-
         # Security Groups
         if hasattr(self, "security_groups") and self.security_groups:
             from lib.metachecks.checks.AwsEc2SecurityGroup import (
@@ -65,7 +61,7 @@ class MetaChecksBase:
 
             for sg in self.security_groups:
                 self.logger.info(
-                    "Drilling MetaChecks for security group: {}".format(sg)
+                    "Running Drilled MetaChecks for resource {} for security group: {}".format(self.resource_arn, sg)
                 )
                 sg_drilled = SecurityGroupMetacheck(
                     self.logger, self.finding, True, False, self.sess, drilled=sg
@@ -78,7 +74,7 @@ class MetaChecksBase:
 
             for iam_role in self.iam_roles:
                 self.logger.info(
-                    "Drilling MetaChecks for IAM role: {}".format(iam_role)
+                    "Running Drilled MetaChecks for resource {} for IAM role: {}".format(self.resource_arn, iam_role)
                 )
                 iam_role_drilled = IamRoleMetacheck(
                     self.logger, self.finding, True, False, self.sess, drilled=iam_role
@@ -96,7 +92,7 @@ class MetaChecksBase:
 
                 for iam_policy in iam_role_drilled.iam_policies:
                     self.logger.info(
-                        "Drilling MetaChecks for IAM policy: {}".format(iam_policy)
+                        "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(self.resource_arn, iam_policy)
                     )
                     iam_policy_drilled = IamPolicyMetacheck(
                         self.logger,
@@ -109,6 +105,32 @@ class MetaChecksBase:
                     iam_role_drilled.iam_policies[
                         iam_policy
                     ] = iam_policy_drilled.output_checks_drilled()
+
+        # IAM Roles
+        if (
+            hasattr(self, "iam_policies")
+            and self.iam_policies
+        ):
+            from lib.metachecks.checks.AwsIamPolicy import (
+                Metacheck as IamPolicyMetacheck,
+            )
+
+            for iam_policy in self.iam_policies:
+                self.logger.info(
+                    "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(self.resource_arn, iam_policy)
+                )
+                iam_policy_drilled = IamPolicyMetacheck(
+                    self.logger,
+                    self.finding,
+                    True,
+                    False,
+                    self.sess,
+                    drilled=iam_policy,
+                )
+                self.iam_policies[
+                    iam_policy
+                ] = iam_policy_drilled.output_checks_drilled()
+
 
     def output_checks_drilled(self):
         mh_values_checks = {}
