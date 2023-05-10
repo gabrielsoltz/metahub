@@ -5,20 +5,21 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is the command line utility for ASFF and AWS Security Hub.
+  <b>MetaHub</b> is the automated security findings contextual enrichment for AWS Security Hub and ASFF.
 </p>
 
 # Table of Contents
 
 - [Description](#description)
-- [Features](#features)
-- [Examples](#investigations-examples)
+- [Context](#context)
+- [Ownership](#ownership)
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
 - [AWS Authentication](#aws-authentication)
 - [Configuring Security Hub](#configuring-security-hub)
 - [Usage](#usage)
+- [Examples](#investigations-examples)
 - [Inputs](#Inputs)
 - [Outputs](#Outputs)
 - [Output Modes](#output-modes-1)
@@ -32,13 +33,30 @@
 
 # Description
 
-**MetaHub** is a powerful security context enrichment command line utility designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html). With MetaHub, you can enhance your security findings with contextual information for the purpose of filtering, deduplicating, grouping, reporting, automating, suppressing, or updating. MetaHub interacts with AWS Security Hub API or ASFF files, and you can combine these sources in any way you choose to further enrich your findings.
+**MetaHub** is a powerful security **context** and **ownership** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security findings. It helps you to automate the process of contextualizing your findings with information from your AWS environment, such as tags, trails, checks, and more. MetaHub can also be used to filter, deduplicate, group, report, automate, suppress, or update your findings in automated workflows.
 
-MetaHub provides contextual information not only about the affected resource but also about any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
+When analyzing a security finding, you may need to gather additional information about the affected resource, such as its tags, trails, environment, what is the resource doing, or other related findings. This information is not available in the finding itself, so you need to manually gather it from other sources. This process is time-consuming and error-prone, especially when you have to do it for multiple findings. MetaHub automates this process for you, so you can focus on fixing the real issues, not just the findings themselves.
 
-<p align="center">
-  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
-</p>
+MetaHub is designed to be used in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions. It can also be used as a standalone tool to enrich your findings in batch mode.
+
+# Context
+
+In **MetaHub** context is the information that is not available in the finding itself but is required to understand it. For instance, if you are investigating the security finding [EC2.8] for EC2 Instance i-0c721c63f74a2863a, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), you may need to know if the instance is effectively public and effectively encrypted, if it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, so you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
+
+MetaHub doesn't stop in the affected resource itsef, it also analyzes any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
+
+# Ownsership
+
+MetaHub also focus on ownership. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign ownership of the finding to the owner of the affected resource, or to escalate the finding.
+
+MetaHub can determine the owner of the affected resource in different ways:
+
+  - With MetaTags (AWS tags)
+  - With MetaTrails (AWS CloudTrail)
+  - With MetaAccount (Information about the account where the resource is running)
+  - With MetaChecks (Information about the resource itself)
+
+# Features
 
 **MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
 
@@ -246,106 +264,6 @@ With **MetaHub**, you can back **enrich your findings directly in AWS Security H
 
 **MetaHub** supports **multi-account setups**. You can run the tool from any environment by assuming roles in your AWS Security Hub `master` account and your `child/service` accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub multi-account implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. Refer to [Configuring Security Hub](#configuring-security-hub) for more information.
 
-# Investigations Examples
-
-## Investigating security findings using Security Hub filters
-
-- List all affected resources by AWS Security Hub findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
-```
-./metahub --list-findings
-```
-
-- Show the statistics output:
-```
-./metahub --list-findings --outputs statistics
-```
-
-- Filter only one resource:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>
-```
-
-- Filter only one AWS Account and show statistics:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --outputs statistics
-```
-
-## Investigating resources based on MetaTags (Tagging)
-
-- List all affected resources by AWS Security Hub findings and enrich them with MetaTags (Tagging):
-```
-./metahub --list-findings --meta-tags
-```
-
-- Filter only the affected resources that have the Tag "Environment" with the value "Production"
-```
-./metahub --list-findings --meta-tags --mh-filters-tags Environment=production
-```
-
-- Filter only the affected resources that have the Tag "Environment" with the value "Production", which are `HIGH` severity:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production
-```
-
-## Investigating resources based on MetaChecks
-
-- List all MetaChecks available:
-```
-./metahub --list-findings --list-meta-checks
-```
-
-- List all affected resources by AWS Security Hub findings and enrich them with MetaChecks:
-```
-./metahub --list-findings --meta-checks
-```
-
-- Filter only the affected resources that are effectively public:
-```
-./metahub --list-findings --meta-checks --mh-filters-checks is_public=True
-```
-
-- Show the previous list of affected resources in inventory output:
-```
-./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --outputs inventory
-```
-
-- Filter only the affected resources that are unencrypted:
-```
-./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False
-```
-
-- Filter only the affected resources that are unencrypted and have a Tag "Classification" with the value "PI":
-```
-./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False --meta-tags --mh-fiters-tags Classification=PI
-```
-
-- Filter only the affected resources that are unencrypted and have a Tag "Classification" with the value "PI" and output a CSV:
-```
-./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --output-modes csv
-```
-
-## Investigating a finding
-
-- List all affected resources for specific Security Hub findings, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"
-```
-
-- Enable MetaChecks to get more info for those resources:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks
-```
-
-- Filter only the affected resources that are associated with public IPs:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True
-```
-
-- Update all related AWS Security Findings to `NOTIFIED` with a Note `Ticket ID: 123`:
-```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
-```
-
 # Run with Python
 
 **MetaHub** is a Python3 program. You need to have Python3 installed in your system and the required python modules described in the file `requirements.txt`.
@@ -489,6 +407,106 @@ You can use three options to configure where and how AWS Security Hub is running
 - If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for MetaChecks and MetaTags as the affected resources are not in the same AWS Account that the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources. 
 - If you are logged in to a Master/SSO/Jump AWS Account that you use just for logging in, you then probably need to specify all the options together: `--sh-account` and `--sh-assume-role` for specifying where AWS Security Hub is running and which role to assume, and `--mh-assume-role` to specify which role to assume in the affected AWS Accounts when you are using `--meta-checks` and `--meta-tags`. If you use the same role for AWS Security Hub and the affected AWS Accounts, specify both have the same value.
 - You can choose to provide `--sh-account` and `--sh-assume-role` as needed. For example, if you are logged in to the same account as AWS Security Hub, you don't need to assume a role there. But you can if needed. 
+
+# Investigations Examples
+
+## Investigating security findings using Security Hub filters
+
+- List all affected resources by AWS Security Hub findings with default filters (`RecordState=ACTIVE WorkflowStatus=NEW ProductName="Security Hub"`):
+```
+./metahub --list-findings
+```
+
+- Show the statistics output:
+```
+./metahub --list-findings --outputs statistics
+```
+
+- Filter only one resource:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE ResourceId=<<ARN>>
+```
+
+- Filter only one AWS Account and show statistics:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE AwsAccountId=<<Account Id>> --outputs statistics
+```
+
+## Investigating resources based on MetaTags (Tagging)
+
+- List all affected resources by AWS Security Hub findings and enrich them with MetaTags (Tagging):
+```
+./metahub --list-findings --meta-tags
+```
+
+- Filter only the affected resources that have the Tag "Environment" with the value "Production"
+```
+./metahub --list-findings --meta-tags --mh-filters-tags Environment=production
+```
+
+- Filter only the affected resources that have the Tag "Environment" with the value "Production", which are `HIGH` severity:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE SeverityLabel=HIGH --meta-tags --mh-filters-tags Environment=production
+```
+
+## Investigating resources based on MetaChecks
+
+- List all MetaChecks available:
+```
+./metahub --list-findings --list-meta-checks
+```
+
+- List all affected resources by AWS Security Hub findings and enrich them with MetaChecks:
+```
+./metahub --list-findings --meta-checks
+```
+
+- Filter only the affected resources that are effectively public:
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_public=True
+```
+
+- Show the previous list of affected resources in inventory output:
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_public=True --outputs inventory
+```
+
+- Filter only the affected resources that are unencrypted:
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False
+```
+
+- Filter only the affected resources that are unencrypted and have a Tag "Classification" with the value "PI":
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=False --meta-tags --mh-fiters-tags Classification=PI
+```
+
+- Filter only the affected resources that are unencrypted and have a Tag "Classification" with the value "PI" and output a CSV:
+```
+./metahub --list-findings --meta-checks --mh-filters-checks is_encrypted=True --meta-tags --mh-fiters-tags Classification=PI --output-modes csv
+```
+
+## Investigating a finding
+
+- List all affected resources for specific Security Hub findings, for example: `EC2.19 Security groups should not allow unrestricted access to ports with high risk`:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk"
+```
+
+- Enable MetaChecks to get more info for those resources:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks
+```
+
+- Filter only the affected resources that are associated with public IPs:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True
+```
+
+- Update all related AWS Security Findings to `NOTIFIED` with a Note `Ticket ID: 123`:
+```
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
+```
 
 # Usage
 
@@ -1000,7 +1018,6 @@ On top of the AWS Security Hub findings, **MetaHub** can run additional checks d
 
 **MetaChecks** has the capability to retrieve information from every related resource associated with the affected resource. For instance, when checking an EC2 Instance, MetaChecks can gather information from its associated Security Groups, including details about which ports are open and from where. Additionally, MetaChecks can fetch information from the IAM roles that are linked to the EC2 Instance, including the permissions granted to those roles. 
 
-
 Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, like resources that you can use for your favorite integrations.
 
 You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
@@ -1011,7 +1028,7 @@ If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull req
 
 **MetaHub** can run MetaChecks on the resources associated to the affected resource. We call these, **Drilled MetaChecks**. This is one of the most powerful features of **MetaHub** because it allows you to get a comprehensive view of the affected resource and its associated resources to define the impact of a finding.
 
-The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `it_has_resource_policy` and more in the future.
+The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `its_associated_with_iam_policies` and more in the future. The MetaChecks `it_has_resource_policy` and `it_has_iam_inline_policies` are not real drilled MetaChecks because they are not drilling in an external associated resoruce, but they are drilling in the resource policy itself so we added them to the list.
 
 ### its_associated_with_security_groups
 
@@ -1071,9 +1088,8 @@ Resources that can be associated with IAM Roles are checked by this MetaCheck to
 │   ├── metachecks
 │   │   ├── its_associated_with_iam_roles
 │   │   │   ├── role-1
-│   │   │   │   └── iam_policies
+│   │   │   │   ├── its_associated_with_iam_policies
 │   │   │   │       ├── policy-a
-│   │   │   │       │   └── policy_checks
 │   │   │   │       │       ├── is_principal_wildcard
 │   │   │   │       │       │   ├── statement-1
 │   │   │   │       │       ├── is_principal_cross_account
@@ -1084,7 +1100,6 @@ Resources that can be associated with IAM Roles are checked by this MetaCheck to
 │   │   │   │       │       │   ├── statement-public
 │   │   │   │       │       ├── is_actions_wildcard
 │   │   │   │       │       │   ├── statement-actions-wildcard
-│   │   │   │       │   └── policy-document
 │   │   │   ├── role-2
 │   │   │   └── role-3
 ```
@@ -1092,64 +1107,28 @@ Resources that can be associated with IAM Roles are checked by this MetaCheck to
 ```
   "its_associated_with_iam_roles": {
     "arn:aws:iam::0123456789012:role/security-role": {
-      "iam_policies": {
+      "its_associated_with_iam_policies": {
         "arn:aws:iam::0123456789012:policy/policy-a": {
-          "policy_checks": {
             "is_principal_wildcard": [],
             "is_principal_cross_account": [],
             "is_principal_external": [],
             "is_public": [],
             "is_actions_wildcard": []
           },
-          "policy": {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "",
-                "Effect": "Allow",
-                "Action": "logs:CreateLogGroup",
-                "Resource": "*"
-              },
-              {
-                "Sid": "",
-                "Effect": "Allow",
-                "Action": [
-                  "logs:PutLogEvents",
-                  "logs:CreateLogStream"
-                ],
-                "Resource": [
-                  "*"
-                ]
-              }
-            ]
-          }
         },
         "arn:aws:iam::0123456789012:policy/policy-b": {
-          "policy_checks": {
             "is_principal_wildcard": [],
             "is_principal_cross_account": [],
             "is_principal_external": [],
             "is_public": [],
             "is_actions_wildcard": []
           },
-          "policy": {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "",
-                "Effect": "Allow",
-                "Action": [
-                  "ec2:DescribeNetworkInterfaces",
-                  "ec2:DeleteNetworkInterface",
-                  "ec2:CreateNetworkInterface"
-                ],
-                "Resource": "*"
-              }
-            ]
-          }
         },
 ```
 
+### its_associated_with_iam_policies
+
+TBD
 
 ### it_has_resource_policy
 
@@ -1165,23 +1144,20 @@ Resources that can have a resource policy are checked by this MetaCheck to analy
 │   ├── ...
 │   ├── metachecks
 │   │   ├── it_has_resource_policy
-│   │   │   ├── policy_checks
-│   │   │   │   └── is_principal_wildcard
-│   │   │   │       ├── statement-wildcard
-│   │   │   │   └── is_principal_cross_account
-│   │   │   │       ├── statement-cross-account
-│   │   │   │   └── is_principal_external
-│   │   │   │       ├── statement-external
-│   │   │   │   └── is_public
-│   │   │   │       ├── statement-public
-│   │   │   │   └── is_actions_wildcard
-│   │   │   │       ├── statement-actions-wildcard
-│   │   │   └── policy-document
+│   │   │    └── is_principal_wildcard
+│   │   │         ├── statement-wildcard
+│   │   │     └── is_principal_cross_account
+│   │   │         ├── statement-cross-account
+│   │   │     └── is_principal_external
+│   │   │         ├── statement-external
+│   │   │     └── is_public
+│   │   │         ├── statement-public
+│   │   │     └── is_actions_wildcard
+│   │   │         ├── statement-actions-wildcard
 ```
 
 ```
       "it_has_resource_policy": {
-        "policy_checks": {
           "is_principal_wildcard": [],
           "is_principal_cross_account": [
             {
@@ -1214,69 +1190,131 @@ Resources that can have a resource policy are checked by this MetaCheck to analy
             }
           ]
         },
-        "policy": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "permissions",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "arn:aws:iam::0123456789012:root"
-              },
-              "Action": "s3:*",
-              "Resource": [
-                "arn:aws:s3:::bucket-name",
-                "arn:aws:s3:::bucket-name/*"
-              ]
-            },
-            {
-              "Sid": "",
-              "Effect": "Allow",
-              "Action": "logs:CreateLogGroup",
-              "Resource": "*"
-            },
-          ]
-        }
       },
 ```
 
+### it_has_iam_inline_policies
 
-## Generic MetaChecks
+TBD
 
-**MetaHub** provides a set of **MetaChecks** called "generic" that are defined across all resources with the same name. You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the MetaCheck `is_public=True`.
+## Magic MetaChecks
 
-The generic **MetaChecks** are: is_public, is_encrypted, is_running.
+**MetaHub** provides a set of **MetaChecks** called "magic" that are defined across all resources. These **MetaChecks** are useful for filtering across all resources the same way. The magic **MetaChecks** are: `is_public`, `is_unrestricted`, `is_encrypted` and `is_attached`. If for some resource, the magic **MetaChecks** are not applicable, they will be `False`.
+
+You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the MetaCheck `--mh-filters-checks is_public=True`, or you can filter all resources that are public not encrypted using the MetaCheck `--mh-filters-checks is_public=True is_encrypted=False`.
 
 ### is_public
 
-This is a magic MetaCheck, it's deployed across all ResourceTypes. It must be effectively Public, meaning that if a resource has a Public IP, but the Security Group is closed, the resource is not Public. This MetaCheck it's populated based no others MetaChecks, but it's useful for filering across any ResourceType the same way (is_public=True/False).
+This MetaChecks refers to the network accessibility of a resource. It must be effectively Public, meaning that if a resource has a Public IP, but the Security Group is closed, the resource is not Public.
 
-This MetaCheck will always answer a network element, like an IP, a domain or an URI. You can connect the output of this MetaCheck with network scanners like Nmap.
+Because we know exactly how the resource is public, this MetaCheck answer with the public endpoint of the resource and the ports that are open.
+
+For example: 
+
+```
+"100.100.100.100": [
+  {
+    "from_port": 80, 
+    "to_port": 80, 
+    "ip_protocol": tcp
+  },
+  {
+    "from_port": 3389, 
+    "to_port": 3389, 
+    "ip_protocol": tcp
+  }
+]
+```
+
+You can use the output of this MetaCheck to integrate with other network scanning tools like Nmap.
+
+#### is_unrestricted
+
+This MetaCheck refers to the policy of a resource. It must be effectively unrestricted, meaning that if a resource has a policy that allows all actions, but it has a condition that restricts the actions, the resource is not unrestricted. Examples of unrestricted resources are: S3 Buckets, SQS Queues, SNS Topics, etc.
 
 #### is_encrypted
 
-This is a magic MetaCheck, it's deployed across all ResourceTypes. It must be effectively encrypted. If a resource is encrypted at rest but not in-transit, the resource is not encrypted. This MetaCheck it's populated based no others MetaChecks, but it's useful for filering across any ResourceType the same way (is_encrypted=True/False).
+This MetaCheck refers to the encryption of a resource. If the resource supports rest and in-transit encryption, both must be effectively encrypted. For example, if an S3 Bucket is encrypted at rest but not in-transit, the resource is not encrypted. 
+
+If a resource is associated to another resource like an EBS Volume to an EC2 Instance, the resource is encrypted if the associated resource is encrypted. 
+
+#### is_attached
+
+This metachecks refers to the attachment of a resource. If the resource supports attachments, it must be effectively attached. For example, if an EBS Volume is attached to an EC2 Instance, the resource is attached.
 
 ## List of MetaChecks
 
-These are just a few of the MetaChecks available, to see all of them use: `metahub --list-metachecks`
-
-|                    | MetaCheck                                       | AwsAutoScalingLaunchConfiguration | AwsEc2Instance | AwsEc2LaunchTemplate | AwsEc2NetworkAcl | AwsEc2SecurityGroup | AwsEksCluster | AwsElastiCacheCacheCluster | AwsElasticsearchDomain | AwsIamPolicy | AwsLambdaFunction | AwsRdsDbCluster | AwsRdsDbInstance | AwsS3Bucket | AwsSnsTopic | AwsSqsQueue |
-|--------------------|-------------------------------------------------|-----------------------------------|----------------|----------------------|------------------|---------------------|---------------|----------------------------|------------------------|--------------|-------------------|-----------------|------------------|-------------|-------------|-------------|
-| Drilled MetaChecks | its_associated_with_security_groups             | X                                 | X              | X                    |                  | X                   | X             | X                          |                        |              | X                 | X               | X                |             |             |             |
-| Drilled MetaChecks | its_associated_with_a_role                      | X                                 | X              | X                    |                  |                     | X             | X                          |                        |              | X                 | X               | X                |             |             |             |
-| Drilled MetaChecks | it_has_resource_policy                          |                                   |                |                      |                  |                     |               |                            | X                      |              | X                 |                 |                  | X           | X           | X           |
-| Generic MetaChecks | is_public                                       |                                   | X              |                      |                  | X                   |               | X                          | X                      |              | X                 | X               | X                | X           | X           | X           |
-| Generic MetaChecks | is_encrypted                                    |                                   | X              |                      |                  |                     |               | X                          | X                      |              |                   |                 |                  | X           | X           | X           |
-| MetaCheck          | is_instance_metadata_v2                         | X                                 | X              | X                    |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | is_instance_metadata_hop_limit_1                | X                                 | X              | X                    |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_an_asg                      | X                                 | X              | X                    |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_asg_instances               | X                                 | X              | X                    |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_an_asg_launch_configuration |                                   | X              |                      |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_an_asg_launch_template      |                                   | X              |                      |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_ebs                         |                                   | X              |                      |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-| MetaCheck          | its_associated_with_ebs_unencrypted             |                                   | X              |                      |                  |                     |               |                            |                        |              |                   |                 |                  |             |             |             |
-
+| TYPE               | MetaCheck                                       | AwsAutoScalingLaunchConfiguration | AwsEc2Instance    | AwsEc2LaunchTemplate | AwsEc2NetworkAcl | AwsEc2SecurityGroup | AwsEksCluster     | AwsElastiCacheCacheCluster | AwsElasticsearchDomain | AwsIamPolicy      | AwsLambdaFunction | AwsRdsDbCluster   | AwsRdsDbInstance  | AwsS3Bucket       | AwsSnsTopic | AwsSqsQueue | AwsIamRole |
+|--------------------|-------------------------------------------------|-----------------------------------|-------------------|----------------------|------------------|---------------------|-------------------|----------------------------|------------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------|-------------|------------|
+| Drilled MetaCheck  | its_associated_with_security_groups             | YES                               | YES               | YES                  | -                | DRILLED             | YES               | YES                        | YES                    | -                 | YES               | YES               | YES               | -                 | -           | -           | -          |
+|                    | ├─ its_associated_with_network_interfaces       |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_ec2_instances            |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_ips_public               |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_managed_services         |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_referenced_by_a_security_group           |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_ingress_rules_unrestricted                |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_egress_rules_unrestricted                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_public                                    |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | └─ is_default                                   |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Drilled MetaCheck  | its_associated_with_iam_roles                   | YES                               | YES               | YES                  | -                | -                   | YES               | -                          | -                      | YES (Not Drilled) | YES               | YES               | YES               | -                 | -           | -           | DRILLED    |
+|                    | ├─ it_has_iam_inline_policies                   |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_principal_wildcard                       |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_principal_cross_account                  |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_principal_external                       |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├└─ is_actions_wildcard                         |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_iam_policies             |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ it_has_name                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ it_has_description                          |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_attached                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_customer_managed                         |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ its_associated_with_iam_groups              |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ its_associated_with_iam_users               |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ its_associated_with_iam_roles               |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_principal_cross_account                  |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├├─ is_unrestricted                             |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├└─ is_actions_wildcard                         |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | └─  is_unrestricted                             |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Drilled MetaCheck  | its_associated_with_iam_policies                | -                                 | -                 | -                    | -                | -                   | -                 | -                          | -                      | DRILLED           | -                 | -                 | -                 | -                 | -           | -           | YES        |
+|                    | ├─ it_has_name                                  |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ it_has_description                           |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_attached                                  |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_customer_managed                          |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_iam_groups               |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_iam_users                |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ its_associated_with_iam_roles                |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_principal_cross_account                   |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_unrestricted                              |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | └─ is_actions_wildcard                          |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Drilled MetaCheck  | it_has_resource_policy                          | -                                 | -                 | -                    | -                | -                   | -                 | -                          | YES                    | -                 | YES               | -                 | -                 | YES               | YES         | YES         | -          |
+|                    | ├─ is_principal_cross_account                   |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_principal_wildcard                        |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | ├─ is_unrestricted                              |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | └─ is_actions_wildcard                          |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Magic MetaCheck    | is_public                                       | YES (True/False)                  | YES (public_dict) | YES (True/False)     | YES (True/False) | YES (public_dict)   | YES (public_dict) | YES (public_dict)          | YES (public_dict)      | -                 | YES (public_dict) | YES (public_dict) | YES (public_dict) | YES (public_dict) | -           | -           | -          |
+| Magic MetaCheck    | is_unrestricted                                 | -                                 | -                 | -                    | -                | -                   | -                 | -                          | YES                    | YES               | YES               | -                 | -                 | YES               | YES         | YES         | YES        |
+| Magic MetaCheck    | is_encrypted                                    |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Magic MetaCheck    | is_attached                                     |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | is_instance_metadata_v2                         | X                                 | X                 | X                    |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | is_instance_metadata_hop_limit_1                | X                                 | X                 | X                    |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_an_asg                      |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_asg_instances               | X                                 | X                 | X                    |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_an_asg_launch_configuration |                                   | X                 |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_an_asg_launch_template      |                                   | X                 |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_ebs                         |                                   | X                 |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_ebs_unencrypted             |                                   | X                 |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_vpc                         |                                   |                   |                      |                  |                     |                   |                            | X                      |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | its_associated_with_subnets                     |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    |                                                 |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+| Standard MetaCheck | it_has_public_endpoint                          |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
+|                    | it_has_public                                   |                                   |                   |                      |                  |                     |                   |                            |                        |                   |                   |                   |                   |                   |             |             |            |
 
 
 ## MetaChecks Naming
