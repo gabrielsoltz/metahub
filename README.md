@@ -47,7 +47,7 @@ MetaHub doesn't stop in the affected resource itsef, it also analyzes any other 
 
 # Ownership
 
-MetaHub also focus on ownership detection. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign ownership of the finding to the owner of the affected resource, or to escalate a finding.
+MetaHub also focus on ownership detection. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or take decistions based on this information like automated remediations.
 
 MetaHub can determine the owner of the affected resource in different ways:
 
