@@ -1228,17 +1228,17 @@ For example:
 
 You can use the output of this MetaCheck to integrate with other network scanning tools like Nmap.
 
-#### is_unrestricted
+### is_unrestricted
 
 This MetaCheck refers to the policy of a resource. It must be effectively unrestricted, meaning that if a resource has a policy that allows all actions, but it has a condition that restricts the actions, the resource is not unrestricted. Examples of unrestricted resources are: S3 Buckets, SQS Queues, SNS Topics, etc.
 
-#### is_encrypted
+### is_encrypted
 
 This MetaCheck refers to the encryption of a resource. If the resource supports rest and in-transit encryption, both must be effectively encrypted. For example, if an S3 Bucket is encrypted at rest but not in-transit, the resource is not encrypted. 
 
 If a resource is associated to another resource like an EBS Volume to an EC2 Instance, the resource is encrypted if the associated resource is encrypted. 
 
-#### is_attached
+### is_attached
 
 This metachecks refers to the attachment of a resource. If the resource supports attachments, it must be effectively attached. For example, if an EBS Volume is attached to an EC2 Instance, the resource is attached.
 
