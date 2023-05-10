@@ -39,6 +39,8 @@ When analyzing a security finding, the severity of the finding may not be enough
 
 MetaHub is designed to be used as a CLI tool or in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions.
 
+Using MetaHub you can combine security findings from any amount of security scanners regardless if security findings are being duplicated between them or not, taking advantage of the best of each scanners, as it possible that one scanner detects a finding that another one doesn't. MetaHub will automatically group and deduplicate your findings by affected resources and you can work with them as a single finding, for example, changing the workflow status of all of them at once.
+
 # Context
 
 In **MetaHub** context is the information that is not available in the finding itself but is required to understand it. For instance, if you are investigating a security finding for an EC2 Instance, you may need to know if the instance is effectively public and effectively encrypted, what is this instance associated with, if it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, so you can decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
@@ -55,10 +57,6 @@ MetaHub can determine the owner of the affected resource in different ways:
   - With MetaTrails (AWS CloudTrail)
   - With MetaAccount (Information about the account where the resource is running)
   - With MetaChecks (Information about the resource itself and it's associations)
-
-# Features
-
-**MetaHub** aggregates and deduplicates your findings based on affected resources, regardless of the number of scanners used, so that you can focus on fixing the real issues, not just the findings themselves. 
 
 <details>
 <summary>If you are investigating the security finding <b>[EC2.8]</b> for <b>EC2 Instance i-0c721c63f74a2863a</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, and how (MetaChecks), if the instance is associated with IAM roles (MetaChecks) and if any of the policies of that role has an issue, and IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks). With all this information you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
