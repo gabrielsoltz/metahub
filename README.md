@@ -1018,17 +1018,17 @@ On top of the AWS Security Hub findings, **MetaHub** can run additional checks d
 
 **MetaChecks** has the capability to retrieve information from every related resource associated with the affected resource. For instance, when checking an EC2 Instance, MetaChecks can gather information from its associated Security Groups, including details about which ports are open and from where. Additionally, MetaChecks can fetch information from the IAM roles that are linked to the EC2 Instance, including the permissions granted to those roles. 
 
-Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, like resources that you can use for your favorite integrations.
+Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, for example the offending policies or the offending security groups. If a resource is public, it can give you the public entrypoint (ip, dns, endpoint) and the ports open to the public.
 
 You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
 
 If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull requests are more than welcome.
 
+There are two special types of MetaChecks: [Drilled MetaChecks](#drilled-metachecks) and [Magic MetaChecks](#magic-metachecks). Then you have the rest of MetaChecks, we call them standard MetaChecks.
+
 ## Drilled MetaChecks
 
-**MetaHub** can run MetaChecks on the resources associated to the affected resource. We call these, **Drilled MetaChecks**. This is one of the most powerful features of **MetaHub** because it allows you to get a comprehensive view of the affected resource and its associated resources to define the impact of a finding.
-
-The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `its_associated_with_iam_policies` and more in the future. The MetaChecks `it_has_resource_policy` and `it_has_iam_inline_policies` are not real drilled MetaChecks because they are not drilling in an external associated resoruce, but they are drilling in the resource policy itself so we added them to the list.
+Drilled MetaChecks can connet into the associated resources of the affected resource, for example Security Groups and IAM Roles and Policies. The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `its_associated_with_iam_policies`. There are also 2 MetaChecks `it_has_resource_policy` and `it_has_iam_inline_policies` that are not real drilled MetaChecks because they are not drilling in an external associated resoruce, but they are drilling in the resource policy itself so we added them to the list.
 
 ### its_associated_with_security_groups
 
@@ -1326,8 +1326,6 @@ MetaChecks are defined in the form of:
 - [it_has_](#it_has)
 - [its_referenced_by_](#its_referenced_by)
 
-## More examples
-
 ### is_
 
 > Refers to the affected resource itself.
@@ -1345,6 +1343,8 @@ Examples:
 
 - its_associated_with_subnets
 - its_associated_with_security_groups
+- its_associated_with_iam_roles
+- its_associated_with_iam_policies
 - its_associated_with_its_associated_with_vpc
 
 ### it_has
