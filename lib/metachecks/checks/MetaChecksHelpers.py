@@ -209,14 +209,16 @@ class IamHelper:
 
     def get_role_from_instance_profile(self, instance_profile):
         if "/" in instance_profile:
-            instance_profile_name = instance_profile.split("/")[1]
+            instance_profile_name = instance_profile.split("/")[-1]
         else:
             instance_profile_name = instance_profile
+        print (instance_profile_name)
         try:
             response = self.iam_client.get_instance_profile(
                 InstanceProfileName=instance_profile_name
             )
         except ClientError as e:
-            self.logger.error("Error Getting Instance Profile: %s", e)
+            self.logger.error("Error getting role from instance profile %s: %s", instance_profile, e)
+            return False
 
         return response["InstanceProfile"]["Roles"][0]["Arn"]
