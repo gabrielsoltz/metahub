@@ -45,7 +45,7 @@ In **MetaHub** context is the information that is not available in the finding i
 
 MetaHub doesn't stop in the affected resource itsef, it also analyzes any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
 
-# Ownsership
+# Ownership
 
 MetaHub also focus on ownership. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign ownership of the finding to the owner of the affected resource, or to escalate the finding.
 
