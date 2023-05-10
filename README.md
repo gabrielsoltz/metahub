@@ -37,7 +37,7 @@
 
 When analyzing a security finding, the severity of the finding may not be enough to determine the impact of the issue. You need to gather additional information about the affected resource from your context to understand how important the finding is. This information is not available in the finding itself, so you need to manually gather it from other sources. This process is time-consuming and error-prone, especially when you have to do it for multiple findings. MetaHub automates this process for you, so you can focus on the real issues, reduce noise and false positives, and improve the time to detect and respond to real security issues in your environment.
 
-MetaHub is designed to be used in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions. It can also be used as a CLI tool.
+MetaHub is designed to be used as a CLI tool or in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions.
 
 # Context
 
@@ -54,7 +54,7 @@ MetaHub can determine the owner of the affected resource in different ways:
   - With MetaTags (AWS tags)
   - With MetaTrails (AWS CloudTrail)
   - With MetaAccount (Information about the account where the resource is running)
-  - With MetaChecks (Information about the resource itself)
+  - With MetaChecks (Information about the resource itself and it's associations)
 
 # Features
 
