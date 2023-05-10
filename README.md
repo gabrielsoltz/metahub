@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is the automated security findings contextual enrichment for AWS Security Hub and ASFF.
+  <b>MetaHub</b> is the automated contextual enrichment tool for AWS Security Hub and ASFF security findings.
 </p>
 
 # Table of Contents
@@ -33,21 +33,21 @@
 
 # Description
 
-**MetaHub** is a powerful security **context** and **ownership** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security findings. It helps you to automate the process of contextualizing your findings with information from your AWS environment, such as tags, trails, checks, and more. MetaHub can also be used to filter, deduplicate, group, report, automate, suppress, or update your findings in automated workflows.
+**MetaHub** is a powerful security **context** and **ownership** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security findings. It helps you to automate the process of contextualizing your findings with information from your environment, such as tags, trails, associations, other related findings, and more. MetaHub can also be used to filter, deduplicate, group, report, suppress, or update your findings in automated workflows.
 
-When analyzing a security finding, you may need to gather additional information about the affected resource, such as its tags, trails, environment, what is the resource doing, or other related findings. This information is not available in the finding itself, so you need to manually gather it from other sources. This process is time-consuming and error-prone, especially when you have to do it for multiple findings. MetaHub automates this process for you, so you can focus on fixing the real issues, not just the findings themselves.
+When analyzing a security finding, the severity of the finding may not be enough to determine the impact of the issue. You need to gather additional information about the affected resource from your context to understand how importnat the finding is. This information is not available in the finding itself, so you need to manually gather it from other sources. This process is time-consuming and error-prone, especially when you have to do it for multiple findings. MetaHub automates this process for you, so you can focus on the real issues, reduce noise and false positives, and improve the time to detect and respond to security real security issues in your environment.
 
-MetaHub is designed to be used in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions. It can also be used as a standalone tool to enrich your findings in batch mode.
+MetaHub is designed to be used in automated workflows, such as AWS Security Hub custom actions, AWS Lambda functions, or AWS Step Functions. It can also be used as a CLI tool.
 
 # Context
 
-In **MetaHub** context is the information that is not available in the finding itself but is required to understand it. For instance, if you are investigating the security finding [EC2.8] for EC2 Instance i-0c721c63f74a2863a, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), you may need to know if the instance is effectively public and effectively encrypted, if it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, so you can manually decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
+In **MetaHub** context is the information that is not available in the finding itself but is required to understand it. For instance, if you are investigating for an EC2 Instance, you may need to know if the instance is effectively public and effectively encrypted, what is this instance associated with, if it has unrestricted security groups, if it is associated with IAM roles, or if it has other security findings. MetaHub can enrich your finding with all this information, so you can decide what to do with the finding or automate alerting, ownership assignment, forwarding, suppression, severity defintion, or any other required action.
 
 MetaHub doesn't stop in the affected resource itsef, it also analyzes any other resource that is associated or attached to it. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. Similarly, MetaHub will also examine the IAM roles that the affected resource is using and the policies attached to those roles.
 
 # Ownership
 
-MetaHub also focus on ownership. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign ownership of the finding to the owner of the affected resource, or to escalate the finding.
+MetaHub also focus on ownership detection. It can determine who is the owner of the affected resource, in different ways. This information can be used to automatically assign ownership of the finding to the owner of the affected resource, or to escalate a finding.
 
 MetaHub can determine the owner of the affected resource in different ways:
 
