@@ -42,35 +42,38 @@ MetaHub is designed for use as a CLI tool or within automated workflows, such as
 With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them or not. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings at once.
 
 <details>
-<summary>If you are investigating the security finding <b>[EC2.8]</b> for <b>EC2 Instance i-0a8d32b54be32085e</b>, which indicates that the instance should use Instance Metadata Service Version 2 (IMDSv2), MetaHub can enrich your finding with a wealth of contextual information, including the existence of other security findings for the affected resource, Environment, Classification, Owner, or any other Tagging from your affected resource (MetaTags), Who created it and when (MetaTrails), which Security Groups the instance is associated with, and whether they have unrestricted rules (MetaChecks), which EBSs the instance is associated with, and whether they are encrypted (MetaChecks), if the instance is associated with Auto Scaling Groups, if those Auto Scaling groups are associated to Launch Configurations or Launch Templates (MetaChecks), if the instance is associated with IAM roles (MetaChecks) and if any of the policies attached to that role has issues. You also get IP addresses, DNS domains, and other useful information (MetaChecks). Additionally, MetaHub can determine if the instance is effectively public and effectively encrypted (MetaChecks).
+<summary>Expand to see the output example.
+This EC2 instance has security findings from various security scanners, including Security Hub's own standards (which state that EC2 instances should use Instance Metadata Service Version 2 or IMDSv2), Prowler (which looks for secrets in EC2 User Data), and Tenable (which detects unsupported versions of Apache Log4j). These findings are grouped together under the "findings" section.
+The first section, called MetaChecks, includes information about the security groups that the instance is associated with and whether they have unrestricted rules, the EBS volumes that the instance is associated with and whether they are encrypted, whether the instance is associated with Auto Scaling Groups and if those groups are associated with Launch Configurations or Launch Templates. Whether the instance is associated with IAM roles and whether any of the policies attached to that role have issues. Additionally, MetaChecks provides IP addresses, DNS domains, and other useful information. MetaHub can also determine if the instance is effectively public and effectively encrypted.
+Under the section called MetaTags, you can find the tags associated with the instance.
+Under the section called MetaTrails, you can find any important trails associated with the instance, such as who created it.
 </summary>
 
 ```
 {
   "arn:aws:ec2:us-east-1:012345678901:instance/i-0a8d32b54be32085e": {
     "findings": [
-      "SSM.1 EC2 instances should be managed by AWS Systems Manager",
-      "EC2.24 EC2 paravirtual instance types should not be used",
-      "EC2.9 EC2 instances should not have a public IPv4 address",
-      "EC2.8 EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)",
-      "EC2.17 EC2 instances should not use multiple ENIs"
+      "Find secrets in EC2 User Data",
+      "Apache Log4j Unsupported Version Detection",
+      "EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)",
+      "
     ],
     "AwsAccountId": "012345678901",
-    "AwsAccountAlias": "",
+    "AwsAccountAlias": "my-insecure-account",
     "Region": "us-east-1",
     "ResourceType": "AwsEc2Instance",
     "metachecks": {
-      "it_has_public_ip": "54.91.141.118",
+      "it_has_public_ip": "100.100.100.100",
       "it_has_private_ip": "172.11.12.77",
       "it_has_key": "my_service-key",
       "it_has_private_dns": "ip-172-11-12-77.ec2.internal",
-      "it_has_public_dns": "ec2-54-91-141-118.compute-1.amazonaws.com",
+      "it_has_public_dns": "ec2-100-100-100-100.compute-1.amazonaws.com",
       "its_associated_with_iam_roles": { ------> The instance is associated with IAM Roles, we drill down to the IAM Roles
         "arn:aws:iam::012345678901:role/ec2/stg-my_service-role-20230416111756821500000001": {
           "its_associated_with_iam_policies": { ------> The IAM Role is associated with IAM Policies, we drill down to the IAM Policies
             "arn:aws:iam::aws:policy/SecurityAudit": {
               "it_has_name": "SecurityAudit",
-              "it_has_description": "The security audit template grants access to read security configuration metadata. It is useful for software that audits the configuration of an AWS account.",
+              "it_has_description": "The security audit ....",
               "is_attached": 1,
               "is_customer_managed": false,
               "its_associated_with_iam_groups": false,
@@ -78,7 +81,7 @@ With MetaHub, you can combine security findings from any number of security scan
               "its_associated_with_iam_roles": [
                 {
                   "RoleName": "stg-my_service-role-20230416111756821500000001",
-                  "RoleId": "AROAUTVHV2BQVMEGGVMFI"
+                  "RoleId": "AROAUXXXXXXXXXXXXX"
                 }
               ],
               "is_principal_cross_account": [],
@@ -100,7 +103,7 @@ With MetaHub, you can combine security findings from any number of security scan
             "i-0a8d32b54be32085e"
           ],
           "its_associated_with_ips_public": [
-            "54.91.141.118"
+            "100.100.100.100"
           ],
           "its_associated_with_managed_services": false,
           "its_referenced_by_a_security_group": false,
