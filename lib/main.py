@@ -6,6 +6,7 @@ from alive_progress import alive_bar
 
 from lib.AwsHelpers import (
     get_account_alias,
+    get_account_alternate_contact,
     get_account_id,
     get_region,
     get_sh_findings_aggregator,
@@ -24,6 +25,111 @@ from lib.securityhub import SecurityHub
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
 
+def generate_statistics(mh_findings):
+
+    def statistics_root_level(mh_findings):
+        root_level_statistics = {
+            "ResourceId": {},
+            "ResourceType": {},
+            "Region": {},
+            "AwsAccountId": {},
+            "Title": {},
+            "SeverityLabel": {},
+            "RecordState": {},
+            "ProductArn": {},
+            "Workflow": {},
+            "Compliance": {},
+        }
+        for resource_arn in mh_findings:
+            if resource_arn not in root_level_statistics:
+                root_level_statistics["ResourceId"][resource_arn] = 0
+            root_level_statistics["ResourceId"][resource_arn] += 1
+            for key, value in mh_findings[resource_arn].items():
+                if key in ("ResourceType", "Region", "AwsAccountId"):
+                    if value not in root_level_statistics[key]:
+                        root_level_statistics[key][value] = 0
+                    root_level_statistics[key][value] += 1
+                if key == "findings":
+                    for finding in value:
+                        for finding_key, finding_value in finding.items():
+                            if finding_key not in root_level_statistics["Title"]:
+                                root_level_statistics["Title"][finding_key] = 0
+                            root_level_statistics["Title"][finding_key] += 1
+                            for v in finding_value:
+                                if v in ("Id", "StandardsControlArn"):
+                                    continue
+                                if v == "Workflow" or v == "Compliance":
+                                    if finding_value[v]["Status"] not in root_level_statistics[v]:
+                                        root_level_statistics[v][finding_value[v]["Status"]] = 0
+                                    root_level_statistics[v][finding_value[v]["Status"]] += 1
+                                else:
+                                    if finding_value[v] not in root_level_statistics[v]:
+                                        root_level_statistics[v][finding_value[v]] = 0
+                                    root_level_statistics[v][finding_value[v]] += 1
+
+        return root_level_statistics
+
+    def statistics_metatags(mh_findings_short):
+        metatags_statistics = {}
+        for d in mh_findings_short:
+            if "metatags" in mh_findings_short[d]:
+                if mh_findings_short[d]["metatags"]:
+                    for tag, value in mh_findings_short[d]["metatags"].items():
+                        if tag not in metatags_statistics:
+                            metatags_statistics[tag] = {}
+                        if value not in metatags_statistics[tag]:
+                            metatags_statistics[tag][value] = 1
+                        else:
+                            metatags_statistics[tag][value] += 1
+        return metatags_statistics
+
+    def statistics_metachecks(mh_findings_short):
+        metachecks_statistics = {}
+        for d in mh_findings_short:
+            if "metachecks" in mh_findings_short[d]:
+                if mh_findings_short[d]["metachecks"]:
+                    for check, value in mh_findings_short[d]["metachecks"].items():
+                        if check not in metachecks_statistics:
+                            metachecks_statistics[check] = {False: 0, True: 0}
+                        if bool(mh_findings_short[d]["metachecks"][check]):
+                            metachecks_statistics[check][True] += 1
+                        else:
+                            metachecks_statistics[check][False] += 1
+        return metachecks_statistics
+    
+    def statistics_metaaccount(mh_findings_short):
+        metaaccount_statistics = {}
+        for d in mh_findings_short:
+            if "metaaccount" in mh_findings_short[d]:
+                if mh_findings_short[d]["metaaccount"]:
+                    for tag, value in mh_findings_short[d]["metaaccount"].items():
+                        if tag == "AlternateContact":
+                            continue
+                        if tag not in metaaccount_statistics:
+                            metaaccount_statistics[tag] = {}
+                        if value not in metaaccount_statistics[tag]:
+                            metaaccount_statistics[tag][value] = 1
+                        else:
+                            metaaccount_statistics[tag][value] += 1
+        return metaaccount_statistics
+    
+    mh_statistics = statistics_root_level(mh_findings)
+    mh_statistics["metatags"] = statistics_metatags(mh_findings)
+    mh_statistics["metachecks"] = statistics_metachecks(mh_findings)
+    mh_statistics["metaaccount"] = statistics_metaaccount(mh_findings)
+
+    # Sort Statistics
+    for key_to_sort in mh_statistics:
+        if key_to_sort not in ("metatags", "metachecks", "metaaccount"):
+            mh_statistics[key_to_sort] = dict(
+                sorted(
+                    mh_statistics[key_to_sort].items(),
+                    key=lambda item: item[1],
+                    reverse=True,
+                )
+            )
+    
+    return mh_statistics
 
 def generate_findings(
     logger,
@@ -46,23 +152,7 @@ def generate_findings(
     mh_findings_not_matched_findings = {}
     mh_findings_short = {}
     mh_inventory = []
-    mh_statistics = {
-        "Title": {},
-        "SeverityLabel": {},
-        "Workflow": {},
-        "RecordState": {},
-        "Compliance": {},
-        "ProductArn": {},
-        "ResourceType": {},
-        "AwsAccountId": {},
-        "AwsAccountAlias": {},
-        "Region": {},
-        "ResourceId": {},
-        "metatags": {},
-        "metachecks": {},
-        "StandardsControlArn": {},
-    }
-    AwsAccountAliasData = {}
+    AwsAccountData = {}
 
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
 
@@ -154,168 +244,56 @@ def generate_findings(
             # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
             if mh_matched:
 
-                # Query AwsAccountAlias and let's add it to the finding
-                if finding["AwsAccountId"] not in AwsAccountAliasData:
+                # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
+                if finding["AwsAccountId"] not in AwsAccountData:
                     AwsAccountAlias = get_account_alias(
                         logger, finding["AwsAccountId"], mh_role
                     )
-                    AwsAccountAliasData[finding["AwsAccountId"]] = AwsAccountAlias
-                finding["AwsAccountAlias"] = AwsAccountAliasData[
+                    AwsAccountAlternateContact = get_account_alternate_contact(
+                        logger, finding["AwsAccountId"], mh_role
+                    )
+                    AwsAccountData[finding["AwsAccountId"]] = {"Alias": AwsAccountAlias, "AlternateContact": AwsAccountAlternateContact}
+                finding["AwsAccountData"] = AwsAccountData[
                     finding["AwsAccountId"]
                 ]
 
-                # STATISTICS (we count by matched finding)
-
-                # Resource ARN
-                if resource_arn not in mh_statistics["ResourceId"]:
-                    mh_statistics["ResourceId"][resource_arn] = 0
-                mh_statistics["ResourceId"][resource_arn] += 1
-
-                for key, value in finding_parsed.items():
-                    # Title
-                    if key not in mh_statistics["Title"]:
-                        mh_statistics["Title"][key] = 0
-                    mh_statistics["Title"][key] += 1
-                    # Values
-                    for v in value:
-                        if v == "Workflow" or v == "Compliance":
-                            if value[v]:
-                                if not value[v]["Status"] in mh_statistics[v]:
-                                    mh_statistics[v][value[v]["Status"]] = 0
-                                mh_statistics[v][value[v]["Status"]] += 1
-                                continue
-                        if v == "Id":
-                            continue
-                        # It's not consitent per controls :facepalm:
-                        if v == "StandardsControlArn":
-                            continue
-                        if not value[v] in mh_statistics[v]:
-                            mh_statistics[v][value[v]] = 0
-                        mh_statistics[v][value[v]] += 1
-                    # AwsAccountId
-                    if finding["AwsAccountId"] not in mh_statistics["AwsAccountId"]:
-                        mh_statistics["AwsAccountId"][finding["AwsAccountId"]] = 0
-                    mh_statistics["AwsAccountId"][finding["AwsAccountId"]] += 1
-                    # AwsAccountAlias
-                    if (
-                        finding["AwsAccountAlias"]
-                        not in mh_statistics["AwsAccountAlias"]
-                    ):
-                        mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] = 0
-                    mh_statistics["AwsAccountAlias"][finding["AwsAccountAlias"]] += 1
-                    # Region
-                    if finding["Region"] not in mh_statistics["Region"]:
-                        mh_statistics["Region"][finding["Region"]] = 0
-                    mh_statistics["Region"][finding["Region"]] += 1
-                    # ResourceType
-                    if (
-                        finding["Resources"][0]["Type"]
-                        not in mh_statistics["ResourceType"]
-                    ):
-                        mh_statistics["ResourceType"][
-                            finding["Resources"][0]["Type"]
-                        ] = 0
-                    mh_statistics["ResourceType"][finding["Resources"][0]["Type"]] += 1
-
-                # RESOURCE (we add the resource only once)
+                # Resource (we add the resource only once, we check if it's already in the list)
                 if resource_arn not in mh_findings:
-                    # Short
+                    # Inventory
+                    mh_inventory.append(resource_arn)
+                    # Findings
                     mh_findings[resource_arn] = {"findings": []}
-                    mh_findings[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
-                    mh_findings[resource_arn]["AwsAccountAlias"] = finding[
-                        "AwsAccountAlias"
-                    ]
-                    mh_findings[resource_arn]["Region"] = finding["Region"]
-                    mh_findings[resource_arn]["ResourceType"] = finding["Resources"][0][
+                    mh_findings_short[resource_arn] = {"findings": []}
+                    # ResourceType
+                    mh_findings[resource_arn]["ResourceType"] = mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0][
                         "Type"
                     ]
-                    # Standard
-                    mh_findings_short[resource_arn] = {"findings": []}
-                    mh_findings_short[resource_arn]["AwsAccountId"] = finding[
-                        "AwsAccountId"
-                    ]
-                    mh_findings_short[resource_arn]["AwsAccountAlias"] = finding[
-                        "AwsAccountAlias"
-                    ]
-                    mh_findings_short[resource_arn]["Region"] = finding["Region"]
-                    mh_findings_short[resource_arn]["ResourceType"] = finding[
-                        "Resources"
-                    ][0]["Type"]
-
-                    # INVENTORY
-                    mh_inventory.append(resource_arn)
-
-                    # METACHECKS:
+                    # Region
+                    mh_findings[resource_arn]["Region"] = mh_findings_short[resource_arn]["Region"] = finding["Region"]
+                    # AwsAccountId
+                    mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    # MetaAccount
+                    mh_findings[resource_arn]["metaaccount"] = mh_findings_short[resource_arn]["metaaccount"] = finding["AwsAccountData"]
+                    # MetaChecks
                     if metachecks:
-                        # Short
-                        mh_findings_short[resource_arn]["metachecks"] = mh_values
-                        # Standard
-                        mh_findings[resource_arn]["metachecks"] = mh_values
-
-                    # METATAGS
+                        mh_findings[resource_arn]["metachecks"] = mh_findings_short[resource_arn]["metachecks"] = mh_values
+                    # MetaTags
                     if metatags:
-                        # Short
-                        mh_findings_short[resource_arn]["metatags"] = mh_tags
-                        # Standard
-                        mh_findings[resource_arn]["metatags"] = mh_tags
-
-                    # METATRAILS
+                        mh_findings[resource_arn]["metatags"] = mh_findings_short[resource_arn]["metatags"] = mh_tags
+                    # MetaTrails
                     if metatrails:
-                        # Short
-                        mh_findings_short[resource_arn]["metatrails"] = mh_trails
-                        # Standard
-                        mh_findings[resource_arn]["metatrails"] = mh_trails
+                        mh_findings[resource_arn]["metatrails"] = mh_findings_short[resource_arn]["metatrails"] = mh_trails
 
-                # FINDINGS
+                # Add Findings
                 mh_findings_short[resource_arn]["findings"].append(
                     list(finding_parsed.keys())[0]
                 )
                 mh_findings[resource_arn]["findings"].append(finding_parsed)
+
             bar()
         bar.title = "-> Completed"
 
-    # Sort Statistics
-    for key_to_sort in mh_statistics:
-        mh_statistics[key_to_sort] = dict(
-            sorted(
-                mh_statistics[key_to_sort].items(),
-                key=lambda item: item[1],
-                reverse=True,
-            )
-        )
-
-    def statistics_metatags(mh_findings_short):
-        metatags_statistics = {}
-        for d in mh_findings_short:
-            if "metatags" in mh_findings_short[d]:
-                if mh_findings_short[d]["metatags"]:
-                    for tag, value in mh_findings_short[d]["metatags"].items():
-                        if tag not in metatags_statistics:
-                            metatags_statistics[tag] = {}
-                        if value not in metatags_statistics[tag]:
-                            metatags_statistics[tag][value] = 1
-                        else:
-                            metatags_statistics[tag][value] += 1
-        return metatags_statistics
-
-    mh_statistics["metatags"] = statistics_metatags(mh_findings_short)
-
-    def statistics_metachecks(mh_findings_short):
-        metachecks_statistics = {}
-        for d in mh_findings_short:
-            if "metachecks" in mh_findings_short[d]:
-                if mh_findings_short[d]["metachecks"]:
-                    for check, value in mh_findings_short[d]["metachecks"].items():
-                        if check not in metachecks_statistics:
-                            metachecks_statistics[check] = {False: 0, True: 0}
-                        if bool(mh_findings_short[d]["metachecks"][check]):
-                            metachecks_statistics[check][True] += 1
-                        else:
-                            metachecks_statistics[check][False] += 1
-
-        return metachecks_statistics
-
-    mh_statistics["metachecks"] = statistics_metachecks(mh_findings_short)
+    mh_statistics = generate_statistics(mh_findings)
 
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 

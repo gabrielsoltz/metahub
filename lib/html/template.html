@@ -9,7 +9,9 @@ var tableData = [
       {
           ARN: "{{ resource|e }}",
           AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
-          AwsAccountAlias: "{{ resource_value.AwsAccountAlias|e }}",
+          {% if 'metaaccount' in resource_value %}
+            AwsAccountAlias: "{{ resource_value.metaaccount["Alias"]|e }}",
+          {% endif %}
           Region: "{{ resource_value.Region|e }}",
           ResourceType: "{{ resource_value.ResourceType|e }}",
           Severity: "{{ finding_values.SeverityLabel|e }}",
@@ -310,19 +312,20 @@ var statsAwsAccountIdLabels = [
 ]
 
 // AwsAccountAlias
-var statsAwsAccountAliasData = [
-  {% for stat, value in statistics['AwsAccountAlias'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
-
-var statsAwsAccountAliasLabels = [
-  {% for stat, value in statistics['AwsAccountAlias'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+{% if 'metaaccount' in statistics %}
+  var statsAwsAccountAliasData = [
+    {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
+  var statsAwsAccountAliasLabels = [
+    {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
+{% endif %}
 
 // ResourceType
 var statsResourceTypeData = [

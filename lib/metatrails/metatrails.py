@@ -30,11 +30,6 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role, sh_region):
     if mh_role:
         sh_role_assumend = assume_role(logger, AwsAccountId, mh_role)
         sess = get_boto3_session(sh_role_assumend)
-        logger.info(
-            "Assuming IAM Role: %s (%s)",
-            mh_role,
-            AwsAccountId,
-        )
     else:
         sess = None
 
