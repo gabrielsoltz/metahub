@@ -51,13 +51,14 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
         hndl = getattr(lib.metachecks.checks, AWSResourceType).Metacheck(
             logger, finding, meta_checks, mh_filters_checks, sess
         )
-    except AttributeError as err:
+    except (AttributeError, Exception) as err:
         if "has no attribute '" + AWSResourceType in str(err):
             logger.info("No MetaChecks for ResourceType: %s", AWSResourceType)
         else:
             logger.error(
-                "Error running MetaChecks for ResourceType: %s (%s)",
+                "Error running MetaChecks for ResourceType: %s %s (%s)",
                 AWSResourceType,
+                resource_arn,
                 err,
             )
         if mh_filters_checks:
