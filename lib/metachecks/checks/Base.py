@@ -131,6 +131,30 @@ class MetaChecksBase:
                     iam_policy
                 ] = iam_policy_drilled.output_checks_drilled()
 
+        # IAM Roles
+        if (
+            hasattr(self, "autoscaling_group")
+            and self.autoscaling_group
+        ):
+            from lib.metachecks.checks.AwsAutoScalingAutoScalingGroup import (
+                Metacheck as AwsAutoScalingAutoScalingGroupMetacheck,
+            )
+
+            for autoscaling_group in self.autoscaling_group:
+                self.logger.info(
+                    "Running Drilled MetaChecks for resource {} for AutoScaling Group: {}".format(self.resource_arn, autoscaling_group)
+                )
+                autoscaling_group_drilled = AwsAutoScalingAutoScalingGroupMetacheck(
+                    self.logger,
+                    self.finding,
+                    True,
+                    False,
+                    self.sess,
+                    drilled=autoscaling_group,
+                )
+                self.autoscaling_group[
+                    autoscaling_group
+                ] = autoscaling_group_drilled.output_checks_drilled()
 
     def output_checks_drilled(self):
         mh_values_checks = {}

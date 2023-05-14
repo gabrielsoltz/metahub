@@ -59,9 +59,12 @@ def generate_statistics(mh_findings):
                                 if v in ("Id", "StandardsControlArn"):
                                     continue
                                 if v == "Workflow" or v == "Compliance":
-                                    if finding_value[v]["Status"] not in root_level_statistics[v]:
-                                        root_level_statistics[v][finding_value[v]["Status"]] = 0
-                                    root_level_statistics[v][finding_value[v]["Status"]] += 1
+                                    try:
+                                        if finding_value[v]["Status"] not in root_level_statistics[v]:
+                                            root_level_statistics[v][finding_value[v]["Status"]] = 0
+                                        root_level_statistics[v][finding_value[v]["Status"]] += 1
+                                    except TypeError:
+                                        continue
                                 else:
                                     if finding_value[v] not in root_level_statistics[v]:
                                         root_level_statistics[v][finding_value[v]] = 0

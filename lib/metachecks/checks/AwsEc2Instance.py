@@ -29,16 +29,13 @@ class Metacheck(MetaChecksBase):
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
-            self.asg_client = get_boto3_client(
-                self.logger, "autoscaling", self.region, self.sess
-            )
             # Describe
             self.instance = self.describe_instance()
             self.instance_volumes = self.describe_volumes()
-            self.instance_auto_scaling_group = self.describe_auto_scaling_instances()
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
+            self.autoscaling_group = self._describe_autoscaling_group()
 
     # Describe Functions
 
@@ -75,17 +72,6 @@ class Metacheck(MetaChecksBase):
             return response["Volumes"]
         return False
 
-    def describe_auto_scaling_instances(self):
-        # AutoScaling Group is also defined as Tag aws:autoscaling:groupName, but using this endpoint we can also get the launch configuration.
-        if self.instance:
-            response = self.asg_client.describe_auto_scaling_instances(
-                InstanceIds=[
-                    self.resource_id,
-                ],
-            )
-            return response["AutoScalingInstances"]
-        return False
-
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
 
@@ -117,6 +103,27 @@ class Metacheck(MetaChecksBase):
                 iam_roles[arn] = {}
 
         return iam_roles
+
+    def _describe_autoscaling_group(self):
+        autoscaling_group = {}
+        if self.instance:
+            tags = self.instance.get("Tags")
+            for tag in tags:
+                if tag.get("Key") == "aws:autoscaling:groupName":
+                    asg_name = tag.get("Value")
+                    arn = generate_arn(
+                        asg_name,
+                        "autoscaling",
+                        "auto_scaling_group",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    # Temp  - bug in aws_arn:
+                    arn = arn.replace(":autoScalingGroup:", ":autoScalingGroup/")
+                    autoscaling_group[arn] = {}
+
+        return autoscaling_group
 
     # MetaChecks
 
@@ -235,25 +242,9 @@ class Metacheck(MetaChecksBase):
             return EBS
         return False
 
-    def its_associated_with_an_asg(self):
-        if self.instance_auto_scaling_group:
-            return self.instance_auto_scaling_group[0]["AutoScalingGroupName"]
-        return False
-
-    def its_associated_with_an_asg_launch_configuration(self):
-        if self.instance_auto_scaling_group:
-            try:
-                return self.instance_auto_scaling_group[0]["LaunchConfigurationName"]
-            except (KeyError, TypeError):
-                return False
-        return False
-
-    def its_associated_with_an_asg_launch_template(self):
-        if self.instance_auto_scaling_group:
-            try:
-                return self.instance_auto_scaling_group[0]["LaunchTemplate"]
-            except (KeyError, TypeError):
-                return False
+    def its_associated_with_autoscaling_group(self):
+        if self.autoscaling_group:
+            return self.autoscaling_group
         return False
 
     def is_public(self):
@@ -289,9 +280,7 @@ class Metacheck(MetaChecksBase):
             "is_instance_metadata_hop_limit_1",
             "its_associated_with_ebs",
             "its_associated_with_ebs_unencrypted",
-            "its_associated_with_an_asg",
-            "its_associated_with_an_asg_launch_configuration",
-            "its_associated_with_an_asg_launch_template",
+            "its_associated_with_autoscaling_group",
             "is_public",
             "is_encrypted",
             "is_running",

@@ -33,10 +33,10 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.launch_template = self.describe_launch_template_versions()
-            self.auto_scaling_groups = self.describe_auto_scaling_groups()
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
+            self.autoscaling_group = self.describe_autoscaling_group()
 
     # Describe functions
 
@@ -48,12 +48,6 @@ class Metacheck(MetaChecksBase):
             for version in response["LaunchTemplateVersions"]:
                 if version["DefaultVersion"]:
                     return version
-        return False
-
-    def describe_auto_scaling_groups(self):
-        response = self.asg_client.describe_auto_scaling_groups()
-        if response["AutoScalingGroups"]:
-            return response["AutoScalingGroups"]
         return False
 
     # Drilled MetaChecks
@@ -96,32 +90,25 @@ class Metacheck(MetaChecksBase):
 
         return iam_roles
 
+    def describe_autoscaling_group(self):
+        autoscaling_group = {}
+        if self.launch_template:
+            response = self.client.describe_auto_scaling_groups()
+            if response.get("AutoScalingGroups"):
+                for asg in response["AutoScalingGroups"]:
+                    try:
+                        if asg["LaunchTemplate"]["LaunchTemplateId"] == self.resource_id:
+                            autoscaling_group[asg["AutoScalingGroupARN"]] = {}
+                    except KeyError:
+                        # No LaunchTemplate
+                        continue
+        return autoscaling_group
+
     # MetaChecks
 
-    def its_associated_with_an_asg(self):
-        ASGS = []
-        if self.auto_scaling_groups:
-            for asg in self.auto_scaling_groups:
-                try:
-                    if asg["LaunchTemplate"]["LaunchTemplateId"] == self.resource_id:
-                        ASGS.append(asg["AutoScalingGroupARN"])
-                except KeyError:
-                    # No LaunchTemplate
-                    continue
-        if ASGS:
-            return ASGS
-        return False
-
-    def its_associated_with_asg_instances(self):
-        ASGSINSTANCES = []
-        if self.its_associated_with_an_asg():
-            for asg in self.auto_scaling_groups:
-                if asg["LaunchTemplate"]["LaunchTemplateId"] == self.resource_id:
-                    if asg["Instances"]:
-                        for instance in asg["Instances"]:
-                            ASGSINSTANCES.append(instance["InstanceId"])
-        if ASGSINSTANCES:
-            return ASGSINSTANCES
+    def its_associated_with_autoscaling_group(self):
+        if self.autoscaling_group:
+            return self.autoscaling_group
         return False
 
     def is_instance_metadata_v2(self):
@@ -211,8 +198,7 @@ class Metacheck(MetaChecksBase):
         checks = [
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
-            "its_associated_with_an_asg",
-            "its_associated_with_asg_instances",
+            "its_associated_with_autoscaling_group",
             "it_has_name",
             "its_associated_with_security_groups",
             "is_public",
