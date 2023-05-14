@@ -13,6 +13,7 @@
 - [Description](#description)
 - [Context](#context)
 - [Ownership](#ownership)
+- [Architecture](#architecture)
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
@@ -201,6 +202,12 @@ MetaHub can determine the owner of the affected resource through different metho
   - With MetaTrails (AWS CloudTrail)
   - With MetaAccount (Information about the account where the resource is running)
   - With MetaChecks (Information about the resource itself and it's associations)
+
+# Architecture
+
+<p align="center">
+  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
+</p>
 
 # Use Cases
 
