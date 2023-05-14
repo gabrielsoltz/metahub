@@ -215,9 +215,9 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_asg_instances",
             "it_has_name",
             "its_associated_with_security_groups",
-            "it_has_public_ip",
             "is_public",
             "is_encrypted",
+            "it_associates_public_ip",
             "its_associated_with_iam_roles",
         ]
         return checks

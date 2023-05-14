@@ -212,7 +212,6 @@ class IamHelper:
             instance_profile_name = instance_profile.split("/")[-1]
         else:
             instance_profile_name = instance_profile
-        print (instance_profile_name)
         try:
             response = self.iam_client.get_instance_profile(
                 InstanceProfileName=instance_profile_name
