@@ -39,17 +39,21 @@ class Metacheck(MetaChecksBase):
             # Describe
             self.auto_scaling_group = self.describe_auto_scaling_groups()
             self.auto_scaling_instances = self._describe_auto_scaling_groups_instances()
-            self.auto_scaling_launch_template = self._describe_auto_scaling_groups_launch_template()
-            self.auto_scaling_launch_configuration = self._describe_auto_scaling_groups_launch_configuration()
+            self.auto_scaling_launch_template = (
+                self._describe_auto_scaling_groups_launch_template()
+            )
+            self.auto_scaling_launch_configuration = (
+                self._describe_auto_scaling_groups_launch_configuration()
+            )
             # Drilled MetaChecks
 
     # Describe function
 
     def describe_auto_scaling_groups(self):
         response = self.client.describe_auto_scaling_groups(
-                AutoScalingGroupNames=[
-            self.resource_id,
-        ],
+            AutoScalingGroupNames=[
+                self.resource_id,
+            ],
         )
         if response["AutoScalingGroups"]:
             return response["AutoScalingGroups"][0]
@@ -104,6 +108,6 @@ class Metacheck(MetaChecksBase):
         checks = [
             "its_associated_with_instances",
             "its_associated_with_launch_template",
-            "its_associated_with_launch_configuration"
+            "its_associated_with_launch_configuration",
         ]
         return checks

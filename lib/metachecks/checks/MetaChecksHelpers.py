@@ -217,7 +217,9 @@ class IamHelper:
                 InstanceProfileName=instance_profile_name
             )
         except ClientError as e:
-            self.logger.error("Error getting role from instance profile %s: %s", instance_profile, e)
+            self.logger.error(
+                "Error getting role from instance profile %s: %s", instance_profile, e
+            )
             return False
 
         return response["InstanceProfile"]["Roles"][0]["Arn"]

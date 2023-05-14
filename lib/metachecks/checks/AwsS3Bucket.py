@@ -213,7 +213,13 @@ class Metacheck(MetaChecksBase):
                     from_port = "443"
                     to_port = "443"
                     ip_protocol = "tcp"
-                    public_dict[self.it_has_website_enabled()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+                    public_dict[self.it_has_website_enabled()].append(
+                        {
+                            "from_port": from_port,
+                            "to_port": to_port,
+                            "ip_protocol": ip_protocol,
+                        }
+                    )
         if public_dict:
             return public_dict
         return False

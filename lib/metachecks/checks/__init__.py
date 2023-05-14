@@ -1,4 +1,5 @@
 from lib.metachecks.checks import (
+    AwsAutoScalingAutoScalingGroup,
     AwsAutoScalingLaunchConfiguration,
     AwsEc2Instance,
     AwsEc2LaunchTemplate,
@@ -15,5 +16,4 @@ from lib.metachecks.checks import (
     AwsS3Bucket,
     AwsSnsTopic,
     AwsSqsQueue,
-    AwsAutoScalingAutoScalingGroup
 )

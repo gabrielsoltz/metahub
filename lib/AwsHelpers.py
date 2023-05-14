@@ -95,7 +95,10 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         return aliases[0]
     return ""
 
-def get_account_alternate_contact(logger, aws_account_number=None, role_name=None, alternate_contact_type="SECURITY"):
+
+def get_account_alternate_contact(
+    logger, aws_account_number=None, role_name=None, alternate_contact_type="SECURITY"
+):
     # https://docs.aws.amazon.com/accounts/latest/reference/using-orgs-trusted-access.html
     # https://aws.amazon.com/blogs/mt/programmatically-managing-alternate-contacts-on-member-accounts-with-aws-organizations/
 
@@ -107,26 +110,38 @@ def get_account_alternate_contact(logger, aws_account_number=None, role_name=Non
         account_client = sess.client(service_name="account")
     else:
         account_client = boto3.client("account")
-    
+
     try:
         alternate_contact = account_client.get_alternate_contact(
-            AccountId=aws_account_number,
-            AlternateContactType=alternate_contact_type
-        ).get('AlternateContact')
+            AccountId=aws_account_number, AlternateContactType=alternate_contact_type
+        ).get("AlternateContact")
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-        if e.response['Error']['Code'] == 'AccessDeniedException' and "The management account can only be managed using the standalone context from the management account." in e.response['Error']['Message']:
+        if (
+            e.response["Error"]["Code"] == "AccessDeniedException"
+            and "The management account can only be managed using the standalone context from the management account."
+            in e.response["Error"]["Message"]
+        ):
             try:
                 alternate_contact = account_client.get_alternate_contact(
                     AlternateContactType=alternate_contact_type
-                ).get('AlternateContact')
+                ).get("AlternateContact")
             except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-                logger.error("Error getting alternate contact for account {}: {}".format(aws_account_number, e))
+                logger.error(
+                    "Error getting alternate contact for account {}: {}".format(
+                        aws_account_number, e
+                    )
+                )
         else:
-            logger.error("Error getting alternate contact for account {}: {}".format(aws_account_number, e))
+            logger.error(
+                "Error getting alternate contact for account {}: {}".format(
+                    aws_account_number, e
+                )
+            )
 
     if alternate_contact:
         return alternate_contact
     return ""
+
 
 def get_sh_findings_aggregator(logger, region):
     try:

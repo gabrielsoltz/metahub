@@ -61,7 +61,9 @@ class MetaChecksBase:
 
             for sg in self.security_groups:
                 self.logger.info(
-                    "Running Drilled MetaChecks for resource {} for security group: {}".format(self.resource_arn, sg)
+                    "Running Drilled MetaChecks for resource {} for security group: {}".format(
+                        self.resource_arn, sg
+                    )
                 )
                 sg_drilled = SecurityGroupMetacheck(
                     self.logger, self.finding, True, False, self.sess, drilled=sg
@@ -74,7 +76,9 @@ class MetaChecksBase:
 
             for iam_role in self.iam_roles:
                 self.logger.info(
-                    "Running Drilled MetaChecks for resource {} for IAM role: {}".format(self.resource_arn, iam_role)
+                    "Running Drilled MetaChecks for resource {} for IAM role: {}".format(
+                        self.resource_arn, iam_role
+                    )
                 )
                 iam_role_drilled = IamRoleMetacheck(
                     self.logger, self.finding, True, False, self.sess, drilled=iam_role
@@ -92,7 +96,9 @@ class MetaChecksBase:
 
                 for iam_policy in iam_role_drilled.iam_policies:
                     self.logger.info(
-                        "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(self.resource_arn, iam_policy)
+                        "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(
+                            self.resource_arn, iam_policy
+                        )
                     )
                     iam_policy_drilled = IamPolicyMetacheck(
                         self.logger,
@@ -107,17 +113,16 @@ class MetaChecksBase:
                     ] = iam_policy_drilled.output_checks_drilled()
 
         # IAM Roles
-        if (
-            hasattr(self, "iam_policies")
-            and self.iam_policies
-        ):
+        if hasattr(self, "iam_policies") and self.iam_policies:
             from lib.metachecks.checks.AwsIamPolicy import (
                 Metacheck as IamPolicyMetacheck,
             )
 
             for iam_policy in self.iam_policies:
                 self.logger.info(
-                    "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(self.resource_arn, iam_policy)
+                    "Running Drilled MetaChecks for resource {} for IAM policy: {}".format(
+                        self.resource_arn, iam_policy
+                    )
                 )
                 iam_policy_drilled = IamPolicyMetacheck(
                     self.logger,
@@ -132,17 +137,16 @@ class MetaChecksBase:
                 ] = iam_policy_drilled.output_checks_drilled()
 
         # IAM Roles
-        if (
-            hasattr(self, "autoscaling_group")
-            and self.autoscaling_group
-        ):
+        if hasattr(self, "autoscaling_group") and self.autoscaling_group:
             from lib.metachecks.checks.AwsAutoScalingAutoScalingGroup import (
                 Metacheck as AwsAutoScalingAutoScalingGroupMetacheck,
             )
 
             for autoscaling_group in self.autoscaling_group:
                 self.logger.info(
-                    "Running Drilled MetaChecks for resource {} for AutoScaling Group: {}".format(self.resource_arn, autoscaling_group)
+                    "Running Drilled MetaChecks for resource {} for AutoScaling Group: {}".format(
+                        self.resource_arn, autoscaling_group
+                    )
                 )
                 autoscaling_group_drilled = AwsAutoScalingAutoScalingGroupMetacheck(
                     self.logger,

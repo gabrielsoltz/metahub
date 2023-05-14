@@ -210,7 +210,10 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         public_dict = {}
-        if self.its_associated_with_ips_public() and self.is_ingress_rules_unrestricted():
+        if (
+            self.its_associated_with_ips_public()
+            and self.is_ingress_rules_unrestricted()
+        ):
             for ip in self.its_associated_with_ips_public():
                 public_dict[ip] = []
                 if self.is_ingress_rules_unrestricted():
@@ -218,7 +221,13 @@ class Metacheck(MetaChecksBase):
                         from_port = rule.get("FromPort")
                         to_port = rule.get("ToPort")
                         ip_protocol = rule.get("IpProtocol")
-                        public_dict[ip].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+                        public_dict[ip].append(
+                            {
+                                "from_port": from_port,
+                                "to_port": to_port,
+                                "ip_protocol": ip_protocol,
+                            }
+                        )
         if public_dict:
             return public_dict
         return False

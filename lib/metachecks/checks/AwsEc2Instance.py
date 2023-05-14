@@ -253,11 +253,19 @@ class Metacheck(MetaChecksBase):
             for sg in self.security_groups:
                 if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
                     public_dict[self.it_has_public_ip()] = []
-                    for rule in self.security_groups[sg].get("is_ingress_rules_unrestricted"):
+                    for rule in self.security_groups[sg].get(
+                        "is_ingress_rules_unrestricted"
+                    ):
                         from_port = rule.get("FromPort")
                         to_port = rule.get("ToPort")
                         ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.it_has_public_ip()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+                        public_dict[self.it_has_public_ip()].append(
+                            {
+                                "from_port": from_port,
+                                "to_port": to_port,
+                                "ip_protocol": ip_protocol,
+                            }
+                        )
         if public_dict:
             return public_dict
         return False

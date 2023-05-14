@@ -25,8 +25,8 @@ from lib.securityhub import SecurityHub
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
 
-def generate_statistics(mh_findings):
 
+def generate_statistics(mh_findings):
     def statistics_root_level(mh_findings):
         root_level_statistics = {
             "ResourceId": {},
@@ -60,9 +60,16 @@ def generate_statistics(mh_findings):
                                     continue
                                 if v == "Workflow" or v == "Compliance":
                                     try:
-                                        if finding_value[v]["Status"] not in root_level_statistics[v]:
-                                            root_level_statistics[v][finding_value[v]["Status"]] = 0
-                                        root_level_statistics[v][finding_value[v]["Status"]] += 1
+                                        if (
+                                            finding_value[v]["Status"]
+                                            not in root_level_statistics[v]
+                                        ):
+                                            root_level_statistics[v][
+                                                finding_value[v]["Status"]
+                                            ] = 0
+                                        root_level_statistics[v][
+                                            finding_value[v]["Status"]
+                                        ] += 1
                                     except TypeError:
                                         continue
                                 else:
@@ -99,7 +106,7 @@ def generate_statistics(mh_findings):
                         else:
                             metachecks_statistics[check][False] += 1
         return metachecks_statistics
-    
+
     def statistics_metaaccount(mh_findings_short):
         metaaccount_statistics = {}
         for d in mh_findings_short:
@@ -115,7 +122,7 @@ def generate_statistics(mh_findings):
                         else:
                             metaaccount_statistics[tag][value] += 1
         return metaaccount_statistics
-    
+
     mh_statistics = statistics_root_level(mh_findings)
     mh_statistics["metatags"] = statistics_metatags(mh_findings)
     mh_statistics["metachecks"] = statistics_metachecks(mh_findings)
@@ -131,8 +138,9 @@ def generate_statistics(mh_findings):
                     reverse=True,
                 )
             )
-    
+
     return mh_statistics
+
 
 def generate_findings(
     logger,
@@ -255,10 +263,11 @@ def generate_findings(
                     AwsAccountAlternateContact = get_account_alternate_contact(
                         logger, finding["AwsAccountId"], mh_role
                     )
-                    AwsAccountData[finding["AwsAccountId"]] = {"Alias": AwsAccountAlias, "AlternateContact": AwsAccountAlternateContact}
-                finding["AwsAccountData"] = AwsAccountData[
-                    finding["AwsAccountId"]
-                ]
+                    AwsAccountData[finding["AwsAccountId"]] = {
+                        "Alias": AwsAccountAlias,
+                        "AlternateContact": AwsAccountAlternateContact,
+                    }
+                finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
 
                 # Resource (we add the resource only once, we check if it's already in the list)
                 if resource_arn not in mh_findings:
@@ -268,24 +277,36 @@ def generate_findings(
                     mh_findings[resource_arn] = {"findings": []}
                     mh_findings_short[resource_arn] = {"findings": []}
                     # ResourceType
-                    mh_findings[resource_arn]["ResourceType"] = mh_findings_short[resource_arn]["ResourceType"] = finding["Resources"][0][
-                        "Type"
-                    ]
+                    mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
+                        resource_arn
+                    ]["ResourceType"] = finding["Resources"][0]["Type"]
                     # Region
-                    mh_findings[resource_arn]["Region"] = mh_findings_short[resource_arn]["Region"] = finding["Region"]
+                    mh_findings[resource_arn]["Region"] = mh_findings_short[
+                        resource_arn
+                    ]["Region"] = finding["Region"]
                     # AwsAccountId
-                    mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[resource_arn]["AwsAccountId"] = finding["AwsAccountId"]
+                    mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
+                        resource_arn
+                    ]["AwsAccountId"] = finding["AwsAccountId"]
                     # MetaAccount
-                    mh_findings[resource_arn]["metaaccount"] = mh_findings_short[resource_arn]["metaaccount"] = finding["AwsAccountData"]
+                    mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
+                        resource_arn
+                    ]["metaaccount"] = finding["AwsAccountData"]
                     # MetaChecks
                     if metachecks:
-                        mh_findings[resource_arn]["metachecks"] = mh_findings_short[resource_arn]["metachecks"] = mh_values
+                        mh_findings[resource_arn]["metachecks"] = mh_findings_short[
+                            resource_arn
+                        ]["metachecks"] = mh_values
                     # MetaTags
                     if metatags:
-                        mh_findings[resource_arn]["metatags"] = mh_findings_short[resource_arn]["metatags"] = mh_tags
+                        mh_findings[resource_arn]["metatags"] = mh_findings_short[
+                            resource_arn
+                        ]["metatags"] = mh_tags
                     # MetaTrails
                     if metatrails:
-                        mh_findings[resource_arn]["metatrails"] = mh_findings_short[resource_arn]["metatrails"] = mh_trails
+                        mh_findings[resource_arn]["metatrails"] = mh_findings_short[
+                            resource_arn
+                        ]["metatrails"] = mh_trails
 
                 # Add Findings
                 mh_findings_short[resource_arn]["findings"].append(

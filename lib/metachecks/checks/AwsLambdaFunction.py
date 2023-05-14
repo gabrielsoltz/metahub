@@ -74,14 +74,16 @@ class Metacheck(MetaChecksBase):
     def get_function_url_config(self):
         try:
             function_url_config = self.client.get_function_url_config(
-                            FunctionName=self.resource_arn
-                        )
+                FunctionName=self.resource_arn
+            )
         except ClientError as err:
             if err.response["Error"]["Code"] == "ResourceNotFoundException":
                 return False
             else:
                 self.logger.error(
-                    "Failed to get_function_url_config {}, {}".format(self.resource_id, err)
+                    "Failed to get_function_url_config {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
                 return False
 
@@ -185,12 +187,21 @@ class Metacheck(MetaChecksBase):
         public_dict = {}
         if self.function:
             if self.function_url_config:
-                if self.it_has_endpoint() and self.function_url_config["AuthType"] == "NONE":
+                if (
+                    self.it_has_endpoint()
+                    and self.function_url_config["AuthType"] == "NONE"
+                ):
                     public_dict[self.it_has_endpoint()] = []
                     from_port = "443"
                     to_port = "443"
                     ip_protocol = "tcp"
-                    public_dict[self.it_has_endpoint()].append({"from_port": from_port, "to_port": to_port, "ip_protocol": ip_protocol})
+                    public_dict[self.it_has_endpoint()].append(
+                        {
+                            "from_port": from_port,
+                            "to_port": to_port,
+                            "ip_protocol": ip_protocol,
+                        }
+                    )
         if public_dict:
             return public_dict
         return False
@@ -204,6 +215,6 @@ class Metacheck(MetaChecksBase):
             "its_associated_with_subnets",
             "is_unrestricted",
             "it_has_endpoint",
-            "is_public"
+            "is_public",
         ]
         return checks

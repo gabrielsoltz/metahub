@@ -97,7 +97,10 @@ class Metacheck(MetaChecksBase):
             if response.get("AutoScalingGroups"):
                 for asg in response["AutoScalingGroups"]:
                     try:
-                        if asg["LaunchTemplate"]["LaunchTemplateId"] == self.resource_id:
+                        if (
+                            asg["LaunchTemplate"]["LaunchTemplateId"]
+                            == self.resource_id
+                        ):
                             autoscaling_group[asg["AutoScalingGroupARN"]] = {}
                     except KeyError:
                         # No LaunchTemplate

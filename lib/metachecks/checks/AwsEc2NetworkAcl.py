@@ -62,20 +62,36 @@ class Metacheck(MetaChecksBase):
     def is_ingress_rule_unrestricted(self, rule):
         """ """
         if "CidrBlock" in rule:
-            if "0.0.0.0/0" in rule["CidrBlock"] and rule["Egress"] == False and rule["RuleAction"] == "allow":
+            if (
+                "0.0.0.0/0" in rule["CidrBlock"]
+                and rule["Egress"] == False
+                and rule["RuleAction"] == "allow"
+            ):
                 return True
         if "Ipv6CidrBlock" in rule:
-            if "::/0" in rule["Ipv6CidrBlock"] and rule["Egress"] == False and rule["RuleAction"] == "allow":
+            if (
+                "::/0" in rule["Ipv6CidrBlock"]
+                and rule["Egress"] == False
+                and rule["RuleAction"] == "allow"
+            ):
                 return True
         return False
 
     def is_egress_rule_unrestricted(self, rule):
         """ """
         if "CidrBlock" in rule:
-            if "0.0.0.0/0" in rule["CidrBlock"] and rule["Egress"] == True and rule["RuleAction"] == "allow":
+            if (
+                "0.0.0.0/0" in rule["CidrBlock"]
+                and rule["Egress"] == True
+                and rule["RuleAction"] == "allow"
+            ):
                 return True
         if "Ipv6CidrBlock" in rule:
-            if "::/0" in rule["Ipv6CidrBlock"] and rule["Egress"] == True and rule["RuleAction"] == "allow":
+            if (
+                "::/0" in rule["Ipv6CidrBlock"]
+                and rule["Egress"] == True
+                and rule["RuleAction"] == "allow"
+            ):
                 return True
         return False
 
@@ -106,5 +122,11 @@ class Metacheck(MetaChecksBase):
         return False
 
     def checks(self):
-        checks = ["its_associated_with_subnets", "is_default", "is_ingress_rules_unrestricted", "is_egress_rules_unrestricted", "is_public"]
+        checks = [
+            "its_associated_with_subnets",
+            "is_default",
+            "is_ingress_rules_unrestricted",
+            "is_egress_rules_unrestricted",
+            "is_public",
+        ]
         return checks
