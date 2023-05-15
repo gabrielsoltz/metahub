@@ -477,12 +477,12 @@ You have three options to configure where and how AWS Security Hub is running:
 
 - Filter only the affected resources that are associated with public IPs:
 ```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_ips_public=True
 ```
 
 - Update all related AWS Security Findings to `NOTIFIED` with a Note `Ticket ID: 123`:
 ```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_public_ips=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_ips_public=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
 ```
 
 # Usage
@@ -569,10 +569,10 @@ Fetch findings with SH filters `SeverityLabel=CRITICAL ProductName="Security Hub
 ./metahub --list-findings --meta-checks -sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL --mh-filters-checks is_public=True
 ```
 
-Fetch findings with SH filters `ResourceType=AwsEc2SecurityGroup ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `its_associated_with_public_ips=True` and outputs `short` and `statistics`:
+Fetch findings with SH filters `ResourceType=AwsEc2SecurityGroup ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `its_associated_with_ips_public=True` and outputs `short` and `statistics`:
 
 ```sh
-./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_public_ips=True --outputs short statistics
+./metahub --list-findings --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_ips_public=True --outputs short statistics
 ```
 
 ## MetaTags
@@ -1001,184 +1001,38 @@ You can filter your findings based on MetaChecks output using the option `--mh-f
 
 If you want to add your MetaChecks, follow this [guide](metachecks.md). Pull requests are more than welcome.
 
-There are two special types of MetaChecks: [Drilled MetaChecks](#drilled-metachecks) and [Magic MetaChecks](#magic-metachecks). Then you have the rest of MetaChecks, we call them standard MetaChecks.
+There are two special types of MetaChecks: [Drilled MetaChecks](#drilled-metachecks) and [Impact MetaChecks](#impact-metachecks). Then you have the rest of MetaChecks, we call them standard MetaChecks.
 
 ## Drilled MetaChecks
 
-Drilled MetaChecks can connet into the associated resources of the affected resource, for example Security Groups and IAM Roles and Policies. The drilled **MetaChecks** are: `its_associated_with_security_groups`, `its_associated_with_iam_roles`, `its_associated_with_iam_policies`. There are also 2 MetaChecks `it_has_resource_policy` and `it_has_iam_inline_policies` that are not real drilled MetaChecks because they are not drilling in an external associated resoruce, but they are drilling in the resource policy itself so we added them to the list.
+Drilled MetaChecks can connet into the associated resources of the affected resource, for example Security Groups, IAM Roles, IAM Policies, AutoScaling Groups, EBS, etc. and run MetaChecks on them.
 
-### its_associated_with_security_groups
-
-Resources that can be associated with Security Groups are checked by this MetaCheck to provide a comprehensive list of all associated Security Groups. MetaHub will then fetch the rules from these Security Groups to answer the following questions:
-
--  "is_ingress_rules_unrestricted": You get a list of the ingress rules that are unrestricted.
--  "is_egress_rule_unrestricted": You get a list of the egress rules that are unrestricted.
+For example, each time you run a MetaCheck on an EC2 Instance, MetaHub will run the MetaCheck `its_associated_with_security_groups` to understand if the EC2 Instance it's associated with any Security Group. If it is, MetaHub will run the MetaCheck drilled into those Security Groups and run all the related Security Group MetaChecks on them:
 
 ```
-├── affected-resource
-│   ├── ...
-│   ├── metachecks
-│   │   ├── its_associated_with_security_groups
-│   │   │   ├── security-group-1
-│   │   │   │   └── is_ingress_rules_unrestricted
-│   │   │   │       ├── rule-1 (port X open 0.0.0.0/0)
-│   │   │   │   └── is_egress_rule_unrestricted
-│   │   │   ├── security-group-2
-│   │   │   │   └── is_ingress_rules_unrestricted
-│   │   │   │   └── is_egress_rule_unrestricted
-│   │   │   └── security-group-3
+its_associated_with_security_groups
+├─ its_associated_with_network_interfaces
+├─ its_associated_with_ec2_instances
+├─ its_associated_with_ips_public
+├─ its_associated_with_managed_services
+├─ its_referenced_by_a_security_group
+├─ is_ingress_rules_unrestricted
+├─ is_egress_rules_unrestricted
+├─ is_public
+└─ is_default
 ```
 
-```
-  "its_associated_with_security_groups": {
-    "arn:aws:ec2:eu-west-1:012345678901:security-group/sg-012345678901": {
-      "is_ingress_rules_unrestricted": [],
-      "is_egress_rule_unrestricted": [
-        {
-          "SecurityGroupRuleId": "sgr-012345678901",
-          "GroupId": "sg-012345678901",
-          "GroupOwnerId": "012345678901",
-          "IsEgress": true,
-          "IpProtocol": "tcp",
-          "FromPort": 5432,
-          "ToPort": 5432,
-          "CidrIpv4": "0.0.0.0/0",
-          "Tags": []
-        }
-      ]
-    }
-  },
-```
+Drilled MetaChecks are key to undertand the context of your security findings by understanding the associated resources and their configuration.
 
-### its_associated_with_iam_roles
+If you don't need to run drilled MetaChecks, you can disable them using the option `--no-drill-down`. See [Drilled MetaChecks](#drilled-metachecks). By default they are enabled.
 
-Resources that can be associated with IAM Roles are checked by this MetaCheck to provide all the associated IAM Roles, and from every role it will fetch the IAM policies to answer the following questions:
+## Impact MetaChecks
 
-- "is_principal_wildcard": If the policy principal is defined as a wildcard (*)
-- "is_principal_cross_account": If the policy principal is defined as a cross account
-- "is_principal_external": If the policy principal is defined as an external account (not in the same organization)
-- "is_actions_wildcard": If the policy actions are defined as a wildcard (*)
+Impact MetaChecks are defined across all resources. These MetaChecks defines properties that are important for defining the impact of a security finding. For example, if a resource is public, if a resource is encrypted, if a resource is attached to another resource, etc. These MetaChecks are defined for every resource type but the result of it depends on each resource type, for example, for an EC2 Instance to be `is_public` in MetaHub, the instance needs to have a Public IP and needs to be associated with a Security Group that has an ingress rule open to the public.
 
-```
-├── affected-resource
-│   ├── ...
-│   ├── metachecks
-│   │   ├── its_associated_with_iam_roles
-│   │   │   ├── role-1
-│   │   │   │   ├── its_associated_with_iam_policies
-│   │   │   │       ├── policy-a
-│   │   │   │       │       ├── is_principal_wildcard
-│   │   │   │       │       │   ├── statement-1
-│   │   │   │       │       ├── is_principal_cross_account
-│   │   │   │       │       │   ├── statement-cross-account
-│   │   │   │       │       ├── is_principal_external
-│   │   │   │       │       │   ├── statement-external
-│   │   │   │       │       ├── is_public
-│   │   │   │       │       │   ├── statement-public
-│   │   │   │       │       ├── is_actions_wildcard
-│   │   │   │       │       │   ├── statement-actions-wildcard
-│   │   │   ├── role-2
-│   │   │   └── role-3
-```
+Impact MetaChecks are also useful to filter across all resources no matter the resource type, for example, you can filter all resources that are public using the MetaCheck `is_public` (`./metahub --mh-filters-checks is_public=True`), or you can filter all resources that are public and not encrypted using the MetaCheck `is_public` and `is_encrypted` (`./metahub --mh-filters-checks is_public=True is_encrypted=False`).
 
-```
-  "its_associated_with_iam_roles": {
-    "arn:aws:iam::0123456789012:role/security-role": {
-      "its_associated_with_iam_policies": {
-        "arn:aws:iam::0123456789012:policy/policy-a": {
-            "is_principal_wildcard": [],
-            "is_principal_cross_account": [],
-            "is_principal_external": [],
-            "is_public": [],
-            "is_actions_wildcard": []
-          },
-        },
-        "arn:aws:iam::0123456789012:policy/policy-b": {
-            "is_principal_wildcard": [],
-            "is_principal_cross_account": [],
-            "is_principal_external": [],
-            "is_public": [],
-            "is_actions_wildcard": []
-          },
-        },
-```
-
-### its_associated_with_iam_policies
-
-TBD
-
-### it_has_resource_policy
-
-Resources that can have a resource policy are checked by this MetaCheck to analyze it policy to answer the following questions:
-
-- "is_principal_wildcard": If the policy principal is defined as a wildcard (*)
-- "is_principal_cross_account": If the policy principal is defined as a cross account
-- "is_principal_external": If the policy principal is defined as an external account (not in the same organization)
-- "is_actions_wildcard": If the policy actions are defined as a wildcard (*)
-
-```
-├── affected-resource
-│   ├── ...
-│   ├── metachecks
-│   │   ├── it_has_resource_policy
-│   │   │    └── is_principal_wildcard
-│   │   │         ├── statement-wildcard
-│   │   │     └── is_principal_cross_account
-│   │   │         ├── statement-cross-account
-│   │   │     └── is_principal_external
-│   │   │         ├── statement-external
-│   │   │     └── is_public
-│   │   │         ├── statement-public
-│   │   │     └── is_actions_wildcard
-│   │   │         ├── statement-actions-wildcard
-```
-
-```
-      "it_has_resource_policy": {
-          "is_principal_wildcard": [],
-          "is_principal_cross_account": [
-            {
-              "Sid": "permissions",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "arn:aws:iam::0123456789012:root"
-              },
-              "Action": "s3:*",
-              "Resource": [
-                "arn:aws:s3:::bucket-name",
-                "arn:aws:s3:::bucket-name/*"
-              ]
-            }
-          ],
-          "is_principal_external": [],
-          "is_public": [],
-          "is_actions_wildcard": [
-            {
-              "Sid": "permissions",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": "arn:aws:iam::0123456789012:root"
-              },
-              "Action": "s3:*",
-              "Resource": [
-                "arn:aws:s3:::bucket-name",
-                "arn:aws:s3:::bucket-name/*"
-              ]
-            }
-          ]
-        },
-      },
-```
-
-### it_has_iam_inline_policies
-
-TBD
-
-## Magic MetaChecks
-
-**MetaHub** provides a set of **MetaChecks** called "magic" that are defined across all resources. These **MetaChecks** are useful for filtering all resources in the same way. The magic **MetaChecks** are: `is_public`, `is_unrestricted`, `is_encrypted`, and `is_attached`. If any of these magic MetaChecks are not applicable for a particular resource, they will be `False`.
-
-You can use these **MetaChecks** to filter across all resource types based on specific criteria. For instance, you can filter all resources that are public using the **MetaCheck** `is_public` (`./metahub --mh-filters-checks is_public=True`), or you can filter all resources that are public and not encrypted using the **MetaCheck** `is_public` and `is_encrypted` (`./metahub --mh-filters-checks is_public=True is_encrypted=False`).
+Impact MetaChecks are: `is_public`, `is_unrestricted`, `is_encrypted`, and `is_attached`. If any of these MetaChecks are not applicable for a particular resource type, they will return `False`.
 
 ### is_public
 
@@ -1322,7 +1176,6 @@ Examples:
 - its_associated_with_security_groups
 - its_associated_with_iam_roles
 - its_associated_with_iam_policies
-- its_associated_with_its_associated_with_vpc
 
 ### it_has
 
