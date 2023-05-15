@@ -30,7 +30,6 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "eks", self.region, self.sess)
             # Describe
             self.eks_cluster = self.describe_cluster()
-            print (self.eks_cluster)
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
