@@ -35,11 +35,13 @@ class Metacheck(MetaChecksBase):
     def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = "aws"
             if not sess:
-                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=region)
+                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=self.region)
             else:
-                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=region)
+                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=self.region)
             self.resource_arn = finding["Resources"][0]["Id"]
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks

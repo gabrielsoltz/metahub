@@ -1,7 +1,7 @@
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError, ParamValidationError
+from botocore.exceptions import ClientError, ParamValidationError
 
-from lib.AwsHelpers import assume_role, get_boto3_session, get_account_id
+from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session
 
 
 def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
@@ -34,11 +34,6 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role, sh_region):
     if mh_role:
         sh_role_assumend = assume_role(logger, AwsAccountId, mh_role)
         sess = get_boto3_session(sh_role_assumend)
-        logger.info(
-            "Assuming IAM Role: %s (%s)",
-            mh_role,
-            AwsAccountId,
-        )
     else:
         sess = None
 

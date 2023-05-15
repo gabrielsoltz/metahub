@@ -1,6 +1,5 @@
-from sys import argv
-from os import environ
 import lib.main
+
 
 def lambda_handler(event, context):
 
@@ -10,7 +9,7 @@ def lambda_handler(event, context):
 
     LAMBDA_OPTIONS = ["--output-modes", "lambda", "--no-banners"]
     CUSTOM_OPTIONS = []
-    
+
     # CUSTOM_OPTIONS = ["--sh-filters", "Id=arn::::010101010101"]
 
     OPTIONS = LAMBDA_OPTIONS + CUSTOM_OPTIONS

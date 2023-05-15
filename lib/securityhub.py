@@ -26,6 +26,8 @@ class SecurityHub:
 
     def get_findings(self, sh_filters):
         """Get Security Findings from Security Hub with Filters applied"""
+        self.logger.info("Gathering SecurityHub findings...")
+
         findings = []
         next_token = ""
         while True:
@@ -38,14 +40,7 @@ class SecurityHub:
                 )
                 # Add findings to the list
                 findings.extend(response["Findings"])
-            except ClientError as err:
-                self.logger.error(
-                    "An error occurred when attempting to gather SecurityHub data - %s",
-                    err,
-                )
-                # No point proceeding without the data
-                exit(1)
-            except BotoCoreError as err:
+            except (ClientError, BotoCoreError) as err:
                 self.logger.error(
                     "An error occurred when attempting to gather SecurityHub data - %s",
                     err,
@@ -84,7 +79,9 @@ class SecurityHub:
                 "Compliance": compliance,
                 "Id": finding["Id"],
                 "ProductArn": finding["ProductArn"],
-                "StandardsControlArn": finding.get("ProductFields").get("StandardsControlArn"),
+                "StandardsControlArn": finding.get("ProductFields").get(
+                    "StandardsControlArn"
+                ),
             },
         }
         return finding["Resources"][0]["Id"], findings
