@@ -30,6 +30,7 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "eks", self.region, self.sess)
             # Describe
             self.eks_cluster = self.describe_cluster()
+            print (self.eks_cluster)
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
@@ -102,20 +103,26 @@ class Metacheck(MetaChecksBase):
 
     def its_associated_with_iam_roles(self):
         if self.eks_cluster:
-            return self.iam_roles
+            if self.iam_roles:
+                return self.iam_roles
+        return False
 
     def its_associated_with_security_groups(self):
         if self.eks_cluster:
-            return self.security_groups
+            if self.security_groups:
+                return self.security_groups
+        return False
 
     def it_has_endpoint(self):
         if self.eks_cluster:
-            return self.eks_cluster.get("endpoint")
+            return self.eks_cluster.get("endpoint", False)
+        return False
 
     def it_has_public_endpoint(self):
         if self.eks_cluster:
             if self.eks_cluster["resourcesVpcConfig"]["endpointPublicAccess"]:
-                return self.eks_cluster.get("endpoint")
+                return self.eks_cluster.get("endpoint", False)
+        return False
 
     def is_public(self):
         public_dict = {}

@@ -157,7 +157,7 @@ def generate_findings(
     asff_findings,
     metatrails,
     banners,
-    drilled_down,
+    drill_down,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -213,7 +213,7 @@ def generate_findings(
                                 finding,
                                 mh_filters_checks,
                                 mh_role,
-                                drilled_down,
+                                drill_down,
                             )
                     else:
                         mh_checks_matched = True
@@ -663,7 +663,7 @@ def main(args):
     print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
     print_table("MetaChecks: ", str(args.meta_checks), banners=banners)
     print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
-    print_table("Drilled Down Mode: ", str(args.drilled_down), banners=banners)
+    print_table("Drilled Down Mode: ", str(args.drill_down), banners=banners)
     print_table("MetaTags: ", str(args.meta_tags), banners=banners)
     print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
     print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
@@ -691,7 +691,7 @@ def main(args):
         asff_findings=asff_findings,
         metatrails=args.meta_trails,
         banners=banners,
-        drilled_down=args.drilled_down,
+        drill_down=args.drill_down,
     )
 
     if args.list_findings:

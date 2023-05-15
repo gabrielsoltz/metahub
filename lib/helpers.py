@@ -171,8 +171,8 @@ def get_parser():
         required=False,
     )
     group_meta_checks.add_argument(
-        "--drilled-down",
-        help="Use this option to execute MetaChecks in drilled down mode. This option will be used only if you are using --meta-checks",
+        "--drill-down",
+        help="Use this option to execute Drilled MetaChecks. This option will be used only if you are using --meta-checks",
         default=True,
         required=False,
         action=argparse.BooleanOptionalAction,
