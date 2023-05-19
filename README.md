@@ -368,10 +368,10 @@ You have three options to configure where and how AWS Security Hub is running:
 
 ## Configuring MetaChecks and MetaTags
 
-- The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks` and `--meta-tags`.
-- For MetaTags, you need the policy: `tag:get_resources`
+- The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks`, `--meta-tags` and `--meta-trails`.
+- For MetaTags, you need a policy allowing the action: `tag:get_resources`
 - For MetaCheks, you can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit`
-- For MetaTrails, you need the policy: `cloudtrail:LookupEvents`
+- For MetaTrails, you need a policy allowing the action: `cloudtrail:LookupEvents`
 - If you need it to log in and assume a role in the same account, use the options `--mh-assume-role` to specify the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for specifying the role you want to assume to read/write from AWS Security Hub.
 
 ## Single Account Setup 
@@ -671,9 +671,11 @@ MetaHub can read security findings directly from AWS Security Hub or an input fi
 
 If you want to read from an input ASFF file, you need to use the options:: `--inputs file-asff --input-asff path/to/the/file.json.asff`
 
-When using a file as input, you can't use the option `--sh-filters` for filter findings, as this option relies on AWS API for filtering. You can't use the options `--update-findings` or `--enrich-findings` as those findings are not in AWS Security Hub. If you are reading from both sources, only the findings from AWS Security Hub will be updated.
+When using a file as input, you can't use the option `--sh-filters` for filter findings, as this option relies on AWS API for filtering. You can't use the options `--update-findings` or `--enrich-findings` as those findings are not in AWS Security Hub. 
 
 You also can combine AWS Security Hub findings with an input ASFF file specifying both inputs: `--inputs file-asff securityhub --input-asff path/to/the/file.json.asff`
+
+If you are reading from both sources, only the findings from AWS Security Hub will be updated.
 
 
 # Outputs

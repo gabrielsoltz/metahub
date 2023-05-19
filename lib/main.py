@@ -224,7 +224,7 @@ def generate_findings(
                             and resource_arn not in mh_findings_not_matched_findings
                         ):
                             mh_tags, mh_tags_matched = run_metatags(
-                                logger, finding, mh_filters_tags, mh_role, sh_region
+                                logger, finding, mh_filters_tags, mh_role
                             )
                     else:
                         mh_tags_matched = True
@@ -240,7 +240,7 @@ def generate_findings(
                             and resource_arn not in mh_findings_not_matched_findings
                         ):
                             mh_trails = run_metatrails(
-                                logger, finding, mh_filters_tags, mh_role, sh_region
+                                logger, finding, mh_filters_tags, mh_role
                             )
             else:
                 # If no metachecks and no metatags, we enforce to True the match so we show the resource:
