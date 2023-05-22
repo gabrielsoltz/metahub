@@ -95,12 +95,14 @@ class Metacheck(MetaChecksBase):
     def describe_iam_roles(self):
         iam_roles = {}
         if self.instance:
-            instance_profile = self.instance.get("IamInstanceProfile").get("Arn")
-            arn = IamHelper(
-                self.logger, self.finding, False, self.sess, instance_profile
-            ).get_role_from_instance_profile(instance_profile)
-            if arn:
-                iam_roles[arn] = {}
+            instance_profile = self.instance.get("IamInstanceProfile")
+            if instance_profile:
+                instance_profile_arn = instance_profile.get("Arn")
+                arn = IamHelper(
+                    self.logger, self.finding, False, self.sess, instance_profile_arn
+                ).get_role_from_instance_profile(instance_profile_arn)
+                if arn:
+                    iam_roles[arn] = {}
 
         return iam_roles
 
