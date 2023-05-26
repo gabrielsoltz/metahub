@@ -60,10 +60,19 @@ Under the section called MetaTrails, you can find any important trails associate
       "
     ],
     "AwsAccountId": "012345678901",
-    "AwsAccountAlias": "my-insecure-account",
     "Region": "us-east-1",
     "ResourceType": "AwsEc2Instance",
-    "metachecks": {
+    "metaaccount": { ---> MetaAccount section with information about the account.
+      "Alias": "metahub",
+      "AlternateContact": {
+        "AlternateContactType": "SECURITY",
+        "EmailAddress": "gabriel@xxx.com",
+        "Name": "Gabriel",
+        "PhoneNumber": "+XXXXXXXX",
+        "Title": "Security"
+      }
+    }
+    "metachecks": { ---> MetaChecks section.
       "it_has_public_ip": "100.100.100.100",
       "it_has_private_ip": "172.11.12.77",
       "it_has_key": "my_service-key",
@@ -166,7 +175,7 @@ Under the section called MetaTrails, you can find any important trails associate
       "is_encrypted": true,
       "is_running": true
     },
-    "metatags": {
+    "metatags": { ---> MetaTags section.
       "aws:autoscaling:groupName": "stg-asg",
       "environment": "stg",
       "service": "my_service",
@@ -175,7 +184,7 @@ Under the section called MetaTrails, you can find any important trails associate
       "aws:ec2launchtemplate:id": "lt-0a6809a0720dd2cb7",
       "Name": "my_service"
     },
-    "metatrails": {
+    "metatrails": { ---> MetaTrails section.
       "RunInstances": {
         "Username": "root",
         "EventTime": "2023-04-16 13:58:34+02:00"
@@ -475,14 +484,14 @@ You have three options to configure where and how AWS Security Hub is running:
 ./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks
 ```
 
-- Filter only the affected resources that are associated with public IPs:
+- Filter only the affected resources that are public:
 ```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_ips_public=True
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_public=True
 ```
 
 - Update all related AWS Security Findings to `NOTIFIED` with a Note `Ticket ID: 123`:
 ```
-./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks its_associated_with_ips_public=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
+./metahub --list-findings --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_public=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
 ```
 
 # Usage
@@ -689,7 +698,7 @@ If you are reading from both sources, only the findings from AWS Security Hub wi
 
 ## Short
 
-The default output. You get the findings title under each affected resource and the `AwsAccountId`, `AwsAccountAlias`, `Region`, and `ResourceType`:
+The default output. You get the findings title under each affected resource and the `AwsAccountId`, `Region`, and `ResourceType`:
 
 ```
   "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/ofuscated": {
@@ -757,7 +766,6 @@ The full output. Use `--outputs full`. Show all findings with all data. Findings
       }
     ],
     "AwsAccountId": "ofuscated",
-    "AwsAccountAlias": "ofuscated",
     "Region": "eu-west-1",
     "ResourceType": "AwsSageMakerNotebookInstance"
   },
@@ -776,7 +784,7 @@ You can use `--outputs inventory` to get only a list of resources' ARNs.
 
 ## Statistics
 
-You can use `--outputs statistics` to get statistics about your search. You get statistics by each field:
+You can use `--outputs statistics` to get statistics about your search. In the output you will see each field/value and the amount of ocurrences, for example, the following output shows statistics for six findings. 
 
 ```
 {
@@ -805,9 +813,6 @@ You can use `--outputs statistics` to get statistics about your search. You get 
     "AwsSageMakerNotebookInstance": 6
   },
   "AwsAccountId": {
-    "ofuscated": 6
-  },
-  "AwsAccountAlias": {
     "ofuscated": 6
   },
   "Region": {
@@ -862,9 +867,9 @@ You can create a CSV custom report from your findings, adding MetaChecks and Met
 
 > You can customize which MetaChecks and MetaTags to use as column headers using the options `--output-meta-tags-columns` and `--output-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns don't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enabled `--meta-checks --meta-tags`)
 
-For example, you can generate two csv outputs, one for full and one for inventory, with MetaTags and MetaChecks enabled, adding columns `is_encrypted` from MetaChecks and `Name` and `Owner` from MetaTags:
+For example, you can generate a csv output, with MetaTags and MetaChecks enabled, adding columns `is_encrypted` from MetaChecks and `Name` and `Owner` from MetaTags:
 
-`./metahub --outputs full inventory --meta-tags --output-meta-tags-columns Name Owner --meta-checks --output-meta-checks-columns is_encrypted --output-modes csv`
+`./metahub --meta-tags --output-meta-tags-columns Name Owner --meta-checks --output-meta-checks-columns is_encrypted --output-modes csv`
 
 <p align="center">
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>
@@ -997,7 +1002,7 @@ On top of the AWS Security Hub findings, **MetaHub** can run additional checks d
 
 **MetaChecks** has the capability to retrieve information from every related resource associated with the affected resource. For instance, when checking an EC2 Instance, MetaChecks can gather information from its associated Security Groups, including details about which ports are open and from where. Additionally, MetaChecks can fetch information from the IAM roles that are linked to the EC2 Instance, including the permissions granted to those roles. 
 
-Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, for example the offending policies or the offending security groups. If a resource is public, it can give you the public entrypoint (ip, dns, endpoint) and the ports open to the public.
+Each MetaChecks not only answer the MetaCheck question but also provide you with extra information, for example the offending policies or the offending security groups rules. If a resource is public, it can give you the public entrypoint (ip, dns, endpoint) and the ports open to the public.
 
 You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
 
