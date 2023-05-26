@@ -82,10 +82,10 @@ def get_account_alias(logger, aws_account_number=None, role_name=None):
         sh_role_assumend = assume_role(logger, aws_account_number, role_name)
         sess = get_boto3_session(sh_role_assumend)
         iam_client = sess.client(service_name="iam")
-    elif not role_name and aws_account_number:
-        return ""
-    else:
+    elif aws_account_number and aws_account_number == get_account_id(logger):
         iam_client = boto3.client("iam")
+    else:
+        return ""
 
     try:
         aliases = iam_client.list_account_aliases()["AccountAliases"]
@@ -110,10 +110,10 @@ def get_account_alternate_contact(
         sh_role_assumend = assume_role(logger, aws_account_number, role_name)
         sess = get_boto3_session(sh_role_assumend)
         account_client = sess.client(service_name="account")
-    elif not role_name and aws_account_number:
-        return ""
-    else:
+    elif aws_account_number and aws_account_number == get_account_id(logger):
         account_client = boto3.client("account")
+    else:
+        return ""
 
     try:
         alternate_contact = account_client.get_alternate_contact(
