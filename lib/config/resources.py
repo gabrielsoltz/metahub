@@ -29,7 +29,7 @@ MetaHubResourcesConfig = {
     },
     "AwsS3Bucket": {
         "metatrails_events": ["CreateBucket"],
-        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+        "ResourceName": {"parsing_char": ":", "parsing_pos": -1},
     },
     "AwsElastiCacheCacheCluster": {
         "metatrails_events": ["CreateCacheCluster"],

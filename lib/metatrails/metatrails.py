@@ -15,6 +15,12 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
     resource_type = finding["Resources"][0]["Type"]
     current_account_id = get_account_id(logger)
 
+    logger.info(
+        "Running MetaTrails for ResourceType: %s (%s)",
+        resource_type,
+        finding["Resources"][0]["Id"],
+    )
+
     # If the resources lives in another account, you need to provide a role for running MetaTrails
     if resource_account_id != current_account_id and not mh_role:
         resource_arn = finding["Resources"][0]["Id"]
@@ -42,9 +48,9 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
         paginator = client.get_paginator("lookup_events")
 
         try:
-            ResourceName = finding["Resources"][0]["Id"].split(
-                MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_char"]
-            )[MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_pos"]]
+            parsing_char = MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_char"]
+            parsing_pos = MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_pos"]
+            ResourceName = finding["Resources"][0]["Id"].split(parsing_char)[parsing_pos]
             event_names = MetaHubResourcesConfig[resource_type]["metatrails_events"]
         except KeyError:
             # No Config Defined
