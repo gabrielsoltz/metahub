@@ -435,12 +435,14 @@ def validate_arguments(args, logger):
                 "file-asff input specified but not --input-asff, specify the input file with --input-asff"
             )
             exit(1)
-        try:
-            with open(args.input_asff) as f:
-                asff_findings = json.load(f)
-        except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
-            logger.error("--input-asff file %s %s!", args.input_asff, str(err))
-            exit(1)
+        asff_findings = []
+        for file in args.input_asff:
+            try:
+                with open(file) as f:
+                    asff_findings.extend(json.load(f))
+            except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
+                logger.error("--input-asff file %s %s!", args.input_asff, str(err))
+                exit(1)
     else:
         asff_findings = False
 
@@ -672,6 +674,7 @@ def main(args):
     print_table("Output: ", str(args.outputs), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
+    print_table("Input File: ", str(args.input_asff), banners=banners)
     print_table("Log Level: ", str(args.log_level), banners=banners)
 
     # Generate Findings

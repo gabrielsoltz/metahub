@@ -118,7 +118,8 @@ def get_parser():
     group_security_hub.add_argument(
         "--input-asff",
         default=None,
-        help="Specify ASFF file path for use with --input file-asff",
+        nargs="+",
+        help="Specify ASFF file path for use with --input-asff file-asff-1, file-asff-2",
         required=False,
     )
 
