@@ -63,20 +63,12 @@ class SecurityHub:
 
     def parse_finding(self, finding):
         """Returns resurce ARN and finding parsed for it"""
-        try:
-            compliance = finding["Compliance"]
-        except KeyError:
-            compliance = None
-        try:
-            workflow = finding["Workflow"]
-        except KeyError:
-            workflow = None
         findings = {
             finding["Title"]: {
                 "SeverityLabel": finding["Severity"]["Label"],
-                "Workflow": workflow,
+                "Workflow": finding.get("Workflow"),
                 "RecordState": finding["RecordState"],
-                "Compliance": compliance,
+                "Compliance": finding.get("Compliance"),
                 "Id": finding["Id"],
                 "ProductArn": finding["ProductArn"],
                 "StandardsControlArn": finding.get("ProductFields").get(

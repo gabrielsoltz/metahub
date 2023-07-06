@@ -2,4 +2,4 @@ boto3
 pyyaml
 alive_progress
 jinja2
-aws-arn==0.0.6
+aws-arn==0.0.10
