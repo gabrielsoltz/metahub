@@ -16,4 +16,5 @@ from lib.metachecks.checks import (
     AwsS3Bucket,
     AwsSnsTopic,
     AwsSqsQueue,
+    AwsEc2Volume
 )

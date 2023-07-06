@@ -31,11 +31,11 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.instance = self.describe_instance()
-            self.instance_volumes = self.describe_volumes()
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
             self.autoscaling_group = self._describe_autoscaling_group()
+            self.volumes = self.describe_volumes()
 
     # Describe Functions
 
@@ -59,17 +59,6 @@ class Metacheck(MetaChecksBase):
                 return False
         if response["Reservations"]:
             return response["Reservations"][0]["Instances"][0]
-        return False
-
-    def describe_volumes(self):
-        BlockDeviceMappings = []
-        if self.instance:
-            if self.instance["BlockDeviceMappings"]:
-                for ebs in self.instance["BlockDeviceMappings"]:
-                    BlockDeviceMappings.append(ebs["Ebs"]["VolumeId"])
-        if BlockDeviceMappings:
-            response = self.client.describe_volumes(VolumeIds=BlockDeviceMappings)
-            return response["Volumes"]
         return False
 
     # Drilled MetaChecks
@@ -121,11 +110,26 @@ class Metacheck(MetaChecksBase):
                         self.account,
                         self.partition,
                     )
-                    # Temp  - bug in aws_arn:
-                    arn = arn.replace(":autoScalingGroup:", ":autoScalingGroup/")
                     autoscaling_group[arn] = {}
 
         return autoscaling_group
+
+    def describe_volumes(self):
+        volumes = {}
+        if self.instance:
+            if self.instance["BlockDeviceMappings"]:
+                for ebs in self.instance["BlockDeviceMappings"]:
+                    arn = generate_arn(
+                        ebs["Ebs"]["VolumeId"],
+                        "ec2",
+                        "volume",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    volumes[arn] = {}
+                    
+        return volumes
 
     # MetaChecks
 
@@ -226,22 +230,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_ebs(self):
-        EBS = []
-        if self.instance_volumes:
-            for ebs in self.instance_volumes:
-                EBS.append(ebs["VolumeId"])
-        if EBS:
-            return EBS
-        return False
-
-    def its_associated_with_ebs_unencrypted(self):
-        EBS = []
-        if self.instance_volumes:
-            for ebs in self.instance_volumes:
-                if not ebs["Encrypted"]:
-                    EBS.append(ebs["VolumeId"])
-        if EBS:
-            return EBS
+        if self.volumes:
+            return self.volumes
         return False
 
     def its_associated_with_autoscaling_group(self):
@@ -273,8 +263,9 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_encrypted(self):
-        if not self.its_associated_with_ebs_unencrypted():
-            return True
+        for volume in self.volumes:
+            if self.volumes[volume].get("is_encrypted"):
+                return True
         return False
 
     def checks(self):
@@ -289,7 +280,6 @@ class Metacheck(MetaChecksBase):
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
             "its_associated_with_ebs",
-            "its_associated_with_ebs_unencrypted",
             "its_associated_with_autoscaling_group",
             "is_public",
             "is_encrypted",

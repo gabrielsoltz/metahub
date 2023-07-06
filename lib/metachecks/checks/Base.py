@@ -160,6 +160,24 @@ class MetaChecksBase:
                     autoscaling_group
                 ] = autoscaling_group_drilled.output_checks_drilled()
 
+        # Security Groups
+        if hasattr(self, "volumes") and self.volumes:
+            from lib.metachecks.checks.AwsEc2Volume import (
+                Metacheck as VolumeMetacheck,
+            )
+
+            for volume in self.volumes:
+                self.logger.info(
+                    "Running Drilled MetaChecks for resource {} for Volume: {}".format(
+                        self.resource_arn, volume
+                    )
+                )
+                volume_drilled = VolumeMetacheck(
+                    self.logger, self.finding, True, False, self.sess, drilled=volume
+                )
+                self.volumes[volume] = volume_drilled.output_checks_drilled()
+
+
     def output_checks_drilled(self):
         mh_values_checks = {}
         for check in self.checks():
