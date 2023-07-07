@@ -1,8 +1,8 @@
 import argparse
 import logging
 import sys
-import jinja2
 
+import jinja2
 from rich.panel import Panel
 
 from lib.AwsHelpers import get_available_regions
@@ -194,8 +194,22 @@ def get_parser():
     )
     group_output.add_argument(
         "--output-modes",
-        choices=["json-short", "json-full", "json-statistics", "json-inventory", "html", "csv"],
-        default=["json-short", "json-full", "json-statistics", "json-inventory", "html", "csv"],
+        choices=[
+            "json-short",
+            "json-full",
+            "json-statistics",
+            "json-inventory",
+            "html",
+            "csv",
+        ],
+        default=[
+            "json-short",
+            "json-full",
+            "json-statistics",
+            "json-inventory",
+            "html",
+            "csv",
+        ],
         nargs="*",
         help="Specify the output mode, by default json. Combine one or more using spaces",
         required=False,
@@ -315,10 +329,12 @@ def print_table(key, value, keycolor=color["DARKCYAN"], banners=True):
         tabs = "\t"
     print(keycolor + key + color["END"], tabs, value)
 
+
 def print_color(value, keycolor=color["DARKCYAN"], banners=True):
     if not banners:
         return
     print(keycolor + value + color["END"])
+
 
 def print_title_line(text, ch="-", length=78, banners=True):
     if not banners:
@@ -353,11 +369,13 @@ def test_python_version():
         )
         sys.exit(1)
 
+
 def rich_box(resource_type, values):
     title = resource_type
     value = values
     # return f"[b]{title}[/b]\n[yellow]{value}"
     return f"[b]{title.center(20)}[/b]\n[bold][yellow]{str(value).center(20)}"
+
 
 def rich_box_severity(severity, values):
     color = {
@@ -369,6 +387,7 @@ def rich_box_severity(severity, values):
     title = "[" + color[severity] + "] " + severity + "[/]"
     value = values
     return f"[b]{title.center(5)}[/b]\n[bold]{str(value).center(5)}"
+
 
 def generate_output_csv(output, metatags_columns, metachecks_columns):
     new_list = []
@@ -389,7 +408,10 @@ def generate_output_csv(output, metatags_columns, metachecks_columns):
     columns = new_list[0].keys()
     return columns, new_list
 
-def generate_output_html(mh_findings, mh_statistics, metatags_columns, metachecks_columns):
+
+def generate_output_html(
+    mh_findings, mh_statistics, metatags_columns, metachecks_columns
+):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader)
     TEMPLATE_FILE = "lib/html/template.html"
@@ -403,13 +425,44 @@ def generate_output_html(mh_findings, mh_statistics, metatags_columns, metacheck
     )
     return html
 
+
 def generate_rich(mh_statistics):
     severity_renderables = []
     for severity in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
-        severity_renderables.append(Panel(rich_box_severity(severity, mh_statistics["SeverityLabel"].get(severity, 0)), expand=False, padding=(1, 10)))
-    resource_type_renderables = [Panel(rich_box(resource_type, values), expand=True) for resource_type, values in mh_statistics["ResourceType"].items()]
-    workflows_renderables = [Panel(rich_box(workflow, values), expand=True) for workflow, values in mh_statistics["Workflow"].items()]
-    region_renderables = [Panel(rich_box(Region, values), expand=True) for Region, values in mh_statistics["Region"].items()]
-    accountid_renderables = [Panel(rich_box(AwsAccountId, values), expand=True) for AwsAccountId, values in mh_statistics["AwsAccountId"].items()]
-    recordstate_renderables = [Panel(rich_box(RecordState, values), expand=True) for RecordState, values in mh_statistics["RecordState"].items()]
-    return severity_renderables, resource_type_renderables, workflows_renderables, region_renderables, accountid_renderables, recordstate_renderables
+        severity_renderables.append(
+            Panel(
+                rich_box_severity(
+                    severity, mh_statistics["SeverityLabel"].get(severity, 0)
+                ),
+                expand=False,
+                padding=(1, 10),
+            )
+        )
+    resource_type_renderables = [
+        Panel(rich_box(resource_type, values), expand=True)
+        for resource_type, values in mh_statistics["ResourceType"].items()
+    ]
+    workflows_renderables = [
+        Panel(rich_box(workflow, values), expand=True)
+        for workflow, values in mh_statistics["Workflow"].items()
+    ]
+    region_renderables = [
+        Panel(rich_box(Region, values), expand=True)
+        for Region, values in mh_statistics["Region"].items()
+    ]
+    accountid_renderables = [
+        Panel(rich_box(AwsAccountId, values), expand=True)
+        for AwsAccountId, values in mh_statistics["AwsAccountId"].items()
+    ]
+    recordstate_renderables = [
+        Panel(rich_box(RecordState, values), expand=True)
+        for RecordState, values in mh_statistics["RecordState"].items()
+    ]
+    return (
+        severity_renderables,
+        resource_type_renderables,
+        workflows_renderables,
+        region_renderables,
+        accountid_renderables,
+        recordstate_renderables,
+    )

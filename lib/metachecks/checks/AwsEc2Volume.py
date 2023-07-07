@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 
+
 class Metacheck(MetaChecksBase):
     def __init__(
         self,
@@ -31,9 +32,7 @@ class Metacheck(MetaChecksBase):
                 finding["Resources"][0]["Id"] if not drilled else drilled
             )
             self.mh_filters_checks = mh_filters_checks
-            self.client = get_boto3_client(
-                self.logger, "ec2", self.region, self.sess
-            )
+            self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.volume = self.describe_volume()
             # Drilled MetaChecks
@@ -43,7 +42,7 @@ class Metacheck(MetaChecksBase):
     def describe_volume(self):
         response = self.client.describe_volumes(VolumeIds=[self.resource_id])
         return response["Volumes"]
-    
+
     # MetaChecks
 
     def is_encrypted(self):

@@ -1,12 +1,12 @@
-import json
 import csv
+import json
 from sys import argv, exit
 from time import strftime
-from rich.console import Console
-from rich.columns import Columns
-from rich.text import Text
 
 from alive_progress import alive_bar
+from rich.columns import Columns
+from rich.console import Console
+from rich.text import Text
 
 from lib.AwsHelpers import (
     get_account_alias,
@@ -17,16 +17,16 @@ from lib.AwsHelpers import (
 )
 from lib.helpers import (
     confirm_choice,
+    generate_output_csv,
+    generate_output_html,
+    generate_rich,
     get_logger,
     get_parser,
     print_banner,
+    print_color,
     print_table,
     print_title_line,
     test_python_version,
-    print_color,
-    generate_output_csv,
-    generate_output_html,
-    generate_rich
 )
 from lib.securityhub import SecurityHub
 
@@ -456,10 +456,7 @@ def validate_arguments(args, logger):
 
     # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
-        default_sh_filters = {
-            "RecordState": ["ACTIVE"],
-            "WorkflowStatus": ["NEW"]
-        }
+        default_sh_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
         sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
         from pathlib import Path
@@ -553,7 +550,9 @@ def validate_arguments(args, logger):
     )
 
 
-def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners):
+def generate_outputs(
+    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
+):
 
     # Columns for CSV and HTML
     metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
@@ -583,19 +582,24 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
             if ouput_mode == "html":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
                 with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    html = generate_output_html(mh_findings, mh_statistics, metachecks_columns, metatags_columns)
+                    html = generate_output_html(
+                        mh_findings, mh_statistics, metachecks_columns, metatags_columns
+                    )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)
-            
+
             # Output CSV files
             if ouput_mode == "csv":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
                 with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
-                    columns, csv_list = generate_output_csv(mh_findings_short, metatags_columns, metachecks_columns)
+                    columns, csv_list = generate_output_csv(
+                        mh_findings_short, metatags_columns, metachecks_columns
+                    )
                     dict_writer = csv.DictWriter(output_file, columns)
                     dict_writer.writeheader()
                     dict_writer.writerows(csv_list)
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
+
 
 def main(args):
     parser = get_parser()
@@ -688,9 +692,15 @@ def main(args):
                 )
             )
 
-
     print_title_line("Outputs", banners=banners)
-    generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners=banners)
+    generate_outputs(
+        args,
+        mh_findings_short,
+        mh_inventory,
+        mh_statistics,
+        mh_findings,
+        banners=banners,
+    )
 
     print_title_line("Results", banners=banners)
     print_table("Total Resources: ", str(len(mh_findings)), banners=banners)
@@ -698,12 +708,19 @@ def main(args):
         "Total Findings: ", str(count_mh_findings(mh_findings)), banners=banners
     )
 
-    if banners:    
-        severity_renderables, resource_type_renderables, workflows_renderables, region_renderables, accountid_renderables, recordstate_renderables = generate_rich(mh_statistics)
+    if banners:
+        (
+            severity_renderables,
+            resource_type_renderables,
+            workflows_renderables,
+            region_renderables,
+            accountid_renderables,
+            recordstate_renderables,
+        ) = generate_rich(mh_statistics)
         console = Console()
         print_color("Severities:")
         # console.print(Align.center(Group(Columns(severity_renderables))))
-        console.print(Columns(severity_renderables), end='')
+        console.print(Columns(severity_renderables), end="")
         print_color("Resource Type:")
         console.print(Columns(resource_type_renderables))
         print_color("Workflow:")

@@ -111,6 +111,4 @@ def list_metachecks(logger):
         if execute is not False:
             print_table(name + ": ", " ".join(execute))
         else:
-            logger.error(
-                "Error running MetaChecks checks() for ResourceType: %s", name
-            )
+            logger.error("Error running MetaChecks checks() for ResourceType: %s", name)
