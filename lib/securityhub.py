@@ -42,7 +42,7 @@ class SecurityHub:
                 findings.extend(response["Findings"])
             except (ClientError, BotoCoreError) as err:
                 self.logger.error(
-                    "An error occurred when attempting to gather SecurityHub data - %s",
+                    "An error occurred when attempting to gather SecurityHub data: %s. Try using --sh-account, --sh-assume-role and --sh-region to specify the SecurityHub account and region.",
                     err,
                 )
                 # No point proceeding without the data

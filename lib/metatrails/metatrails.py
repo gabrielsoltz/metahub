@@ -1,6 +1,11 @@
 from botocore.exceptions import ClientError, ParamValidationError
 
-from lib.AwsHelpers import assume_role, get_account_id, get_boto3_session, get_boto3_client
+from lib.AwsHelpers import (
+    assume_role,
+    get_account_id,
+    get_boto3_client,
+    get_boto3_session,
+)
 from lib.config.resources import MetaHubResourcesConfig
 
 
@@ -24,8 +29,8 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
     # If the resources lives in another account, you need to provide a role for running MetaTrails
     if resource_account_id != current_account_id and not mh_role:
         resource_arn = finding["Resources"][0]["Id"]
-        logger.error(
-            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaTrails...",
+        logger.warning(
+            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account %s and not --mh-assume-role was provided. Ignoring MetaTrails...",
             resource_arn,
             resource_account_id,
             current_account_id,
@@ -48,9 +53,15 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
         paginator = client.get_paginator("lookup_events")
 
         try:
-            parsing_char = MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_char"]
-            parsing_pos = MetaHubResourcesConfig[resource_type]["ResourceName"]["parsing_pos"]
-            ResourceName = finding["Resources"][0]["Id"].split(parsing_char)[parsing_pos]
+            parsing_char = MetaHubResourcesConfig[resource_type]["ResourceName"][
+                "parsing_char"
+            ]
+            parsing_pos = MetaHubResourcesConfig[resource_type]["ResourceName"][
+                "parsing_pos"
+            ]
+            ResourceName = finding["Resources"][0]["Id"].split(parsing_char)[
+                parsing_pos
+            ]
             event_names = MetaHubResourcesConfig[resource_type]["metatrails_events"]
         except KeyError:
             # No Config Defined

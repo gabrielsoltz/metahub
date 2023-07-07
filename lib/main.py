@@ -1,8 +1,12 @@
+import csv
 import json
 from sys import argv, exit
 from time import strftime
 
 from alive_progress import alive_bar
+from rich.columns import Columns
+from rich.console import Console
+from rich.text import Text
 
 from lib.AwsHelpers import (
     get_account_alias,
@@ -13,9 +17,13 @@ from lib.AwsHelpers import (
 )
 from lib.helpers import (
     confirm_choice,
+    generate_output_csv,
+    generate_output_html,
+    generate_rich,
     get_logger,
     get_parser,
     print_banner,
+    print_color,
     print_table,
     print_title_line,
     test_python_version,
@@ -176,146 +184,150 @@ def generate_findings(
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
 
-    with alive_bar(total=len(findings)) as bar:
-        for finding in findings:
-            bar.title = "-> Analyzing findings..."
+    try:
+        with alive_bar(total=len(findings)) as bar:
+            for finding in findings:
+                bar.title = "-> Analyzing findings..."
 
-            mh_matched = False
-            resource_arn, finding_parsed = sh.parse_finding(finding)
+                mh_matched = False
+                resource_arn, finding_parsed = sh.parse_finding(finding)
 
-            # Fix Region when not in root
-            try:
-                region = finding["Region"]
-            except KeyError:
-                region = finding["Resources"][0]["Region"]
-                finding["Region"] = region
+                # Fix Region when not in root
+                try:
+                    region = finding["Region"]
+                except KeyError:
+                    region = finding["Resources"][0]["Region"]
+                    finding["Region"] = region
 
-            # MetaChecks and MetaTags:
-            if metachecks or metatags or metatrails:
-                from lib.metachecks.metachecks import run_metachecks
-                from lib.metatags.metatags import run_metatags
-                from lib.metatrails.metatrails import run_metatrails
+                # MetaChecks and MetaTags:
+                if metachecks or metatags or metatrails:
+                    from lib.metachecks.metachecks import run_metachecks
+                    from lib.metatags.metatags import run_metatags
+                    from lib.metatrails.metatrails import run_metatrails
 
-                # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
-                if resource_arn in mh_findings:
-                    mh_matched = True
-                elif resource_arn in mh_findings_not_matched_findings:
-                    mh_matched = False
-                else:
-                    if metachecks:
-                        # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_values, mh_checks_matched = run_metachecks(
-                                logger,
-                                finding,
-                                mh_filters_checks,
-                                mh_role,
-                                drill_down,
-                            )
-                    else:
-                        mh_checks_matched = True
-                    if metatags:
-                        # We run metatags only once:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_tags, mh_tags_matched = run_metatags(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-                    else:
-                        mh_tags_matched = True
-                    # If both checks are True we show the resource
-                    if mh_tags_matched and mh_checks_matched:
+                    # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
+                    if resource_arn in mh_findings:
                         mh_matched = True
+                    elif resource_arn in mh_findings_not_matched_findings:
+                        mh_matched = False
+                    else:
+                        if metachecks:
+                            # If the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
+                            # We run metachecks only once for each resource.
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_values, mh_checks_matched = run_metachecks(
+                                    logger,
+                                    finding,
+                                    mh_filters_checks,
+                                    mh_role,
+                                    drill_down,
+                                )
+                        else:
+                            mh_checks_matched = True
+                        if metatags:
+                            # We run metatags only once for each resource:
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_tags, mh_tags_matched = run_metatags(
+                                    logger, finding, mh_filters_tags, mh_role
+                                )
+                        else:
+                            mh_tags_matched = True
+                        # If both checks are True we show the resource
+                        if mh_tags_matched and mh_checks_matched:
+                            mh_matched = True
 
-                    # MetaTrails runs without filters, for now?
-                    if metatrails:
-                        # We run metatrails only once:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_trails = run_metatrails(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-            else:
-                # If no metachecks and no metatags, we enforce to True the match so we show the resource:
-                mh_matched = True
+                        # MetaTrails runs without filters, for now?
+                        if metatrails:
+                            # We run metatrails only once for each resource:
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_trails = run_metatrails(
+                                    logger, finding, mh_filters_tags, mh_role
+                                )
+                else:
+                    # If no metachecks and no metatags, we enforce to True the match so we show the resource:
+                    mh_matched = True
 
-            # We keep a dict with no matched resources so we don't run MetaChecks again
-            if not mh_matched:
-                # We add the resource in our output only once:
-                if resource_arn not in mh_findings_not_matched_findings:
-                    mh_findings_not_matched_findings[resource_arn] = {}
+                # We keep a dict with no matched resources so we don't run MetaChecks again
+                if not mh_matched:
+                    # We add the resource in our output only once:
+                    if resource_arn not in mh_findings_not_matched_findings:
+                        mh_findings_not_matched_findings[resource_arn] = {}
 
-            # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
-            if mh_matched:
+                # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
+                if mh_matched:
 
-                # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
-                if finding["AwsAccountId"] not in AwsAccountData:
-                    AwsAccountAlias = get_account_alias(
-                        logger, finding["AwsAccountId"], mh_role
+                    # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
+                    if finding["AwsAccountId"] not in AwsAccountData:
+                        AwsAccountAlias = get_account_alias(
+                            logger, finding["AwsAccountId"], mh_role
+                        )
+                        AwsAccountAlternateContact = get_account_alternate_contact(
+                            logger, finding["AwsAccountId"], mh_role
+                        )
+                        AwsAccountData[finding["AwsAccountId"]] = {
+                            "Alias": AwsAccountAlias,
+                            "AlternateContact": AwsAccountAlternateContact,
+                        }
+                    finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+
+                    # Resource (we add the resource only once, we check if it's already in the list)
+                    if resource_arn not in mh_findings:
+                        # Inventory
+                        mh_inventory.append(resource_arn)
+                        # Findings
+                        mh_findings[resource_arn] = {"findings": []}
+                        mh_findings_short[resource_arn] = {"findings": []}
+                        # ResourceType
+                        mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
+                            resource_arn
+                        ]["ResourceType"] = finding["Resources"][0]["Type"]
+                        # Region
+                        mh_findings[resource_arn]["Region"] = mh_findings_short[
+                            resource_arn
+                        ]["Region"] = finding["Region"]
+                        # AwsAccountId
+                        mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
+                            resource_arn
+                        ]["AwsAccountId"] = finding["AwsAccountId"]
+                        # MetaAccount
+                        mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
+                            resource_arn
+                        ]["metaaccount"] = finding["AwsAccountData"]
+                        # MetaChecks
+                        if metachecks:
+                            mh_findings[resource_arn]["metachecks"] = mh_findings_short[
+                                resource_arn
+                            ]["metachecks"] = mh_values
+                        # MetaTags
+                        if metatags:
+                            mh_findings[resource_arn]["metatags"] = mh_findings_short[
+                                resource_arn
+                            ]["metatags"] = mh_tags
+                        # MetaTrails
+                        if metatrails:
+                            mh_findings[resource_arn]["metatrails"] = mh_findings_short[
+                                resource_arn
+                            ]["metatrails"] = mh_trails
+
+                    # Add Findings
+                    mh_findings_short[resource_arn]["findings"].append(
+                        list(finding_parsed.keys())[0]
                     )
-                    AwsAccountAlternateContact = get_account_alternate_contact(
-                        logger, finding["AwsAccountId"], mh_role
-                    )
-                    AwsAccountData[finding["AwsAccountId"]] = {
-                        "Alias": AwsAccountAlias,
-                        "AlternateContact": AwsAccountAlternateContact,
-                    }
-                finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+                    mh_findings[resource_arn]["findings"].append(finding_parsed)
 
-                # Resource (we add the resource only once, we check if it's already in the list)
-                if resource_arn not in mh_findings:
-                    # Inventory
-                    mh_inventory.append(resource_arn)
-                    # Findings
-                    mh_findings[resource_arn] = {"findings": []}
-                    mh_findings_short[resource_arn] = {"findings": []}
-                    # ResourceType
-                    mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
-                        resource_arn
-                    ]["ResourceType"] = finding["Resources"][0]["Type"]
-                    # Region
-                    mh_findings[resource_arn]["Region"] = mh_findings_short[
-                        resource_arn
-                    ]["Region"] = finding["Region"]
-                    # AwsAccountId
-                    mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
-                        resource_arn
-                    ]["AwsAccountId"] = finding["AwsAccountId"]
-                    # MetaAccount
-                    mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
-                        resource_arn
-                    ]["metaaccount"] = finding["AwsAccountData"]
-                    # MetaChecks
-                    if metachecks:
-                        mh_findings[resource_arn]["metachecks"] = mh_findings_short[
-                            resource_arn
-                        ]["metachecks"] = mh_values
-                    # MetaTags
-                    if metatags:
-                        mh_findings[resource_arn]["metatags"] = mh_findings_short[
-                            resource_arn
-                        ]["metatags"] = mh_tags
-                    # MetaTrails
-                    if metatrails:
-                        mh_findings[resource_arn]["metatrails"] = mh_findings_short[
-                            resource_arn
-                        ]["metatrails"] = mh_trails
-
-                # Add Findings
-                mh_findings_short[resource_arn]["findings"].append(
-                    list(finding_parsed.keys())[0]
-                )
-                mh_findings[resource_arn]["findings"].append(finding_parsed)
-
-            bar()
-        bar.title = "-> Completed"
+                bar()
+            bar.title = "-> Completed"
+    except KeyboardInterrupt:
+        print("Keyboard interrupt detected. Exiting...")
 
     mh_statistics = generate_statistics(mh_findings)
 
@@ -448,11 +460,7 @@ def validate_arguments(args, logger):
 
     # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
-        default_sh_filters = {
-            "RecordState": ["ACTIVE"],
-            "WorkflowStatus": ["NEW"],
-            "ProductName": ["Security Hub"],
-        }
+        default_sh_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
         sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
         from pathlib import Path
@@ -546,18 +554,21 @@ def validate_arguments(args, logger):
     )
 
 
-def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings):
+def generate_outputs(
+    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
+):
 
     # Columns for CSV and HTML
     metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
     metatags_columns = args.output_meta_tags_columns or mh_statistics["metatags"]
 
-    # Output JSON files
-    if "json" in args.output_modes:
-        if mh_findings:
-            for out in args.outputs:
-                print_title_line("Output JSON: " + out)
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{out}-{TIMESTRF}.json"
+    if mh_findings:
+        for ouput_mode in args.output_modes:
+
+            # Output JSON files
+            if ouput_mode.startswith("json"):
+                json_mode = ouput_mode.split("-")[1]
+                WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
                 with open(WRITE_FILE, "w", encoding="utf-8") as f:
                     json.dump(
                         {
@@ -565,66 +576,33 @@ def generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_fi
                             "inventory": mh_inventory,
                             "statistics": mh_statistics,
                             "full": mh_findings,
-                        }[out],
+                        }[json_mode],
                         f,
                         indent=2,
                     )
-                print_table("File: ", WRITE_FILE)
+                print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=banners)
 
-    # Output HTML files
-    if "html" in args.output_modes:
-        print_title_line("Output HTML")
-        import jinja2
+            # Output HTML files
+            if ouput_mode == "html":
+                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
+                with open(WRITE_FILE, "w", encoding="utf-8") as f:
+                    html = generate_output_html(
+                        mh_findings, mh_statistics, metachecks_columns, metatags_columns
+                    )
+                    f.write(html)
+                print_table("HTML:  ", WRITE_FILE, banners=banners)
 
-        if mh_findings:
-            WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
-            templateLoader = jinja2.FileSystemLoader(searchpath="./")
-            templateEnv = jinja2.Environment(loader=templateLoader)
-            TEMPLATE_FILE = "lib/html/template.html"
-            template = templateEnv.get_template(TEMPLATE_FILE)
-            with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                html = template.render(
-                    data=mh_findings,
-                    statistics=mh_statistics,
-                    title="MetaHub",
-                    metachecks_columns=metachecks_columns,
-                    metatags_columns=metatags_columns,
-                )
-                f.write(html)
-            print_table("File: ", WRITE_FILE)
-
-    # Output CSV files
-    if "csv" in args.output_modes:
-        print_title_line("Output CSV")
-        import csv
-
-        def output_csv(output):
-            new_list = []
-            for key, dictionary in output.items():
-                new_dict = {"ARN": key}
-                for column in metatags_columns:
-                    try:
-                        dictionary[column] = dictionary["metatags"][column]
-                    except (KeyError, TypeError):
-                        dictionary[column] = ""
-                for column in metachecks_columns:
-                    try:
-                        dictionary[column] = dictionary["metachecks"][column]
-                    except (KeyError, TypeError):
-                        dictionary[column] = ""
-                new_dict.update(dictionary)
-                new_list.append(new_dict)
-            columns = new_list[0].keys()
-            return columns, new_list
-
-        if mh_findings:
-            WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
-            with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
-                columns, csv_list = output_csv(mh_findings_short)
-                dict_writer = csv.DictWriter(output_file, columns)
-                dict_writer.writeheader()
-                dict_writer.writerows(csv_list)
-            print_table("File: ", WRITE_FILE)
+            # Output CSV files
+            if ouput_mode == "csv":
+                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
+                with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
+                    columns, csv_list = generate_output_csv(
+                        mh_findings_short, metatags_columns, metachecks_columns
+                    )
+                    dict_writer = csv.DictWriter(output_file, columns)
+                    dict_writer.writeheader()
+                    dict_writer.writerows(csv_list)
+                print_table("CSV:   ", WRITE_FILE, banners=banners)
 
 
 def main(args):
@@ -671,7 +649,7 @@ def main(args):
     print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
-    print_table("Output: ", str(args.outputs), banners=banners)
+    print_table("List Findings: ", str(args.list_findings), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
     print_table("Input File: ", str(args.input_asff), banners=banners)
@@ -697,41 +675,66 @@ def main(args):
         drill_down=args.drill_down,
     )
 
-    if args.list_findings:
-        if mh_findings:
-            for out in args.outputs:
-                print_title_line("List Findings: " + out, banners=banners)
-                print(
-                    json.dumps(
-                        {
-                            "short": mh_findings_short,
-                            "inventory": mh_inventory,
-                            "statistics": mh_statistics,
-                            "full": mh_findings,
-                        }[out],
-                        indent=2,
-                    )
-                )
-
     if "lambda" in args.output_modes:
+        # This needs to be improved
         if mh_findings:
-            for out in args.outputs:
-                if out == "short":
-                    return mh_findings_short
-                if out == "inventory":
-                    return mh_inventory
-                if out == "statistics":
-                    return mh_inventory
-                if out == "full":
-                    return mh_findings
+            return mh_findings_short
+        return False
 
-    generate_outputs(args, mh_findings_short, mh_inventory, mh_statistics, mh_findings)
+    if mh_findings:
+        for out in args.list_findings:
+            print_title_line("List Findings: " + out, banners=banners)
+            print(
+                json.dumps(
+                    {
+                        "short": mh_findings_short,
+                        "inventory": mh_inventory,
+                        "statistics": mh_statistics,
+                        "full": mh_findings,
+                    }[out],
+                    indent=2,
+                )
+            )
+
+    print_title_line("Outputs", banners=banners)
+    generate_outputs(
+        args,
+        mh_findings_short,
+        mh_inventory,
+        mh_statistics,
+        mh_findings,
+        banners=banners,
+    )
 
     print_title_line("Results", banners=banners)
     print_table("Total Resources: ", str(len(mh_findings)), banners=banners)
     print_table(
         "Total Findings: ", str(count_mh_findings(mh_findings)), banners=banners
     )
+
+    if banners:
+        (
+            severity_renderables,
+            resource_type_renderables,
+            workflows_renderables,
+            region_renderables,
+            accountid_renderables,
+            recordstate_renderables,
+        ) = generate_rich(mh_statistics)
+        console = Console()
+        print_color("Severities:")
+        # console.print(Align.center(Group(Columns(severity_renderables))))
+        console.print(Columns(severity_renderables), end="")
+        print_color("Resource Type:")
+        console.print(Columns(resource_type_renderables))
+        print_color("Workflow:")
+        console.print(Columns(workflows_renderables))
+        print_color("Record State:")
+        console.print(Columns(recordstate_renderables))
+        print_color("Region:")
+        console.print(Columns(region_renderables))
+        print_color("Account ID:")
+        console.print(Columns(accountid_renderables))
 
     if args.update_findings:
         UPProcessedFindings = []

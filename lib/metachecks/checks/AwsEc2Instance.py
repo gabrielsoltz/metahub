@@ -128,7 +128,7 @@ class Metacheck(MetaChecksBase):
                         self.partition,
                     )
                     volumes[arn] = {}
-                    
+
         return volumes
 
     # MetaChecks
