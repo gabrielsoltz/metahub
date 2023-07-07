@@ -485,10 +485,10 @@ Or you can export your credentials to the environment.
 ./metahub --sh-filters RecordState=ACTIVE Title="EC2.19 Security groups should not allow unrestricted access to ports with high risk" --meta-checks --mh-filters-checks is_public=True --update-findings Workflow=NOTIFIED Note="Ticket ID: 123"
 ```
 
-- Fetch findings with SH filters `Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" ResourceType=AwsS3Bucket ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `is_public=False` and update Workflow Status to `SUPPRESSED` with a Note `Suppressing reason: non-public S3 buckets`:
+- Fetch findings with SH filters `Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" ResourceType=AwsS3Bucket RecordState=ACTIVE WorkflowStatus=NEW` and list (terminal) with MetaChecks enabled and MetaChecks filters `is_public=False` and update Workflow Status to `SUPPRESSED` with a Note `Suppressing reason: non-public S3 buckets`:
 
 ```sh
-./metahub --list-findings short --meta-checks --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" --mh-filters-checks is_public=False --update-findings Note="Suppressing reason: non-public S3 buckets" Workflow=SUPPRESSED
+./metahub --list-findings short --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket Title="S3.8 S3 Block Public Access setting should be enabled at the bucket-level" --mh-filters-checks is_public=False --update-findings Note="Suppressing reason: non-public S3 buckets" Workflow=SUPPRESSED
 ```
 
 - Fetch and list findings (terminal) with default options with MetaTags enabled and enrich them back in AWS Security Hub:
@@ -1110,12 +1110,12 @@ You can check available filters in [AWS Documentation](https://boto3.amazonaws.c
 ```sh
 ./metahub --sh-filters <KEY=VALUE>
 ```
-If you don't specify any filters, defaults filters are applied: `ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW`
+If you don't specify any filters, defaults filters are applied: `RecordState=ACTIVE WorkflowStatus=NEW`
 
 Passing filters using this option resets the default filters. If you want to add filters to the defaults, you need to specify them in addition to the default ones. For example, adding SeverityLabel to the defaults filters:
 
 ```sh
-./metahub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW
 ```
 If a value contains spaces, you should specify it using double quotes: `ProductName="Security Hub"`
 
@@ -1125,27 +1125,27 @@ Examples:
 
 - Filter by Severity (CRITICAL):
 ```sh
-./metaHub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL
+./metaHub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL
 ```
 - Filter by Severity (CRITICAL and HIGH):
 ```sh
-./metaHub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL SeverityLabel=HIGH
+./metaHub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL SeverityLabel=HIGH
 ```
 - Filter by Severity and AWS Account:
 ```sh
-./metaHub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL AwsAccountId=1234567890
+./metaHub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW SeverityLabel=CRITICAL AwsAccountId=1234567890
 ```
 - Filter by Check Title:
 ```sh
-./metahub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW Title="EC2.22 Unused EC2 security groups should be removed"
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW Title="EC2.22 Unused EC2 security groups should be removed"
 ```
 - Filter by AWS Resource Type:
 ```sh
-./metahub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup
 ```
 - Filter by Resource Id:
 ```sh
-./metahub --sh-filters ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceId="arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890"
 ```
 - Filter by Finding Id:
 ```sh
