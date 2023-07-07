@@ -184,146 +184,150 @@ def generate_findings(
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
 
-    with alive_bar(total=len(findings)) as bar:
-        for finding in findings:
-            bar.title = "-> Analyzing findings..."
+    try:
+        with alive_bar(total=len(findings)) as bar:
+            for finding in findings:
+                bar.title = "-> Analyzing findings..."
 
-            mh_matched = False
-            resource_arn, finding_parsed = sh.parse_finding(finding)
+                mh_matched = False
+                resource_arn, finding_parsed = sh.parse_finding(finding)
 
-            # Fix Region when not in root
-            try:
-                region = finding["Region"]
-            except KeyError:
-                region = finding["Resources"][0]["Region"]
-                finding["Region"] = region
+                # Fix Region when not in root
+                try:
+                    region = finding["Region"]
+                except KeyError:
+                    region = finding["Resources"][0]["Region"]
+                    finding["Region"] = region
 
-            # MetaChecks and MetaTags:
-            if metachecks or metatags or metatrails:
-                from lib.metachecks.metachecks import run_metachecks
-                from lib.metatags.metatags import run_metatags
-                from lib.metatrails.metatrails import run_metatrails
+                # MetaChecks and MetaTags:
+                if metachecks or metatags or metatrails:
+                    from lib.metachecks.metachecks import run_metachecks
+                    from lib.metatags.metatags import run_metatags
+                    from lib.metatrails.metatrails import run_metatrails
 
-                # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
-                if resource_arn in mh_findings:
-                    mh_matched = True
-                elif resource_arn in mh_findings_not_matched_findings:
-                    mh_matched = False
-                else:
-                    if metachecks:
-                        # We run metachecks only once, if the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_values, mh_checks_matched = run_metachecks(
-                                logger,
-                                finding,
-                                mh_filters_checks,
-                                mh_role,
-                                drill_down,
-                            )
-                    else:
-                        mh_checks_matched = True
-                    if metatags:
-                        # We run metatags only once:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_tags, mh_tags_matched = run_metatags(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-                    else:
-                        mh_tags_matched = True
-                    # If both checks are True we show the resource
-                    if mh_tags_matched and mh_checks_matched:
+                    # If the resource was already matched, we don't run metachecks or metatags again but we show others findings
+                    if resource_arn in mh_findings:
                         mh_matched = True
+                    elif resource_arn in mh_findings_not_matched_findings:
+                        mh_matched = False
+                    else:
+                        if metachecks:
+                            # If the resource is in mh_findings or mh_findings_not_matched_findings, means it was already evaluated:
+                            # We run metachecks only once for each resource.
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_values, mh_checks_matched = run_metachecks(
+                                    logger,
+                                    finding,
+                                    mh_filters_checks,
+                                    mh_role,
+                                    drill_down,
+                                )
+                        else:
+                            mh_checks_matched = True
+                        if metatags:
+                            # We run metatags only once for each resource:
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_tags, mh_tags_matched = run_metatags(
+                                    logger, finding, mh_filters_tags, mh_role
+                                )
+                        else:
+                            mh_tags_matched = True
+                        # If both checks are True we show the resource
+                        if mh_tags_matched and mh_checks_matched:
+                            mh_matched = True
 
-                    # MetaTrails runs without filters, for now?
-                    if metatrails:
-                        # We run metatrails only once:
-                        if (
-                            resource_arn not in mh_findings
-                            and resource_arn not in mh_findings_not_matched_findings
-                        ):
-                            mh_trails = run_metatrails(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-            else:
-                # If no metachecks and no metatags, we enforce to True the match so we show the resource:
-                mh_matched = True
+                        # MetaTrails runs without filters, for now?
+                        if metatrails:
+                            # We run metatrails only once for each resource:
+                            if (
+                                resource_arn not in mh_findings
+                                and resource_arn not in mh_findings_not_matched_findings
+                            ):
+                                mh_trails = run_metatrails(
+                                    logger, finding, mh_filters_tags, mh_role
+                                )
+                else:
+                    # If no metachecks and no metatags, we enforce to True the match so we show the resource:
+                    mh_matched = True
 
-            # We keep a dict with no matched resources so we don't run MetaChecks again
-            if not mh_matched:
-                # We add the resource in our output only once:
-                if resource_arn not in mh_findings_not_matched_findings:
-                    mh_findings_not_matched_findings[resource_arn] = {}
+                # We keep a dict with no matched resources so we don't run MetaChecks again
+                if not mh_matched:
+                    # We add the resource in our output only once:
+                    if resource_arn not in mh_findings_not_matched_findings:
+                        mh_findings_not_matched_findings[resource_arn] = {}
 
-            # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
-            if mh_matched:
+                # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
+                if mh_matched:
 
-                # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
-                if finding["AwsAccountId"] not in AwsAccountData:
-                    AwsAccountAlias = get_account_alias(
-                        logger, finding["AwsAccountId"], mh_role
+                    # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
+                    if finding["AwsAccountId"] not in AwsAccountData:
+                        AwsAccountAlias = get_account_alias(
+                            logger, finding["AwsAccountId"], mh_role
+                        )
+                        AwsAccountAlternateContact = get_account_alternate_contact(
+                            logger, finding["AwsAccountId"], mh_role
+                        )
+                        AwsAccountData[finding["AwsAccountId"]] = {
+                            "Alias": AwsAccountAlias,
+                            "AlternateContact": AwsAccountAlternateContact,
+                        }
+                    finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+
+                    # Resource (we add the resource only once, we check if it's already in the list)
+                    if resource_arn not in mh_findings:
+                        # Inventory
+                        mh_inventory.append(resource_arn)
+                        # Findings
+                        mh_findings[resource_arn] = {"findings": []}
+                        mh_findings_short[resource_arn] = {"findings": []}
+                        # ResourceType
+                        mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
+                            resource_arn
+                        ]["ResourceType"] = finding["Resources"][0]["Type"]
+                        # Region
+                        mh_findings[resource_arn]["Region"] = mh_findings_short[
+                            resource_arn
+                        ]["Region"] = finding["Region"]
+                        # AwsAccountId
+                        mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
+                            resource_arn
+                        ]["AwsAccountId"] = finding["AwsAccountId"]
+                        # MetaAccount
+                        mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
+                            resource_arn
+                        ]["metaaccount"] = finding["AwsAccountData"]
+                        # MetaChecks
+                        if metachecks:
+                            mh_findings[resource_arn]["metachecks"] = mh_findings_short[
+                                resource_arn
+                            ]["metachecks"] = mh_values
+                        # MetaTags
+                        if metatags:
+                            mh_findings[resource_arn]["metatags"] = mh_findings_short[
+                                resource_arn
+                            ]["metatags"] = mh_tags
+                        # MetaTrails
+                        if metatrails:
+                            mh_findings[resource_arn]["metatrails"] = mh_findings_short[
+                                resource_arn
+                            ]["metatrails"] = mh_trails
+
+                    # Add Findings
+                    mh_findings_short[resource_arn]["findings"].append(
+                        list(finding_parsed.keys())[0]
                     )
-                    AwsAccountAlternateContact = get_account_alternate_contact(
-                        logger, finding["AwsAccountId"], mh_role
-                    )
-                    AwsAccountData[finding["AwsAccountId"]] = {
-                        "Alias": AwsAccountAlias,
-                        "AlternateContact": AwsAccountAlternateContact,
-                    }
-                finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+                    mh_findings[resource_arn]["findings"].append(finding_parsed)
 
-                # Resource (we add the resource only once, we check if it's already in the list)
-                if resource_arn not in mh_findings:
-                    # Inventory
-                    mh_inventory.append(resource_arn)
-                    # Findings
-                    mh_findings[resource_arn] = {"findings": []}
-                    mh_findings_short[resource_arn] = {"findings": []}
-                    # ResourceType
-                    mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
-                        resource_arn
-                    ]["ResourceType"] = finding["Resources"][0]["Type"]
-                    # Region
-                    mh_findings[resource_arn]["Region"] = mh_findings_short[
-                        resource_arn
-                    ]["Region"] = finding["Region"]
-                    # AwsAccountId
-                    mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
-                        resource_arn
-                    ]["AwsAccountId"] = finding["AwsAccountId"]
-                    # MetaAccount
-                    mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
-                        resource_arn
-                    ]["metaaccount"] = finding["AwsAccountData"]
-                    # MetaChecks
-                    if metachecks:
-                        mh_findings[resource_arn]["metachecks"] = mh_findings_short[
-                            resource_arn
-                        ]["metachecks"] = mh_values
-                    # MetaTags
-                    if metatags:
-                        mh_findings[resource_arn]["metatags"] = mh_findings_short[
-                            resource_arn
-                        ]["metatags"] = mh_tags
-                    # MetaTrails
-                    if metatrails:
-                        mh_findings[resource_arn]["metatrails"] = mh_findings_short[
-                            resource_arn
-                        ]["metatrails"] = mh_trails
-
-                # Add Findings
-                mh_findings_short[resource_arn]["findings"].append(
-                    list(finding_parsed.keys())[0]
-                )
-                mh_findings[resource_arn]["findings"].append(finding_parsed)
-
-            bar()
-        bar.title = "-> Completed"
+                bar()
+            bar.title = "-> Completed"
+    except KeyboardInterrupt:
+        print("Keyboard interrupt detected. Exiting...")
 
     mh_statistics = generate_statistics(mh_findings)
 
