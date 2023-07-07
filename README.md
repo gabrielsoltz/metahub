@@ -917,7 +917,7 @@ Impact MetaChecks are defined across all resources. These MetaChecks defines pro
 
 Impact MetaChecks are also useful to filter across all resources no matter the resource type, for example, you can filter all resources that are public using the MetaCheck `is_public` (`./metahub --mh-filters-checks is_public=True`), or you can filter all resources that are public and not encrypted using the MetaCheck `is_public` and `is_encrypted` (`./metahub --mh-filters-checks is_public=True is_encrypted=False`).
 
-Impact MetaChecks are: `is_public`, `is_unrestricted`, `is_encrypted`, and `is_attached`. If any of these MetaChecks are not applicable for a particular resource type, they will return `False`.
+Impact MetaChecks are: `is_public`, `is_unrestricted`, `is_encrypted`, and `is_attached`.
 
 ### is_public
 
