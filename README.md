@@ -14,6 +14,8 @@
 - [Context](#context)
 - [Ownership](#ownership)
 - [Architecture](#architecture)
+- [Use Cases](#use-cases)
+- [Features](#features)
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
