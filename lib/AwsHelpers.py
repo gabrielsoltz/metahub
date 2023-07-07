@@ -130,21 +130,19 @@ def get_account_alternate_contact(
                     AlternateContactType=alternate_contact_type
                 ).get("AlternateContact")
             except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-                logger.error(
+                logger.warning(
                     "Error getting alternate contact for account {}: {}".format(
                         aws_account_number, e
                     )
                 )
         else:
-            logger.error(
+            logger.warning(
                 "Error getting alternate contact for account {}: {}".format(
                     aws_account_number, e
                 )
             )
 
-    if alternate_contact:
-        return alternate_contact
-    return ""
+    return alternate_contact
 
 
 def get_sh_findings_aggregator(logger, region):
