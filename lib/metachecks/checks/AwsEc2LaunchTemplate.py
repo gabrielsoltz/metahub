@@ -91,7 +91,6 @@ class Metacheck(MetaChecksBase):
         return iam_roles
 
     def describe_autoscaling_group(self):
-        print (self.launch_template)
         autoscaling_group = {}
         if self.launch_template:
             response = self.asg_client.describe_auto_scaling_groups()
