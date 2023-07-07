@@ -29,7 +29,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     # If the resources lives in another account, we need the --mh-assume-role
     if resource_account_id != current_account_id and not mh_role:
         logger.warning(
-            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not --mh-assume-role was provided. Ignoring MetaChecks...",
+            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account %s and not --mh-assume-role was provided. Ignoring MetaChecks...",
             resource_arn,
             resource_account_id,
             current_account_id,

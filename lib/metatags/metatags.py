@@ -26,8 +26,8 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
     # If the resources lives in another account, you need to provide a role for running MetaTags
     if resource_account_id != current_account_id and not mh_role:
         resource_arn = finding["Resources"][0]["Id"]
-        logger.error(
-            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account: %s and not mh_role was provided. Ignoring MetaTags...",
+        logger.warning(
+            "Resource %s lives in AWS Account %s, but you are logged in to AWS Account %s and not --mh-assume-role was provided. Ignoring MetaTags...",
             resource_arn,
             resource_account_id,
             current_account_id,
