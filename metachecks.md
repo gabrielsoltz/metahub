@@ -28,27 +28,36 @@ If you want to add MetaChecks for a ResourceType that has not yet been defined i
 ```
 '''MetaCheck: <AWSResourceType>'''
 
-import boto3
-from metachecks.checks.Base import MetaChecksBase
+from lib.AwsHelpers import get_boto3_client
+from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import IamHelper
+
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled=False,
+    ):
         self.logger = logger
         if metachecks:
             self.region = finding["Region"]
             self.account = finding["AwsAccountId"]
-            self.partition = "aws"
-            if not sess:
-                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=self.region)
-            else:
-                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=self.region)
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
             self.resource_arn = finding["Resources"][0]["Id"]
-            self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
+            self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
+            )
 
     def checks(self):
         checks = [
-
         ]
         return checks
 ```
@@ -70,23 +79,40 @@ def _get_bucket_acl(self):
 ```
 '''MetaCheck: <AWSResourceType>'''
 
-import boto3
-from metachecks.checks.Base import MetaChecksBase
+from lib.AwsHelpers import get_boto3_client
+from lib.metachecks.checks.Base import MetaChecksBase
+from lib.metachecks.checks.MetaChecksHelpers import IamHelper
+
 
 class Metacheck(MetaChecksBase):
-    def __init__(self, logger, finding, metachecks, mh_filters_checks, sess):
+    def __init__(
+        self,
+        logger,
+        finding,
+        metachecks,
+        mh_filters_checks,
+        sess,
+        drilled=False,
+    ):
         self.logger = logger
         if metachecks:
-            region = finding["Region"]
-            if not sess:
-                self.client = boto3.client(<<BOTO3 SERVICE>>, region_name=region)
-            else:
-                self.client = sess.client(service_name=<<BOTO3 SERVICE>>, region_name=region)
+            self.region = finding["Region"]
+            self.account = finding["AwsAccountId"]
+            self.partition = finding["Resources"][0]["Id"].split(":")[1]
+            self.finding = finding
+            self.sess = sess
             self.resource_arn = finding["Resources"][0]["Id"]
-            self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
             self.mh_filters_checks = mh_filters_checks
-
+            self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
+            )
+            # Describe functions
             self.bucket_acl = self._get_bucket_acl() --> YOUR DESCRIBE FUNCTION AS AN ATTRIBUTE
+
+    def checks(self):
+        checks = [
+        ]
+        return checks
 ```
 
 5. Import Metacheck in metachecks/checks/__init__.py file
