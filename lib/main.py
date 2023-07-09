@@ -13,7 +13,6 @@ from lib.AwsHelpers import (
     get_account_alternate_contact,
     get_account_id,
     get_region,
-    get_sh_findings_aggregator,
 )
 from lib.helpers import (
     confirm_choice,
@@ -28,126 +27,11 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.securityhub import SecurityHub
+from lib.statistics import generate_statistics
+from lib.securityhub import SecurityHub, parse_finding
 
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
-
-
-def generate_statistics(mh_findings):
-    def statistics_root_level(mh_findings):
-        root_level_statistics = {
-            "ResourceId": {},
-            "ResourceType": {},
-            "Region": {},
-            "AwsAccountId": {},
-            "Title": {},
-            "SeverityLabel": {},
-            "RecordState": {},
-            "ProductArn": {},
-            "Workflow": {},
-            "Compliance": {},
-        }
-        for resource_arn in mh_findings:
-            if resource_arn not in root_level_statistics:
-                root_level_statistics["ResourceId"][resource_arn] = 0
-            root_level_statistics["ResourceId"][resource_arn] += 1
-            for key, value in mh_findings[resource_arn].items():
-                if key in ("ResourceType", "Region", "AwsAccountId"):
-                    if value not in root_level_statistics[key]:
-                        root_level_statistics[key][value] = 0
-                    root_level_statistics[key][value] += 1
-                if key == "findings":
-                    for finding in value:
-                        for finding_key, finding_value in finding.items():
-                            if finding_key not in root_level_statistics["Title"]:
-                                root_level_statistics["Title"][finding_key] = 0
-                            root_level_statistics["Title"][finding_key] += 1
-                            for v in finding_value:
-                                if v in ("Id", "StandardsControlArn"):
-                                    continue
-                                if v == "Workflow" or v == "Compliance":
-                                    try:
-                                        if (
-                                            finding_value[v]["Status"]
-                                            not in root_level_statistics[v]
-                                        ):
-                                            root_level_statistics[v][
-                                                finding_value[v]["Status"]
-                                            ] = 0
-                                        root_level_statistics[v][
-                                            finding_value[v]["Status"]
-                                        ] += 1
-                                    except TypeError:
-                                        continue
-                                else:
-                                    if finding_value[v] not in root_level_statistics[v]:
-                                        root_level_statistics[v][finding_value[v]] = 0
-                                    root_level_statistics[v][finding_value[v]] += 1
-
-        return root_level_statistics
-
-    def statistics_metatags(mh_findings_short):
-        metatags_statistics = {}
-        for d in mh_findings_short:
-            if "metatags" in mh_findings_short[d]:
-                if mh_findings_short[d]["metatags"]:
-                    for tag, value in mh_findings_short[d]["metatags"].items():
-                        if tag not in metatags_statistics:
-                            metatags_statistics[tag] = {}
-                        if value not in metatags_statistics[tag]:
-                            metatags_statistics[tag][value] = 1
-                        else:
-                            metatags_statistics[tag][value] += 1
-        return metatags_statistics
-
-    def statistics_metachecks(mh_findings_short):
-        metachecks_statistics = {}
-        for d in mh_findings_short:
-            if "metachecks" in mh_findings_short[d]:
-                if mh_findings_short[d]["metachecks"]:
-                    for check, value in mh_findings_short[d]["metachecks"].items():
-                        if check not in metachecks_statistics:
-                            metachecks_statistics[check] = {False: 0, True: 0}
-                        if bool(mh_findings_short[d]["metachecks"][check]):
-                            metachecks_statistics[check][True] += 1
-                        else:
-                            metachecks_statistics[check][False] += 1
-        return metachecks_statistics
-
-    def statistics_metaaccount(mh_findings_short):
-        metaaccount_statistics = {}
-        for d in mh_findings_short:
-            if "metaaccount" in mh_findings_short[d]:
-                if mh_findings_short[d]["metaaccount"]:
-                    for tag, value in mh_findings_short[d]["metaaccount"].items():
-                        if tag == "AlternateContact":
-                            continue
-                        if tag not in metaaccount_statistics:
-                            metaaccount_statistics[tag] = {}
-                        if value not in metaaccount_statistics[tag]:
-                            metaaccount_statistics[tag][value] = 1
-                        else:
-                            metaaccount_statistics[tag][value] += 1
-        return metaaccount_statistics
-
-    mh_statistics = statistics_root_level(mh_findings)
-    mh_statistics["metatags"] = statistics_metatags(mh_findings)
-    mh_statistics["metachecks"] = statistics_metachecks(mh_findings)
-    mh_statistics["metaaccount"] = statistics_metaaccount(mh_findings)
-
-    # Sort Statistics
-    for key_to_sort in mh_statistics:
-        if key_to_sort not in ("metatags", "metachecks", "metaaccount"):
-            mh_statistics[key_to_sort] = dict(
-                sorted(
-                    mh_statistics[key_to_sort].items(),
-                    key=lambda item: item[1],
-                    reverse=True,
-                )
-            )
-
-    return mh_statistics
 
 
 def generate_findings(
@@ -166,6 +50,7 @@ def generate_findings(
     metatrails,
     banners,
     drill_down,
+    metaaccount
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -173,13 +58,12 @@ def generate_findings(
     mh_inventory = []
     AwsAccountData = {}
 
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role)
-
     findings = []
     if "file-asff" in inputs and asff_findings:
         findings.extend(asff_findings)
         print_table("Input ASFF findings found: ", len(asff_findings), banners=banners)
     if "securityhub" in inputs:
+        sh = SecurityHub(logger, sh_region, sh_account, sh_role)
         sh_findings = sh.get_findings(sh_filters)
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
@@ -190,7 +74,7 @@ def generate_findings(
                 bar.title = "-> Analyzing findings..."
 
                 mh_matched = False
-                resource_arn, finding_parsed = sh.parse_finding(finding)
+                resource_arn, finding_parsed = parse_finding(finding)
 
                 # Fix Region when not in root
                 try:
@@ -265,19 +149,22 @@ def generate_findings(
                 # We show the resouce only if matched MetaChecks (or Metachecks are disabled)
                 if mh_matched:
 
-                    # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
-                    if finding["AwsAccountId"] not in AwsAccountData:
-                        AwsAccountAlias = get_account_alias(
-                            logger, finding["AwsAccountId"], mh_role
-                        )
-                        AwsAccountAlternateContact = get_account_alternate_contact(
-                            logger, finding["AwsAccountId"], mh_role
-                        )
-                        AwsAccountData[finding["AwsAccountId"]] = {
-                            "Alias": AwsAccountAlias,
-                            "AlternateContact": AwsAccountAlternateContact,
-                        }
-                    finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+                    if metaaccount:
+                        # Get MetaAccount Data (We save the data in a dict to avoid calling the API for each finding)
+                        if finding["AwsAccountId"] not in AwsAccountData:
+                            AwsAccountAlias = get_account_alias(
+                                logger, finding["AwsAccountId"], mh_role
+                            )
+                            AwsAccountAlternateContact = get_account_alternate_contact(
+                                logger, finding["AwsAccountId"], mh_role
+                            )
+                            AwsAccountData[finding["AwsAccountId"]] = {
+                                "Alias": AwsAccountAlias,
+                                "AlternateContact": AwsAccountAlternateContact,
+                            }
+                        finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+                    else:
+                        finding["AwsAccountData"] = {}
 
                     # Resource (we add the resource only once, we check if it's already in the list)
                     if resource_arn not in mh_findings:
@@ -334,43 +221,10 @@ def generate_findings(
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 
-def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region):
-    UpdateFilters = {}
-    IsNnoteProvided = False
-    IsAllowedKeyProvided = False
-    for key, value in update.items():
-        if key in ("Workflow", "Note"):
-            if key == "Workflow":
-                WorkflowValues = ("NEW", "NOTIFIED", "RESOLVED", "SUPPRESSED")
-                if value not in WorkflowValues:
-                    logger.error("Workflow values: " + str(WorkflowValues))
-                    exit(1)
-                Workflow = {"Workflow": {"Status": value}}
-                UpdateFilters.update(Workflow)
-                IsAllowedKeyProvided = True
-            if key == "Note":
-                Note = {"Note": {"Text": value, "UpdatedBy": "MetaHub"}}
-                UpdateFilters.update(Note)
-                IsNnoteProvided = True
-            continue
-        logger.error(
-            "Unsuported update finding key: " + str(key) + " - Supported Keys: Workflow"
-        )
-        exit(1)
-    if not IsAllowedKeyProvided:
-        logger.error(
-            'Missing Key to Update in update findings command. Please add Key="This is a value"'
-        )
-        exit(1)
-    if not IsNnoteProvided:
-        logger.error(
-            'Missing Note in update findings command. Please add Note="This is an example Note"'
-        )
-        exit(1)
-    # Run Update
+def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
     if confirm_choice("Are you sure you want to update all findings?"):
-        update_multiple = sh.update_findings_workflow(mh_findings, UpdateFilters)
+        update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
         for update in update_multiple:
@@ -455,6 +309,11 @@ def validate_arguments(args, logger):
             except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
                 logger.error("--input-asff file %s %s!", args.input_asff, str(err))
                 exit(1)
+    elif args.input_asff and "file-asff" not in args.inputs:
+        logger.error(
+            "--input-asff specified but not file-asff input. Use --inputs file-asff to use --input-asff"
+        )
+        exit(1)
     else:
         asff_findings = False
 
@@ -491,7 +350,7 @@ def validate_arguments(args, logger):
             mh_filters_checks[mh_filter_check_key] = bool(False)
         else:
             logger.error(
-                "MetaHub Filter Only True/False Supported: " + str(mh_filters_checks)
+                "Only True or False is supported for MetaChecks filters: " + str(mh_filters_checks)
             )
             exit(1)
 
@@ -509,39 +368,55 @@ def validate_arguments(args, logger):
         )
         exit(1)
 
-    # AWS Account
-    if not args.sh_account:
-        sh_account = get_account_id(logger)
-        sh_account_alias = get_account_alias(logger)
-    else:
-        sh_account = args.sh_account
+    # AWS Security Hub
+    if "securityhub" in args.inputs:
+        sh_region = args.sh_region or get_region(logger)
+        sh_account = args.sh_account or get_account_id(logger)
         sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
+    else:
+        sh_region = args.sh_region
+        sh_account = args.sh_account
+        sh_account_alias = ""
     sh_account_alias_str = (
         " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
     )
 
-    # AWS Region
-    sh_region = args.sh_region or get_region(logger)
-
-    # SH Aggregator
-    sh_region_aggregator = False
-    if sh_region:
-        sh_region_aggregator = get_sh_findings_aggregator(logger, sh_region)
-    if sh_region_aggregator:
-        if sh_region_aggregator != sh_region:
-            logger.error(
-                "You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s for aggregated findings...",
-                sh_region,
-                sh_region_aggregator,
-                sh_region_aggregator,
-            )
-
     # Validate Security Hub input
     if "securityhub" in args.inputs and (not sh_region or not sh_account):
         logger.error(
-            "AWS Region or Account not found, but Security Hub defined as input. Set Credentials and/or use --sh-region and --sh-account."
+            "Security Hub is defined as input for findings, but no region or account was found. Check your credentials and/or use --sh-region and --sh-account."
         )
         exit(1)
+
+    # Validate udpate findings
+    update_findings_filters = {}
+    if args.update_findings:
+        IsNnoteProvided = False
+        IsAllowedKeyProvided = False
+        for key, value in args.update_findings.items():
+            if key in ("Workflow", "Note"):
+                if key == "Workflow":
+                    WorkflowValues = ("NEW", "NOTIFIED", "RESOLVED", "SUPPRESSED")
+                    if value not in WorkflowValues:
+                        logger.error("Incorrect update findings workflow value. Use: " + str(WorkflowValues))
+                        exit(1)
+                    Workflow = {"Workflow": {"Status": value}}
+                    update_findings_filters.update(Workflow)
+                    IsAllowedKeyProvided = True
+                if key == "Note":
+                    Note = {"Note": {"Text": value, "UpdatedBy": "MetaHub"}}
+                    update_findings_filters.update(Note)
+                    IsNnoteProvided = True
+                continue
+            logger.error(
+                "Unsuported update findings key: " + str(key) + " - Supported keys: Workflow and Note. Use --update-findings Workflow=NEW Note='This is an example Note'"
+            )
+            exit(1)
+        if not IsAllowedKeyProvided or not IsNnoteProvided:
+            logger.error(
+                'Update findings missing key. Use --update-findings Workflow=NEW Note="This is an example Note"'
+            )
+            exit(1)
 
     return (
         asff_findings,
@@ -551,6 +426,7 @@ def validate_arguments(args, logger):
         sh_account,
         sh_account_alias_str,
         sh_region,
+        update_findings_filters
     )
 
 
@@ -587,7 +463,7 @@ def generate_outputs(
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
                 with open(WRITE_FILE, "w", encoding="utf-8") as f:
                     html = generate_output_html(
-                        mh_findings, mh_statistics, metachecks_columns, metatags_columns
+                        mh_findings, mh_statistics, metatags_columns, metachecks_columns
                     )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)
@@ -604,13 +480,12 @@ def generate_outputs(
                     dict_writer.writerows(csv_list)
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
 
-
 def main(args):
     parser = get_parser()
     args = parser.parse_args(args)
     banners = args.banners
     print_banner(banners)
-    test_python_version()
+    if not test_python_version(): exit(1)
     logger = get_logger(args.log_level)
 
     if args.list_meta_checks:
@@ -628,6 +503,7 @@ def main(args):
         sh_account,
         sh_account_alias_str,
         sh_region,
+        update_findings_filters
     ) = validate_arguments(args, logger)
 
     print_title_line("Options", banners=banners)
@@ -647,6 +523,7 @@ def main(args):
     print_table("MetaTags: ", str(args.meta_tags), banners=banners)
     print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
     print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
+    print_table("MetaAccount: ", str(args.meta_account), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
     print_table("List Findings: ", str(args.list_findings), banners=banners)
@@ -673,6 +550,7 @@ def main(args):
         metatrails=args.meta_trails,
         banners=banners,
         drill_down=args.drill_down,
+        metaaccount=args.meta_account
     )
 
     if "lambda" in args.output_modes:
@@ -752,6 +630,7 @@ def main(args):
                 sh_account,
                 args.sh_assume_role,
                 sh_region,
+                update_findings_filters
             )
         print_title_line("Results", banners=banners)
         print_table(
