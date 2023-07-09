@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError, EndpointConnectionError, NoCredenti
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):
     """
-    Assumes the provided role in each account and returns Credentials
+    Assumes the provided role in each account and returns the session
     :param aws_account_number: AWS Account Number
     :param role_name: Role to assume in target account
     :return: Assumed Role Credentials
@@ -30,25 +30,28 @@ def assume_role(logger, aws_account_number, role_name, duration=3600):
     except ClientError as e:
         logger.error("Error assuming IAM role: {}".format(e))
         exit(1)
-    return response["Credentials"]
-
-
-def get_boto3_session(Credentials):
+    # Session
+    logger.info("Getting session for assumed IAM Role: %s (%s)", role_name, aws_account_number)
+    Credentials = response["Credentials"]
     access_key = Credentials["AccessKeyId"]
     secret_key = Credentials["SecretAccessKey"]
     session_token = Credentials["SessionToken"]
-    boto3_session = boto3.session.Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        aws_session_token=session_token,
-    )
+    try:
+        boto3_session = boto3.session.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            aws_session_token=session_token,
+        )
+    except ClientError as e:
+        logger.error("Error getting session for assumed IAM role: {}".format(e))
+        exit(1)
     return boto3_session
 
-
-def get_account_id(logger):
+def get_account_id(logger, sess=None, profile=None):
     account_id = None
+    sts = get_boto3_client(logger, "sts", "us-east-1", sess, profile)
     try:
-        account_id = boto3.client("sts").get_caller_identity().get("Account")
+        account_id = sts.get_caller_identity().get("Account")
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
         logger.error("Error getting account ID: {}".format(e))
     return account_id
@@ -76,45 +79,38 @@ def get_available_regions(logger, aws_service):
     return available_regions
 
 
-def get_account_alias(logger, aws_account_number=None, role_name=None):
-    aliases = None
+def get_account_alias(logger, aws_account_number, role_name=None):
+    aliases = ""
+    local_account = get_account_id(logger)
+    if aws_account_number != local_account and not role_name:
+        return aliases
     if role_name and aws_account_number:
-        sh_role_assumend = assume_role(logger, aws_account_number, role_name)
-        sess = get_boto3_session(sh_role_assumend)
-        iam_client = sess.client(service_name="iam")
-    elif aws_account_number and aws_account_number == get_account_id(logger):
-        iam_client = boto3.client("iam")
+        sess = assume_role(logger, aws_account_number, role_name)
     else:
-        return ""
-
+        sess = None
+    iam_client = get_boto3_client(logger, "iam", "us-east-1", sess)
     try:
         aliases = iam_client.list_account_aliases()["AccountAliases"]
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
         logger.error("Error getting account alias: {}".format(e))
-        aliases = None
-
-    if aliases:
-        return aliases[0]
-    return ""
+    if aliases: return aliases[0]
+    return aliases
 
 
 def get_account_alternate_contact(
-    logger, aws_account_number=None, role_name=None, alternate_contact_type="SECURITY"
+    logger, aws_account_number, role_name=None, alternate_contact_type="SECURITY"
 ):
     # https://docs.aws.amazon.com/accounts/latest/reference/using-orgs-trusted-access.html
     # https://aws.amazon.com/blogs/mt/programmatically-managing-alternate-contacts-on-member-accounts-with-aws-organizations/
-
     alternate_contact = ""
-
+    local_account = get_account_id(logger)
+    if aws_account_number != local_account and not role_name:
+        return alternate_contact
     if role_name and aws_account_number:
-        sh_role_assumend = assume_role(logger, aws_account_number, role_name)
-        sess = get_boto3_session(sh_role_assumend)
-        account_client = sess.client(service_name="account")
-    elif aws_account_number and aws_account_number == get_account_id(logger):
-        account_client = boto3.client("account")
+        sess = assume_role(logger, aws_account_number, role_name)
     else:
-        return ""
-
+        sess = None
+    account_client = get_boto3_client(logger, "account", "us-east-1", sess)
     try:
         alternate_contact = account_client.get_alternate_contact(
             AccountId=aws_account_number, AlternateContactType=alternate_contact_type
@@ -141,28 +137,14 @@ def get_account_alternate_contact(
                     aws_account_number, e
                 )
             )
-
     return alternate_contact
 
 
-def get_sh_findings_aggregator(logger, region):
-    try:
-        sh_findings_aggregator = boto3.client(
-            "securityhub", region_name=region
-        ).list_finding_aggregators()["FindingAggregators"]
-    except (EndpointConnectionError, Exception) as e:
-        logger.error("Error getting securityhub aggregators: {}".format(e))
-        return False
-    if sh_findings_aggregator:
-        sh_findings_aggregator_region = sh_findings_aggregator[0][
-            "FindingAggregatorArn"
-        ].split(":")[3]
-        return sh_findings_aggregator_region
-    return False
-
-
-def get_boto3_client(logger, service, region, sess):
-    if not sess:
-        return boto3.client(service, region_name=region)
-    else:
+def get_boto3_client(logger, service, region, sess, profile=None):
+    if sess:
         return sess.client(service_name=service, region_name=region)
+    if profile:
+        return boto3.Session(profile_name=profile).client(
+            service_name=service, region_name=region
+        )
+    return boto3.client(service, region_name=region)
