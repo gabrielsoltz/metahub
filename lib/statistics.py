@@ -1,5 +1,4 @@
 def generate_statistics(mh_findings):
-    
     def statistics_findings(mh_findings):
         root_level_statistics = {
             "ResourceId": {},
@@ -55,9 +54,16 @@ def generate_statistics(mh_findings):
                             except TypeError:
                                 pass
                             continue
-                        if findings_keys[finding_key] not in root_level_statistics[finding_key]:
-                            root_level_statistics[finding_key][findings_keys[finding_key]] = 0
-                        root_level_statistics[finding_key][findings_keys[finding_key]] += 1            
+                        if (
+                            findings_keys[finding_key]
+                            not in root_level_statistics[finding_key]
+                        ):
+                            root_level_statistics[finding_key][
+                                findings_keys[finding_key]
+                            ] = 0
+                        root_level_statistics[finding_key][
+                            findings_keys[finding_key]
+                        ] += 1
 
         return root_level_statistics
 
@@ -67,7 +73,9 @@ def generate_statistics(mh_findings):
             if "metatags" in mh_findings_short[resource_arn]:
                 if mh_findings_short[resource_arn]["metatags"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
-                        for tag, value in mh_findings_short[resource_arn]["metatags"].items():
+                        for tag, value in mh_findings_short[resource_arn][
+                            "metatags"
+                        ].items():
                             if tag not in metatags_statistics:
                                 metatags_statistics[tag] = {}
                             if value not in metatags_statistics[tag]:
@@ -82,10 +90,14 @@ def generate_statistics(mh_findings):
             if "metachecks" in mh_findings_short[resource_arn]:
                 if mh_findings_short[resource_arn]["metachecks"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
-                        for check, value in mh_findings_short[resource_arn]["metachecks"].items():
+                        for check, value in mh_findings_short[resource_arn][
+                            "metachecks"
+                        ].items():
                             if check not in metachecks_statistics:
                                 metachecks_statistics[check] = {False: 0, True: 0}
-                            if bool(mh_findings_short[resource_arn]["metachecks"][check]):
+                            if bool(
+                                mh_findings_short[resource_arn]["metachecks"][check]
+                            ):
                                 metachecks_statistics[check][True] += 1
                             else:
                                 metachecks_statistics[check][False] += 1
@@ -97,7 +109,9 @@ def generate_statistics(mh_findings):
             if "metaaccount" in mh_findings_short[resource_arn]:
                 if mh_findings_short[resource_arn]["metaaccount"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
-                        for tag, value in mh_findings_short[resource_arn]["metaaccount"].items():
+                        for tag, value in mh_findings_short[resource_arn][
+                            "metaaccount"
+                        ].items():
                             if tag == "AlternateContact":
                                 continue
                             if tag not in metaaccount_statistics:

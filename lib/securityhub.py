@@ -16,9 +16,7 @@ class SecurityHub:
             shsess = assume_role(logger, sh_account, sh_role)
         else:
             shsess = None
-        self.sh_client = get_boto3_client(
-            self.logger, "securityhub", sh_region, shsess
-        )
+        self.sh_client = get_boto3_client(self.logger, "securityhub", sh_region, shsess)
         region_aggregator = self.get_region_aggregator()
         if region_aggregator != sh_region:
             logger.warning(
@@ -30,7 +28,9 @@ class SecurityHub:
 
     def get_region_aggregator(self):
         try:
-            sh_findings_aggregator = self.sh_client.list_finding_aggregators()["FindingAggregators"]
+            sh_findings_aggregator = self.sh_client.list_finding_aggregators()[
+                "FindingAggregators"
+            ]
         except (EndpointConnectionError, Exception) as e:
             self.logger.error("Error getting SecurityHub aggregators: {}".format(e))
             sh_findings_aggregator = False
@@ -156,6 +156,7 @@ class SecurityHub:
                         FindingIdentifier["Id"],
                     )
         return response_multiple
+
 
 def parse_finding(finding):
     """Returns resource ARN and finding parsed for it"""

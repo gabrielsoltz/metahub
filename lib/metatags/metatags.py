@@ -1,10 +1,6 @@
 from botocore.exceptions import ClientError, ParamValidationError
 
-from lib.AwsHelpers import (
-    assume_role,
-    get_account_id,
-    get_boto3_client,
-)
+from lib.AwsHelpers import assume_role, get_account_id, get_boto3_client
 
 
 def run_metatags(logger, finding, mh_filters_tags, mh_role):

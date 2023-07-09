@@ -31,7 +31,9 @@ def assume_role(logger, aws_account_number, role_name, duration=3600):
         logger.error("Error assuming IAM role: {}".format(e))
         exit(1)
     # Session
-    logger.info("Getting session for assumed IAM Role: %s (%s)", role_name, aws_account_number)
+    logger.info(
+        "Getting session for assumed IAM Role: %s (%s)", role_name, aws_account_number
+    )
     Credentials = response["Credentials"]
     access_key = Credentials["AccessKeyId"]
     secret_key = Credentials["SecretAccessKey"]
@@ -46,6 +48,7 @@ def assume_role(logger, aws_account_number, role_name, duration=3600):
         logger.error("Error getting session for assumed IAM role: {}".format(e))
         exit(1)
     return boto3_session
+
 
 def get_account_id(logger, sess=None, profile=None):
     account_id = None
@@ -93,7 +96,8 @@ def get_account_alias(logger, aws_account_number, role_name=None):
         aliases = iam_client.list_account_aliases()["AccountAliases"]
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
         logger.error("Error getting account alias: {}".format(e))
-    if aliases: return aliases[0]
+    if aliases:
+        return aliases[0]
     return aliases
 
 

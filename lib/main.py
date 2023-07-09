@@ -27,8 +27,8 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.statistics import generate_statistics
 from lib.securityhub import SecurityHub, parse_finding
+from lib.statistics import generate_statistics
 
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
@@ -50,7 +50,7 @@ def generate_findings(
     metatrails,
     banners,
     drill_down,
-    metaaccount
+    metaaccount,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -162,7 +162,9 @@ def generate_findings(
                                 "Alias": AwsAccountAlias,
                                 "AlternateContact": AwsAccountAlternateContact,
                             }
-                        finding["AwsAccountData"] = AwsAccountData[finding["AwsAccountId"]]
+                        finding["AwsAccountData"] = AwsAccountData[
+                            finding["AwsAccountId"]
+                        ]
                     else:
                         finding["AwsAccountData"] = {}
 
@@ -221,7 +223,9 @@ def generate_findings(
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 
-def update_findings(logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters):
+def update_findings(
+    logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters
+):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role)
     if confirm_choice("Are you sure you want to update all findings?"):
         update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
@@ -350,7 +354,8 @@ def validate_arguments(args, logger):
             mh_filters_checks[mh_filter_check_key] = bool(False)
         else:
             logger.error(
-                "Only True or False is supported for MetaChecks filters: " + str(mh_filters_checks)
+                "Only True or False is supported for MetaChecks filters: "
+                + str(mh_filters_checks)
             )
             exit(1)
 
@@ -398,7 +403,10 @@ def validate_arguments(args, logger):
                 if key == "Workflow":
                     WorkflowValues = ("NEW", "NOTIFIED", "RESOLVED", "SUPPRESSED")
                     if value not in WorkflowValues:
-                        logger.error("Incorrect update findings workflow value. Use: " + str(WorkflowValues))
+                        logger.error(
+                            "Incorrect update findings workflow value. Use: "
+                            + str(WorkflowValues)
+                        )
                         exit(1)
                     Workflow = {"Workflow": {"Status": value}}
                     update_findings_filters.update(Workflow)
@@ -409,7 +417,9 @@ def validate_arguments(args, logger):
                     IsNnoteProvided = True
                 continue
             logger.error(
-                "Unsuported update findings key: " + str(key) + " - Supported keys: Workflow and Note. Use --update-findings Workflow=NEW Note='This is an example Note'"
+                "Unsuported update findings key: "
+                + str(key)
+                + " - Supported keys: Workflow and Note. Use --update-findings Workflow=NEW Note='This is an example Note'"
             )
             exit(1)
         if not IsAllowedKeyProvided or not IsNnoteProvided:
@@ -426,7 +436,7 @@ def validate_arguments(args, logger):
         sh_account,
         sh_account_alias_str,
         sh_region,
-        update_findings_filters
+        update_findings_filters,
     )
 
 
@@ -480,12 +490,14 @@ def generate_outputs(
                     dict_writer.writerows(csv_list)
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
 
+
 def main(args):
     parser = get_parser()
     args = parser.parse_args(args)
     banners = args.banners
     print_banner(banners)
-    if not test_python_version(): exit(1)
+    if not test_python_version():
+        exit(1)
     logger = get_logger(args.log_level)
 
     if args.list_meta_checks:
@@ -503,7 +515,7 @@ def main(args):
         sh_account,
         sh_account_alias_str,
         sh_region,
-        update_findings_filters
+        update_findings_filters,
     ) = validate_arguments(args, logger)
 
     print_title_line("Options", banners=banners)
@@ -550,7 +562,7 @@ def main(args):
         metatrails=args.meta_trails,
         banners=banners,
         drill_down=args.drill_down,
-        metaaccount=args.meta_account
+        metaaccount=args.meta_account,
     )
 
     if "lambda" in args.output_modes:
@@ -630,7 +642,7 @@ def main(args):
                 sh_account,
                 args.sh_assume_role,
                 sh_region,
-                update_findings_filters
+                update_findings_filters,
             )
         print_title_line("Results", banners=banners)
         print_table(
