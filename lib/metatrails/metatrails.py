@@ -4,7 +4,6 @@ from lib.AwsHelpers import (
     assume_role,
     get_account_id,
     get_boto3_client,
-    get_boto3_session,
 )
 from lib.config.resources import MetaHubResourcesConfig
 
@@ -41,8 +40,7 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
 
     # Get a Boto3 Session in the Child Account if mh_role is passed
     if mh_role:
-        sh_role_assumend = assume_role(logger, resource_account_id, mh_role)
-        sess = get_boto3_session(sh_role_assumend)
+        sess = assume_role(logger, resource_account_id, mh_role)
     else:
         sess = None
 
