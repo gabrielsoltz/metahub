@@ -64,20 +64,6 @@ def get_parser():
     # Group: Security Hub
     group_security_hub = parser.add_argument_group("Security Hub Options")
     group_security_hub.add_argument(
-        "--sh-filters",
-        default=None,
-        help='Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW',
-        required=False,
-        nargs="*",
-        action=KeyValueWithList,
-    )
-    group_security_hub.add_argument(
-        "--sh-template",
-        default=None,
-        help="Use this option to filter the results from SH using a YAML file. You need to specify the file: --sh-template templates/default.yml",
-        required=False,
-    )
-    group_security_hub.add_argument(
         "--sh-assume-role",
         default=None,
         help="Specify the AWS IAM role to be assumed where SH is running. Use with --sh-account",
@@ -94,6 +80,26 @@ def get_parser():
         choices=get_available_regions(get_logger("ERROR"), "securityhub"),
         default=[],
         help="Specify the AWS Region where SH is running",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--sh-profile",
+        default=None,
+        help="",
+        required=False,
+    )
+    group_security_hub.add_argument(
+        "--sh-filters",
+        default=None,
+        help='Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW',
+        required=False,
+        nargs="*",
+        action=KeyValueWithList,
+    )
+    group_security_hub.add_argument(
+        "--sh-template",
+        default=None,
+        help="Use this option to filter the results from SH using a YAML file. You need to specify the file: --sh-template templates/default.yml",
         required=False,
     )
     group_security_hub.add_argument(
@@ -126,8 +132,8 @@ def get_parser():
         required=False,
     )
 
-    # Group: Meta Checks and Meta Tags Options
-    group_meta_checks = parser.add_argument_group("Meta Checks and Meta Tags Options")
+    # Group: Meta Options
+    group_meta_checks = parser.add_argument_group("Meta Options")
     group_meta_checks.add_argument(
         "--list-meta-checks",
         help="Use this option to list all available Meta Checks",
@@ -178,6 +184,12 @@ def get_parser():
         "--drill-down",
         help="Use this option to execute Drilled MetaChecks. This option will be used only if you are using --meta-checks",
         default=True,
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    group_meta_checks.add_argument(
+        "--meta-account",
+        help="Use this option to enable Meta Account",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
@@ -367,7 +379,8 @@ def test_python_version():
             "Python Version must be Python 3.9 or above. Please update your Python version: %s",
             sys.version,
         )
-        sys.exit(1)
+        return False
+    return True
 
 
 def rich_box(resource_type, values):
