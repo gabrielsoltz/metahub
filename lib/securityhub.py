@@ -2,9 +2,9 @@
 from sys import exit
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from botocore.exceptions import BotoCoreError, ClientError, EndpointConnectionError
 
-from lib.AwsHelpers import assume_role, get_boto3_session
+from lib.AwsHelpers import assume_role, get_boto3_client
 
 
 class SecurityHub:
@@ -12,17 +12,34 @@ class SecurityHub:
 
     def __init__(self, logger, sh_region, sh_account=False, sh_role=False):
         self.logger = logger
-        if not sh_role or not sh_account:
-            self.sh_client = boto3.client("securityhub", region_name=sh_region)
-        elif sh_role and sh_account:
-            sh_role_assumend = assume_role(logger, sh_account, sh_role)
-            shsess = get_boto3_session(sh_role_assumend)
-            self.sh_client = shsess.client(
-                service_name="securityhub", region_name=sh_region
-            )
+        if sh_role and sh_account:
+            shsess = assume_role(logger, sh_account, sh_role)
         else:
-            self.logger.error("Missing data for assuming a Session to SH")
-            exit(1)
+            shsess = None
+        self.sh_client = get_boto3_client(
+            self.logger, "securityhub", sh_region, shsess
+        )
+        region_aggregator = self.get_region_aggregator()
+        if region_aggregator != sh_region:
+            logger.warning(
+                "You are using region %s, but your findings aggregator is in region: %s. Use --sh-region %s for aggregated findings...",
+                sh_region,
+                region_aggregator,
+                region_aggregator,
+            )
+
+    def get_region_aggregator(self):
+        try:
+            sh_findings_aggregator = self.sh_client.list_finding_aggregators()["FindingAggregators"]
+        except (EndpointConnectionError, Exception) as e:
+            self.logger.error("Error getting SecurityHub aggregators: {}".format(e))
+            sh_findings_aggregator = False
+        if sh_findings_aggregator:
+            sh_findings_aggregator_region = sh_findings_aggregator[0][
+                "FindingAggregatorArn"
+            ].split(":")[3]
+            return sh_findings_aggregator_region
+        return False
 
     def get_findings(self, sh_filters):
         """Get Security Findings from Security Hub with Filters applied"""
@@ -60,23 +77,6 @@ class SecurityHub:
                 break
         self.logger.info("Gathering SecurityHub results complete")
         return findings
-
-    def parse_finding(self, finding):
-        """Returns resurce ARN and finding parsed for it"""
-        findings = {
-            finding["Title"]: {
-                "SeverityLabel": finding["Severity"]["Label"],
-                "Workflow": finding.get("Workflow"),
-                "RecordState": finding["RecordState"],
-                "Compliance": finding.get("Compliance"),
-                "Id": finding["Id"],
-                "ProductArn": finding["ProductArn"],
-                "StandardsControlArn": finding.get("ProductFields").get(
-                    "StandardsControlArn"
-                ),
-            },
-        }
-        return finding["Resources"][0]["Id"], findings
 
     def _spit_list(self, lst, n):
         """split a list into multipe lists from n items"""
@@ -156,3 +156,20 @@ class SecurityHub:
                         FindingIdentifier["Id"],
                     )
         return response_multiple
+
+def parse_finding(finding):
+    """Returns resource ARN and finding parsed for it"""
+    findings = {
+        finding["Title"]: {
+            "SeverityLabel": finding["Severity"]["Label"],
+            "Workflow": finding.get("Workflow"),
+            "RecordState": finding["RecordState"],
+            "Compliance": finding.get("Compliance"),
+            "Id": finding.get("Id"),
+            "ProductArn": finding.get("ProductArn"),
+            "StandardsControlArn": finding.get("ProductFields").get(
+                "StandardsControlArn"
+            ),
+        },
+    }
+    return finding["Resources"][0]["Id"], findings
