@@ -5,31 +5,31 @@
 var tableData = [
   {% for resource, resource_value in data.items() %}
     {% for finding in resource_value.findings %} 
-    {% for finding_name, finding_values in finding.items() %}
-      {
-          ARN: "{{ resource|e }}",
-          AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
-          {% if 'metaaccount' in resource_value %}
-            AwsAccountAlias: "{{ resource_value.metaaccount["Alias"]|e }}",
-          {% endif %}
-          Region: "{{ resource_value.Region|e }}",
-          ResourceType: "{{ resource_value.ResourceType|e }}",
-          Severity: "{{ finding_values.SeverityLabel|e }}",
-          Title: "{{ finding_name|e }}",
-          WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
-          RecordState: "{{ finding_values.RecordState|e }}",
-          ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
-          {% if 'metatags' in resource_value %}
-            {% for metatags_column in metatags_columns %}
-              "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
-            {% endfor %}
-          {% endif %}
-          {% if 'metachecks' in resource_value %}
-            {% for metachecks_column in metachecks_columns %}
-              "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
-            {% endfor %}
-          {% endif %}
-      },
+      {% for finding_name, finding_values in finding.items() %}
+        {
+            ARN: "{{ resource|e }}",
+            AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
+            {% if 'metaaccount' in resource_value %}
+              AwsAccountAlias: "{{ resource_value.metaaccount["Alias"]|e }}",
+            {% endif %}
+            Region: "{{ resource_value.Region|e }}",
+            ResourceType: "{{ resource_value.ResourceType|e }}",
+            Severity: "{{ finding_values.SeverityLabel|e }}",
+            Title: "{{ finding_name|e }}",
+            WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
+            RecordState: "{{ finding_values.RecordState|e }}",
+            ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
+            {% if 'metatags' in resource_value %}
+              {% for metatags_column in metatags_columns %}
+                "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
+              {% endfor %}
+            {% endif %}
+            {% if 'metachecks' in resource_value %}
+              {% for metachecks_column in metachecks_columns %}
+                "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
+              {% endfor %}
+            {% endif %}
+        },
       {% endfor %}
     {% endfor %}
   {% endfor %}
@@ -104,7 +104,9 @@ var table = new Tabulator("#findings-table", {
         {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"AwsAccountAlias", field:"AwsAccountAlias", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% if 'metaaccount' in resource_value %}
+          {title:"AwsAccountAlias", field:"AwsAccountAlias", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endif %}
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -253,9 +255,6 @@ document.getElementById("download-html").addEventListener("click", function(){
     <div style="width: 200px;"><canvas id="ChartAwsAccountId"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartAwsAccountAlias"></canvas></div>
-  </div>
-  <div class="column">
     <div style="width: 200px;"><canvas id="ChartRegion"></canvas></div>
   </div>
   <div class="column">
@@ -313,18 +312,20 @@ var statsAwsAccountIdLabels = [
 
 // AwsAccountAlias
 {% if 'metaaccount' in statistics %}
-  var statsAwsAccountAliasData = [
-    {% for stat, value in statistics['metaaccount']['Alias'].items() %}
-      {
-        stat: "{{ stat|e }}", value: {{ value|e }}
-      },
-    {% endfor %}
-  ]
-  var statsAwsAccountAliasLabels = [
-    {% for stat, value in statistics['metaaccount']['Alias'].items() %}
-      "{{ stat|e }}",
-    {% endfor %}
-  ]
+  {% if 'Alias' in  statistics['metaaccount'] %}
+    var statsAwsAccountAliasData = [
+      {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+        {
+          stat: "{{ stat|e }}", value: {{ value|e }}
+        },
+      {% endfor %}
+    ]
+    var statsAwsAccountAliasLabels = [
+      {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+        "{{ stat|e }}",
+      {% endfor %}
+    ]
+  {% endif %}
 {% endif %}
 
 // ResourceType
