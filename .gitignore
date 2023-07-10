@@ -177,3 +177,4 @@ terraform.rc
 
 terminalizer/*.yml
 terminalizer/*.gif
+terminalizer/*.json
