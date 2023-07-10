@@ -83,9 +83,11 @@ def get_available_regions(logger, aws_service):
 
 
 def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
+    logger.info("Getting account alias for account {}".format(aws_account_number))
     aliases = ""
     local_account = get_account_id(logger, sess=None, profile=profile)
     if aws_account_number != local_account and not role_name:
+        logger.warning("Can't get account alias for account {}, not --mh-assume-role provided".format(aws_account_number))
         return aliases
     if role_name and aws_account_number:
         sess = assume_role(logger, aws_account_number, role_name)
@@ -104,11 +106,13 @@ def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
 def get_account_alternate_contact(
     logger, aws_account_number, role_name=None, alternate_contact_type="SECURITY"
 ):
+    logger.info("Getting alternate contact for account {}".format(aws_account_number))
     # https://docs.aws.amazon.com/accounts/latest/reference/using-orgs-trusted-access.html
     # https://aws.amazon.com/blogs/mt/programmatically-managing-alternate-contacts-on-member-accounts-with-aws-organizations/
     alternate_contact = ""
     local_account = get_account_id(logger)
     if aws_account_number != local_account and not role_name:
+        logger.warning("Can't get alternate contact for account {}, not --mh-assume-role provided".format(aws_account_number))
         return alternate_contact
     if role_name and aws_account_number:
         sess = assume_role(logger, aws_account_number, role_name)
@@ -120,27 +124,20 @@ def get_account_alternate_contact(
             AccountId=aws_account_number, AlternateContactType=alternate_contact_type
         ).get("AlternateContact")
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-        if (
-            e.response["Error"]["Code"] == "AccessDeniedException"
-            and "The management account can only be managed using the standalone context from the management account."
-            in e.response["Error"]["Message"]
-        ):
-            try:
-                alternate_contact = account_client.get_alternate_contact(
-                    AlternateContactType=alternate_contact_type
-                ).get("AlternateContact")
-            except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
+        try:
+            alternate_contact = account_client.get_alternate_contact(
+                AlternateContactType=alternate_contact_type
+            ).get("AlternateContact")
+        except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                logger.info("No alternate contact found")
+                pass
+            else:
                 logger.warning(
                     "Error getting alternate contact for account {}: {}".format(
                         aws_account_number, e
                     )
                 )
-        else:
-            logger.warning(
-                "Error getting alternate contact for account {}: {}".format(
-                    aws_account_number, e
-                )
-            )
     return alternate_contact
 
 
