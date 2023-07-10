@@ -174,3 +174,6 @@ terraform.rc
 *.lock.hcl
 *.ignore
 *.zip
+
+terminalizer/*.yml
+terminalizer/*.gif
