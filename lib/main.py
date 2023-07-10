@@ -189,9 +189,10 @@ def generate_findings(
                             resource_arn
                         ]["AwsAccountId"] = finding["AwsAccountId"]
                         # MetaAccount
-                        mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
-                            resource_arn
-                        ]["metaaccount"] = finding["AwsAccountData"]
+                        if metaaccount:
+                            mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
+                                resource_arn
+                            ]["metaaccount"] = finding["AwsAccountData"]
                         # MetaChecks
                         if metachecks:
                             mh_findings[resource_arn]["metachecks"] = mh_findings_short[
@@ -589,16 +590,6 @@ def main(args):
                 )
             )
 
-    print_title_line("Outputs", banners=banners)
-    generate_outputs(
-        args,
-        mh_findings_short,
-        mh_inventory,
-        mh_statistics,
-        mh_findings,
-        banners=banners,
-    )
-
     print_title_line("Results", banners=banners)
     print_table("Total Resources: ", str(len(mh_findings)), banners=banners)
     print_table(
@@ -628,6 +619,16 @@ def main(args):
         console.print(Columns(region_renderables))
         print_color("Account ID:")
         console.print(Columns(accountid_renderables))
+
+    print_title_line("Outputs", banners=banners)
+    generate_outputs(
+        args,
+        mh_findings_short,
+        mh_inventory,
+        mh_statistics,
+        mh_findings,
+        banners=banners,
+    )
 
     if args.update_findings:
         UPProcessedFindings = []
