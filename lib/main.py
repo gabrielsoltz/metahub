@@ -51,6 +51,7 @@ def generate_findings(
     banners,
     drill_down,
     metaaccount,
+    sh_profile
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -63,7 +64,7 @@ def generate_findings(
         findings.extend(asff_findings)
         print_table("Input ASFF findings found: ", len(asff_findings), banners=banners)
     if "securityhub" in inputs:
-        sh = SecurityHub(logger, sh_region, sh_account, sh_role)
+        sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
         sh_findings = sh.get_findings(sh_filters)
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
@@ -224,9 +225,9 @@ def generate_findings(
 
 
 def update_findings(
-    logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters
+    logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters, sh_profile
 ):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role)
+    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
     if confirm_choice("Are you sure you want to update all findings?"):
         update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
         update_multiple_ProcessedFinding = []
@@ -247,8 +248,8 @@ def update_findings(
     return [], []
 
 
-def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role)
+def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region, sh_profile):
+    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
     if confirm_choice("Are you sure you want to enrich all findings?"):
         update_multiple = sh.update_findings_meta(mh_findings)
         update_multiple_ProcessedFinding = []
@@ -376,8 +377,8 @@ def validate_arguments(args, logger):
     # AWS Security Hub
     if "securityhub" in args.inputs:
         sh_region = args.sh_region or get_region(logger)
-        sh_account = args.sh_account or get_account_id(logger)
-        sh_account_alias = get_account_alias(logger, sh_account, args.sh_assume_role)
+        sh_account = args.sh_account or get_account_id(logger, sess=None, profile=args.sh_profile)
+        sh_account_alias = get_account_alias(logger, sh_account, role_name=args.sh_assume_role, profile=args.sh_profile)
     else:
         sh_region = args.sh_region
         sh_account = args.sh_account
@@ -526,6 +527,7 @@ def main(args):
     )
     print_table("Security Hub Role: ", str(args.sh_assume_role), banners=banners)
     print_table("Security Hub Region: ", sh_region, banners=banners)
+    print_table("Security Hub Profile: ", args.sh_profile, banners=banners)
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)
     print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
@@ -563,6 +565,7 @@ def main(args):
         banners=banners,
         drill_down=args.drill_down,
         metaaccount=args.meta_account,
+        sh_profile=args.sh_profile,
     )
 
     if "lambda" in args.output_modes:
@@ -643,6 +646,7 @@ def main(args):
                 args.sh_assume_role,
                 sh_region,
                 update_findings_filters,
+                args.sh_profile
             )
         print_title_line("Results", banners=banners)
         print_table(
@@ -661,7 +665,7 @@ def main(args):
         )
         if mh_findings:
             ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
-                logger, mh_findings, sh_account, args.sh_assume_role, sh_region
+                logger, mh_findings, sh_account, args.sh_assume_role, sh_region, args.sh_profile
             )
         print_title_line("Results", banners=banners)
         print_table(
