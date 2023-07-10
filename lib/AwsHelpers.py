@@ -1,6 +1,11 @@
 import boto3
 import botocore
-from botocore.exceptions import ClientError, EndpointConnectionError, NoCredentialsError, ProfileNotFound
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    NoCredentialsError,
+    ProfileNotFound,
+)
 
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):
@@ -87,7 +92,11 @@ def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
     aliases = ""
     local_account = get_account_id(logger, sess=None, profile=profile)
     if aws_account_number != local_account and not role_name:
-        logger.warning("Can't get account alias for account {}, not --mh-assume-role provided".format(aws_account_number))
+        logger.warning(
+            "Can't get account alias for account {}, not --mh-assume-role provided".format(
+                aws_account_number
+            )
+        )
         return aliases
     if role_name and aws_account_number:
         sess = assume_role(logger, aws_account_number, role_name)
@@ -112,7 +121,11 @@ def get_account_alternate_contact(
     alternate_contact = ""
     local_account = get_account_id(logger)
     if aws_account_number != local_account and not role_name:
-        logger.warning("Can't get alternate contact for account {}, not --mh-assume-role provided".format(aws_account_number))
+        logger.warning(
+            "Can't get alternate contact for account {}, not --mh-assume-role provided".format(
+                aws_account_number
+            )
+        )
         return alternate_contact
     if role_name and aws_account_number:
         sess = assume_role(logger, aws_account_number, role_name)
@@ -150,6 +163,10 @@ def get_boto3_client(logger, service, region, sess, profile=None):
                 service_name=service, region_name=region
             )
         except (ProfileNotFound) as e:
-            logger.error("Error getting boto3 client using AWS profile (check --sh-profile): {}".format(e))
+            logger.error(
+                "Error getting boto3 client using AWS profile (check --sh-profile): {}".format(
+                    e
+                )
+            )
             exit(1)
     return boto3.client(service, region_name=region)

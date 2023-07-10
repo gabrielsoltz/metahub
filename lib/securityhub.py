@@ -10,13 +10,17 @@ from lib.AwsHelpers import assume_role, get_boto3_client
 class SecurityHub:
     """Interfaces with the AWS Security Hub"""
 
-    def __init__(self, logger, sh_region, sh_account=False, sh_role=False, sh_profile=False):
+    def __init__(
+        self, logger, sh_region, sh_account=False, sh_role=False, sh_profile=False
+    ):
         self.logger = logger
         if sh_role and sh_account:
             shsess = assume_role(logger, sh_account, sh_role)
         else:
             shsess = None
-        self.sh_client = get_boto3_client(self.logger, "securityhub", sh_region, shsess, sh_profile)
+        self.sh_client = get_boto3_client(
+            self.logger, "securityhub", sh_region, shsess, sh_profile
+        )
         region_aggregator = self.get_region_aggregator()
         if region_aggregator != sh_region:
             logger.warning(

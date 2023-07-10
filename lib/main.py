@@ -51,7 +51,7 @@ def generate_findings(
     banners,
     drill_down,
     metaaccount,
-    sh_profile
+    sh_profile,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -190,9 +190,13 @@ def generate_findings(
                         ]["AwsAccountId"] = finding["AwsAccountId"]
                         # MetaAccount
                         if metaaccount:
-                            mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
-                                resource_arn
-                            ]["metaaccount"] = finding["AwsAccountData"]
+                            mh_findings[resource_arn][
+                                "metaaccount"
+                            ] = mh_findings_short[resource_arn][
+                                "metaaccount"
+                            ] = finding[
+                                "AwsAccountData"
+                            ]
                         # MetaChecks
                         if metachecks:
                             mh_findings[resource_arn]["metachecks"] = mh_findings_short[
@@ -226,7 +230,14 @@ def generate_findings(
 
 
 def update_findings(
-    logger, mh_findings, update, sh_account, sh_role, sh_region, update_filters, sh_profile
+    logger,
+    mh_findings,
+    update,
+    sh_account,
+    sh_role,
+    sh_region,
+    update_filters,
+    sh_profile,
 ):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
     if confirm_choice("Are you sure you want to update all findings?"):
@@ -378,8 +389,12 @@ def validate_arguments(args, logger):
     # AWS Security Hub
     if "securityhub" in args.inputs:
         sh_region = args.sh_region or get_region(logger)
-        sh_account = args.sh_account or get_account_id(logger, sess=None, profile=args.sh_profile)
-        sh_account_alias = get_account_alias(logger, sh_account, role_name=args.sh_assume_role, profile=args.sh_profile)
+        sh_account = args.sh_account or get_account_id(
+            logger, sess=None, profile=args.sh_profile
+        )
+        sh_account_alias = get_account_alias(
+            logger, sh_account, role_name=args.sh_assume_role, profile=args.sh_profile
+        )
     else:
         sh_region = args.sh_region
         sh_account = args.sh_account
@@ -647,7 +662,7 @@ def main(args):
                 args.sh_assume_role,
                 sh_region,
                 update_findings_filters,
-                args.sh_profile
+                args.sh_profile,
             )
         print_title_line("Results", banners=banners)
         print_table(
@@ -666,7 +681,12 @@ def main(args):
         )
         if mh_findings:
             ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
-                logger, mh_findings, sh_account, args.sh_assume_role, sh_region, args.sh_profile
+                logger,
+                mh_findings,
+                sh_account,
+                args.sh_assume_role,
+                sh_region,
+                args.sh_profile,
             )
         print_title_line("Results", banners=banners)
         print_table(

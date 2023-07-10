@@ -431,7 +431,10 @@ def generate_output_html(
     template = templateEnv.get_template(TEMPLATE_FILE)
     # Convert MetaChecks to Boolean
     for resource_arn in mh_findings:
-        if "metachecks" in mh_findings[resource_arn] and mh_findings[resource_arn]["metachecks"]:
+        if (
+            "metachecks" in mh_findings[resource_arn]
+            and mh_findings[resource_arn]["metachecks"]
+        ):
             for metacheck in mh_findings[resource_arn]["metachecks"]:
                 if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
                     mh_findings[resource_arn]["metachecks"][metacheck] = True
