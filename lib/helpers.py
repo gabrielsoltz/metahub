@@ -85,7 +85,7 @@ def get_parser():
     group_security_hub.add_argument(
         "--sh-profile",
         default=None,
-        help="",
+        help="AWS Profile to use for Security Hub",
         required=False,
     )
     group_security_hub.add_argument(
