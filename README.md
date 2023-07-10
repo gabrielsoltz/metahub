@@ -43,13 +43,7 @@ MetaHub is designed for use as a CLI tool or within automated workflows, such as
 
 With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them or not. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings at once.
 
-<details>
-<summary>Expand to see the output example.
-This EC2 instance has security findings from various security scanners, including Security Hub's own standards (which state that EC2 instances should use Instance Metadata Service Version 2 or IMDSv2), Prowler (which looks for secrets in EC2 User Data), and Tenable (which detects unsupported versions of Apache Log4j). These findings are grouped together under the "findings" section.
-The following section, called MetaChecks, includes information about the security groups that the instance is associated with and whether they have unrestricted rules, the EBS volumes that the instance is associated with and whether they are encrypted, whether the instance is associated with Auto Scaling Groups and if those groups are associated with Launch Configurations or Launch Templates. Whether the instance is associated with IAM roles and whether any of the policies attached to that role have issues. Additionally, MetaChecks provides IP addresses, DNS domains, and other useful information. MetaHub can also determine if the instance is effectively public and effectively encrypted.
-Under the section called MetaTags, you can find the tags associated with the instance.
-Under the section called MetaTrails, you can find any important trails associated with the instance, such as who created it.
-</summary>
+<img width="524" src="metahub-min.gif" />
 
 ```
 {
@@ -238,6 +232,7 @@ You can read the following articles on MetaHub practical use-cases:
 - **[MetaTags](#MetaTags)** (`--meta-tags`): Queries tagging from affected resources
 - **[MetaTrails](#MetaTrails)** (`--meta-trails`): Queries CloudTrail in the affected account to identify who created the resource and when, as well as any other related critical events
 - **[MetaChecks](#MetaChecks)** (`--meta-checks`): Fetches extra information from the affected resource, such as whether it is public, encrypted, associated with, or referenced by other resources.
+- **[MetaAccount](#MetaChecks)** (`--meta-account`): Fetches extra information from the account where the affected resource is running, such as the account name, security contacts, and other information.
   
 MetaHub supports filters on top of these Meta* outputs to automate the detection of other resources with the same issues. For instance, you can list all resources that are effectively public, not encrypted, and tagged as `Environment=production` `Service="My Insecure Service"`. You can use **[MetaChecks filters](#metachecks-filtering)** using the option `--mh-filters-checks` and **[MetaTags filters](#metatags-filtering)** using the option `--mh-filters-tags`. The results of your filters are managed in an aggregate way that allows you to update your findings together when necessary or send them to other tools, such as ticketing or alerting systems. 
 
@@ -376,17 +371,49 @@ Or you can export your credentials to the environment.
 
 - `--sh-account` and `--sh-assume-role`: The AWS Account ID where Security Hub is running and the AWS IAM role to assume in that account. These options are helpful when you are logged in to a different AWS Account than the one where AWS Security Hub is running or when running AWS Security Hub in a multiple AWS Account setup. Both options must be used together. The role provided needs to have enough policies to get and update findings in AWS Security Hub (if needed). If you don't specify a `--sh-account`, MetaHub will assume the one you are logged in.
 
-- You can use the managed policy: `arn:aws:iam::aws:policy/AWSSecurityHubFullAccess` 
+- `--sh-profile`: You can also provide your aws profile name to use for AWS Security Hub. If you don't specify a profile. When using this option, you don't need to specify `--sh-account` or `--sh-assume-role` as MetaHub will use the credentials from the profile. If you are using `--sh-account` and `--sh-assume-role`, those options takes precedence over `--sh-profile`.
+
+## IAM Policy for Security Hub
+
+This is the minimum IAM policy you need to read and write from AWS Security Hub. If you don't want to update your findings with MetaHub, you can remove the `securityhub:BatchUpdateFindings` action.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "securityhub:GetFindings",
+                "securityhub:ListFindingAggregators",
+                "securityhub:BatchUpdateFindings",
+                "iam:ListAccountAliases"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+```
 
 # Configuring MetaChecks, MetaTags, and MetaTrails
 
 - If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for MetaChecks, MetaTags and MetaTrails, because the affected resources are not in the same AWS Account that the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources. 
 
 - The option `--mh-assume-role` let you configure the role to assume in the affected account when you are using AWS Security Hub in a [Multiple Account setup](#multiple-account-setup) for executing `--meta-checks`, `--meta-tags` and `--meta-trails`.
-- For MetaTags, you need a policy allowing the action: `tag:get_resources`
-- For MetaCheks, you can use the managed policy: `arn:aws:iam::aws:policy/SecurityAudit`
-- For MetaTrails, you need a policy allowing the action: `cloudtrail:LookupEvents`
-- If you need it to log in and assume a role in the same account, use the options `--mh-assume-role` to specify the role you want to use for `--meta-checks` and `--meta-tags` and the option `--sh-assume-role` for specifying the role you want to assume to read/write from AWS Security Hub.
+
+## IAM Policy for Meta* options
+
+- For MetaTags, you need a policy allowing the action: 
+  - `tag:get_resources`
+- For MetaCheks, you can use the managed policy: 
+  - `arn:aws:iam::aws:policy/SecurityAudit`
+- For MetaTrails, you need a policy allowing the action: 
+  - `cloudtrail:LookupEvents`
+- For MetaAccount, you need a policy allowing the action: 
+  - `account:GetAlternateContact`
+  - `iam:ListAccountAliases`
 
 # Quick Run
 
