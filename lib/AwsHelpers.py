@@ -1,6 +1,6 @@
 import boto3
 import botocore
-from botocore.exceptions import ClientError, EndpointConnectionError, NoCredentialsError
+from botocore.exceptions import ClientError, EndpointConnectionError, NoCredentialsError, ProfileNotFound
 
 
 def assume_role(logger, aws_account_number, role_name, duration=3600):
@@ -27,7 +27,7 @@ def assume_role(logger, aws_account_number, role_name, duration=3600):
             RoleSessionName="MetaHub",
             DurationSeconds=duration,
         )
-    except ClientError as e:
+    except (ClientError, NoCredentialsError) as e:
         logger.error("Error assuming IAM role: {}".format(e))
         exit(1)
     # Session
@@ -82,22 +82,22 @@ def get_available_regions(logger, aws_service):
     return available_regions
 
 
-def get_account_alias(logger, aws_account_number, role_name=None):
+def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
     aliases = ""
-    local_account = get_account_id(logger)
+    local_account = get_account_id(logger, sess=None, profile=profile)
     if aws_account_number != local_account and not role_name:
         return aliases
     if role_name and aws_account_number:
         sess = assume_role(logger, aws_account_number, role_name)
     else:
         sess = None
-    iam_client = get_boto3_client(logger, "iam", "us-east-1", sess)
+    iam_client = get_boto3_client(logger, "iam", "us-east-1", sess, profile)
     try:
-        aliases = iam_client.list_account_aliases()["AccountAliases"]
+        aliases = iam_client.list_account_aliases()["AccountAliases"][0]
     except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
         logger.error("Error getting account alias: {}".format(e))
-    if aliases:
-        return aliases[0]
+    except IndexError:
+        logger.info("No account alias found")
     return aliases
 
 
@@ -148,7 +148,11 @@ def get_boto3_client(logger, service, region, sess, profile=None):
     if sess:
         return sess.client(service_name=service, region_name=region)
     if profile:
-        return boto3.Session(profile_name=profile).client(
-            service_name=service, region_name=region
-        )
+        try:
+            return boto3.Session(profile_name=profile).client(
+                service_name=service, region_name=region
+            )
+        except (ProfileNotFound) as e:
+            logger.error("Error getting boto3 client using AWS profile (check --sh-profile): {}".format(e))
+            exit(1)
     return boto3.client(service, region_name=region)
