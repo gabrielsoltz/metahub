@@ -20,26 +20,20 @@ class PolicyHelper:
             "is_unrestricted": [],
             "is_actions_wildcard": [],
         }
-        for statement in self.policy["Statement"]:
-            (
-                effect,
-                principal,
-                not_principal,
-                condition,
-                action,
-                not_action,
-            ) = self.parse_statement(statement)
-            if effect == "Allow":
-                if self.is_principal_wildcard(statement):
-                    failed_statements["is_principal_wildcard"].append(statement)
-                if self.is_principal_cross_account(statement):
-                    failed_statements["is_principal_cross_account"].append(statement)
-                if self.is_principal_external(statement):
-                    failed_statements["is_principal_external"].append(statement)
-                if self.is_unrestricted(statement):
-                    failed_statements["is_unrestricted"].append(statement)
-                if self.is_actions_wildcard(statement):
-                    failed_statements["is_actions_wildcard"].append(statement)
+        statements = self.policy["Statement"]
+        if type(statements) is not list:
+            statements = [statements]
+        for statement in statements:
+            if self.is_principal_wildcard(statement):
+                failed_statements["is_principal_wildcard"].append(statement)
+            if self.is_principal_cross_account(statement):
+                failed_statements["is_principal_cross_account"].append(statement)
+            if self.is_principal_external(statement):
+                failed_statements["is_principal_external"].append(statement)
+            if self.is_unrestricted(statement):
+                failed_statements["is_unrestricted"].append(statement)
+            if self.is_actions_wildcard(statement):
+                failed_statements["is_actions_wildcard"].append(statement)
         return failed_statements
 
     def parse_statement(self, statement):
@@ -69,8 +63,9 @@ class PolicyHelper:
             action,
             not_action,
         ) = self.parse_statement(statement)
-        if principal == "*" or principal.get("AWS") == "*":
-            return statement
+        if effect == "Allow":
+            if principal == "*" or principal.get("AWS") == "*":
+                return statement
         return False
 
     def is_principal_cross_account(self, statement):
@@ -85,29 +80,30 @@ class PolicyHelper:
             action,
             not_action,
         ) = self.parse_statement(statement)
-        if principal and principal != "*" and principal.get("AWS") != "*":
-            if "AWS" in principal:
-                principals = principal["AWS"]
-            elif "Service" in principal:
-                return False
-            else:
-                principals = principal
-            if type(principals) is not list:
-                principals = [principals]
-            for p in principals:
-                try:
-                    account_id = p.split(":")[4]
-                    if account_id != self.account_id:
-                        if account_id not in ("cloudfront"):
-                            return statement
-                except IndexError:
-                    self.logger.warning(
-                        "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
-                        p,
-                        self.resource,
-                    )
-                    # To DO: check identifiers-unique-ids
-                    # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
+        if effect == "Allow":
+            if principal and principal != "*" and principal.get("AWS") != "*":
+                if "AWS" in principal:
+                    principals = principal["AWS"]
+                elif "Service" in principal:
+                    return False
+                else:
+                    principals = principal
+                if type(principals) is not list:
+                    principals = [principals]
+                for p in principals:
+                    try:
+                        account_id = p.split(":")[4]
+                        if account_id != self.account_id:
+                            if account_id not in ("cloudfront"):
+                                return statement
+                    except IndexError:
+                        self.logger.warning(
+                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
+                            p,
+                            self.resource,
+                        )
+                        # To DO: check identifiers-unique-ids
+                        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
     def is_principal_external(self, statement):
@@ -122,31 +118,32 @@ class PolicyHelper:
             action,
             not_action,
         ) = self.parse_statement(statement)
-        if principal and principal != "*" and principal.get("AWS") != "*":
-            if "AWS" in principal:
-                principals = principal["AWS"]
-            elif "Service" in principal:
-                return False
-            else:
-                principals = principal
-            if type(principals) is not list:
-                principals = [principals]
-            for p in principals:
-                try:
-                    account_id = p.split(":")[4]
-                    if (
-                        account_id not in internal_accounts
-                        and account_id not in amazon_accounts
-                    ):
-                        return statement
-                except IndexError:
-                    self.logger.warning(
-                        "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
-                        p,
-                        self.resource,
-                    )
-                    # To DO: check identifiers-unique-ids
-                    # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
+        if effect == "Allow":
+            if principal and principal != "*" and principal.get("AWS") != "*":
+                if "AWS" in principal:
+                    principals = principal["AWS"]
+                elif "Service" in principal:
+                    return False
+                else:
+                    principals = principal
+                if type(principals) is not list:
+                    principals = [principals]
+                for p in principals:
+                    try:
+                        account_id = p.split(":")[4]
+                        if (
+                            account_id not in internal_accounts
+                            and account_id not in amazon_accounts
+                        ):
+                            return statement
+                    except IndexError:
+                        self.logger.warning(
+                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
+                            p,
+                            self.resource,
+                        )
+                        # To DO: check identifiers-unique-ids
+                        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
     def is_unrestricted(self, statement):
@@ -162,18 +159,19 @@ class PolicyHelper:
             not_action,
         ) = self.parse_statement(statement)
         suffix = "/0"
-        if principal == "*" or principal.get("AWS") == "*":
-            if condition is not None:
-                # IpAddress Condition with /0
-                if suffix in str(condition.get("IpAddress")):
+        if effect == "Allow":
+            if principal == "*" or principal.get("AWS") == "*":
+                if condition is not None:
+                    # IpAddress Condition with /0
+                    if suffix in str(condition.get("IpAddress")):
+                        return statement
+                    # To Do: Add other public conditions
+                else:
+                    # No Condition
                     return statement
-                # To Do: Add other public conditions
-            else:
-                # No Condition
+            # Not Principal (all other principals)
+            if not_principal is not None:
                 return statement
-        # Not Principal (all other principals)
-        if not_principal is not None:
-            return statement
         return False
 
     def is_actions_wildcard(self, statement):
@@ -186,12 +184,16 @@ class PolicyHelper:
             action,
             not_action,
         ) = self.parse_statement(statement)
-        if action:
-            if "*" in action:
+        if effect == "Allow":
+            if action:
+                if type(action) is not list:
+                    action = [action]
+                    for a in action:
+                        if "*" in a:
+                            return statement
+            # Not Action (all other actions are allowed)
+            if not_action:
                 return statement
-        # Not Action (all other actions)
-        if not_action:
-            return statement
         return False
 
 
