@@ -7,6 +7,10 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateSecurityGroup", "AuthorizeSecurityGroupIngress"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": 1},
     },
+    "AwsEc2Volume": {
+        "metatrails_events": ["CreateVolume"],
+        "ResourceName": {"parsing_char": "/", "parsing_pos": 1},
+    },
     "AwsAutoScalingLaunchConfiguration": {
         "metatrails_events": ["CreateLaunchConfiguration"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": 1},
