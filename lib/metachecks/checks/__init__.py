@@ -11,6 +11,8 @@ from lib.metachecks.checks import (
     AwsElasticsearchDomain,
     AwsIamPolicy,
     AwsIamRole,
+    AwsIamUser,
+    AwsIamGroup,
     AwsLambdaFunction,
     AwsRdsDbCluster,
     AwsRdsDbInstance,
