@@ -121,6 +121,12 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def is_attached(self):
+        if self.network_acl:
+            if self.its_associated_with_subnets():
+                return True
+        return False
+
     def checks(self):
         checks = [
             "its_associated_with_subnets",
@@ -128,5 +134,6 @@ class Metacheck(MetaChecksBase):
             "is_ingress_rules_unrestricted",
             "is_egress_rules_unrestricted",
             "is_public",
+            "is_attached",
         ]
         return checks

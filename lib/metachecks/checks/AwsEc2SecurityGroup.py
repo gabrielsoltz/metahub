@@ -240,6 +240,12 @@ class Metacheck(MetaChecksBase):
                         return True
         return False
 
+    def is_attached(self):
+        if self.all_security_group:
+            if self.its_associated_with_network_interfaces() or self.its_associated_with_ec2_instances() or self.its_associated_with_ips_public() or self.its_associated_with_managed_services():
+                return True
+        return False
+
     def checks(self):
         checks = [
             "its_associated_with_network_interfaces",
@@ -251,5 +257,6 @@ class Metacheck(MetaChecksBase):
             "is_egress_rules_unrestricted",
             "is_public",
             "is_default",
+            "is_attached",
         ]
         return checks

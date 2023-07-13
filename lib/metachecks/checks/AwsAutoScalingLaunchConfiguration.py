@@ -166,6 +166,11 @@ class Metacheck(MetaChecksBase):
                         return False
         return True
 
+    def is_attached(self):
+        if self.its_associated_with_autoscaling_group():
+            return True
+        return False
+
     def checks(self):
         checks = [
             "is_instance_metadata_v2",
@@ -176,5 +181,6 @@ class Metacheck(MetaChecksBase):
             "it_associates_public_ip",
             "is_public",
             "is_encrypted",
+            "is_attached",
         ]
         return checks
