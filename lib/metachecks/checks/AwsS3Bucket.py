@@ -77,34 +77,31 @@ class Metacheck(MetaChecksBase):
     def get_bucket_public_access_block(self):
         try:
             response = self.client.get_public_access_block(Bucket=self.resource_id)
+            if response["PublicAccessBlockConfiguration"]:
+                for key, value in response["PublicAccessBlockConfiguration"].items():
+                    if value == False:
+                        return False
+                return True
         except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
                 self.logger.error(
                     "Failed to get_public_access_block {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        return response["PublicAccessBlockConfiguration"]
+            return False
 
     def get_bucket_encryption(self):
         try:
             response = self.client.get_bucket_encryption(Bucket=self.resource_id)
         except ClientError as err:
-            if (
-                err.response["Error"]["Code"]
-                == "ServerSideEncryptionConfigurationNotFoundError"
-            ):
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "ServerSideEncryptionConfigurationNotFoundError":
                 self.logger.error(
                     "Failed to get_bucket_encryption {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
+            return False
         return response["ServerSideEncryptionConfiguration"]["Rules"]
 
     # Resource Policy
@@ -113,20 +110,17 @@ class Metacheck(MetaChecksBase):
         try:
             response = self.client.get_bucket_policy(Bucket=self.resource_id)
         except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchBucketPolicy":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "NoSuchBucketPolicy":
                 self.logger.error(
                     "Failed to get_bucket_policy {}, {}".format(self.resource_id, err)
                 )
-                return False
+            return False
 
         if response["Policy"]:
             policy_json = json.loads(response["Policy"])
             checked_policy = PolicyHelper(
                 self.logger, self.finding, policy_json
             ).check_policy()
-            # policy = {"policy_checks": checked_policy, "policy": policy_json}
             return checked_policy
 
         return False
