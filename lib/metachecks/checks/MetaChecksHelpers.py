@@ -139,7 +139,7 @@ class PolicyHelper:
                         account_id = p.split(":")[4]
                         if (
                             account_id not in trusted_accounts
-                            and account_id not in amazon_accounts
+                            and account_id not in amazon_accounts and account_id != self.account_id
                         ):
                             return statement
                     except IndexError:
