@@ -77,11 +77,7 @@ class Metacheck(MetaChecksBase):
     def get_bucket_public_access_block(self):
         try:
             response = self.client.get_public_access_block(Bucket=self.resource_id)
-            if response["PublicAccessBlockConfiguration"]:
-                for key, value in response["PublicAccessBlockConfiguration"].items():
-                    if value == False:
-                        return False
-                return True
+            return response.get("PublicAccessBlockConfiguration")
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
                 self.logger.error(
@@ -168,7 +164,10 @@ class Metacheck(MetaChecksBase):
 
     def it_has_public_access_block_enabled(self):
         if self.bucket_public_access_block:
-            return self.bucket_public_access_block
+            for key, value in self.bucket_public_access_block.items():
+                if value == False:
+                    return False
+            return True
         return False
 
     def it_has_website_enabled(self):
