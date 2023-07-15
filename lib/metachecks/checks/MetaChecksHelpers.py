@@ -94,7 +94,10 @@ class PolicyHelper:
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]
-                        if account_id != self.account_id and account_id not in amazon_accounts:
+                        if (
+                            account_id != self.account_id
+                            and account_id not in amazon_accounts
+                        ):
                             return statement
                     except IndexError:
                         self.logger.warning(
@@ -140,6 +143,7 @@ class PolicyHelper:
                         if (
                             account_id not in trusted_accounts
                             and account_id not in amazon_accounts
+                            and account_id != self.account_id
                         ):
                             return statement
                     except IndexError:
