@@ -72,6 +72,7 @@ class PolicyHelper:
         """
         Check if policy is allowed for principal cross account
         """
+        amazon_accounts = ["cloudfront"]
         (
             effect,
             principal,
@@ -93,9 +94,8 @@ class PolicyHelper:
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]
-                        if account_id != self.account_id:
-                            if account_id not in ("cloudfront"):
-                                return statement
+                        if account_id != self.account_id and account_id not in amazon_accounts:
+                            return statement
                     except IndexError:
                         self.logger.warning(
                             "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
@@ -108,8 +108,14 @@ class PolicyHelper:
 
     def is_principal_external(self, statement):
         """ """
-        internal_accounts = configuration.trusted_accounts
-        amazon_accounts = "cloudfront"
+        trusted_accounts = configuration.trusted_accounts
+        if not trusted_accounts:
+            self.logger.info(
+                "No trusted accounts defined in configuration, skipping check for resource %s",
+                self.resource,
+            )
+            return False
+        amazon_accounts = ["cloudfront"]
         (
             effect,
             principal,
@@ -132,7 +138,7 @@ class PolicyHelper:
                     try:
                         account_id = p.split(":")[4]
                         if (
-                            account_id not in internal_accounts
+                            account_id not in trusted_accounts
                             and account_id not in amazon_accounts
                         ):
                             return statement
