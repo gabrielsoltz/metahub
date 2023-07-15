@@ -79,7 +79,10 @@ class Metacheck(MetaChecksBase):
             response = self.client.get_public_access_block(Bucket=self.resource_id)
             return response.get("PublicAccessBlockConfiguration")
         except ClientError as err:
-            if not err.response["Error"]["Code"] == "NoSuchPublicAccessBlockConfiguration":
+            if (
+                not err.response["Error"]["Code"]
+                == "NoSuchPublicAccessBlockConfiguration"
+            ):
                 self.logger.error(
                     "Failed to get_public_access_block {}, {}".format(
                         self.resource_id, err
@@ -91,7 +94,10 @@ class Metacheck(MetaChecksBase):
         try:
             response = self.client.get_bucket_encryption(Bucket=self.resource_id)
         except ClientError as err:
-            if not err.response["Error"]["Code"] == "ServerSideEncryptionConfigurationNotFoundError":
+            if (
+                not err.response["Error"]["Code"]
+                == "ServerSideEncryptionConfigurationNotFoundError"
+            ):
                 self.logger.error(
                     "Failed to get_bucket_encryption {}, {}".format(
                         self.resource_id, err
