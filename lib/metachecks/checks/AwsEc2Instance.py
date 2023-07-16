@@ -36,6 +36,8 @@ class Metacheck(MetaChecksBase):
             self.security_groups = self.describe_security_groups()
             self.autoscaling_group = self._describe_autoscaling_group()
             self.volumes = self.describe_volumes()
+            self.vpcs = self._describe_instance_vpc()
+            self.subnets = self._describe_instance_subnet()
 
     # Describe Functions
 
@@ -130,6 +132,36 @@ class Metacheck(MetaChecksBase):
                     volumes[arn] = {}
 
         return volumes
+
+    def _describe_instance_subnet(self):
+        subnet = {}
+        if self.instance:
+            if self.instance.get("SubnetId"):
+                arn = generate_arn(
+                    self.instance["SubnetId"],
+                    "ec2",
+                    "subnet",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                subnet[arn] = {}
+        return subnet
+
+    def _describe_instance_vpc(self):
+        vpc = {}
+        if self.instance:
+            if self.instance.get("VpcId"):
+                arn = generate_arn(
+                    self.instance["VpcId"],
+                    "ec2",
+                    "vpc",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                vpc[arn] = {}
+        return vpc
 
     # MetaChecks
 
@@ -268,6 +300,16 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def its_associated_with_vpcs(self):
+        if self.vpcs:
+            return self.vpcs
+        return False
+
+    def its_associated_with_subnets(self):
+        if self.subnets:
+            return self.subnets
+        return False
+
     def checks(self):
         checks = [
             "it_has_public_ip",
@@ -284,5 +326,7 @@ class Metacheck(MetaChecksBase):
             "is_public",
             "is_encrypted",
             "is_running",
+            "its_associated_with_vpcs",
+            "its_associated_with_subnets",
         ]
         return checks

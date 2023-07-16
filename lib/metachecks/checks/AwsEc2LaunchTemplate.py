@@ -201,7 +201,6 @@ class Metacheck(MetaChecksBase):
         if self.its_associated_with_autoscaling_group():
             return True
         return False
-    
 
     def checks(self):
         checks = [

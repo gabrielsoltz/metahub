@@ -42,6 +42,8 @@ class Metacheck(MetaChecksBase):
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
+            self.vpcs = self._describe_lambda_vpc()
+            self.subnets = self._describe_lambda_subnet()
 
     # Describe Functions
 
@@ -110,10 +112,6 @@ class Metacheck(MetaChecksBase):
                 checked_policy = PolicyHelper(
                     self.logger, self.finding, json.loads(response["Policy"])
                 ).check_policy()
-                # policy = {
-                #     "policy_checks": checked_policy,
-                #     "policy": json.loads(response["Policy"]),
-                # }
                 return checked_policy
         return False
 
@@ -145,26 +143,54 @@ class Metacheck(MetaChecksBase):
                 iam_roles[role_arn] = {}
         return iam_roles
 
+    def _describe_lambda_vpc(self):
+        vpc = {}
+        if self.function_vpc:
+            if self.function_vpc["VpcId"]:
+                arn = generate_arn(
+                    self.function_vpc["VpcId"],
+                    "ec2",
+                    "vpc",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                vpc[arn] = {}
+        return vpc
+
+    def _describe_lambda_subnet(self):
+        subnet = {}
+        if self.function_vpc:
+            if self.function_vpc["SubnetIds"]:
+                arn = generate_arn(
+                    self.function_vpc["SubnetIds"],
+                    "ec2",
+                    "subnet",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                subnet[arn] = {}
+        return subnet
+
     # MetaChecks
 
     def it_has_resource_policy(self):
         return self.resource_policy
 
     def its_associated_with_vpc(self):
-        if self.function_vpc:
-            if self.function_vpc["VpcId"]:
-                return self.function_vpc["VpcId"]
+        if self.vpcs:
+            return self.vpcs
+        return False
+
+    def its_associated_with_subnets(self):
+        if self.subnets:
+            return self.subnets
         return False
 
     def its_associated_with_security_groups(self):
         if self.security_groups:
             return self.security_groups
-        return False
-
-    def its_associated_with_subnets(self):
-        if self.function_vpc:
-            if self.function_vpc["SubnetIds"]:
-                return self.function_vpc["SubnetIds"]
         return False
 
     def is_unrestricted(self):
@@ -211,8 +237,8 @@ class Metacheck(MetaChecksBase):
             "it_has_resource_policy",
             "its_associated_with_iam_roles",
             "its_associated_with_vpc",
-            "its_associated_with_security_groups",
             "its_associated_with_subnets",
+            "its_associated_with_security_groups",
             "is_unrestricted",
             "it_has_endpoint",
             "is_public",

@@ -10,7 +10,9 @@ var tableData = [
             ARN: "{{ resource|e }}",
             AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
             {% if 'metaaccount' in resource_value %}
-              AwsAccountAlias: "{{ resource_value.metaaccount["Alias"]|e }}",
+              {% for metaaccount_column in metaaccount_columns %}
+                "{{ metaaccount_column }}": "{{ resource_value.metaaccount[metaaccount_column]|e }}",
+              {% endfor %}
             {% endif %}
             Region: "{{ resource_value.Region|e }}",
             ResourceType: "{{ resource_value.ResourceType|e }}",
@@ -39,8 +41,8 @@ var tableData = [
 
 {% block table %}
 <div id="findings-table"></div>
-<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.js"></script>
+<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script>
 
@@ -90,6 +92,49 @@ var headerMenu = function(){
    return menu;
 };
 
+//create row popup contents
+var rowPopupFormatter = function(e, row, onRendered){
+    var data = row.getData(),
+    container = document.createElement("div"),
+    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
+    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
+    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
+    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
+    contents += "</ul>";
+
+    container.innerHTML = contents;
+
+    return container;
+};
+
+//create header popup contents
+var headerPopupFormatter = function(e, column, onRendered){
+    var container = document.createElement("div");
+
+    var label = document.createElement("label");
+    label.innerHTML = "Filter Column:";
+    label.style.display = "block";
+    label.style.fontSize = ".7em";
+
+    var input = document.createElement("input");
+    input.placeholder = "Filter Column...";
+    input.value = column.getHeaderFilterValue() || "";
+
+    input.addEventListener("keyup", (e) => {
+        column.setHeaderFilterValue(input.value);
+    });
+
+    container.appendChild(label);
+    container.appendChild(input);
+
+    return container;
+}
+
+//create dummy header filter to allow popup to filter
+var emptyHeaderFilter = function(){
+    return document.createElement("div");;
+}
+
 //initialize table
 var table = new Tabulator("#findings-table", {
   data:tableData, 
@@ -104,12 +149,12 @@ var table = new Tabulator("#findings-table", {
         {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% if 'metaaccount' in resource_value %}
-          {title:"AwsAccountAlias", field:"AwsAccountAlias", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endif %}
+        {% for metaaccount_column in metaaccount_columns %}
+          { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -126,8 +171,8 @@ var table = new Tabulator("#findings-table", {
 
 {% block table_groupped %}
 <div id="findings-table-groupped"></div>
-<link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.js"></script>
+<link href="https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script>
 
@@ -177,6 +222,49 @@ var headerMenu = function(){
    return menu;
 };
 
+//create row popup contents
+var rowPopupFormatter = function(e, row, onRendered){
+    var data = row.getData(),
+    container = document.createElement("div"),
+    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
+    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
+    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
+    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
+    contents += "</ul>";
+
+    container.innerHTML = contents;
+
+    return container;
+};
+
+//create header popup contents
+var headerPopupFormatter = function(e, column, onRendered){
+    var container = document.createElement("div");
+
+    var label = document.createElement("label");
+    label.innerHTML = "Filter Column:";
+    label.style.display = "block";
+    label.style.fontSize = ".7em";
+
+    var input = document.createElement("input");
+    input.placeholder = "Filter Column...";
+    input.value = column.getHeaderFilterValue() || "";
+
+    input.addEventListener("keyup", (e) => {
+        column.setHeaderFilterValue(input.value);
+    });
+
+    container.appendChild(label);
+    container.appendChild(input);
+
+    return container;
+}
+
+//create dummy header filter to allow popup to filter
+var emptyHeaderFilter = function(){
+    return document.createElement("div");;
+}
+
 //initialize table
 var table = new Tabulator("#findings-table-groupped", {
   data:tableData, 
@@ -192,10 +280,12 @@ var table = new Tabulator("#findings-table-groupped", {
         {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"AwsAccountAlias", field:"AwsAccountAlias", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% for metaaccount_column in metaaccount_columns %}
+          { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
         {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ARN", field:"ARN", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},

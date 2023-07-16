@@ -62,10 +62,6 @@ class Metacheck(MetaChecksBase):
                         self.finding,
                         json.loads(self.topic_atributes["Policy"]),
                     ).check_policy()
-                    # policy = {
-                    #     "policy_checks": details,
-                    #     "policy": json.loads(self.topic_atributes["Policy"]),
-                    # }
                     return checked_policy
             except KeyError:
                 return False

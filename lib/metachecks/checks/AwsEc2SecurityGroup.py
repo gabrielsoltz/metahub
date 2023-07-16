@@ -1,5 +1,6 @@
 """MetaCheck: AwsEc2SecurityGroup"""
 
+from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
@@ -35,32 +36,33 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.all_security_group = self.describe_security_groups()
+            self.security_group = self._describe_security_group()
             self.network_interfaces = self.describe_network_interfaces()
             self.security_group_rules = self.describe_security_group_rules()
             # Drilled MetaChecks
+            self.vpcs = self._describe_security_group_vpc()
 
     # Describe Functions
 
     def describe_security_groups(self):
         try:
             response = self.client.describe_security_groups()
+            if response["SecurityGroups"]:
+                return response["SecurityGroups"]
         except ClientError as err:
-            if err.response["Error"]["Code"] == "ResourceNotFoundException":
-                self.logger.info(
-                    "Failed to describe_security_groups: {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.error(
                     "Failed to describe_security_groups: {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        if response["SecurityGroups"]:
-            return response["SecurityGroups"]
+        return False
+
+    def _describe_security_group(self):
+        if self.all_security_group:
+            for sg in self.all_security_group:
+                if sg["GroupId"] == self.resource_id:
+                    return sg
         return False
 
     def describe_network_interfaces(self):
@@ -85,6 +87,20 @@ class Metacheck(MetaChecksBase):
         if response["SecurityGroupRules"]:
             return response["SecurityGroupRules"]
         return False
+
+    def _describe_security_group_vpc(self):
+        vcps = {}
+        if self.security_group:
+            arn = generate_arn(
+                self.security_group["VpcId"],
+                "ec2",
+                "vpc",
+                self.region,
+                self.account,
+                self.partition,
+            )
+            vcps[arn] = {}
+        return vcps
 
     # MetaChecks
 
@@ -233,17 +249,25 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_default(self):
-        if self.all_security_group:
-            for sg in self.all_security_group:
-                if sg["GroupId"] == self.resource_id:
-                    if sg["GroupName"] == "default":
-                        return True
+        if self.security_group:
+            if self.security_group["GroupName"] == "default":
+                return True
         return False
 
     def is_attached(self):
-        if self.all_security_group:
-            if self.its_associated_with_network_interfaces() or self.its_associated_with_ec2_instances() or self.its_associated_with_ips_public() or self.its_associated_with_managed_services():
+        if self.security_group:
+            if (
+                self.its_associated_with_network_interfaces()
+                or self.its_associated_with_ec2_instances()
+                or self.its_associated_with_ips_public()
+                or self.its_associated_with_managed_services()
+            ):
                 return True
+        return False
+
+    def its_associated_with_vpc(self):
+        if self.vpcs:
+            return self.vpcs
         return False
 
     def checks(self):
@@ -258,5 +282,6 @@ class Metacheck(MetaChecksBase):
             "is_public",
             "is_default",
             "is_attached",
+            "its_associated_with_vpc",
         ]
         return checks

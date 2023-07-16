@@ -34,14 +34,21 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
-            self.volume = self.describe_volume()
+            self.volume = self.describe_volumes()
             # Drilled MetaChecks
 
     # Describe function
 
-    def describe_volume(self):
-        response = self.client.describe_volumes(VolumeIds=[self.resource_id])
-        return response["Volumes"]
+    def describe_volumes(self):
+        try:
+            response = self.client.describe_volumes(VolumeIds=[self.resource_id])
+            return response["Volumes"]
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "InvalidVolume.NotFound":
+                self.logger.error(
+                    "Failed to describe_volumes {}, {}".format(self.resource_id, err)
+                )
+            return False
 
     # MetaChecks
 

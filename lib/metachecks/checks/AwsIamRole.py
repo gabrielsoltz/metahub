@@ -89,9 +89,7 @@ class Metacheck(MetaChecksBase):
                 return False
             else:
                 self.logger.error(
-                    "Failed to list_role_policies {}, {}".format(
-                        self.resource_id, err
-                    )
+                    "Failed to list_role_policies {}, {}".format(self.resource_id, err)
                 )
                 return False
         if list_role_policies["PolicyNames"]:
@@ -160,7 +158,7 @@ class Metacheck(MetaChecksBase):
         if self.instance_profile:
             return self.instance_profile
         return False
-    
+
     def it_has_assume_role_policy(self):
         if self.role:
             if self.role.get("AssumeRolePolicyDocument"):
@@ -180,6 +178,6 @@ class Metacheck(MetaChecksBase):
             "is_unrestricted",
             "its_associated_with_instance_profile",
             "it_has_assume_role_policy",
-            "it_has_permissions_boundary"
+            "it_has_permissions_boundary",
         ]
         return checks
