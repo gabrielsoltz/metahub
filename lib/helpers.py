@@ -423,7 +423,11 @@ def generate_output_csv(output, metatags_columns, metachecks_columns):
 
 
 def generate_output_html(
-    mh_findings, mh_statistics, metatags_columns, metachecks_columns
+    mh_findings,
+    mh_statistics,
+    metatags_columns,
+    metachecks_columns,
+    metaaccount_columns,
 ):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader)
@@ -446,6 +450,7 @@ def generate_output_html(
         title="MetaHub",
         metachecks_columns=metachecks_columns,
         metatags_columns=metatags_columns,
+        metaaccount_columns=metaaccount_columns,
     )
     return html
 
@@ -482,6 +487,10 @@ def generate_rich(mh_statistics):
         Panel(rich_box(RecordState, values), expand=True)
         for RecordState, values in mh_statistics["RecordState"].items()
     ]
+    compliance_renderables = [
+        Panel(rich_box(Compliance, values), expand=True)
+        for Compliance, values in mh_statistics["Compliance"].items()
+    ]
     return (
         severity_renderables,
         resource_type_renderables,
@@ -489,4 +498,5 @@ def generate_rich(mh_statistics):
         region_renderables,
         accountid_renderables,
         recordstate_renderables,
+        compliance_renderables,
     )

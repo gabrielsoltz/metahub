@@ -68,9 +68,7 @@ class Metacheck(MetaChecksBase):
                 return False
             else:
                 self.logger.error(
-                    "Failed to list_user_policies {}, {}".format(
-                        self.resource_id, err
-                    )
+                    "Failed to list_user_policies {}, {}".format(self.resource_id, err)
                 )
                 return False
         if list_user_policies["PolicyNames"]:
@@ -137,6 +135,6 @@ class Metacheck(MetaChecksBase):
         checks = [
             "its_associated_with_iam_policies",
             "it_has_iam_inline_policies",
-            "is_unrestricted"
+            "is_unrestricted",
         ]
         return checks

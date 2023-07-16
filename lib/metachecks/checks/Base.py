@@ -10,7 +10,6 @@ class MetaChecksBase:
         drilled=False,
     ):
         self.logger = logger
-        # self.iam_policies = {}
 
     def output_checks(self):
         """
@@ -53,6 +52,10 @@ class MetaChecksBase:
 
     def execute_drilled_metachecks(self):
 
+        # We keep a dictionary so we don't scan a same resource twice
+        self.route_tables_drilled = {}
+        self.subnets_drilled = {}
+
         # Security Groups
         if hasattr(self, "security_groups") and self.security_groups:
             from lib.metachecks.checks.AwsEc2SecurityGroup import (
@@ -85,7 +88,7 @@ class MetaChecksBase:
                 )
                 self.iam_roles[iam_role] = iam_role_drilled.output_checks_drilled()
 
-            # Double Drill for IAM Policies
+            # IAM Roles >> IAM Policies
             if (
                 hasattr(iam_role_drilled, "iam_policies")
                 and iam_role_drilled.iam_policies
@@ -112,7 +115,7 @@ class MetaChecksBase:
                         iam_policy
                     ] = iam_policy_drilled.output_checks_drilled()
 
-        # IAM Roles
+        # IAM Policies
         if hasattr(self, "iam_policies") and self.iam_policies:
             from lib.metachecks.checks.AwsIamPolicy import (
                 Metacheck as IamPolicyMetacheck,
@@ -136,7 +139,7 @@ class MetaChecksBase:
                     iam_policy
                 ] = iam_policy_drilled.output_checks_drilled()
 
-        # IAM Roles
+        # AutoScaling Groups
         if hasattr(self, "autoscaling_group") and self.autoscaling_group:
             from lib.metachecks.checks.AwsAutoScalingAutoScalingGroup import (
                 Metacheck as AwsAutoScalingAutoScalingGroupMetacheck,
@@ -160,7 +163,7 @@ class MetaChecksBase:
                     autoscaling_group
                 ] = autoscaling_group_drilled.output_checks_drilled()
 
-        # Security Groups
+        # Volumes
         if hasattr(self, "volumes") and self.volumes:
             from lib.metachecks.checks.AwsEc2Volume import Metacheck as VolumeMetacheck
 
@@ -174,6 +177,110 @@ class MetaChecksBase:
                     self.logger, self.finding, True, False, self.sess, drilled=volume
                 )
                 self.volumes[volume] = volume_drilled.output_checks_drilled()
+
+        # VPC
+        if hasattr(self, "vpcs") and self.vpcs:
+            from lib.metachecks.checks.AwsEc2Vpc import Metacheck as VpcMetacheck
+
+            for vpc in self.vpcs:
+                self.logger.info(
+                    "Running Drilled MetaChecks for resource {} for Route Table: {}".format(
+                        self.resource_arn, vpc
+                    )
+                )
+                vpc_drilled = VpcMetacheck(
+                    self.logger, self.finding, True, False, self.sess, drilled=vpc
+                ).output_checks_drilled()
+                self.vpcs[vpc] = vpc_drilled
+
+        # Subnets
+        if hasattr(self, "subnets") and self.subnets:
+            from lib.metachecks.checks.AwsEc2RouteTable import (
+                Metacheck as RouteTableMetacheck,
+            )
+            from lib.metachecks.checks.AwsEc2Subnet import Metacheck as SubnetMetacheck
+
+            for subnet in self.subnets:
+                if subnet in self.subnets_drilled:
+                    self.logger.info(
+                        "Ignoring (already executed) Drilled MetaChecks for resource {} for Subnet: {}".format(
+                            self.resource_arn, subnet
+                        )
+                    )
+                    subnet_drilled_output = self.subnets_drilled[subnet]
+                else:
+                    self.logger.info(
+                        "Running Drilled MetaChecks for resource {} for Subnet: {}".format(
+                            self.resource_arn, subnet
+                        )
+                    )
+                    subnet_drilled = SubnetMetacheck(
+                        self.logger,
+                        self.finding,
+                        True,
+                        False,
+                        self.sess,
+                        drilled=subnet,
+                    )
+                    subnet_drilled_output = subnet_drilled.output_checks_drilled()
+                    self.subnets_drilled[subnet] = subnet_drilled_output
+                # Add the drilled subnet
+                self.subnets[subnet] = subnet_drilled_output
+
+                # Subnets >> Route Tables
+                if (
+                    hasattr(subnet_drilled, "route_tables")
+                    and subnet_drilled.route_tables
+                ):
+
+                    for route_table in subnet_drilled.route_tables:
+                        # Check if we already scan this resource
+                        if route_table in self.route_tables_drilled:
+                            self.logger.info(
+                                "Ignoring (already executed) Drilled MetaChecks for resource {} for Route Table: {}".format(
+                                    subnet_drilled.resource_arn, route_table
+                                )
+                            )
+                            route_table_drilled = self.route_tables_drilled[route_table]
+                        else:
+                            self.logger.info(
+                                "Running Drilled MetaChecks for resource {} for Route Table: {}".format(
+                                    subnet_drilled.resource_arn, route_table
+                                )
+                            )
+                            route_table_drilled = RouteTableMetacheck(
+                                self.logger,
+                                self.finding,
+                                True,
+                                False,
+                                self.sess,
+                                drilled=route_table,
+                            ).output_checks_drilled()
+                            self.route_tables_drilled[route_table] = route_table_drilled
+                        # Add the drilled route table to the subnet
+                        subnet_drilled.route_tables[route_table] = route_table_drilled
+
+        # Route Tables
+        if hasattr(self, "route_tables") and self.route_tables:
+            from lib.metachecks.checks.AwsEc2RouteTable import (
+                Metacheck as RouteTableMetacheck,
+            )
+
+            for route_table in self.route_tables:
+                self.logger.info(
+                    "Running Drilled MetaChecks for resource {} for Route Table: {}".format(
+                        self.resource_arn, route_table
+                    )
+                )
+                route_table_drilled = RouteTableMetacheck(
+                    self.logger,
+                    self.finding,
+                    True,
+                    False,
+                    self.sess,
+                    drilled=route_table,
+                ).output_checks_drilled()
+                self.route_tables[route_table] = route_table_drilled
 
     def output_checks_drilled(self):
         mh_values_checks = {}

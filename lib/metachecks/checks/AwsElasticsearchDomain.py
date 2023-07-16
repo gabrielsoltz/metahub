@@ -37,6 +37,7 @@ class Metacheck(MetaChecksBase):
             self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
+            self.vpcs = self._describe_elasticsearch_domain_vpc()
 
     # Describe Functions
 
@@ -104,6 +105,25 @@ class Metacheck(MetaChecksBase):
             except KeyError:
                 return False
         return False
+
+    # Drilled
+
+    def _describe_elasticsearch_domain_vpc(self):
+        vpc = {}
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("VPCOptions"):
+                if self.elasticsearch_domain.get("VPCOptions").get("VPCId"):
+                    arn = generate_arn(
+                        self.elasticsearch_domain.get("VPCOptions").get("VPCId"),
+                        "ec2",
+                        "vpc",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    vpc[arn] = {}
+                    return
+        return vpc
 
     # MetaChecks
 
@@ -179,17 +199,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_vpc(self):
-        if self.elasticsearch_domain:
-            if self.elasticsearch_domain.get("VPCOptions"):
-                if self.elasticsearch_domain.get("VPCOptions").get("VPCId"):
-                    return self.elasticsearch_domain.get("VPCOptions").get("VPCId")
-        return False
-
-    def its_associated_with_subnets(self):
-        if self.elasticsearch_domain:
-            if self.elasticsearch_domain.get("VPCOptions"):
-                if self.elasticsearch_domain.get("VPCOptions").get("SubnetIds"):
-                    return self.elasticsearch_domain.get("VPCOptions").get("SubnetIds")
+        if self.vpc:
+            return self.vpc
         return False
 
     def checks(self):
@@ -203,7 +214,6 @@ class Metacheck(MetaChecksBase):
             "is_encrypted",
             "its_associated_with_security_groups",
             "its_associated_with_vpc",
-            "its_associated_with_subnets",
             "is_unrestricted",
         ]
         return checks

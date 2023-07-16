@@ -1,5 +1,7 @@
 """MetaCheck: AwsEc2NetworkAcl"""
 
+from aws_arn import generate_arn
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 
@@ -28,6 +30,7 @@ class Metacheck(MetaChecksBase):
             # Describe
             self.network_acl = self.describe_network_acls()
             # Drilled MetaChecks
+            self.subnets = self._describe_network_acls_subnets()
 
     # Describe Functions
 
@@ -44,14 +47,29 @@ class Metacheck(MetaChecksBase):
         )
         return response["NetworkAcls"]
 
+    # DrillDown
+
+    def _describe_network_acls_subnets(self):
+        subnets = {}
+        if self.network_acl:
+            if self.network_acl[0].get("Associations"):
+                for association in self.network_acl[0].get("Associations"):
+                    arn = generate_arn(
+                        association["SubnetId"],
+                        "ec2",
+                        "vpc",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    subnets[arn] = {}
+        return subnets
+
     # MetaChecks
 
     def its_associated_with_subnets(self):
-        Subnets = []
-        if self.network_acl:
-            for Association in self.network_acl[0]["Associations"]:
-                Subnets.append(Association["SubnetId"])
-            return Subnets
+        if self.subnets:
+            return self.subnets
         return False
 
     def is_default(self):
@@ -129,11 +147,11 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_associated_with_subnets",
             "is_default",
             "is_ingress_rules_unrestricted",
             "is_egress_rules_unrestricted",
             "is_public",
             "is_attached",
+            "its_associated_with_subnets",
         ]
         return checks

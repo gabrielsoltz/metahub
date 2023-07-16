@@ -14,15 +14,15 @@ def generate_statistics(mh_findings):
         }
         # Iterate Resources
         for resource_arn in mh_findings:
-            if resource_arn not in root_level_statistics:
-                root_level_statistics["ResourceId"][resource_arn] = 0
-            root_level_statistics["ResourceId"][resource_arn] += 1
             region = mh_findings[resource_arn]["Region"]
             aws_account_id = mh_findings[resource_arn]["AwsAccountId"]
             resource_type = mh_findings[resource_arn]["ResourceType"]
             # Iterate Findings
             for finding in mh_findings[resource_arn]["findings"]:
                 for finding_title, findings_keys in finding.items():
+                    if resource_arn not in root_level_statistics["ResourceId"]:
+                        root_level_statistics["ResourceId"][resource_arn] = 0
+                    root_level_statistics["ResourceId"][resource_arn] += 1
                     if finding_title not in root_level_statistics["Title"]:
                         root_level_statistics["Title"][finding_title] = 0
                     root_level_statistics["Title"][finding_title] += 1
