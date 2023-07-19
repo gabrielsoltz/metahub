@@ -225,9 +225,10 @@ def update_findings(
     sh_region,
     update_filters,
     sh_profile,
+    actions_confirmation
 ):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice("Are you sure you want to update all findings?"):
+    if confirm_choice("Are you sure you want to update all findings?", actions_confirmation):
         update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
@@ -247,9 +248,9 @@ def update_findings(
     return [], []
 
 
-def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region, sh_profile):
+def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region, sh_profile, actions_confirmation):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice("Are you sure you want to enrich all findings?"):
+    if confirm_choice("Are you sure you want to enrich all findings?", actions_confirmation):
         update_multiple = sh.update_findings_meta(mh_findings)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
@@ -551,6 +552,7 @@ def main(args):
     print_table("MetaAccount: ", str(args.meta_account), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
+    print_table("Actions Confirmation: ", str(args.actions_confirmation), banners=banners)
     print_table("List Findings: ", str(args.list_findings), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
@@ -578,12 +580,6 @@ def main(args):
         metaaccount=args.meta_account,
         sh_profile=args.sh_profile,
     )
-
-    if "lambda" in args.output_modes:
-        # This needs to be improved
-        if mh_findings:
-            return mh_findings_short
-        return False
 
     if mh_findings:
         for out in args.list_findings:
@@ -652,6 +648,9 @@ def main(args):
             "Findings to update: ", str(count_mh_findings(mh_findings)), banners=banners
         )
         print_table("Update: ", str(args.update_findings), banners=banners)
+        if "lambda" in args.output_modes:
+            print(
+                "Updating findings: ", str(count_mh_findings(mh_findings)), "with:", str(args.update_findings))
         if mh_findings:
             UPProcessedFindings, UPUnprocessedFindings = update_findings(
                 logger,
@@ -662,6 +661,7 @@ def main(args):
                 sh_region,
                 update_findings_filters,
                 args.sh_profile,
+                args.actions_confirmation,
             )
         print_title_line("Results", banners=banners)
         print_table(
@@ -678,6 +678,9 @@ def main(args):
         print_table(
             "Findings to enrich: ", str(count_mh_findings(mh_findings)), banners=banners
         )
+        if "lambda" in args.output_modes:
+            print(
+                "Enriching findings: ", str(count_mh_findings(mh_findings)))
         if mh_findings:
             ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
                 logger,
@@ -686,6 +689,7 @@ def main(args):
                 args.sh_assume_role,
                 sh_region,
                 args.sh_profile,
+                args.actions_confirmation,
             )
         print_title_line("Results", banners=banners)
         print_table(
@@ -695,6 +699,8 @@ def main(args):
             "UnprocessedFindings: ", str(len(ENUnprocessedFindings)), banners=banners
         )
 
+    if "lambda" in args.output_modes:
+        return mh_findings_short
 
 if __name__ == "__main__":
     main(argv[1:])

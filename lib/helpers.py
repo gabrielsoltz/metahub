@@ -103,20 +103,6 @@ def get_parser():
         required=False,
     )
     group_security_hub.add_argument(
-        "--update-findings",
-        default=None,
-        help='Use this option to update the result findings Workflow Status (with a Note). Use --update-findings Workflow=NOTIFIED|RESOLVED|SUPPRESSED|NEW Note="You can whatever you like here, like a ticket ID, you will see this Note on your SH "Updated at" colum',
-        required=False,
-        nargs="*",
-        action=KeyValue,
-    )
-    group_security_hub.add_argument(
-        "--enrich-findings",
-        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags. Use with --meta-checks and/or --meta-tags",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    group_security_hub.add_argument(
         "--inputs",
         choices=["securityhub", "file-asff"],
         default=["securityhub"],
@@ -130,6 +116,30 @@ def get_parser():
         nargs="+",
         help="Specify ASFF file path for use with --input-asff file-asff-1, file-asff-2",
         required=False,
+    )
+
+    # Group: Security Hub Actions
+    group_actions = parser.add_argument_group("Security Hub Options")
+    group_actions.add_argument(
+        "--update-findings",
+        default=None,
+        help='Use this option to update the result findings Workflow Status (with a Note). Use --update-findings Workflow=NOTIFIED|RESOLVED|SUPPRESSED|NEW Note="You can whatever you like here, like a ticket ID, you will see this Note on your SH "Updated at" colum',
+        required=False,
+        nargs="*",
+        action=KeyValue,
+    )
+    group_actions.add_argument(
+        "--enrich-findings",
+        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags. Use with --meta-checks and/or --meta-tags",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    group_actions.add_argument(
+        "--actions-confirmation",
+        default=True,
+        help="Use this option to execute the security hub actions without confirmation",
+        required=False,
+        action=argparse.BooleanOptionalAction,
     )
 
     # Group: Meta Options
@@ -213,6 +223,7 @@ def get_parser():
             "json-inventory",
             "html",
             "csv",
+            "lambda"
         ],
         default=[
             "json-short",
@@ -360,16 +371,19 @@ def print_title_line(text, ch="-", length=78, banners=True):
     print("\n" + banner)
 
 
-def confirm_choice(message):
+def confirm_choice(message, actions_confirmation=True):
     """Simple function to confirm the action, returns True or False based on user entry"""
-    confirm = input(message + " [c]Confirm or [v]Void: ")
-    if confirm != "c" and confirm != "v":
-        print("\n Invalid Option. Please Enter a Valid Option.")
-        return confirm_choice(message)
-    if confirm == "c":
+    if actions_confirmation:
+        confirm = input(message + " [c]Confirm or [v]Void: ")
+        if confirm != "c" and confirm != "v":
+            print("\n Invalid Option. Please Enter a Valid Option.")
+            return confirm_choice(message)
+        if confirm == "c":
+            return True
+        return False
+    else:
+        print("Actions confirmation disabled: continuing with the action...")
         return True
-    return False
-
 
 def test_python_version():
     """Check Python Version"""
