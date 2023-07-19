@@ -28,7 +28,7 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_role.json
 }
 
-# Logs
+# IAM Lambda Logs
 
 data "aws_iam_policy_document" "lambda_logging" {
   statement {
@@ -55,14 +55,15 @@ resource "aws_iam_role_policy_attachment" "lambda_logging" {
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
-# Security Hub
+# IAM Security Hub
 
 data "aws_iam_policy_document" "lambda_securityhub" {
   statement {
     actions = [
       "securityhub:GetFindings",
       "securityhub:ListFindingAggregators",
-      "iam:ListAccountAliases"
+      "iam:ListAccountAliases",
+      "securityhub:BatchUpdateFindings"
     ]
     resources = [
       "*"
@@ -81,11 +82,67 @@ resource "aws_iam_role_policy_attachment" "lambda_attach_securityhub" {
   policy_arn = aws_iam_policy.lambda_policy_securityhub.arn
 }
 
+# IAM MetaChecks, MetaTags and MetaTrails
+
+data "aws_iam_policy_document" "lambda_policy_document_metachecks" {
+  statement {
+    actions = [
+      "lambda:GetFunction",
+      "lambda:GetFunctionUrlConfig",
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_policy_metachecks" {
+  name   = "${local.prefix}-policy-metachecks"
+  path   = "/"
+  policy = data.aws_iam_policy_document.lambda_policy_document_metachecks.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_attach_metaachecks" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy_metachecks.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_attach_securityaudit" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+}
+
+# IAM MetaAccount
+
+data "aws_iam_policy_document" "lambda_policy_document_metaaccount" {
+  statement {
+    actions = [
+      "account:GetAlternateContact"
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_policy_metaaccount" {
+  name   = "${local.prefix}-policy-metaaccount"
+  path   = "/"
+  policy = data.aws_iam_policy_document.lambda_policy_document_metaaccount.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_attach_metaaccount" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy_metaaccount.arn
+}
+
+
 # Layer
 
 resource "aws_lambda_layer_version" "lambda_layer" {
-  filename   = "zip/metahub-layer.zip"
-  layer_name = "metahub_layer"
+  filename         = "zip/metahub-layer.zip"
+  layer_name       = "metahub_layer"
+  source_code_hash = filebase64sha256("zip/metahub-layer.zip")
 
   compatible_runtimes = ["python3.9"]
 }

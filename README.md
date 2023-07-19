@@ -19,6 +19,7 @@
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
+- [Run with Security Hub Custom Action]
 - [AWS Authentication](#aws-authentication)
 - [Configuring Security Hub](#configuring-security-hub)
 - [Configuring MetaChecks, MetaTags and MetaTrails](#configuring-metachecks-metatags-and-metatrails)
@@ -184,12 +185,9 @@ You will need to create a zip package for the lambda with MetaHub code, for doin
 You will need to create a Lambda layer with all MetaHub python dependencies. 
 
 - `cd metahub`
-- `mkdir layer`
-- `cd layer`
-- `mkdir -p python/lib/python3.9/site-packages`
-- `pip3 install -r ../requirements.txt --target python/lib/python3.9/site-packages`
-- `zip -r9 ../terraform/zip/metahub-layer.zip .`
-- `cd ..`
+- `mkdir -p layer/python/lib/python3.9/site-packages`
+- `pip3 install -r requirements.txt --target layer/python/lib/python3.9/site-packages`
+- `cd layer && zip -r9 ../terraform/zip/metahub-layer.zip . && cd ..`
 - `rm -r layer`
 
 ### Deploy Lambda
@@ -198,6 +196,22 @@ You can find the code for deploying the lambda function under the `terraform/` f
 
 - `terraform init`
 - `terraform apply`
+
+
+# Run with Security Hub Custom Action
+
+**MetaHub** can be run as a Security Hub Custom Action. This allows you to run MetaHub directly from the Security Hub console for a selected finding or for a selected set of findings.
+
+The custom action then will triggered a Lambda function that will run MetaHub for the selected findings.
+
+You need to first create the Lambda function and then create the custom action in Security Hub.
+
+For creating the lambda function, follow the instructions in the [Run with Lambda](#run-with-lambda) section.
+
+For creating the AWS Security Hub custom action, follow this step by step [guide](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-custom-actions.html).
+
+
+
 
 
 # AWS Authentication
@@ -261,9 +275,11 @@ This is the minimum IAM policy you need to read and write from AWS Security Hub.
 ## IAM Policy for Meta* options
 
 - For MetaTags, you need a policy allowing the action: 
-  - `tag:get_resources`
+  - `tag:GetResources`
 - For MetaCheks, you can use the managed policy: 
-  - `arn:aws:iam::aws:policy/SecurityAudit`
+  - `arn:aws:iam::aws:policy/SecurityAudit` and 
+  - `lambda:GetFunction`
+  - `lambda:GetFunctionUrlConfig`
 - For MetaTrails, you need a policy allowing the action: 
   - `cloudtrail:LookupEvents`
 - For MetaAccount, you need a policy allowing the action: 
@@ -1072,11 +1088,11 @@ See more examples under [Updating Findings Workflow Status](#updating-findings-w
 
 # Enriching Findings
 
-You can use **MetaHub** to enrich your AWS Security Findings with `MetaTags` and `MetaChecks` outputs. Enriching your findings means updating those findings directly in Security Hub. **MetaHub** uses the `UserDefinedFields` field to add all the MetaChecks and MetaTags available for the affected resource.
+You can use **MetaHub** to enrich back your AWS Security Hub Findings with `MetaTags`, `MetaChecks`, `MetaTrails` and `MetaAccount` outputs. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
 
 By enriching your findings directly in AWS Security Hub, you can take advantage of features like Insights and Filters by using the extra information that was not available in Security Hub before. 
 
-For example, you want to enrich all AWS Security Hub findings with `WorkflowStatus=NEW`, `RecordState=ACTIVE`, and `ResourceType=AwsS3Bucket` that are MetaCheck i`s_public=True` with MetaChecks and MetaTags:
+For example, you want to enrich all AWS Security Hub findings with `WorkflowStatus=NEW`, `RecordState=ACTIVE`, and `ResourceType=AwsS3Bucket` that are MetaCheck `is_public=True` with MetaChecks and MetaTags:
 
 ```sh
 ./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --meta-tags --meta-checks --mh-filters-checks is_public=True --enrich-findings  

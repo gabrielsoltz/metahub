@@ -116,6 +116,17 @@ class SecurityHub:
 
     def update_findings_meta(self, mh_findings):
         response_multiple = []
+        # Convert metachecks to booleans
+        for resource_arn in mh_findings:
+            if (
+                "metachecks" in mh_findings[resource_arn]
+                and mh_findings[resource_arn]["metachecks"]
+            ):
+                for metacheck in mh_findings[resource_arn]["metachecks"]:
+                    if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
+                        mh_findings[resource_arn]["metachecks"][metacheck] = True
+                    else:
+                        mh_findings[resource_arn]["metachecks"][metacheck] = False
         for mh_finding in mh_findings:
             # MetaTags
             try:
@@ -135,8 +146,26 @@ class SecurityHub:
                 finding_metachecks = {}
             for key in list(finding_metachecks):
                 finding_metachecks[key] = str(finding_metachecks[key])
+            # MetaAccount
+            try:
+                finding_metaaccount = mh_findings[mh_finding]["metaaccount"]
+                if not finding_metaaccount:
+                    finding_metaaccount = {}
+            except KeyError:
+                finding_metaaccount = {}
+            for key in list(finding_metaaccount):
+                finding_metaaccount[key] = str(finding_metaaccount[key])
+            # MetaTrails
+            try:
+                finding_metatrails = mh_findings[mh_finding]["metatrails"]
+                if not finding_metatrails:
+                    finding_metatrails = {}
+            except KeyError:
+                finding_metatrails = {}
+            for key in list(finding_metatrails):
+                finding_metatrails[key] = str(finding_metatrails[key])
             # Combining MetaChecks and MetaTags
-            combined = {**finding_metatags, **finding_metachecks}
+            combined = {**finding_metatags, **finding_metachecks, **finding_metaaccount, **finding_metatrails}
 
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():
