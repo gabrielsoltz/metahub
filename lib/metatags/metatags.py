@@ -16,7 +16,14 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
     resource_account_id = finding["AwsAccountId"]
     resource_region = finding["Region"]
     resource_id = finding["Resources"][0]["Id"]
+    resource_type = finding["Resources"][0]["Type"]
     current_account_id = get_account_id(logger)
+
+    logger.info(
+        "Running MetaTags for ResourceType: %s (%s)",
+        resource_type,
+        resource_id,
+    )
 
     # If the resources lives in another account, you need to provide a role for running MetaTags
     if resource_account_id != current_account_id and not mh_role:
@@ -62,27 +69,27 @@ def run_metatags(logger, finding, mh_filters_tags, mh_role):
         for tag in tags:
             mh_tags_values.update({(tag["Key"]): tag["Value"]})
 
-        # Lower Case for better matching:
-        mh_tags_values_lower = dict(
-            (k.lower(), v.lower()) for k, v in mh_tags_values.items()
-        )
-        mh_filters_tags_lower = dict(
-            (k.lower(), v.lower()) for k, v in mh_filters_tags.items()
-        )
-
-        compare = {
-            k: mh_tags_values_lower[k]
-            for k in mh_tags_values_lower
-            if k in mh_filters_tags_lower
-            and mh_tags_values_lower[k] == mh_filters_tags_lower[k]
-        }
-        logger.info(
-            "Evaluating MetaTag filter. Expected: "
-            + str(mh_filters_tags)
-            + " Found: "
-            + str(bool(compare))
-        )
-        if mh_filters_tags and bool(compare):
-            mh_tags_matched = True
+        if mh_filters_tags:
+            # Lower Case for better matching:
+            mh_tags_values_lower = dict(
+                (k.lower(), v.lower()) for k, v in mh_tags_values.items()
+            )
+            mh_filters_tags_lower = dict(
+                (k.lower(), v.lower()) for k, v in mh_filters_tags.items()
+            )
+            compare = {
+                k: mh_tags_values_lower[k]
+                for k in mh_tags_values_lower
+                if k in mh_filters_tags_lower
+                and mh_tags_values_lower[k] == mh_filters_tags_lower[k]
+            }
+            logger.info(
+                "Evaluating MetaTag filter. Expected: "
+                + str(mh_filters_tags)
+                + " Found: "
+                + str(bool(compare))
+            )
+            if bool(compare):
+                mh_tags_matched = True
 
     return mh_tags_values, mh_tags_matched
