@@ -199,8 +199,8 @@ class Metacheck(MetaChecksBase):
         return False
 
     def its_associated_with_vpc(self):
-        if self.vpc:
-            return self.vpc
+        if self.vpcs:
+            return self.vpcs
         return False
 
     def checks(self):

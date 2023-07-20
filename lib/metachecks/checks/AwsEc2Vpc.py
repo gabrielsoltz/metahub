@@ -1,6 +1,5 @@
 """MetaCheck: AwsEc2Vpc"""
 
-from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client

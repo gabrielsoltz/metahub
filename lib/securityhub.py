@@ -1,7 +1,7 @@
 """Integration AWS Security Hub"""
 from sys import exit
 
-import boto3
+from alive_progress import alive_bar
 from botocore.exceptions import BotoCoreError, ClientError, EndpointConnectionError
 
 from lib.AwsHelpers import assume_role, get_boto3_client
@@ -51,34 +51,42 @@ class SecurityHub:
 
         findings = []
         next_token = ""
-        while True:
-            try:
-                response = self.sh_client.get_findings(
-                    Filters=sh_filters,
-                    NextToken=next_token,
-                    # The maximum value is 100 as per AWS documentation
-                    MaxResults=100,
-                )
-                # Add findings to the list
-                findings.extend(response["Findings"])
-            except (ClientError, BotoCoreError) as err:
-                self.logger.error(
-                    "An error occurred when attempting to gather SecurityHub data: %s. Try using --sh-account, --sh-assume-role and --sh-region to specify the SecurityHub account and region.",
-                    err,
-                )
-                # No point proceeding without the data
-                exit(1)
-            if "Findings" not in list(response.keys()):
-                self.logger.error(
-                    "get_findings returned unexpected data (No 'Findings' key) - %s",
-                    str(response),
-                )
-                exit(1)
-            if "NextToken" in list(response.keys()):
-                next_token = response["NextToken"]
-                self.logger.info("Found a token, gathering more results")
-            else:
-                break
+
+        with alive_bar(
+            title="-> Gathering findings from Security Hub..."
+        ) as bar:  # Initialize the progress bar
+            while True:
+                try:
+                    response = self.sh_client.get_findings(
+                        Filters=sh_filters,
+                        NextToken=next_token,
+                        # The maximum value is 100 as per AWS documentation
+                        MaxResults=100,
+                    )
+                    # Add findings to the list
+                    findings.extend(response["Findings"])
+                    bar(
+                        len(response["Findings"])
+                    )  # Update the progress bar by the number of new findings
+                except (ClientError, BotoCoreError) as err:
+                    self.logger.error(
+                        "An error occurred when attempting to gather SecurityHub data: %s. Try using --sh-account, --sh-assume-role and --sh-region to specify the SecurityHub account and region.",
+                        err,
+                    )
+                    # No point proceeding without the data
+                    exit(1)
+                if "Findings" not in list(response.keys()):
+                    self.logger.error(
+                        "get_findings returned unexpected data (No 'Findings' key) - %s",
+                        str(response),
+                    )
+                    exit(1)
+                if "NextToken" in list(response.keys()):
+                    next_token = response["NextToken"]
+                    self.logger.info("Found a token, gathering more results")
+                else:
+                    break
+
         self.logger.info("Gathering SecurityHub results complete")
         return findings
 
@@ -165,7 +173,12 @@ class SecurityHub:
             for key in list(finding_metatrails):
                 finding_metatrails[key] = str(finding_metatrails[key])
             # Combining MetaChecks and MetaTags
-            combined = {**finding_metatags, **finding_metachecks, **finding_metaaccount, **finding_metatrails}
+            combined = {
+                **finding_metatags,
+                **finding_metachecks,
+                **finding_metaaccount,
+                **finding_metatrails,
+            }
 
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():

@@ -56,42 +56,43 @@ class Metacheck(MetaChecksBase):
     # Drilled MetaChecks
     def describe_route_tables(self):
         route_tables = {}
-        try:
-            response = self.client.describe_route_tables(
-                Filters=[
-                    {
-                        "Name": "association.subnet-id",
-                        "Values": [
-                            self.resource_id,
-                        ],
-                    }
-                ],
-            )
-            if not response["RouteTables"]:
+        if self.subnet:
+            try:
                 response = self.client.describe_route_tables(
                     Filters=[
-                        {"Name": "association.main", "Values": ["true"]},
-                        {"Name": "vpc-id", "Values": [self.subnet["VpcId"]]},
+                        {
+                            "Name": "association.subnet-id",
+                            "Values": [
+                                self.resource_id,
+                            ],
+                        }
                     ],
                 )
-            for route_table in response["RouteTables"]:
-                arn = generate_arn(
-                    route_table["RouteTableId"],
-                    "ec2",
-                    "route_table",
-                    self.region,
-                    self.account,
-                    self.partition,
-                )
-                route_tables[arn] = {}
-
-        except ClientError as err:
-            if not err.response["Error"]["Code"] == "NoSuchEntity":
-                self.logger.error(
-                    "Failed to describe_route_tables {}, {}".format(
-                        self.resource_id, err
+                if not response["RouteTables"]:
+                    response = self.client.describe_route_tables(
+                        Filters=[
+                            {"Name": "association.main", "Values": ["true"]},
+                            {"Name": "vpc-id", "Values": [self.subnet["VpcId"]]},
+                        ],
                     )
-                )
+                for route_table in response["RouteTables"]:
+                    arn = generate_arn(
+                        route_table["RouteTableId"],
+                        "ec2",
+                        "route_table",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    route_tables[arn] = {}
+
+            except ClientError as err:
+                if not err.response["Error"]["Code"] == "NoSuchEntity":
+                    self.logger.error(
+                        "Failed to describe_route_tables {}, {}".format(
+                            self.resource_id, err
+                        )
+                    )
 
         return route_tables
 

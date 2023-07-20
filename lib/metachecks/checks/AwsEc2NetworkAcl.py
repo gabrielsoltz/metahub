@@ -82,14 +82,14 @@ class Metacheck(MetaChecksBase):
         if "CidrBlock" in rule:
             if (
                 "0.0.0.0/0" in rule["CidrBlock"]
-                and rule["Egress"] == False
+                and rule["Egress"] is False
                 and rule["RuleAction"] == "allow"
             ):
                 return True
         if "Ipv6CidrBlock" in rule:
             if (
                 "::/0" in rule["Ipv6CidrBlock"]
-                and rule["Egress"] == False
+                and rule["Egress"] is False
                 and rule["RuleAction"] == "allow"
             ):
                 return True
@@ -100,14 +100,14 @@ class Metacheck(MetaChecksBase):
         if "CidrBlock" in rule:
             if (
                 "0.0.0.0/0" in rule["CidrBlock"]
-                and rule["Egress"] == True
+                and rule["Egress"] is True
                 and rule["RuleAction"] == "allow"
             ):
                 return True
         if "Ipv6CidrBlock" in rule:
             if (
                 "::/0" in rule["Ipv6CidrBlock"]
-                and rule["Egress"] == True
+                and rule["Egress"] is True
                 and rule["RuleAction"] == "allow"
             ):
                 return True
