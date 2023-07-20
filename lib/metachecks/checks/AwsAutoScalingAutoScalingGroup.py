@@ -4,7 +4,6 @@ from aws_arn import generate_arn
 
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import IamHelper
 
 
 class Metacheck(MetaChecksBase):
