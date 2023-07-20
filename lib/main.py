@@ -1,19 +1,16 @@
 import csv
 import json
+from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from sys import argv, exit
+from threading import Lock
 from time import strftime
 
 from alive_progress import alive_bar
 from rich.columns import Columns
 from rich.console import Console
-from rich.text import Text
 
-from lib.AwsHelpers import (
-    get_account_alias,
-    get_account_alternate_contact,
-    get_account_id,
-    get_region,
-)
+from lib.AwsHelpers import get_account_alias, get_account_id, get_region
+from lib.findings import evaluate_finding
 from lib.helpers import (
     confirm_choice,
     generate_output_csv,
@@ -27,9 +24,6 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.metachecks.metachecks import run_metachecks
-from lib.metatags.metatags import run_metatags
-from lib.metatrails.metatrails import run_metatrails
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -72,144 +66,81 @@ def generate_findings(
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
 
-    try:
-        with alive_bar(total=len(findings)) as bar:
-            for finding in findings:
-                bar.title = "-> Analyzing findings..."
+        resource_locks = {}
 
-                mh_matched = False
-                resource_arn, finding_parsed = parse_finding(finding)
+        def process_finding(finding):
+            # Get the resource_arn from the finding
+            resource_arn, finding_parsed = parse_finding(finding)
 
-                # Fix Region when not in root
+            # Get the lock for this resource
+            lock = resource_locks.get(resource_arn)
+
+            # If the lock does not exist, create it
+            if lock is None:
+                lock = Lock()
+                resource_locks[resource_arn] = lock
+
+            # Acquire the lock for this resource
+            with lock:
+                # Now process the finding
+                return evaluate_finding(
+                    logger,
+                    finding,
+                    mh_findings,
+                    mh_findings_not_matched_findings,
+                    mh_inventory,
+                    mh_findings_short,
+                    AwsAccountData,
+                    mh_role,
+                    metachecks,
+                    mh_filters_checks,
+                    drill_down,
+                    metatags,
+                    mh_filters_tags,
+                    metatrails,
+                    metaaccount,
+                )
+
+        with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
+            try:
+                executor = (
+                    ThreadPoolExecutor()
+                )  # create executor outside of context manager
+                # Create future tasks
+                futures = {
+                    executor.submit(process_finding, finding) for finding in findings
+                }
+
                 try:
-                    region = finding["Region"]
-                except KeyError:
-                    region = finding["Resources"][0]["Region"]
-                    finding["Region"] = region
+                    # Process futures as they complete
+                    for future in as_completed(futures):
+                        (
+                            mh_findings,
+                            mh_findings_not_matched_findings,
+                            mh_findings_short,
+                            mh_inventory,
+                            AwsAccountData,
+                        ) = future.result()
+                        bar()
 
-                # Meta*:
-                if metachecks or metatags or metatrails or metaaccount:
+                except KeyboardInterrupt:
+                    print("Keyboard interrupt detected. Exiting...")
+                    for future in futures:
+                        future.cancel()  # cancel each future
 
-                    # If the resource was already matched or not_matched, we don't run meta* but we show others findings
-                    if resource_arn in mh_findings:
-                        mh_matched = True
-                    elif resource_arn in mh_findings_not_matched_findings:
-                        mh_matched = False
-                    else:
-                        # Run MetaChecks
-                        if metachecks:
-                            mh_values, mh_checks_matched = run_metachecks(
-                                logger,
-                                finding,
-                                mh_filters_checks,
-                                mh_role,
-                                drill_down,
-                            )
-                        else:
-                            mh_checks_matched = True
-                        # Run MetaTags
-                        if metatags:
-                            mh_tags, mh_tags_matched = run_metatags(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-                        else:
-                            mh_tags_matched = True
-                        # If both checks are True we show the resource
-                        if mh_tags_matched and mh_checks_matched:
-                            mh_matched = True
+                    # Wait for all futures to be cancelled
+                    for future in as_completed(futures):
+                        try:
+                            future.result()  # this will raise a CancelledError if the future was cancelled
+                        except CancelledError:
+                            pass
 
-                        # MetaTrails and MetaAccount runs without filters (for now?)
-                        # Run MetaTrails
-                        if metatrails:
-                            mh_trails = run_metatrails(
-                                logger, finding, mh_filters_tags, mh_role
-                            )
-                        # Run MetaAccount
-                        if metaaccount:
-                            if finding["AwsAccountId"] not in AwsAccountData:
-                                AwsAccountAlias = get_account_alias(
-                                    logger, finding["AwsAccountId"], mh_role
-                                )
-                                AwsAccountAlternateContact = (
-                                    get_account_alternate_contact(
-                                        logger, finding["AwsAccountId"], mh_role
-                                    )
-                                )
-                                AwsAccountData[finding["AwsAccountId"]] = {
-                                    "Alias": AwsAccountAlias,
-                                    "AlternateContact": AwsAccountAlternateContact,
-                                }
-                            finding["AwsAccountData"] = AwsAccountData[
-                                finding["AwsAccountId"]
-                            ]
-                        else:
-                            finding["AwsAccountData"] = {}
-                else:
-                    # If no metachecks and no metatags, we enforce to True the match so we show the resource:
-                    mh_matched = True
-
-                # We keep a dict with no matched resources so we don't run MetaChecks again
-                if not mh_matched:
-                    # We add the resource in our output only once:
-                    if resource_arn not in mh_findings_not_matched_findings:
-                        mh_findings_not_matched_findings[resource_arn] = {}
-
-                # We show the resouce only if matched MetaChecks and MetaTags (or are disabled)
-                if mh_matched:
-                    # Resource (we add the resource only once, we check if it's already in the list)
-                    if resource_arn not in mh_findings:
-                        # Inventory
-                        mh_inventory.append(resource_arn)
-                        # Findings
-                        mh_findings[resource_arn] = {"findings": []}
-                        mh_findings_short[resource_arn] = {"findings": []}
-                        # ResourceType
-                        mh_findings[resource_arn]["ResourceType"] = mh_findings_short[
-                            resource_arn
-                        ]["ResourceType"] = finding["Resources"][0]["Type"]
-                        # Region
-                        mh_findings[resource_arn]["Region"] = mh_findings_short[
-                            resource_arn
-                        ]["Region"] = finding["Region"]
-                        # AwsAccountId
-                        mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[
-                            resource_arn
-                        ]["AwsAccountId"] = finding["AwsAccountId"]
-                        # MetaAccount
-                        if metaaccount:
-                            mh_findings[resource_arn][
-                                "metaaccount"
-                            ] = mh_findings_short[resource_arn][
-                                "metaaccount"
-                            ] = finding[
-                                "AwsAccountData"
-                            ]
-                        # MetaChecks
-                        if metachecks:
-                            mh_findings[resource_arn]["metachecks"] = mh_findings_short[
-                                resource_arn
-                            ]["metachecks"] = mh_values
-                        # MetaTags
-                        if metatags:
-                            mh_findings[resource_arn]["metatags"] = mh_findings_short[
-                                resource_arn
-                            ]["metatags"] = mh_tags
-                        # MetaTrails
-                        if metatrails:
-                            mh_findings[resource_arn]["metatrails"] = mh_findings_short[
-                                resource_arn
-                            ]["metatrails"] = mh_trails
-
-                    # Add Findings
-                    mh_findings_short[resource_arn]["findings"].append(
-                        list(finding_parsed.keys())[0]
-                    )
-                    mh_findings[resource_arn]["findings"].append(finding_parsed)
-
-                bar()
-            bar.title = "-> Completed"
-    except KeyboardInterrupt:
-        print("Keyboard interrupt detected. Exiting...")
+            except KeyboardInterrupt:
+                print("Keyboard interrupt detected during shutdown. Exiting...")
+            finally:
+                executor.shutdown(
+                    wait=False
+                )  # shutdown executor without waiting for all threads to finish
 
     mh_statistics = generate_statistics(mh_findings)
 
@@ -225,10 +156,12 @@ def update_findings(
     sh_region,
     update_filters,
     sh_profile,
-    actions_confirmation
+    actions_confirmation,
 ):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice("Are you sure you want to update all findings?", actions_confirmation):
+    if confirm_choice(
+        "Are you sure you want to update all findings?", actions_confirmation
+    ):
         update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
@@ -248,9 +181,19 @@ def update_findings(
     return [], []
 
 
-def enrich_findings(logger, mh_findings, sh_account, sh_role, sh_region, sh_profile, actions_confirmation):
+def enrich_findings(
+    logger,
+    mh_findings,
+    sh_account,
+    sh_role,
+    sh_region,
+    sh_profile,
+    actions_confirmation,
+):
     sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice("Are you sure you want to enrich all findings?", actions_confirmation):
+    if confirm_choice(
+        "Are you sure you want to enrich all findings?", actions_confirmation
+    ):
         update_multiple = sh.update_findings_meta(mh_findings)
         update_multiple_ProcessedFinding = []
         update_multiple_UnprocessedFindings = []
@@ -552,7 +495,9 @@ def main(args):
     print_table("MetaAccount: ", str(args.meta_account), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
-    print_table("Actions Confirmation: ", str(args.actions_confirmation), banners=banners)
+    print_table(
+        "Actions Confirmation: ", str(args.actions_confirmation), banners=banners
+    )
     print_table("List Findings: ", str(args.list_findings), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
     print_table("Input: ", str(args.inputs), banners=banners)
@@ -650,7 +595,11 @@ def main(args):
         print_table("Update: ", str(args.update_findings), banners=banners)
         if "lambda" in args.output_modes:
             print(
-                "Updating findings: ", str(count_mh_findings(mh_findings)), "with:", str(args.update_findings))
+                "Updating findings: ",
+                str(count_mh_findings(mh_findings)),
+                "with:",
+                str(args.update_findings),
+            )
         if mh_findings:
             UPProcessedFindings, UPUnprocessedFindings = update_findings(
                 logger,
@@ -679,8 +628,7 @@ def main(args):
             "Findings to enrich: ", str(count_mh_findings(mh_findings)), banners=banners
         )
         if "lambda" in args.output_modes:
-            print(
-                "Enriching findings: ", str(count_mh_findings(mh_findings)))
+            print("Enriching findings: ", str(count_mh_findings(mh_findings)))
         if mh_findings:
             ENProcessedFindings, ENUnprocessedFindings = enrich_findings(
                 logger,
@@ -701,6 +649,7 @@ def main(args):
 
     if "lambda" in args.output_modes:
         return mh_findings_short
+
 
 if __name__ == "__main__":
     main(argv[1:])
