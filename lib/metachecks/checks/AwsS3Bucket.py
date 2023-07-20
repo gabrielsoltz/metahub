@@ -171,7 +171,7 @@ class Metacheck(MetaChecksBase):
     def it_has_public_access_block_enabled(self):
         if self.bucket_public_access_block:
             for key, value in self.bucket_public_access_block.items():
-                if value == False:
+                if value is False:
                     return False
             return True
         return False
