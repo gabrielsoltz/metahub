@@ -223,7 +223,7 @@ def get_parser():
             "json-inventory",
             "html",
             "csv",
-            "lambda"
+            "lambda",
         ],
         default=[
             "json-short",
@@ -385,6 +385,7 @@ def confirm_choice(message, actions_confirmation=True):
         print("Actions confirmation disabled: continuing with the action...")
         return True
 
+
 def test_python_version():
     """Check Python Version"""
     logger = get_logger("ERROR")
@@ -410,6 +411,7 @@ def rich_box_severity(severity, values):
         "HIGH": "red",
         "MEDIUM": "yellow",
         "LOW": "green",
+        "INFORMATIONAL": "white",
     }
     title = "[" + color[severity] + "] " + severity + "[/]"
     value = values
@@ -471,7 +473,7 @@ def generate_output_html(
 
 def generate_rich(mh_statistics):
     severity_renderables = []
-    for severity in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+    for severity in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"):
         severity_renderables.append(
             Panel(
                 rich_box_severity(
