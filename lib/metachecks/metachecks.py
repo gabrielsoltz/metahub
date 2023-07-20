@@ -23,7 +23,7 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     logger.info(
         "Running MetaChecks for ResourceType: %s (%s)",
         resource_type,
-        finding["Resources"][0]["Id"],
+        resource_arn,
     )
 
     # If the resources lives in another account, we need the --mh-assume-role
