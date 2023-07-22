@@ -1063,9 +1063,9 @@ Examples:
 
 # Updating Workflow Status
 
-You can use **MetaHub** to update your AWS Security Findings Workflow Status in bulk. You will use the option `-update-findings' to update all the findings realted to your filters. This means you can update one, ten, or thousands of findings using only one command.
+You can use **MetaHub** to update your AWS Security Hub Findings workflow status (`NOTIFIED`, `NEW`, `RESOLVED`, `SUPPRESSED`) with a single command. You will use the `--update-findings` option to update all the findings from your MetaHub query. This means you can update one, ten, or thousands of findings using only one command. AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings beside the amount.
 
-For example, using the following filter: `./metahub -sh-filters ResourceType=AwsSageMakerNotebookInstance RecordState=ACTIVE WorkflowStatus=NEW` I found two affected resources with three finding each making six security hub findings in total.
+For example, using the following filter: `./metahub --sh-filters ResourceType=AwsSageMakerNotebookInstance RecordState=ACTIVE WorkflowStatus=NEW` I found two affected resources with three finding each making six Security Hub findings in total.
 
 Running the following update command will update those six findings' workflow status to `NOTIFIED` with a Note:
 
@@ -1081,15 +1081,11 @@ Running the following update command will update those six findings' workflow st
   <img src="docs/imgs/update-findings-2.png" alt="update-findings" width="850"/>
 </p>
 
-Workflow Status options are: `NOTIFIED`, `NEW`, `RESOLVED`, and `SUPPRESSED`
-
-AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings beside the amount.
-
-See more examples under [Updating Findings Workflow Status](#updating-findings-workflow-status)
+The `--update-findings` will ask you for confirmation before updating your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
 
 # Enriching Findings
 
-You can use **MetaHub** to enrich back your AWS Security Hub Findings with `MetaTags`, `MetaChecks`, `MetaTrails` and `MetaAccount` outputs. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
+You can use **MetaHub** to enrich back your AWS Security Hub Findings with `MetaTags`, `MetaChecks`, `MetaTrails` and `MetaAccount` outputs using the option `--enrich-findings`. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
 
 By enriching your findings directly in AWS Security Hub, you can take advantage of features like Insights and Filters by using the extra information not available in Security Hub before. 
 
@@ -1102,3 +1098,5 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 <p align="center">
   <img src="docs/imgs/enrich-findings-1.png" alt="update-findings" width="850"/>
 </p>
+
+The `--enrich-findings` will ask you for confirmation before enriching your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
