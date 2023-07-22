@@ -1,3 +1,4 @@
+
 """MetaCheck: AwsSnsTopic"""
 
 import json
@@ -83,6 +84,32 @@ class Metacheck(MetaChecksBase):
             return self.topic_kms_master_key_id
         return False
 
+    def it_has_subscriptions_confirmed(self):
+        if self.topic_atributes:
+            try:
+                if self.topic_atributes["SubscriptionsConfirmed"]:
+                    if int(self.topic_atributes["SubscriptionsConfirmed"]) == 0:
+                        return False
+                    return self.topic_atributes["SubscriptionsConfirmed"]
+            except KeyError:
+                return False
+        return False
+
+    def it_has_name(self):
+        if self.topic_atributes:
+            try:
+                if self.topic_atributes["DisplayName"]:
+                    return self.topic_atributes["DisplayName"]
+            except KeyError:
+                return False
+        return False
+
     def checks(self):
-        checks = ["it_has_resource_policy", "is_unrestricted", "is_encrypted"]
+        checks = [
+            "it_has_resource_policy",
+            "is_unrestricted",
+            "is_encrypted",
+            "it_has_subscriptions_confirmed",
+            "it_has_name",
+        ]
         return checks
