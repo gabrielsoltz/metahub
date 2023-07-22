@@ -124,7 +124,9 @@ def generate_findings(
                         bar()
 
                 except KeyboardInterrupt:
-                    print("Keyboard interrupt detected. Exiting...")
+                    print(
+                        "Keyboard interrupt detected, shutting down all tasks, please wait..."
+                    )
                     for future in futures:
                         future.cancel()  # cancel each future
 
