@@ -28,8 +28,8 @@ MetaHubResourcesConfig = {
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
     },
     "AwsLambdaFunction": {
-        "metatrails_events": ["CreateFunction"],
-        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+        "metatrails_events": ["CreateFunction", "CreateFunction20150331"],
+        "ResourceName": {"parsing_char": ":", "parsing_pos": -1},
     },
     "AwsS3Bucket": {
         "metatrails_events": ["CreateBucket"],
@@ -159,7 +159,7 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateWebAcl"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
     },
-    "AwsVpc": {
+    "AwsEc2Vpc": {
         "metatrails_events": ["CreateVpc"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": 1},
     },
@@ -175,4 +175,8 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateLogGroup"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
     },
+    "AwsEc2Subnet": {
+        "metatrails_events": ["CreateSubnet"],
+        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+    }
 }
