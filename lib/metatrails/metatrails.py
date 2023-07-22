@@ -53,9 +53,12 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
             parsing_pos = MetaHubResourcesConfig[resource_type]["ResourceName"][
                 "parsing_pos"
             ]
-            ResourceName = finding["Resources"][0]["Id"].split(parsing_char)[
-                parsing_pos
-            ]
+            if parsing_char is not None:
+                ResourceName = finding["Resources"][0]["Id"].split(parsing_char)[
+                    parsing_pos
+                ]
+            else:
+                ResourceName = finding["Resources"][0]["Id"]
             event_names = MetaHubResourcesConfig[resource_type]["metatrails_events"]
         except KeyError:
             # No Config Defined
@@ -75,6 +78,7 @@ def run_metatrails(logger, finding, mh_filters_trails, mh_role):
                             trails[event["EventName"]] = {
                                 "Username": event["Username"],
                                 "EventTime": str(event["EventTime"]),
+                                "EventId": event["EventId"],
                             }
 
     except (ClientError, ParamValidationError, Exception) as err:

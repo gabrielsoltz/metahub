@@ -99,13 +99,9 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateFleet"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
     },
-    "AwsAppStreamStack": {
-        "metatrails_events": ["CreateStack"],
-        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
-    },
     "AwsCloudFormationStack": {
         "metatrails_events": ["CreateStack"],
-        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+        "ResourceName": {"parsing_char": None, "parsing_pos": None},
     },
     "AwsRoute53HostedZone": {
         "metatrails_events": ["CreateHostedZone"],
