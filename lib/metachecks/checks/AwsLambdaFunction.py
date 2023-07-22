@@ -162,15 +162,16 @@ class Metacheck(MetaChecksBase):
         subnet = {}
         if self.function_vpc:
             if self.function_vpc["SubnetIds"]:
-                arn = generate_arn(
-                    self.function_vpc["SubnetIds"],
-                    "ec2",
-                    "subnet",
-                    self.region,
-                    self.account,
-                    self.partition,
-                )
-                subnet[arn] = {}
+                for subnet_id in self.function_vpc["SubnetIds"]:
+                    arn = generate_arn(
+                        subnet_id,
+                        "ec2",
+                        "subnet",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    subnet[arn] = {}
         return subnet
 
     # MetaChecks
