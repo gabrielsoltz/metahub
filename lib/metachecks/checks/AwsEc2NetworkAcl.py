@@ -133,12 +133,6 @@ class Metacheck(MetaChecksBase):
             return failed_rules
         return False
 
-    def is_public(self):
-        if self.network_acl:
-            if self.is_ingress_rules_unrestricted():
-                return True
-        return False
-
     def is_attached(self):
         if self.network_acl:
             if self.its_associated_with_subnets():
@@ -150,7 +144,6 @@ class Metacheck(MetaChecksBase):
             "is_default",
             "is_ingress_rules_unrestricted",
             "is_egress_rules_unrestricted",
-            "is_public",
             "is_attached",
             "its_associated_with_subnets",
         ]
