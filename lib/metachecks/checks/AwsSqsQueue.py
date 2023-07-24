@@ -30,6 +30,7 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "sqs", self.region, self.sess)
             # Describe
             self.queue_url = self.get_queue_url()
+            if not self.queue_url: return False
             self.queue_attributes = self.get_queue_atributes()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()

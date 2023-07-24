@@ -33,6 +33,7 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "es", self.region, self.sess)
             # Descrbe
             self.elasticsearch_domain = self.describe_elasticsearch_domain()
+            if not self.elasticsearch_domain: return False
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks

@@ -40,6 +40,7 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.elasticcache_cluster = self.describe_cache_clusters()
+            if not self.elasticcache_cluster: return False
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
 

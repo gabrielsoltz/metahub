@@ -35,6 +35,7 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.function = self.get_function()
+            if not self.function: return False
             self.function_vpc = self.get_function_vpc()
             self.function_url_config = self.get_function_url_config()
             # Resource Policy

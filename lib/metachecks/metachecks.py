@@ -52,6 +52,8 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     except (AttributeError, Exception) as err:
         if "has no attribute '" + resource_type in str(err):
             logger.info("No MetaChecks for ResourceType: %s", resource_type)
+        elif "should return None" in str(err):
+            logger.info("Resource not found: %s", resource_arn)
         else:
             logger.error(
                 "Error running MetaChecks for ResourceType: %s %s (%s)",

@@ -30,6 +30,7 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "rds", self.region, self.sess)
             # Describe
             self.rds_instances = self.describe_db_instances()
+            if not self.rds_instances: return False
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()

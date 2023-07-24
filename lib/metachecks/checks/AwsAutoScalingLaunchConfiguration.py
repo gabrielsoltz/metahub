@@ -32,6 +32,7 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.launch_configuration = self.describe_launch_configuration()
+            if not self.launch_configuration: return False
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()

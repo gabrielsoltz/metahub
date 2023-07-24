@@ -37,6 +37,7 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.user = self.get_user()
+            if not self.user: return False
             self.iam_inline_policies = self.list_user_policies()
             # Drilled MetaChecks
             self.iam_policies = self.list_attached_user_policies()

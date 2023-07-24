@@ -37,6 +37,7 @@ class Metacheck(MetaChecksBase):
             # Describe
             self.all_security_group = self.describe_security_groups()
             self.security_group = self._describe_security_group()
+            if not self.security_group: return False
             self.network_interfaces = self.describe_network_interfaces()
             self.security_group_rules = self.describe_security_group_rules()
             # Drilled MetaChecks
