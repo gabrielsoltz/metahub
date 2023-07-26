@@ -8,6 +8,10 @@ resource "aws_lambda_function" "lambda_zip" {
   layers           = [aws_lambda_layer_version.lambda_layer.id]
   source_code_hash = filebase64sha256("zip/lambda.zip")
 
+  tags = {
+    Service = local.prefix
+  }
+
 }
 
 # IAM
@@ -26,6 +30,10 @@ data "aws_iam_policy_document" "lambda_role" {
 resource "aws_iam_role" "lambda_role" {
   name               = "lambda_role"
   assume_role_policy = data.aws_iam_policy_document.lambda_role.json
+
+  tags = {
+    Service = local.prefix
+  }
 }
 
 # IAM Lambda Logs
@@ -48,6 +56,10 @@ resource "aws_iam_policy" "lambda_logging" {
   name   = "${local.prefix}-policy-logging"
   path   = "/"
   policy = data.aws_iam_policy_document.lambda_logging.json
+
+  tags = {
+    Service = local.prefix
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
@@ -75,6 +87,10 @@ resource "aws_iam_policy" "lambda_policy_securityhub" {
   name   = "${local.prefix}-policy-securityhub"
   path   = "/"
   policy = data.aws_iam_policy_document.lambda_securityhub.json
+
+  tags = {
+    Service = local.prefix
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_attach_securityhub" {
@@ -100,6 +116,10 @@ resource "aws_iam_policy" "lambda_policy_metachecks" {
   name   = "${local.prefix}-policy-metachecks"
   path   = "/"
   policy = data.aws_iam_policy_document.lambda_policy_document_metachecks.json
+
+  tags = {
+    Service = local.prefix
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_attach_metaachecks" {
@@ -129,6 +149,10 @@ resource "aws_iam_policy" "lambda_policy_metaaccount" {
   name   = "${local.prefix}-policy-metaaccount"
   path   = "/"
   policy = data.aws_iam_policy_document.lambda_policy_document_metaaccount.json
+
+  tags = {
+    Service = local.prefix
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_attach_metaaccount" {
