@@ -53,24 +53,15 @@ class Metacheck(MetaChecksBase):
                 ShowCacheNodeInfo=True,
                 # ShowCacheClustersNotInReplicationGroups=True|False
             )
+            if response["CacheClusters"]:
+                return response["CacheClusters"][0]
         except ClientError as err:
-            if err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
-                self.logger.info(
-                    "Failed to describe_cache_clusters: {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
                 self.logger.error(
                     "Failed to describe_cache_clusters: {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        if response["CacheClusters"]:
-            return response["CacheClusters"][0]
-
         return False
 
     # Drilled MetaChecks

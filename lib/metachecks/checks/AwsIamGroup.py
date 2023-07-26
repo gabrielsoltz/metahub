@@ -47,13 +47,14 @@ class Metacheck(MetaChecksBase):
     def get_group(self):
         try:
             group = self.client.get_group(GroupName=self.resource_id).get("Group")
+            return group
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NoSuchEntity":
                 self.logger.error(
                     "Failed to get_group {}, {}".format(self.resource_id, err)
                 )
-            return False
-        return group
+        return False
+        
 
     def list_group_policies(self):
         iam_inline_policies = {}

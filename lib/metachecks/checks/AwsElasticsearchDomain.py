@@ -47,22 +47,16 @@ class Metacheck(MetaChecksBase):
             response = self.client.describe_elasticsearch_domain(
                 DomainName=self.resource_id
             )
+            return response.get("DomainStatus")
         except ClientError as err:
-            if err.response["Error"]["Code"] == "ResourceNotFoundException":
-                self.logger.info(
-                    "Failed to describe_elasticsearch_domain: {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.error(
                     "Failed to describe_elasticsearch_domain: {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        return response["DomainStatus"]
+        return False
+        
 
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}

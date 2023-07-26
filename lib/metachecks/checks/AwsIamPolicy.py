@@ -3,7 +3,7 @@
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
-
+from botocore.exceptions import ClientError
 
 class Metacheck(MetaChecksBase):
     def __init__(
@@ -46,9 +46,14 @@ class Metacheck(MetaChecksBase):
     # Describe Functions
 
     def get_policy(self):
-        response = self.client.get_policy(PolicyArn=self.resource_arn)
-        if response["Policy"]:
-            return response["Policy"]
+        try:
+            response = self.client.get_policy(PolicyArn=self.resource_arn)
+            return response.get("Policy")
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "NoSuchEntityException":
+                self.logger.error(
+                    "Failed to get_policy {}, {}".format(self.resource_id, err)
+                )
         return False
 
     def get_policy_version(self):

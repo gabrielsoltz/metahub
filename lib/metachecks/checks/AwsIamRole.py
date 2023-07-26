@@ -47,15 +47,14 @@ class Metacheck(MetaChecksBase):
     def get_role(self):
         try:
             role = self.client.get_role(RoleName=self.resource_id).get("Role")
+            return role
         except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchEntity":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "NoSuchEntity":
                 self.logger.error(
                     "Failed to get_role {}, {}".format(self.resource_id, err)
                 )
-                return False
-        return role
+        return False
+        
 
     def list_instance_profiles_for_role(self):
         try:

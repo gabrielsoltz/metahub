@@ -31,6 +31,8 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.client = get_boto3_client(self.logger, "s3", self.region, self.sess)
             # Describe
+            self.cannonical_user_id = self.list_bucket()
+            if not self.cannonical_user_id: return False
             self.bucket_acl = self.get_bucket_acl()
             self.cannonical_user_id = self.get_canonical_user_id()
             self.bucket_website = self.get_bucket_website()
@@ -41,6 +43,23 @@ class Metacheck(MetaChecksBase):
 
     # Describe Functions
 
+    def list_bucket(self):
+        ''' List buckets and check if the bucket is in the list'''
+        try:
+            response = self.client.list_buckets(
+                Buckets=[{"Name": self.resource_id}]
+            )
+            buckets = response.get("Buckets")
+            for bucket in buckets:
+                if bucket["Name"] == self.resource_id:
+                    return response["Owner"]["ID"]
+            return False
+        except ClientError as err:
+            self.logger.error(
+                "Failed to list_bucket {}, {}".format(self.resource_id, err)
+            )
+        return False
+        
     def get_bucket_acl(self):
         try:
             response = self.client.get_bucket_acl(Bucket=self.resource_id)
@@ -50,16 +69,6 @@ class Metacheck(MetaChecksBase):
             )
             return False
         return response["Grants"]
-
-    def get_canonical_user_id(self):
-        try:
-            response = self.client.list_buckets()
-        except ClientError as err:
-            self.logger.error(
-                "Failed to get_canonical_user_id {}, {}".format(self.resource_id, err)
-            )
-            return False
-        return response["Owner"]["ID"]
 
     def get_bucket_website(self):
         try:

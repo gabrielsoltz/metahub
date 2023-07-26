@@ -54,16 +54,12 @@ class Metacheck(MetaChecksBase):
                 FunctionName=self.resource_arn
                 #            Qualifier='string'
             )
+            return response.get("Configuration")
         except ClientError as err:
-            if err.response["Error"]["Code"] == "ResourceNotFoundException":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.error(
                     "Failed to get_function {}, {}".format(self.resource_id, err)
                 )
-                return False
-        if response["Configuration"]:
-            return response["Configuration"]
         return False
 
     def get_function_vpc(self):
