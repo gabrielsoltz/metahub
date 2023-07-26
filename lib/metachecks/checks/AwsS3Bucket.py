@@ -32,9 +32,9 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "s3", self.region, self.sess)
             # Describe
             self.cannonical_user_id = self.list_bucket()
-            if not self.cannonical_user_id: return False
+            if not self.cannonical_user_id:
+                return False
             self.bucket_acl = self.get_bucket_acl()
-            self.cannonical_user_id = self.get_canonical_user_id()
             self.bucket_website = self.get_bucket_website()
             self.bucket_public_access_block = self.get_bucket_public_access_block()
             # Resource Policy
@@ -44,11 +44,9 @@ class Metacheck(MetaChecksBase):
     # Describe Functions
 
     def list_bucket(self):
-        ''' List buckets and check if the bucket is in the list'''
+        """List buckets and check if the bucket is in the list"""
         try:
-            response = self.client.list_buckets(
-                Buckets=[{"Name": self.resource_id}]
-            )
+            response = self.client.list_buckets(Buckets=[{"Name": self.resource_id}])
             buckets = response.get("Buckets")
             for bucket in buckets:
                 if bucket["Name"] == self.resource_id:
@@ -59,7 +57,7 @@ class Metacheck(MetaChecksBase):
                 "Failed to list_bucket {}, {}".format(self.resource_id, err)
             )
         return False
-        
+
     def get_bucket_acl(self):
         try:
             response = self.client.get_bucket_acl(Bucket=self.resource_id)

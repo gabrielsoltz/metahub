@@ -36,7 +36,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.subnet = self.describe_subnets()
-            if not self.subnet: return False
+            if not self.subnet:
+                return False
             # Drilled MetaChecks
             self.route_tables = self.describe_route_tables()
 

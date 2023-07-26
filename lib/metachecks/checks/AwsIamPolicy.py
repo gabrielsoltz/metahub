@@ -1,9 +1,11 @@
 """MetaCheck: AwsIamPolicy"""
 
+from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
-from botocore.exceptions import ClientError
+
 
 class Metacheck(MetaChecksBase):
     def __init__(
@@ -34,7 +36,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.policy = self.get_policy()
-            if not self.policy: return False
+            if not self.policy:
+                return False
             self.policy_version = self.get_policy_version()
             if self.policy_version:
                 self.checked_policy_version = PolicyHelper(

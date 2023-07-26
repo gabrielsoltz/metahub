@@ -1,12 +1,12 @@
-
 """MetaCheck: AwsSnsTopic"""
 
 import json
 
+from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
-from botocore.exceptions import ClientError
 
 
 class Metacheck(MetaChecksBase):
@@ -32,7 +32,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "sns", self.region, self.sess)
             # Describe
             self.topic_atributes = self.get_topic_attributes()
-            if not self.topic_atributes: return False
+            if not self.topic_atributes:
+                return False
             self.topic_kms_master_key_id = self.get_topic_atributes_kms_master_key_id()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
@@ -47,7 +48,9 @@ class Metacheck(MetaChecksBase):
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NotFoundException":
                 self.logger.error(
-                    "Failed to get_topic_attributes {}, {}".format(self.resource_id, err)
+                    "Failed to get_topic_attributes {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
         return False
 

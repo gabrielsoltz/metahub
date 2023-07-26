@@ -36,7 +36,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.role = self.get_role()
-            if not self.role: return False
+            if not self.role:
+                return False
             self.instance_profile = self.list_instance_profiles_for_role()
             self.iam_inline_policies = self.list_role_policies()
             # Drilled MetaChecks
@@ -54,7 +55,6 @@ class Metacheck(MetaChecksBase):
                     "Failed to get_role {}, {}".format(self.resource_id, err)
                 )
         return False
-        
 
     def list_instance_profiles_for_role(self):
         try:

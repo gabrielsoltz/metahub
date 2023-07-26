@@ -35,7 +35,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.volume = self.describe_volumes()
-            if not self.volume: return False
+            if not self.volume:
+                return False
             # Drilled MetaChecks
 
     # Describe function

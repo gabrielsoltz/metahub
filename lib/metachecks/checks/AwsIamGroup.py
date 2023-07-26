@@ -37,7 +37,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.group = self.get_group()
-            if not self.group: return False
+            if not self.group:
+                return False
             self.iam_inline_policies = self.list_group_policies()
             # Drilled MetaChecks
             self.iam_policies = self.list_attached_group_policies()
@@ -54,7 +55,6 @@ class Metacheck(MetaChecksBase):
                     "Failed to get_group {}, {}".format(self.resource_id, err)
                 )
         return False
-        
 
     def list_group_policies(self):
         iam_inline_policies = {}
