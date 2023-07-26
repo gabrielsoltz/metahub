@@ -40,6 +40,8 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.elasticcache_cluster = self.describe_cache_clusters()
+            if not self.elasticcache_cluster:
+                return False
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
 
@@ -52,24 +54,15 @@ class Metacheck(MetaChecksBase):
                 ShowCacheNodeInfo=True,
                 # ShowCacheClustersNotInReplicationGroups=True|False
             )
+            if response["CacheClusters"]:
+                return response["CacheClusters"][0]
         except ClientError as err:
-            if err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
-                self.logger.info(
-                    "Failed to describe_cache_clusters: {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "CacheClusterNotFoundFault":
                 self.logger.error(
                     "Failed to describe_cache_clusters: {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        if response["CacheClusters"]:
-            return response["CacheClusters"][0]
-
         return False
 
     # Drilled MetaChecks

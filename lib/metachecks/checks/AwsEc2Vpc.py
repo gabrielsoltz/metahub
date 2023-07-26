@@ -35,6 +35,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.vpc = self.describe_vpcs()
+            if not self.vpc:
+                return False
             # Drilled MetaChecks
             self.subnets = self.describe_subnets()
 

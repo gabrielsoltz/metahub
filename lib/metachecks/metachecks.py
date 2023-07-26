@@ -52,6 +52,8 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
     except (AttributeError, Exception) as err:
         if "has no attribute '" + resource_type in str(err):
             logger.info("No MetaChecks for ResourceType: %s", resource_type)
+        elif "should return None" in str(err):
+            logger.info("Resource not found: %s", resource_arn)
         else:
             logger.error(
                 "Error running MetaChecks for ResourceType: %s %s (%s)",
@@ -65,7 +67,20 @@ def run_metachecks(logger, finding, mh_filters_checks, mh_role, drilled_down):
 
     # Execute MetaChecks
     if drilled_down:
-        hndl.execute_drilled_metachecks()
+        try:
+            hndl.execute_drilled_metachecks()
+        except (AttributeError, Exception) as err:
+            if "should return None" in str(err):
+                logger.info(
+                    "Drilled Resources for resource: %s not found!", resource_arn
+                )
+            else:
+                logger.error(
+                    "Error running Drilled MetaChecks for ResourceType: %s %s (%s)",
+                    resource_type,
+                    resource_arn,
+                    err,
+                )
 
     # Get MetaChecks Outputs
     execute = hndl.output_checks()

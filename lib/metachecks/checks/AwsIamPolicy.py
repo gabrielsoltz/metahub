@@ -1,5 +1,7 @@
 """MetaCheck: AwsIamPolicy"""
 
+from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
@@ -34,6 +36,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.policy = self.get_policy()
+            if not self.policy:
+                return False
             self.policy_version = self.get_policy_version()
             if self.policy_version:
                 self.checked_policy_version = PolicyHelper(
@@ -45,9 +49,14 @@ class Metacheck(MetaChecksBase):
     # Describe Functions
 
     def get_policy(self):
-        response = self.client.get_policy(PolicyArn=self.resource_arn)
-        if response["Policy"]:
-            return response["Policy"]
+        try:
+            response = self.client.get_policy(PolicyArn=self.resource_arn)
+            return response.get("Policy")
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "NoSuchEntityException":
+                self.logger.error(
+                    "Failed to get_policy {}, {}".format(self.resource_id, err)
+                )
         return False
 
     def get_policy_version(self):

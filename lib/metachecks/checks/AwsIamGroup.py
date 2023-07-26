@@ -36,7 +36,9 @@ class Metacheck(MetaChecksBase):
             self.mh_filters_checks = mh_filters_checks
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
-            self.user = self.get_group()
+            self.group = self.get_group()
+            if not self.group:
+                return False
             self.iam_inline_policies = self.list_group_policies()
             # Drilled MetaChecks
             self.iam_policies = self.list_attached_group_policies()
@@ -46,15 +48,13 @@ class Metacheck(MetaChecksBase):
     def get_group(self):
         try:
             group = self.client.get_group(GroupName=self.resource_id).get("Group")
+            return group
         except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchEntity":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "NoSuchEntity":
                 self.logger.error(
                     "Failed to get_group {}, {}".format(self.resource_id, err)
                 )
-                return False
-        return group
+        return False
 
     def list_group_policies(self):
         iam_inline_policies = {}

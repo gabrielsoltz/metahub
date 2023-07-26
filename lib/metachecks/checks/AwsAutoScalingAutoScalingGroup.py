@@ -37,6 +37,8 @@ class Metacheck(MetaChecksBase):
             )
             # Describe
             self.auto_scaling_group = self.describe_auto_scaling_groups()
+            if not self.auto_scaling_group:
+                return False
             self.auto_scaling_instances = self._describe_auto_scaling_groups_instances()
             self.auto_scaling_launch_template = (
                 self._describe_auto_scaling_groups_launch_template()

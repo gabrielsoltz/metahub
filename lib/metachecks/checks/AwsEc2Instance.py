@@ -31,6 +31,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.instance = self.describe_instance()
+            if not self.instance:
+                return False
             # Drilled MetaChecks
             self.iam_roles = self.describe_iam_roles()
             self.security_groups = self.describe_security_groups()
@@ -46,7 +48,19 @@ class Metacheck(MetaChecksBase):
             response = self.client.describe_instances(
                 InstanceIds=[
                     self.resource_id,
-                ]
+                ],
+                Filters=[
+                    {
+                        "Name": "instance-state-name",
+                        "Values": [
+                            "pending",
+                            "running",
+                            "shutting-down",
+                            "stopping",
+                            "stopped",
+                        ],
+                    }
+                ],
             )
         except ClientError as err:
             if err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":

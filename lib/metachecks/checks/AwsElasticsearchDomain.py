@@ -33,6 +33,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "es", self.region, self.sess)
             # Descrbe
             self.elasticsearch_domain = self.describe_elasticsearch_domain()
+            if not self.elasticsearch_domain:
+                return False
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
@@ -46,22 +48,15 @@ class Metacheck(MetaChecksBase):
             response = self.client.describe_elasticsearch_domain(
                 DomainName=self.resource_id
             )
+            return response.get("DomainStatus")
         except ClientError as err:
-            if err.response["Error"]["Code"] == "ResourceNotFoundException":
-                self.logger.info(
-                    "Failed to describe_elasticsearch_domain: {}, {}".format(
-                        self.resource_id, err
-                    )
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.error(
                     "Failed to describe_elasticsearch_domain: {}, {}".format(
                         self.resource_id, err
                     )
                 )
-                return False
-        return response["DomainStatus"]
+        return False
 
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}

@@ -29,6 +29,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.network_acl = self.describe_network_acls()
+            if not self.network_acl:
+                return False
             # Drilled MetaChecks
             self.subnets = self._describe_network_acls_subnets()
 

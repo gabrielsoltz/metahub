@@ -37,6 +37,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
             # Describe
             self.user = self.get_user()
+            if not self.user:
+                return False
             self.iam_inline_policies = self.list_user_policies()
             # Drilled MetaChecks
             self.iam_policies = self.list_attached_user_policies()
@@ -46,15 +48,13 @@ class Metacheck(MetaChecksBase):
     def get_user(self):
         try:
             user = self.client.get_user(UserName=self.resource_id).get("User")
+            return user
         except ClientError as err:
-            if err.response["Error"]["Code"] == "NoSuchEntity":
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "NoSuchEntity":
                 self.logger.error(
                     "Failed to get_user {}, {}".format(self.resource_id, err)
                 )
-                return False
-        return user
+        return False
 
     def list_user_policies(self):
         iam_inline_policies = {}

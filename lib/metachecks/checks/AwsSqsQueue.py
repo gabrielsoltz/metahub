@@ -2,6 +2,8 @@
 
 import json
 
+from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
@@ -30,6 +32,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "sqs", self.region, self.sess)
             # Describe
             self.queue_url = self.get_queue_url()
+            if not self.queue_url:
+                return False
             self.queue_attributes = self.get_queue_atributes()
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
@@ -38,8 +42,15 @@ class Metacheck(MetaChecksBase):
     # Describe Functions
 
     def get_queue_url(self):
-        response = self.client.get_queue_url(QueueName=self.resource_id)
-        return response["QueueUrl"]
+        try:
+            response = self.client.get_queue_url(QueueName=self.resource_id)
+            return response.get("QueueUrl")
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "QueueDoesNotExist":
+                self.logger.error(
+                    "Failed to get_queue_url {}, {}".format(self.resource_id, err)
+                )
+        return False
 
     def get_queue_atributes(self):
         response = self.client.get_queue_attributes(

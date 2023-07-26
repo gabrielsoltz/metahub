@@ -35,6 +35,8 @@ class Metacheck(MetaChecksBase):
             self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
             # Describe
             self.route_table = self.describe_route_tables()
+            if not self.route_table:
+                return False
             # Drilled MetaChecks
 
     # Drilled MetaChecks
