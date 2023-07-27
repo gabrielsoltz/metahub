@@ -82,7 +82,7 @@ You can read the following articles on MetaHub practical use-cases:
 
 # Features
 
-**MetaHub** provides a range of ways to list and manage AWS Security Hub findings, including investigation, suppression, updating, and integration with other tools or alerting systems. To avoid *Shadowing* and *Duplication*, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
+**MetaHub** provides a range of ways to list and manage security findings, including investigation, suppression, updating, and integration with other tools or alerting systems. To avoid *Shadowing* and *Duplication*, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
 
 **MetaHub** queries the affected resources directly in the affected account to provide additional context using the following options:
 
@@ -1105,4 +1105,4 @@ The `--enrich-findings` will ask you for confirmation before enriching your find
 
 # Configuration
 
-**MetaHub** uses configuration files that let you customize some checks behaviours, default filters and more. The configuration files are located in `lib/config/`. You can edit them using your favourite text editor.
+**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in `lib/config/`. You can edit them using your favorite text editor.
