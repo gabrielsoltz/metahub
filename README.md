@@ -33,6 +33,7 @@
 - [Filtering](#Filtering)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
+- [Configuration](#configuration)
 
 # Description
 
@@ -1100,3 +1101,8 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 </p>
 
 The `--enrich-findings` will ask you for confirmation before enriching your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
+
+
+# Configuration
+
+**MetaHub** uses configuration files that let you customize some checks behaviours, default filters and more. The configuration files are located in `lib/config/`. You can edit them using your favourite text editor.
