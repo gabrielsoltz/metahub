@@ -33,6 +33,7 @@
 - [Filtering](#Filtering)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
+- [Configuration](#configuration)
 
 # Description
 
@@ -81,7 +82,7 @@ You can read the following articles on MetaHub practical use-cases:
 
 # Features
 
-**MetaHub** provides a range of ways to list and manage AWS Security Hub findings, including investigation, suppression, updating, and integration with other tools or alerting systems. To avoid *Shadowing* and *Duplication*, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
+**MetaHub** provides a range of ways to list and manage security findings, including investigation, suppression, updating, and integration with other tools or alerting systems. To avoid *Shadowing* and *Duplication*, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
 
 **MetaHub** queries the affected resources directly in the affected account to provide additional context using the following options:
 
@@ -1100,3 +1101,8 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 </p>
 
 The `--enrich-findings` will ask you for confirmation before enriching your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
+
+
+# Configuration
+
+**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in `lib/config/`. You can edit them using your favorite text editor.
