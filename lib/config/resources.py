@@ -179,4 +179,8 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateSecret"],
         "ResourceName": {"parsing_char": ":", "parsing_pos": -1},
     },
+    "AwsKmsKey": {
+        "metatrails_events": ["CreateKey"],
+        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+    },
 }

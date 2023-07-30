@@ -23,4 +23,5 @@ from lib.metachecks.checks import (
     AwsSecretsManagerSecret,
     AwsSnsTopic,
     AwsSqsQueue,
+    AwsKmsKey
 )
