@@ -119,7 +119,7 @@ def get_parser():
     )
 
     # Group: Security Hub Actions
-    group_actions = parser.add_argument_group("Security Hub Options")
+    group_actions = parser.add_argument_group("Security Hub Actions")
     group_actions.add_argument(
         "--update-findings",
         default=None,
