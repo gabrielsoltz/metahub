@@ -1,12 +1,12 @@
 """MetaCheck: AwsSecretsManagerSecret"""
 
+import json
+
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
-
-import json
 
 
 class Metacheck(MetaChecksBase):
@@ -35,7 +35,9 @@ class Metacheck(MetaChecksBase):
                 finding["Resources"][0]["Id"] if not drilled else drilled
             )
             self.mh_filters_checks = mh_filters_checks
-            self.client = get_boto3_client(self.logger, "secretsmanager", self.region, self.sess)
+            self.client = get_boto3_client(
+                self.logger, "secretsmanager", self.region, self.sess
+            )
             # Describe
             self.secret = self.describe_secret()
             if not self.secret:
@@ -58,9 +60,7 @@ class Metacheck(MetaChecksBase):
 
     def get_resource_policy(self):
         if self.secret:
-            response = self.client.get_resource_policy(
-                SecretId=self.resource_arn
-            )
+            response = self.client.get_resource_policy(SecretId=self.resource_arn)
         if response.get("ResourcePolicy"):
             checked_policy = PolicyHelper(
                 self.logger, self.finding, json.loads(response["ResourcePolicy"])

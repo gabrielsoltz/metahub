@@ -20,7 +20,7 @@ from lib.metachecks.checks import (
     AwsRdsDbCluster,
     AwsRdsDbInstance,
     AwsS3Bucket,
+    AwsSecretsManagerSecret,
     AwsSnsTopic,
     AwsSqsQueue,
-    AwsSecretsManagerSecret
 )
