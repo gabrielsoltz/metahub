@@ -477,6 +477,7 @@ def main(args):
     ) = validate_arguments(args, logger)
 
     print_title_line("Options", banners=banners)
+    print_table("Input: ", str(args.inputs), banners=banners)
     print_table(
         "Security Hub Account: ",
         str(sh_account) + sh_account_alias_str,
@@ -487,6 +488,7 @@ def main(args):
     print_table("Security Hub Profile: ", args.sh_profile, banners=banners)
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)
+    print_table("Input File: ", str(args.input_asff), banners=banners)
     print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
     print_table("MetaChecks: ", str(args.meta_checks), banners=banners)
     print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
@@ -500,10 +502,8 @@ def main(args):
     print_table(
         "Actions Confirmation: ", str(args.actions_confirmation), banners=banners
     )
-    print_table("List Findings: ", str(args.list_findings), banners=banners)
     print_table("Output Modes: ", str(args.output_modes), banners=banners)
-    print_table("Input: ", str(args.inputs), banners=banners)
-    print_table("Input File: ", str(args.input_asff), banners=banners)
+    print_table("List Findings: ", str(args.list_findings), banners=banners)
     print_table("Log Level: ", str(args.log_level), banners=banners)
 
     # Generate Findings

@@ -174,5 +174,9 @@ MetaHubResourcesConfig = {
     "AwsEc2Subnet": {
         "metatrails_events": ["CreateSubnet"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
-    }
+    },
+    "AwsSecretsManagerSecret": {
+        "metatrails_events": ["CreateSecret"],
+        "ResourceName": {"parsing_char": ":", "parsing_pos": -1},
+    },
 }
