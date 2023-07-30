@@ -22,4 +22,5 @@ from lib.metachecks.checks import (
     AwsS3Bucket,
     AwsSnsTopic,
     AwsSqsQueue,
+    AwsSecretsManagerSecret
 )
