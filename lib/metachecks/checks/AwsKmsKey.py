@@ -35,9 +35,7 @@ class Metacheck(MetaChecksBase):
                 finding["Resources"][0]["Id"] if not drilled else drilled
             )
             self.mh_filters_checks = mh_filters_checks
-            self.client = get_boto3_client(
-                self.logger, "kms", self.region, self.sess
-            )
+            self.client = get_boto3_client(self.logger, "kms", self.region, self.sess)
             # Describe
             self.policy = self.get_key_policy()
             if not self.policy:
@@ -48,7 +46,9 @@ class Metacheck(MetaChecksBase):
 
     def get_key_policy(self):
         try:
-            response = self.client.get_key_policy(KeyId=self.resource_id, PolicyName="default")
+            response = self.client.get_key_policy(
+                KeyId=self.resource_id, PolicyName="default"
+            )
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NotFoundException":
                 self.logger.error(
@@ -70,7 +70,7 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.policy:
             if self.policy["is_unrestricted"]:
-                return True
+                return self.policy["is_unrestricted"]
         return False
 
     def checks(self):

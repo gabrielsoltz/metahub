@@ -154,12 +154,12 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
+            "it_has_endpoint",
             "is_rest_encrypted",
             "is_transit_encrypted",
-            "is_encrypted",
             "its_associated_with_security_groups",
             "its_associated_with_replication_group",
-            "it_has_endpoint",
+            "is_encrypted",
             "is_public",
         ]
         return checks

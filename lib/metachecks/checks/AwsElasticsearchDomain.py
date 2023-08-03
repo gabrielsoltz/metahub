@@ -35,11 +35,15 @@ class Metacheck(MetaChecksBase):
             self.elasticsearch_domain = self.describe_elasticsearch_domain()
             if not self.elasticsearch_domain:
                 return False
+            self.elasticsearch_domain_as = (
+                self._describe_elasticsearch_domain_advanced_security()
+            )
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
             self.security_groups = self.describe_security_groups()
             self.vpcs = self._describe_elasticsearch_domain_vpc()
+            self.subnets = self._describe_elasticsearch_domain_subnets()
 
     # Describe Functions
 
@@ -83,6 +87,13 @@ class Metacheck(MetaChecksBase):
 
         return security_groups
 
+    def _describe_elasticsearch_domain_advanced_security(self):
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("AdvancedSecurityOptions"):
+                if self.elasticsearch_domain.get("AdvancedSecurityOptions")["Enabled"]:
+                    return self.elasticsearch_domain.get("AdvancedSecurityOptions")
+        return False
+
     # Resource Policy
 
     def describe_resource_policy(self):
@@ -117,8 +128,26 @@ class Metacheck(MetaChecksBase):
                         self.partition,
                     )
                     vpc[arn] = {}
-                    return
         return vpc
+
+    def _describe_elasticsearch_domain_subnets(self):
+        subnets = {}
+        if self.elasticsearch_domain:
+            if self.elasticsearch_domain.get("VPCOptions"):
+                if self.elasticsearch_domain.get("VPCOptions").get("SubnetIds"):
+                    for subnet in self.elasticsearch_domain.get("VPCOptions").get(
+                        "SubnetIds"
+                    ):
+                        arn = generate_arn(
+                            subnet,
+                            "ec2",
+                            "subnet",
+                            self.region,
+                            self.account,
+                            self.partition,
+                        )
+                        subnets[arn] = {}
+        return subnets
 
     # MetaChecks
 
@@ -139,8 +168,12 @@ class Metacheck(MetaChecksBase):
 
     def is_unrestricted(self):
         if self.resource_policy:
-            if self.resource_policy["is_unrestricted"]:
-                return True
+            if (
+                self.resource_policy["is_unrestricted"]
+                and self.elasticsearch_domain_as
+                and not self.elasticsearch_domain_as["InternalUserDatabaseEnabled"]
+            ):
+                return self.resource_policy["is_unrestricted"]
         return False
 
     def is_public(self):
@@ -170,6 +203,9 @@ class Metacheck(MetaChecksBase):
             return public_dict
         return False
 
+    def it_has_advanced_security_enabled(self):
+        return self.elasticsearch_domain_as
+
     def is_rest_encrypted(self):
         if self.elasticsearch_domain:
             if self.elasticsearch_domain["EncryptionAtRestOptions"]:
@@ -198,17 +234,24 @@ class Metacheck(MetaChecksBase):
             return self.vpcs
         return False
 
+    def its_associated_with_subnets(self):
+        if self.subnets:
+            return self.subnets
+        return False
+
     def checks(self):
         checks = [
             "it_has_resource_policy",
             "it_has_private_endpoint",
             "it_has_public_endpoint",
-            "is_public",
             "is_rest_encrypted",
             "is_transit_encrypted",
-            "is_encrypted",
+            "it_has_advanced_security_enabled",
             "its_associated_with_security_groups",
             "its_associated_with_vpc",
+            "its_associated_with_subnets",
+            "is_encrypted",
             "is_unrestricted",
+            "is_public",
         ]
         return checks

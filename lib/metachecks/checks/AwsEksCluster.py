@@ -150,10 +150,10 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_associated_with_iam_roles",
-            "its_associated_with_security_groups",
             "it_has_endpoint",
             "it_has_public_endpoint",
+            "its_associated_with_iam_roles",
+            "its_associated_with_security_groups",
             "is_public",
         ]
         return checks

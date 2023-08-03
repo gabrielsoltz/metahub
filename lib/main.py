@@ -483,8 +483,8 @@ def main(args):
         str(sh_account) + sh_account_alias_str,
         banners=banners,
     )
-    print_table("Security Hub Role: ", str(args.sh_assume_role), banners=banners)
     print_table("Security Hub Region: ", sh_region, banners=banners)
+    print_table("Security Hub Role: ", str(args.sh_assume_role), banners=banners)
     print_table("Security Hub Profile: ", args.sh_profile, banners=banners)
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)

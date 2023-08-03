@@ -16,6 +16,7 @@ from lib.metachecks.checks import (
     AwsIamPolicy,
     AwsIamRole,
     AwsIamUser,
+    AwsKmsKey,
     AwsLambdaFunction,
     AwsRdsDbCluster,
     AwsRdsDbInstance,
@@ -23,5 +24,4 @@ from lib.metachecks.checks import (
     AwsSecretsManagerSecret,
     AwsSnsTopic,
     AwsSqsQueue,
-    AwsKmsKey
 )

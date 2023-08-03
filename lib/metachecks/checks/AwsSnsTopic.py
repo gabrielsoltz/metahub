@@ -86,7 +86,7 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.resource_policy:
             if self.resource_policy["is_unrestricted"]:
-                return True
+                return self.resource_policy["is_unrestricted"]
         return False
 
     def is_encrypted(self):
@@ -116,10 +116,10 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
+            "it_has_name",
+            "it_has_subscriptions_confirmed",
             "it_has_resource_policy",
             "is_unrestricted",
             "is_encrypted",
-            "it_has_subscriptions_confirmed",
-            "it_has_name",
         ]
         return checks
