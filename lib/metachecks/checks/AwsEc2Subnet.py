@@ -125,9 +125,9 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "is_default",
-            "its_associated_with_route_tables",
             "it_has_cidr",
             "it_has_map_public_ip_on_launch_enabled",
+            "its_associated_with_route_tables",
+            "is_default",
         ]
         return checks

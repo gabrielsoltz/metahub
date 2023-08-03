@@ -146,7 +146,7 @@ class Metacheck(MetaChecksBase):
             "is_default",
             "is_ingress_rules_unrestricted",
             "is_egress_rules_unrestricted",
-            "is_attached",
             "its_associated_with_subnets",
+            "is_attached",
         ]
         return checks

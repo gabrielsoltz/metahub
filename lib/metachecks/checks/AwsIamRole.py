@@ -146,12 +146,18 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.iam_policies:
             for policy in self.iam_policies:
-                if self.iam_policies[policy].get("is_unrestricted"):
-                    return True
+                if self.iam_policies[policy].get("is_actions_and_resource_wildcard"):
+                    return self.iam_policies[policy].get(
+                        "is_actions_and_resource_wildcard"
+                    )
         if self.iam_inline_policies:
             for policy in self.iam_inline_policies:
-                if self.iam_inline_policies[policy].get("is_unrestricted"):
-                    return True
+                if self.iam_inline_policies[policy].get(
+                    "is_actions_and_resource_wildcard"
+                ):
+                    return self.iam_inline_policies[policy].get(
+                        "is_actions_and_resource_wildcard"
+                    )
         return False
 
     def its_associated_with_instance_profile(self):
@@ -162,7 +168,10 @@ class Metacheck(MetaChecksBase):
     def it_has_assume_role_policy(self):
         if self.role:
             if self.role.get("AssumeRolePolicyDocument"):
-                return self.role.get("AssumeRolePolicyDocument")
+                checked_policy = PolicyHelper(
+                    self.logger, self.finding, self.role.get("AssumeRolePolicyDocument")
+                ).check_policy()
+                return checked_policy
         return False
 
     def it_has_permissions_boundary(self):
@@ -173,11 +182,11 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "its_associated_with_iam_policies",
             "it_has_iam_inline_policies",
-            "is_unrestricted",
             "its_associated_with_instance_profile",
             "it_has_assume_role_policy",
             "it_has_permissions_boundary",
+            "its_associated_with_iam_policies",
+            "is_unrestricted",
         ]
         return checks

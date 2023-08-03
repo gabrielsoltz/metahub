@@ -111,12 +111,12 @@ class MetaChecksBase:
                                 resource,
                                 self.resource_arn,
                             )
-                            resources[resource] = False
                         else:
                             self.logger.error(
-                                "Error Running Drilled MetaChecks for resource %s from resource: %s",
+                                "Error Running Drilled MetaChecks for resource %s from resource: %s - %s",
                                 resource,
                                 self.resource_arn,
+                                err,
                             )
                         resources[resource] = False
                         self.drilled_cache[resource] = False

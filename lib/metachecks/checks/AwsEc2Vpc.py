@@ -103,8 +103,8 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
-            "is_default",
-            "its_associated_with_subnets",
             "it_has_cidr",
+            "its_associated_with_subnets",
+            "is_default",
         ]
         return checks

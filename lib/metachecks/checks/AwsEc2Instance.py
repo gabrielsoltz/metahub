@@ -324,6 +324,13 @@ class Metacheck(MetaChecksBase):
             return self.subnets
         return False
 
+    def is_unrestricted(self):
+        if self.iam_roles:
+            for role in self.iam_roles:
+                if self.iam_roles[role].get("is_unrestricted"):
+                    return self.iam_roles[role].get("is_unrestricted")
+        return False
+
     def checks(self):
         checks = [
             "it_has_public_ip",
@@ -331,16 +338,17 @@ class Metacheck(MetaChecksBase):
             "it_has_key",
             "it_has_private_dns",
             "it_has_public_dns",
-            "its_associated_with_iam_roles",
-            "its_associated_with_security_groups",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
+            "its_associated_with_iam_roles",
+            "its_associated_with_security_groups",
             "its_associated_with_ebs",
             "its_associated_with_autoscaling_group",
-            "is_public",
-            "is_encrypted",
-            "is_running",
             "its_associated_with_vpcs",
             "its_associated_with_subnets",
+            "is_running",
+            "is_public",
+            "is_encrypted",
+            "is_unrestricted",
         ]
         return checks

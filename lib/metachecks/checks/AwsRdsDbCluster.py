@@ -131,11 +131,19 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def is_unrestricted(self):
+        if self.iam_roles:
+            for role in self.iam_roles:
+                if self.iam_roles[role].get("is_unrestricted"):
+                    return self.iam_roles[role].get("is_unrestricted")
+        return False
+
     def checks(self):
         checks = [
             "its_associated_with_iam_roles",
             "its_associated_with_security_groups",
             "is_public",
             "is_encrypted",
+            "is_unrestricted",
         ]
         return checks

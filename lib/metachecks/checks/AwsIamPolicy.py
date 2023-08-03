@@ -134,18 +134,24 @@ class Metacheck(MetaChecksBase):
             return self.checked_policy_version["is_actions_wildcard"]
         return False
 
+    def is_actions_and_resource_wildcard(self):
+        if self.policy_version:
+            return self.checked_policy_version["is_actions_and_resource_wildcard"]
+        return False
+
     def checks(self):
         checks = [
             "it_has_name",
             "it_has_description",
-            "is_attached",
             "is_customer_managed",
+            "is_principal_cross_account",
+            "is_principal_wildcard",
+            "is_actions_wildcard",
+            "is_actions_and_resource_wildcard",
             "its_associated_with_iam_groups",
             "its_associated_with_iam_users",
             "its_associated_with_iam_roles",
-            "is_principal_cross_account",
-            "is_principal_wildcard",
+            "is_attached",
             "is_unrestricted",
-            "is_actions_wildcard",
         ]
         return checks

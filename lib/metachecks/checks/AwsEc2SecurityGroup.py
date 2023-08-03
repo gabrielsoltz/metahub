@@ -281,9 +281,9 @@ class Metacheck(MetaChecksBase):
             "its_referenced_by_a_security_group",
             "is_ingress_rules_unrestricted",
             "is_egress_rules_unrestricted",
+            "its_associated_with_vpc",
             "is_public",
             "is_default",
             "is_attached",
-            "its_associated_with_vpc",
         ]
         return checks

@@ -123,18 +123,24 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.iam_policies:
             for policy in self.iam_policies:
-                if self.iam_policies[policy].get("is_unrestricted"):
-                    return True
+                if self.iam_policies[policy].get("is_actions_and_resource_wildcard"):
+                    return self.iam_policies[policy].get(
+                        "is_actions_and_resource_wildcard"
+                    )
         if self.iam_inline_policies:
             for policy in self.iam_inline_policies:
-                if self.iam_inline_policies[policy].get("is_unrestricted"):
-                    return True
+                if self.iam_inline_policies[policy].get(
+                    "is_actions_and_resource_wildcard"
+                ):
+                    return self.iam_inline_policies[policy].get(
+                        "is_actions_and_resource_wildcard"
+                    )
         return False
 
     def checks(self):
         checks = [
-            "its_associated_with_iam_policies",
             "it_has_iam_inline_policies",
+            "its_associated_with_iam_policies",
             "is_unrestricted",
         ]
         return checks

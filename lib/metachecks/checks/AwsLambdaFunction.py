@@ -195,7 +195,7 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.resource_policy:
             if self.resource_policy["is_unrestricted"]:
-                return True
+                return self.resource_policy["is_unrestricted"]
         return False
 
     def its_associated_with_iam_roles(self):
@@ -233,13 +233,13 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
+            "it_has_endpoint",
             "it_has_resource_policy",
             "its_associated_with_iam_roles",
             "its_associated_with_vpc",
             "its_associated_with_subnets",
             "its_associated_with_security_groups",
             "is_unrestricted",
-            "it_has_endpoint",
             "is_public",
         ]
         return checks

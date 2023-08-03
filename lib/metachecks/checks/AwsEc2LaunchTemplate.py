@@ -204,17 +204,25 @@ class Metacheck(MetaChecksBase):
             return True
         return False
 
+    def is_unrestricted(self):
+        if self.iam_roles:
+            for role in self.iam_roles:
+                if self.iam_roles[role].get("is_unrestricted"):
+                    return self.iam_roles[role].get("is_unrestricted")
+        return False
+
     def checks(self):
         checks = [
+            "it_has_name",
             "is_instance_metadata_v2",
             "is_instance_metadata_hop_limit_1",
+            "it_associates_public_ip",
+            "its_associated_with_iam_roles",
             "its_associated_with_autoscaling_group",
-            "it_has_name",
             "its_associated_with_security_groups",
             "is_public",
             "is_encrypted",
-            "it_associates_public_ip",
-            "its_associated_with_iam_roles",
             "is_attached",
+            "is_unrestricted",
         ]
         return checks

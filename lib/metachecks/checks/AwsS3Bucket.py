@@ -30,6 +30,9 @@ class Metacheck(MetaChecksBase):
             self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
             self.mh_filters_checks = mh_filters_checks
             self.client = get_boto3_client(self.logger, "s3", self.region, self.sess)
+            self.s3control_client = get_boto3_client(
+                self.logger, "s3control", self.region, self.sess
+            )
             # Describe
             self.cannonical_user_id = self.list_bucket()
             if not self.cannonical_user_id:
@@ -37,6 +40,9 @@ class Metacheck(MetaChecksBase):
             self.bucket_acl = self.get_bucket_acl()
             self.bucket_website = self.get_bucket_website()
             self.bucket_public_access_block = self.get_bucket_public_access_block()
+            self.account_public_access_block = (
+                self.get_account_bucket_public_access_block()
+            )
             # Resource Policy
             self.resource_policy = self.describe_resource_policy()
             # Drilled MetaChecks
@@ -84,6 +90,24 @@ class Metacheck(MetaChecksBase):
     def get_bucket_public_access_block(self):
         try:
             response = self.client.get_public_access_block(Bucket=self.resource_id)
+            return response.get("PublicAccessBlockConfiguration")
+        except ClientError as err:
+            if (
+                not err.response["Error"]["Code"]
+                == "NoSuchPublicAccessBlockConfiguration"
+            ):
+                self.logger.error(
+                    "Failed to get_public_access_block {}, {}".format(
+                        self.resource_id, err
+                    )
+                )
+            return False
+
+    def get_account_bucket_public_access_block(self):
+        try:
+            response = self.s3control_client.get_public_access_block(
+                AccountId=self.account
+            )
             return response.get("PublicAccessBlockConfiguration")
         except ClientError as err:
             if (
@@ -180,7 +204,15 @@ class Metacheck(MetaChecksBase):
             for key, value in self.bucket_public_access_block.items():
                 if value is False:
                     return False
-            return True
+            return self.bucket_public_access_block
+        return False
+
+    def it_has_account_public_access_block_enabled(self):
+        if self.account_public_access_block:
+            for key, value in self.account_public_access_block.items():
+                if value is False:
+                    return False
+            return self.account_public_access_block
         return False
 
     def it_has_website_enabled(self):
@@ -199,12 +231,13 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_unrestricted(self):
-        if self.resource_policy:
-            if (
-                self.resource_policy["is_unrestricted"]
-                or self.it_has_bucket_acl_public()
-            ):
-                return True
+        if not self.account_public_access_block and not self.bucket_public_access_block:
+            if self.resource_policy:
+                if self.resource_policy["is_unrestricted"]:
+                    return self.resource_policy["is_unrestricted"]
+            if self.bucket_acl:
+                if self.it_has_bucket_acl_public():
+                    return self.it_has_bucket_acl_public()
         return False
 
     def is_public(self):
@@ -237,14 +270,15 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = [
+            "it_has_website_enabled",
             "it_has_bucket_acl",
             "it_has_bucket_acl_cross_account",
             "it_has_bucket_acl_public",
             "it_has_resource_policy",
             "it_has_public_access_block_enabled",
+            "it_has_account_public_access_block_enabled",
             "is_public",
             "is_unrestricted",
             "is_encrypted",
-            "it_has_website_enabled",
         ]
         return checks

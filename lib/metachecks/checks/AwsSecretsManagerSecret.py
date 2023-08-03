@@ -92,7 +92,7 @@ class Metacheck(MetaChecksBase):
     def is_unrestricted(self):
         if self.policy:
             if self.policy["is_unrestricted"]:
-                return True
+                return self.policy["is_unrestricted"]
         return False
 
     def checks(self):

@@ -19,6 +19,7 @@ class PolicyHelper:
             "is_principal_external": [],
             "is_unrestricted": [],
             "is_actions_wildcard": [],
+            "is_actions_and_resource_wildcard": [],
         }
         statements = self.policy["Statement"]
         if type(statements) is not list:
@@ -34,6 +35,8 @@ class PolicyHelper:
                 failed_statements["is_unrestricted"].append(statement)
             if self.is_actions_wildcard(statement):
                 failed_statements["is_actions_wildcard"].append(statement)
+            if self.is_actions_and_resource_wildcard(statement):
+                failed_statements["is_actions_and_resource_wildcard"].append(statement)
         return failed_statements
 
     def parse_statement(self, statement):
@@ -44,12 +47,13 @@ class PolicyHelper:
             condition = statement.get("Condition", None)
             action = statement.get("Action", None)
             not_action = statement.get("NotAction", None)
+            resource = statement.get("Resource", None)
         except AttributeError:
             self.logger.error(
                 "Failed to parse statement for resource %s", self.resource
             )
-            return None, None, None, None, None, None
-        return effect, principal, not_principal, condition, action, not_action
+            return None, None, None, None, None, None, None
+        return effect, principal, not_principal, condition, action, not_action, resource
 
     def is_principal_wildcard(self, statement):
         """
@@ -62,6 +66,7 @@ class PolicyHelper:
             condition,
             action,
             not_action,
+            resource,
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if principal == "*" or principal.get("AWS") == "*":
@@ -80,6 +85,7 @@ class PolicyHelper:
             condition,
             action,
             not_action,
+            resource,
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
@@ -126,6 +132,7 @@ class PolicyHelper:
             condition,
             action,
             not_action,
+            resource,
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
@@ -156,6 +163,57 @@ class PolicyHelper:
                         # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
+    def is_actions_wildcard(self, statement):
+        """ """
+        (
+            effect,
+            principal,
+            not_principal,
+            condition,
+            action,
+            not_action,
+            resource,
+        ) = self.parse_statement(statement)
+        if effect == "Allow":
+            if action:
+                if type(action) is not list:
+                    action = [action]
+                for a in action:
+                    if "*" in a:
+                        return statement
+            # Not Action (all other actions are allowed)
+            if not_action:
+                return statement
+        return False
+
+    def is_actions_and_resource_wildcard(self, statement):
+        """ """
+        (
+            effect,
+            principal,
+            not_principal,
+            condition,
+            action,
+            not_action,
+            resource,
+        ) = self.parse_statement(statement)
+        if effect == "Allow":
+            if action:
+                if type(action) is not list:
+                    action = [action]
+                for a in action:
+                    if "*" in a:
+                        if resource:
+                            if type(resource) is not list:
+                                resource = [resource]
+                            for r in resource:
+                                if ":*" in r or "*" == r:
+                                    return statement
+            # Not Action (all other actions are allowed)
+            if not_action:
+                return statement
+        return False
+
     def is_unrestricted(self, statement):
         """
         There is no principal defined. This means that the resource is unrestricted if the policy is attached to a resource.
@@ -167,6 +225,7 @@ class PolicyHelper:
             condition,
             action,
             not_action,
+            resource,
         ) = self.parse_statement(statement)
         suffix = "/0"
         if effect == "Allow":
@@ -181,28 +240,6 @@ class PolicyHelper:
                     return statement
             # Not Principal (all other principals)
             if not_principal is not None:
-                return statement
-        return False
-
-    def is_actions_wildcard(self, statement):
-        """ """
-        (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if action:
-                if type(action) is not list:
-                    action = [action]
-                    for a in action:
-                        if "*" in a:
-                            return statement
-            # Not Action (all other actions are allowed)
-            if not_action:
                 return statement
         return False
 
