@@ -1,3 +1,4 @@
+from lib.impact.impact import Impact
 from lib.metaaccount.metaaccount import run_metaaccount
 from lib.metachecks.metachecks import run_metachecks
 from lib.metatags.metatags import run_metatags
@@ -121,6 +122,12 @@ def evaluate_finding(
                 mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
                     resource_arn
                 ]["metaaccount"] = mh_account
+
+            # Impact
+            impact = Impact().get_impact(mh_findings_short[resource_arn])
+            mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
+                "impact"
+            ] = impact
 
         # Add Findings
         mh_findings_short[resource_arn]["findings"].append(

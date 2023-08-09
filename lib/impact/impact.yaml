@@ -1,0 +1,78 @@
+# Impact Scoring Defintion
+
+# How to calculate Impact Scoring
+# Define Properties, Values and Matches 
+
+attachment:
+  weight: 10
+  values:
+    - attached:
+        score: 1
+        matchs:
+          - metachecks:
+            - "is_attached": True
+    - not-attached:
+        score: 0
+        matchs:
+          - metachecks:
+            - "is_attached": False
+
+network:
+  weight: 1
+  values:
+    - public:
+        score: 1
+        matchs:
+          - metachecks:
+            - "is_public": True
+    - not-public:
+        score: 0
+        matchs:
+          - metachecks:
+            - "is_public": False
+
+policy:
+  weight: 1
+  values:
+    - unrestricted:
+        score: 1
+        matchs:
+          - metachecks:
+            - "is_unrestricted": True
+    - not-unrestricted:
+        score: 0
+        matchs:
+          - metachecks:
+            - "is_unrestricted": False
+
+encryption:
+  weight: 0.1
+  values:
+    - not-encrypted:
+        score: 1
+        matchs:
+          - metachecks:
+            - "is_encrypted": False
+    - encrypted:
+        score: 0
+        matchs:
+          - metachecks:
+            - "is_encrypted": True
+
+environment:
+  weight: 1
+  values:
+    - production:
+        score: 1
+        matchs:
+          - metatags:
+            - "Environment": "Production"
+          - metaaccount:
+            - "alias": "test-production"
+    - staging:
+        score: 0
+        matchs:
+          - metatags:
+            - "Environment": "Staging"
+          - metaaccount:
+            - "alias": "test-production"
