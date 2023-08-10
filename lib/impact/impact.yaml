@@ -75,4 +75,4 @@ environment:
           - metatags:
             - "Environment": "Staging"
           - metaaccount:
-            - "alias": "test-production"
+            - "alias": "test-staging"
