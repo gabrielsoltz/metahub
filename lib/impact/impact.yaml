@@ -11,11 +11,25 @@ attachment:
         matchs:
           - metachecks:
             - "is_attached": True
-    - not-attached:
+    - unattached:
         score: 0
         matchs:
           - metachecks:
             - "is_attached": False
+
+status:
+  weight: 5
+  values:
+    - running:
+        score: 1
+        matchs:
+          - metachecks:
+            - "is_running": True
+    - not-running:
+        score: 0
+        matchs:
+          - metachecks:
+            - "is_running": False
 
 network:
   weight: 1
@@ -25,7 +39,7 @@ network:
         matchs:
           - metachecks:
             - "is_public": True
-    - not-public:
+    - private:
         score: 0
         matchs:
           - metachecks:
@@ -39,7 +53,7 @@ policy:
         matchs:
           - metachecks:
             - "is_unrestricted": True
-    - not-unrestricted:
+    - restricted:
         score: 0
         matchs:
           - metachecks:
@@ -48,7 +62,7 @@ policy:
 encryption:
   weight: 0.1
   values:
-    - not-encrypted:
+    - unencrypted:
         score: 1
         matchs:
           - metachecks:
@@ -67,12 +81,22 @@ environment:
         matchs:
           - metatags:
             - "Environment": "Production"
+            - "Environment": "production"
           - metaaccount:
-            - "alias": "test-production"
+            - "alias": "production"
     - staging:
-        score: 0
+        score: 0.5
         matchs:
           - metatags:
             - "Environment": "Staging"
+            - "Environment": "staging"
           - metaaccount:
-            - "alias": "test-staging"
+            - "alias": "staging"
+    - development:
+        score: 0
+        matchs:
+          - metatags:
+            - "Environment": "Development"
+            - "Environment": "development"
+          - metaaccount:
+            - "alias": "development"

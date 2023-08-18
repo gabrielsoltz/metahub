@@ -55,8 +55,27 @@ class Impact:
                             if self.check_match(match_type, match_item, finding):
                                 return value_key, score
         return False
+    
+    def get_findings_score(self, finding):
+        findings_value = {
+            "CRITICAL": 4,
+            "HIGH": 3.5,
+            "MEDIUM": 2,
+            "LOW": 1,
+            "INFORMATIONAL": 0,
+        }
+        findings_score = 0
+        for f in finding["findings"]:
+            for k, v in f.items():
+                # Only ACTIVE findings
+                if v.get("RecordState") == "ACTIVE":
+                    findings_score_max = max(findings_score, findings_value.get(v.get("SeverityLabel")))
+                    findings_score_sum = findings_score + findings_value.get(v.get("SeverityLabel"))
+        findings_score_avg = findings_score_sum / len(finding["findings"])
+        findings_score_max_avg = findings_score_max / max(findings_value.values())
+        return findings_score_max_avg
 
-    def get_impact_score(self, score):
+    def get_meta_score(self, score):
         weight_total = 0
         value_total = 0
         for key, value in score.items():
@@ -87,5 +106,10 @@ class Impact:
             else:
                 impact[property] = "n/a"
                 score[property] = {"weight": property_weight, "value": "-"}
-        impact["score"] = self.get_impact_score(score)
+        impact["findings_score"] = self.get_findings_score(finding)
+        impact["meta_score"] = self.get_meta_score(score)
+        if impact["meta_score"] != "n/a":
+            impact["score"] = impact["findings_score"] * impact["meta_score"]
+        else:
+            impact["score"] = impact["findings_score"]
         return impact

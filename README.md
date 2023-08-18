@@ -64,6 +64,41 @@ MetaHub can determine the owner of the affected resource through different metho
   - With MetaAccount (Information about the account where the resource is running)
   - With MetaChecks (Information about the resource itself and it's associations)
 
+# Impact
+
+> :warning: This is an experimental feature. It is not yet available in the current release. If you find it useful, please provide feedback. 
+
+MetaHub can generate an impact score for each finding based on the affected resource's criticality and the finding's severity. This score can be used to prioritize your findings and focus on the most critical ones first, or to automate alerts and escalations based on it. 
+
+The impact score is calculated based on the following formula:
+
+**Meta_Score** = (Impact Property Weight * Impact Value Score) / Total Impact Property Weights
+**Findings_Score** = Max(Findings Severity Weight) / Max Severity Weights
+**Score** = Meta_Score_Impact * Findings_Score_Impact
+
+Score will be always between 0 and 1. The higher the score, the higher the impact.
+
+## Meta Score
+
+Default Impact Properties:
+
+- **Attachment**: Checking if the affected is effectively attached, based on MetaCheck `is_attached`.
+  - Weight: 10
+- **Status**: Checking if the affected is effectively running, based on MetaCheck `is_running`.
+  - Weight: 5
+- **Network**: Checking if the affected is effectively public, based on MetaCheck `is_public`.
+  - Weight: 1
+- **Policy**: Checking if the affected is effectively unrestricted, based on MetaCheck `is_unrestricted`.
+  - Weight: 1
+- **Encryption**: Checking if the affected is effectively encrypted, based on MetaCheck `is_encrypted`.
+  - Encryption: 0.1
+- **Environment**: Checking if the affected is effectively in production, staging or development based on MetaTags `Environment`.
+  - Weight: 1
+
+## Adding Custom Impact Properties
+
+You can define your own impact properties and weights based on your context by editing the file `lib/impact.yaml`. For example, you can add MetaTags or MetaAccount checks for defining accounts or resources that are more critical than others.
+
 # Architecture
 
 <p align="center">
