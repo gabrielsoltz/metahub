@@ -123,12 +123,6 @@ def evaluate_finding(
                     resource_arn
                 ]["metaaccount"] = mh_account
 
-            # Impact
-            impact = Impact().get_impact(mh_findings_short[resource_arn])
-            mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
-                "impact"
-            ] = impact
-
         # Add Findings
         mh_findings_short[resource_arn]["findings"].append(
             list(finding_parsed.keys())[0]
