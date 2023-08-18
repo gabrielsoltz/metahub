@@ -73,7 +73,9 @@ MetaHub can generate an impact score for each finding based on the affected reso
 The impact score is calculated based on the following formula:
 
 **Meta_Score** = (Impact Property Weight * Impact Value Score) / Total Impact Property Weights
+
 **Findings_Score** = Max(Findings Severity Weight) / Max Severity Weights
+
 **Score** = Meta_Score_Impact * Findings_Score_Impact
 
 Score will be always between 0 and 1. The higher the score, the higher the impact.
