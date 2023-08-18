@@ -111,5 +111,6 @@ class Impact:
         if impact["meta_score"] != "n/a":
             impact["score"] = impact["findings_score"] * impact["meta_score"]
         else:
-            impact["score"] = impact["findings_score"]
+            impact["score"] = impact["findings_score"] * 100
+        impact["score"] = round(impact["score"], 2)
         return impact
