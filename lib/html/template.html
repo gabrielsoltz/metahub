@@ -153,6 +153,9 @@ var table = new Tabulator("#findings-table", {
     columns:[
         {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% for impact_column in impact_columns %}
+          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% for metaaccount_column in metaaccount_columns %}
           { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -168,9 +171,6 @@ var table = new Tabulator("#findings-table", {
         {% endfor %}
         {% for metachecks_column in metachecks_columns %}
           { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {% for impact_column in impact_columns %}
-          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endfor %}
     ],
 });
@@ -287,6 +287,9 @@ var table = new Tabulator("#findings-table-groupped", {
     columns:[
         {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% for impact_column in impact_columns %}
+          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
         {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% for metaaccount_column in metaaccount_columns %}
           { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -302,9 +305,6 @@ var table = new Tabulator("#findings-table-groupped", {
         {% endfor %}
         {% for metachecks_column in metachecks_columns %}
           { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {% for impact_column in impact_columns %}
-          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endfor %}
     ],
 });
