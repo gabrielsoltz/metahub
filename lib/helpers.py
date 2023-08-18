@@ -444,6 +444,7 @@ def generate_output_html(
     metatags_columns,
     metachecks_columns,
     metaaccount_columns,
+    impact_columns
 ):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader)
@@ -467,6 +468,7 @@ def generate_output_html(
         metachecks_columns=metachecks_columns,
         metatags_columns=metatags_columns,
         metaaccount_columns=metaaccount_columns,
+        impact_columns=impact_columns
     )
     return html
 

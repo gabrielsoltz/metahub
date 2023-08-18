@@ -31,6 +31,11 @@ var tableData = [
                 "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
               {% endfor %}
             {% endif %}
+            {% if 'impact' in resource_value %}
+              {% for impact_column in impact_columns %}
+                "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
+              {% endfor %}
+            {% endif %}
         },
       {% endfor %}
     {% endfor %}
@@ -164,6 +169,9 @@ var table = new Tabulator("#findings-table", {
         {% for metachecks_column in metachecks_columns %}
           { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endfor %}
+        {% for impact_column in impact_columns %}
+          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
     ],
 });
 </script>
@@ -294,6 +302,9 @@ var table = new Tabulator("#findings-table-groupped", {
         {% endfor %}
         {% for metachecks_column in metachecks_columns %}
           { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endfor %}
+        {% for impact_column in impact_columns %}
+          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endfor %}
     ],
 });
