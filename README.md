@@ -13,6 +13,7 @@
 - [Description](#description)
 - [Context](#context)
 - [Ownership](#ownership)
+- [Impact](#impact)
 - [Architecture](#architecture)
 - [Use Cases](#use-cases)
 - [Features](#features)
