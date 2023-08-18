@@ -2,6 +2,7 @@ from pathlib import Path
 
 import yaml
 
+
 class Impact:
     def __init__(self):
         self.impact_config = self.load_impact()
@@ -38,7 +39,7 @@ class Impact:
                     if meta_output is not None:
                         if match_type == "metachecks":
                             if bool(meta_output) == bool(match_value):
-                                return True                            
+                                return True
                         else:
                             if meta_output == match_value:
                                 return True
@@ -55,7 +56,7 @@ class Impact:
                             if self.check_match(match_type, match_item, finding):
                                 return value_key, score
         return False
-    
+
     def get_findings_score(self, finding):
         findings_value = {
             "CRITICAL": 4,
@@ -69,8 +70,12 @@ class Impact:
             for k, v in f.items():
                 # Only ACTIVE findings
                 if v.get("RecordState") == "ACTIVE":
-                    findings_score_max = max(findings_score, findings_value.get(v.get("SeverityLabel")))
-                    findings_score_sum = findings_score + findings_value.get(v.get("SeverityLabel"))
+                    findings_score_max = max(
+                        findings_score, findings_value.get(v.get("SeverityLabel"))
+                    )
+                    findings_score_sum = findings_score + findings_value.get(
+                        v.get("SeverityLabel")
+                    )
         findings_score_avg = findings_score_sum / len(finding["findings"])
         findings_score_max_avg = findings_score_max / max(findings_value.values())
         return findings_score_max_avg

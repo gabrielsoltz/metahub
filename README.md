@@ -76,11 +76,11 @@ The impact score is calculated based on the following formula:
 
 **Findings_Score** = Max(Findings Severity Weight) / Max Severity Weights
 
-**Score** = Meta_Score_Impact * Findings_Score_Impact
+**Impact Score** = Meta_Score * Findings_Score
 
-Score will be always between 0 and 1. The higher the score, the higher the impact.
+Score will be always between 0 and 100, where 100 is the highest impact.
 
-## Meta Score
+## Meta Score Properties
 
 Default Impact Properties:
 
@@ -97,7 +97,7 @@ Default Impact Properties:
 - **Environment**: Checking if the affected is effectively in production, staging or development based on MetaTags `Environment`.
   - Weight: 1
 
-## Adding Custom Impact Properties
+## Adding Custom Meta Properties
 
 You can define your own impact properties and weights based on your context by editing the file `lib/impact.yaml`. For example, you can add MetaTags or MetaAccount checks for defining accounts or resources that are more critical than others.
 

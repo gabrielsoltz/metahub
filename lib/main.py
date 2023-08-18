@@ -24,9 +24,9 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
+from lib.impact.impact import Impact
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
-from lib.impact.impact import Impact
 
 OUTPUT_DIR = "outputs/"
 TIMESTRF = strftime("%Y%m%d-%H%M%S")
@@ -279,7 +279,10 @@ def validate_arguments(args, logger):
 
     # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
-        default_sh_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"], "ProductName": ["Security Hub"]}
+        default_sh_filters = {
+            "RecordState": ["ACTIVE"],
+            "WorkflowStatus": ["NEW"],
+        }
         sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
         from pathlib import Path
@@ -443,7 +446,7 @@ def generate_outputs(
                         metatags_columns,
                         metachecks_columns,
                         metaaccount_columns,
-                        impact_columns
+                        impact_columns,
                     )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)
