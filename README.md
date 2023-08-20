@@ -77,7 +77,7 @@ The impact score is based on two factors: **Meta_Score** and **Findings_Score**.
 
 The impact meta score is determined based on the context of the affected resource. It is calculated using the following formula: 
 
-`Meta_Score = (Impact Property Weight * Impact Value Score) / Total Impact Property Weights`
+`Meta_Score = SUM AllAvailableProperties(Impact Property Weight * Impact Value Score) / Total Impact Property Weights`
 
 ### Default Meta Properties
 
@@ -114,6 +114,25 @@ The impact findings score is determined based on the severity of all related fin
 
 By utilizing this comprehensive impact scoring system, MetaHub empowers security professionals to make informed decisions, prioritize effectively, and manage security threats proactively.
 
+## Impact Defintion Examples
+
+For the findings `Security groups should not allow unrestricted access to ports with high risk`:
+
+- If the security group is not attached to any resource, the impact score will be: 0 (0%)
+
+`((Attachment: 10 * 0) + (Status: n/a) + (Network: 1 * 0) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 12 = 0`
+
+- If the security group is attached to a production private EC2 instance, the impact score will be: 0.75 (75%)
+
+`((Attachment: 10 * 1) + (Status: n/a) + (Network: 1 * 0) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 12 = 0.75`
+
+- If the security group is attached to a development public EC2 instance, the impact score will be: 0.916 (91.6%)
+
+`((Attachment: 10 * 1) + (Status: n/a) + (Network: 1 * 1) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 0)) / 12 = 0.916`
+
+- If the security group is attached to a production public EC2 instance, the impact score will be: 1 (100%)
+
+`((Attachment: 10 * 1) + (Status: n/a) + (Network: 1 * 1) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 12 = 1`
 
 # Architecture
 
