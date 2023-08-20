@@ -1,7 +1,20 @@
 # Impact Scoring Defintion
 
-# How to calculate Impact Scoring
-# Define Properties, Values and Matches 
+# property: name of the property
+#   weight: maximum score for this property
+#   values: list of values for this property
+#     - name: name of the value
+#       score: score for this value
+#       matchs: list of matchs to apply to this value
+#         - [metachecks|metatags|metaaccount]: list of meta* to apply to this value
+#           - [key]: value to match
+#           - [key]: value to match
+#     - name: name of the value
+#       score: score for this value
+#       matchs: list of matchs to apply to this value
+#         - [metachecks|metatags|metaaccount]: list of meta* to apply to this value
+#           - [key]: value to match
+#           - [key]: value to match
 
 attachment:
   weight: 10
