@@ -69,21 +69,19 @@ MetaHub can determine the owner of the affected resource through different metho
 
 > :warning: This is an experimental feature. It is not yet available in the current release. If you find it useful, please provide feedback. 
 
-MetaHub can generate an impact score for each finding based on the affected resource's criticality and the finding's severity. This score can be used to prioritize your findings and focus on the most critical ones first, or to automate alerts and escalations based on it. 
+Most Security Scanners only provides you with the severity of the finding, but this is not enough to determine the impact of the finding on the affected resource. For example, a security group with unrestricted access to a port with high risk is a severe finding, but if the security group is not attached to any resource, it may not be as critical as if it were attached to a production EC2 instance. MetaHub can automatically generate an impact score for each security finding and affected resource, leveraging both the context of the affected resource and the severity of the finding itself. This score proves invaluable for prioritizing findings and directing attention to the most critical issues first. Additionally, it can be utilized to automate alerts and escalations.
 
-The impact score is calculated based on the following formula:
+The impact score is based on two factors: **Meta_Score** and **Findings_Score**.
 
-**Meta_Score** = (Impact Property Weight * Impact Value Score) / Total Impact Property Weights
+## Impact Meta Score
 
-**Findings_Score** = Max(Findings Severity Weight) / Max Severity Weights
+The impact meta score is determined based on the context of the affected resource. It is calculated using the following formula: 
 
-**Impact Score** = Meta_Score * Findings_Score
+`Meta_Score = (Impact Property Weight * Impact Value Score) / Total Impact Property Weights`
 
-Score will be always between 0 and 100, where 100 is the highest impact.
+### Default Meta Properties
 
-## Meta Score Properties
-
-Default Impact Properties:
+By default, MetaHub checks for each affected resource the following impact properties, you can edit this values in the [impact.yaml](lib/impact/impact.yaml) file:
 
 - **Attachment**: Checking if the affected is effectively attached, based on MetaCheck `is_attached`.
   - Weight: 10
@@ -98,9 +96,24 @@ Default Impact Properties:
 - **Environment**: Checking if the affected is effectively in production, staging or development based on MetaTags `Environment`.
   - Weight: 1
 
-## Adding Custom Meta Properties
+### Custom Meta Properties
 
-You can define your own impact properties and weights based on your context by editing the file `lib/impact.yaml`. For example, you can add MetaTags or MetaAccount checks for defining accounts or resources that are more critical than others.
+You can define your own impact properties and weights based on your context by editing the [impact.yaml](lib/impact/impact.yaml). For example, you can add MetaTags or MetaAccount checks for defining accounts or resources that are more critical than others.
+
+## Impact Findings Score
+
+The impact findings score is determined based on the severity of all related findings. It is calculated using the following formula: `**Findings_Score** = Max(Findings Severity) / Highest Severity`
+
+- **Findings Severity Weight**: Signifies the weight assigned to the severity of the finding.
+- **Max Severity Weights**: Represents the highest possible severity weight among all findings.
+
+## Impact Interpretation
+
+- A lower impact score suggests a relatively lower impact of the finding.
+- Conversely, a higher impact score indicates a more significant impact of the finding on the affected resources.
+
+By utilizing this comprehensive impact scoring system, MetaHub empowers security professionals to make informed decisions, prioritize effectively, and manage security threats proactively.
+
 
 # Architecture
 
