@@ -72,19 +72,23 @@ class Impact:
 
         # Initialize the findings score to zero
         findings_score = 0
-        
+
         # Iterate through each finding in the resource
         for f in resource["findings"]:
             for k, v in f.items():
                 # Check if the finding is active
                 if v.get("RecordState") == "ACTIVE":
                     # Get the severity value for the finding
-                    single_finding_severity = self.findings_severity_value.get(v.get("SeverityLabel"))
+                    single_finding_severity = self.findings_severity_value.get(
+                        v.get("SeverityLabel")
+                    )
                     # Get the single finding score
-                    single_finding_score = single_finding_severity / max(self.findings_severity_value.values())
+                    single_finding_score = single_finding_severity / max(
+                        self.findings_severity_value.values()
+                    )
                     # Sum the single finding score to the findings score
                     findings_score += single_finding_score
-        
+
         # Ensure the findings score does not exceed 1
         if findings_score > 1:
             findings_score = 1
@@ -122,15 +126,21 @@ class Impact:
                 context = True
             else:
                 # If the property check is False, indicate that it's not applicable
-                meta_score_details[property] = {"weight": property_weight, "value": "n/a", "score": "-"}
+                meta_score_details[property] = {
+                    "weight": property_weight,
+                    "value": "n/a",
+                    "score": "-",
+                }
 
         # Calculate the meta score based on the weighted values if there is context
         if not context:
             meta_score = "n/a"
         else:
             meta_score = (score_total / weight_total) * 100
-            
-        self.logger.info("Impact Meta Score %s, details:: %s", meta_score, meta_score_details)
+
+        self.logger.info(
+            "Impact Meta Score %s, details:: %s", meta_score, meta_score_details
+        )
 
         return meta_score
 
@@ -157,7 +167,7 @@ class Impact:
         # Check if the number has a decimal part
         if impact_score % 1 == 0:
             impact_score = int(impact_score)  # Return the integer part
-        
+
         impact["Impact"] = impact_score
 
         # Return the dictionary containing impact scores
