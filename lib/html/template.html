@@ -17,7 +17,7 @@ var tableData = [
             Region: "{{ resource_value.Region|e }}",
             ResourceType: "{{ resource_value.ResourceType|e }}",
             Severity: "{{ finding_values.SeverityLabel|e }}",
-            Title: "{{ finding_name|e }}",
+            Title: "{{ finding_name }}",
             WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
             RecordState: "{{ finding_values.RecordState|e }}",
             ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
