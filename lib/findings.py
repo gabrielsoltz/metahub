@@ -1,4 +1,4 @@
-from lib.impact.impact import Impact
+from lib.impact import Impact
 from lib.metaaccount.metaaccount import run_metaaccount
 from lib.metachecks.metachecks import run_metachecks
 from lib.metatags.metatags import run_metatags

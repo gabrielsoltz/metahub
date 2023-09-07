@@ -24,7 +24,7 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.impact.impact import Impact
+from lib.impact import Impact
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -149,12 +149,12 @@ def generate_findings(
     def generate_impact():
         for resource_arn in mh_findings_short:
             # Impact
-            impact = Impact().get_impact(mh_findings[resource_arn])
+            impact = Impact(logger).get_impact(mh_findings[resource_arn])
             mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
                 "impact"
             ] = impact
 
-    impact = generate_impact()
+    generate_impact()
 
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
@@ -411,7 +411,8 @@ def generate_outputs(
     metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
     metatags_columns = args.output_meta_tags_columns or mh_statistics["metatags"]
     metaaccount_columns = mh_statistics["metaaccount"]
-    impact_columns = ["score"]
+    # Hardcoded for now
+    impact_columns = ["Impact"]
 
     if mh_findings:
         for ouput_mode in args.output_modes:
