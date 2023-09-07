@@ -5,8 +5,8 @@ import yaml
 
 class Impact:
     def __init__(self, logger):
-        self.impact_config = self.load_impact()
-        self.validate_config()
+        self.logger = logger
+        self.impact_config = self.load_impact_config()
         self.findings_severity_value = {
             "CRITICAL": 4,
             "HIGH": 3,
@@ -14,28 +14,36 @@ class Impact:
             "LOW": 0.5,
             "INFORMATIONAL": 0,
         }
-        self.logger = logger
 
-    def validate_config(self):
-        for property in self.impact_config:
-            property_values = self.impact_config[property]["values"]
-            property_weight = self.impact_config[property]["weight"]
-            if property_weight is not int:
+    def load_impact_config(self):
+        path_yaml_impact = "lib/config/impact.yaml"
+        try:
+            yaml_to_dict = yaml.safe_load(Path(path_yaml_impact).read_text())
+            if not self.validate_config(yaml_to_dict):
+                yaml_to_dict = False
+        except (yaml.scanner.ScannerError, FileNotFoundError) as err:
+            self.logger.error("Error loading impact.yaml: %s", err)
+            yaml_to_dict = False
+        return yaml_to_dict
+
+    def validate_config(self, config):
+        for property in config:
+            property_values = config[property]["values"]
+            property_weight = config[property]["weight"]
+            if not isinstance(property_weight, (int, float)):
+                self.logger.error("Error validating impact.yaml: weight is not int %s", property_weight)
                 return False
             for value in property_values:
                 for value_key, value_data in value.items():
                     score = value_data["score"]
                     matchs = value_data["matchs"]
-                    if score is not int:
+                    if not isinstance(score, (int, float)):
+                        self.logger.error("Error validating impact.yaml: score is not int %s", property_weight)
                         return False
-
-    def load_impact(self):
-        path_yaml_impact = "lib/config/impact.yaml"
-        try:
-            yaml_to_dict = yaml.safe_load(Path(path_yaml_impact).read_text())
-        except (yaml.scanner.ScannerError, FileNotFoundError) as err:
-            yaml_to_dict = False
-        return yaml_to_dict
+                    if score > 1:
+                        self.logger.error("Error validating impact.yaml: score is greater than 1 %s", property_weight)
+                        return False
+        return True
 
     def check_match(self, match_type, match, resource):
         # Check if the value match the resource
@@ -145,6 +153,9 @@ class Impact:
         return meta_score
 
     def get_impact(self, resource):
+        if not self.impact_config:
+            return False
+
         # Create a dictionary to store the impact scores
         impact = {}
 
