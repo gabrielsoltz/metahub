@@ -24,4 +24,10 @@ from lib.metachecks.checks import (
     AwsSecretsManagerSecret,
     AwsSnsTopic,
     AwsSqsQueue,
+    AwsApiGatewayV2Route,
+    AwsDynamoDbTable,
+    AwsEfsFileSystem,
+    AwsKinesisStream,
+    AwsElbv2LoadBalancer,
+    AwsElbLoadBalancer
 )
