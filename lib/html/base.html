@@ -199,13 +199,13 @@ function show(section) {
         {% block pies %}{% endblock %}
       </div><br>
 
-      <div id="findings" class="row" style="display:''">
-        {% block table %} {% endblock %}
-      </div>
-
-      <div id="findings-groupped" class="row" style="display:none">
+      <div id="findings-groupped" class="row" style="display:''">
         {% block table_groupped %} {% endblock %}
       </div><br>
+
+      <div id="findings" class="row" style="display:none">
+        {% block table %} {% endblock %}
+      </div>
 
       <div id="export" class="row" style="display:''">
         {% block export %}{% endblock %}
