@@ -173,7 +173,8 @@ terraform.rc
 
 *.lock.hcl
 *.ignore
-*.zip
+terraform/zip/*.txt
+terraform/zip/*.zip
 
 terminalizer/*.yml
 terminalizer/*.gif
