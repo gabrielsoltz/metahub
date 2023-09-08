@@ -157,47 +157,26 @@ Terraform code is provided for deploying the Lambda function and all its depende
 
 ## Lambda use-cases
 
-- Trigger the MetaHub Lambda function each time there is a new AWS Security Hub finding to enrich that finding back in AWS Security Hub.
-- Trigger the MetaHub Lambda function each time there is a new AWS Security Hub finding for suppression based on MetaChecks or MetaTags.
-- Trigger the MetaHub Lambda function to identify the affected owner of an AWS Security Finding based on MetaTags or MetaTrails and assign that finding to your internal systems.
+- Trigger the MetaHub Lambda function each time there is a new security finding to enrich that finding back in AWS Security Hub.
+- Trigger the MetaHub Lambda function each time there is a new security finding for suppression based on MetaChecks or MetaTags.
+- Trigger the MetaHub Lambda function to identify the affected owner of a security finding based on MetaTags or MetaTrails and assign it using your internal systems.
 - Trigger the MetaHub Lambda function to create a ticket with enriched context.
-
-## Customize Lambda behaviour
-
-You can customize the Lambda behavior by editing the `lib/lambda.py` file, for example, by adding your filters.
 
 ## Deploying Lambda
 
-For deploying the Lambda function:
+The terraform code for deploying the Lambda function is provided under the `terraform/` folder.
 
-1. Create a MetaHub Zip package
-2. Create a MetaHub layer package
-3. Deploy Lambda function
+Just run the following commands:
 
-### Create a MetaHub Zip package
+1. `cd terraform`
+2. `terraform init`
+3. `terraform apply`
 
-You will need to create a zip package for the lambda with MetaHub code, for doing this:
+The code will create a zip file for the lambda code and a zip file for the python dependencies. It will also create a Lambda function and all the required resources.
 
-- `cd metahub`
-- `zip -r terraform/zip/lambda.zip lib`
+## Customize Lambda behaviour
 
-### Create a MetaHub layer package
-
-You will need to create a Lambda layer with all MetaHub python dependencies. 
-
-- `cd metahub`
-- `mkdir -p layer/python/lib/python3.9/site-packages`
-- `pip3 install -r requirements.txt --target layer/python/lib/python3.9/site-packages`
-- `cd layer && zip -r9 ../terraform/zip/metahub-layer.zip . && cd ..`
-- `rm -r layer`
-
-### Deploy Lambda
-
-You can find the code for deploying the lambda function under the `terraform/` folder.
-
-- `terraform init`
-- `terraform apply`
-
+You can customize MetaHub options for your lambda by editing the file [lib/lambda.py](lib/lambda.py). You can change the default options for MetaHub, such as the output modes, the filters, the Meta* options, and more.
 
 # Run with Security Hub Custom Action
 
@@ -1105,4 +1084,4 @@ The `--enrich-findings` will ask you for confirmation before enriching your find
 
 # Configuration
 
-**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in `lib/config/`. You can edit them using your favorite text editor.
+**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in [lib/config/](lib/config). You can edit them using your favorite text editor.
