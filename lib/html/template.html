@@ -17,7 +17,7 @@ var tableData = [
             Region: "{{ resource_value.Region|e }}",
             ResourceType: "{{ resource_value.ResourceType|e }}",
             Severity: "{{ finding_values.SeverityLabel|e }}",
-            Title: "{{ finding_name|e }}",
+            Title: "{{ finding_name }}",
             WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
             RecordState: "{{ finding_values.RecordState|e }}",
             ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
@@ -31,11 +31,158 @@ var tableData = [
                 "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
               {% endfor %}
             {% endif %}
+            {% if 'impact' in resource_value %}
+              {% for impact_column in impact_columns %}
+                "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
+              {% endfor %}
+            {% endif %}
         },
       {% endfor %}
     {% endfor %}
   {% endfor %}
 ]
+</script>
+{% endblock %}
+
+{% block table_common %}
+<script>
+//define column header menu as column visibility toggle
+var headerMenu = function(){
+    var menu = [];
+    var columns = this.getColumns();
+
+    for(let column of columns){
+
+        //create checkbox element using font awesome icons
+        let icon = document.createElement("i");
+        icon.classList.add("fa");
+        icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
+
+        //build label
+        let label = document.createElement("span");
+        let title = document.createElement("span");
+
+        title.textContent = " " + column.getDefinition().title;
+
+        label.appendChild(icon);
+        label.appendChild(title);
+
+        //create menu item
+        menu.push({
+            label:label,
+            action:function(e){
+                //prevent menu closing
+                e.stopPropagation();
+
+                //toggle current column visibility
+                column.toggle();
+
+                //change menu item icon
+                if(column.isVisible()){
+                    icon.classList.remove("fa-square");
+                    icon.classList.add("fa-check-square");
+                }else{
+                    icon.classList.remove("fa-check-square");
+                    icon.classList.add("fa-square");
+                }
+            }
+        });
+    }
+
+   return menu;
+};
+
+//create row popup contents
+var rowPopupFormatter = function(e, row, onRendered){
+    var data = row.getData(),
+    container = document.createElement("div"),
+    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
+    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
+    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
+    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
+    contents += "</ul>";
+
+    container.innerHTML = contents;
+
+    return container;
+};
+
+//create header popup contents
+var headerPopupFormatter = function(e, column, onRendered){
+    var container = document.createElement("div");
+
+    var label = document.createElement("label");
+    label.innerHTML = "Filter Column:";
+    label.style.display = "block";
+    label.style.fontSize = ".7em";
+
+    var input = document.createElement("input");
+    input.placeholder = "Filter Column...";
+    input.value = column.getHeaderFilterValue() || "";
+
+    input.addEventListener("keyup", (e) => {
+        column.setHeaderFilterValue(input.value);
+    });
+
+    container.appendChild(label);
+    container.appendChild(input);
+
+    return container;
+}
+
+//create dummy header filter to allow popup to filter
+var emptyHeaderFilter = function(){
+    return document.createElement("div");;
+}
+
+var tableColumns = [
+    {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, formatter:function(cell, formatterParams){
+      var value = cell.getValue();
+        if(value === "CRITICAL"){
+            return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
+        } else if (value === "HIGH") {
+          return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
+        } else if (value === "MEDIUM") {
+          return "<span style='text-align: center; color:orange; font-weight:bold;'>" + value + "</span>";
+        } else if (value === "LOW") {
+          return "<span style='text-align: center; color:blue; font-weight:bold;'>" + value + "</span>";
+        }else{
+            return value;
+        }
+    }},
+    {% for impact_column in impact_columns %}
+      { title: "{{impact_column}}", field: "{{impact_column}}", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% endfor %}
+    {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% for metaaccount_column in metaaccount_columns %}
+      { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% endfor %}
+    {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% for metatags_column in metatags_columns %}
+      { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% endfor %}
+    {% for metachecks_column in metachecks_columns %}
+      { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+    {% endfor %}
+];
+
+var tableConfig = {
+  data: tableData,
+  layout: "fitDataStretch",
+  pagination: true,
+  paginationSize: 25,
+  paginationCounter: "rows",
+  columnDefaults: {
+    tooltip: true,
+  },
+  columns:tableColumns,
+};
 </script>
 {% endblock %}
 
@@ -46,126 +193,15 @@ var tableData = [
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script>
 
-//define column header menu as column visibility toggle
-var headerMenu = function(){
-    var menu = [];
-    var columns = this.getColumns();
+// table config
+var groupByParam = false; // Set this based on your condition
 
-    for(let column of columns){
-
-        //create checkbox element using font awesome icons
-        let icon = document.createElement("i");
-        icon.classList.add("fa");
-        icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
-
-        //build label
-        let label = document.createElement("span");
-        let title = document.createElement("span");
-
-        title.textContent = " " + column.getDefinition().title;
-
-        label.appendChild(icon);
-        label.appendChild(title);
-
-        //create menu item
-        menu.push({
-            label:label,
-            action:function(e){
-                //prevent menu closing
-                e.stopPropagation();
-
-                //toggle current column visibility
-                column.toggle();
-
-                //change menu item icon
-                if(column.isVisible()){
-                    icon.classList.remove("fa-square");
-                    icon.classList.add("fa-check-square");
-                }else{
-                    icon.classList.remove("fa-check-square");
-                    icon.classList.add("fa-square");
-                }
-            }
-        });
-    }
-
-   return menu;
-};
-
-//create row popup contents
-var rowPopupFormatter = function(e, row, onRendered){
-    var data = row.getData(),
-    container = document.createElement("div"),
-    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
-    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
-    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
-    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
-    contents += "</ul>";
-
-    container.innerHTML = contents;
-
-    return container;
-};
-
-//create header popup contents
-var headerPopupFormatter = function(e, column, onRendered){
-    var container = document.createElement("div");
-
-    var label = document.createElement("label");
-    label.innerHTML = "Filter Column:";
-    label.style.display = "block";
-    label.style.fontSize = ".7em";
-
-    var input = document.createElement("input");
-    input.placeholder = "Filter Column...";
-    input.value = column.getHeaderFilterValue() || "";
-
-    input.addEventListener("keyup", (e) => {
-        column.setHeaderFilterValue(input.value);
-    });
-
-    container.appendChild(label);
-    container.appendChild(input);
-
-    return container;
+if (groupByParam) {
+  tableConfig.groupBy = "ARN";
 }
 
-//create dummy header filter to allow popup to filter
-var emptyHeaderFilter = function(){
-    return document.createElement("div");;
-}
+var table = new Tabulator("#findings-table", tableConfig);
 
-//initialize table
-var table = new Tabulator("#findings-table", {
-  data:tableData, 
-    layout:"fitDataStretch",
-    pagination:true, 
-    paginationSize:25,
-    paginationCounter:"rows",
-    columnDefaults:{
-        tooltip:true,
-    },
-    columns:[
-        {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% for metaaccount_column in metaaccount_columns %}
-          { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% for metatags_column in metatags_columns %}
-          { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {% for metachecks_column in metachecks_columns %}
-          { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-    ],
-});
 </script>
 {% endblock %}
 
@@ -176,127 +212,15 @@ var table = new Tabulator("#findings-table", {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script>
 
-//define column header menu as column visibility toggle
-var headerMenu = function(){
-    var menu = [];
-    var columns = this.getColumns();
+// table config
+var groupByParam = true; // Set this based on your condition
 
-    for(let column of columns){
-
-        //create checkbox element using font awesome icons
-        let icon = document.createElement("i");
-        icon.classList.add("fa");
-        icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
-
-        //build label
-        let label = document.createElement("span");
-        let title = document.createElement("span");
-
-        title.textContent = " " + column.getDefinition().title;
-
-        label.appendChild(icon);
-        label.appendChild(title);
-
-        //create menu item
-        menu.push({
-            label:label,
-            action:function(e){
-                //prevent menu closing
-                e.stopPropagation();
-
-                //toggle current column visibility
-                column.toggle();
-
-                //change menu item icon
-                if(column.isVisible()){
-                    icon.classList.remove("fa-square");
-                    icon.classList.add("fa-check-square");
-                }else{
-                    icon.classList.remove("fa-check-square");
-                    icon.classList.add("fa-square");
-                }
-            }
-        });
-    }
-
-   return menu;
-};
-
-//create row popup contents
-var rowPopupFormatter = function(e, row, onRendered){
-    var data = row.getData(),
-    container = document.createElement("div"),
-    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
-    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
-    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
-    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
-    contents += "</ul>";
-
-    container.innerHTML = contents;
-
-    return container;
-};
-
-//create header popup contents
-var headerPopupFormatter = function(e, column, onRendered){
-    var container = document.createElement("div");
-
-    var label = document.createElement("label");
-    label.innerHTML = "Filter Column:";
-    label.style.display = "block";
-    label.style.fontSize = ".7em";
-
-    var input = document.createElement("input");
-    input.placeholder = "Filter Column...";
-    input.value = column.getHeaderFilterValue() || "";
-
-    input.addEventListener("keyup", (e) => {
-        column.setHeaderFilterValue(input.value);
-    });
-
-    container.appendChild(label);
-    container.appendChild(input);
-
-    return container;
+if (groupByParam) {
+  tableConfig.groupBy = "ARN";
 }
 
-//create dummy header filter to allow popup to filter
-var emptyHeaderFilter = function(){
-    return document.createElement("div");;
-}
+var table = new Tabulator("#findings-table-groupped", tableConfig);
 
-//initialize table
-var table = new Tabulator("#findings-table-groupped", {
-  data:tableData, 
-    layout:"fitDataStretch",
-    pagination:true, 
-    paginationSize:25,
-    paginationCounter:"rows",
-    columnDefaults:{
-        tooltip:true,
-    },
-    groupBy:"ARN",
-    columns:[
-        {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% for metaaccount_column in metaaccount_columns %}
-          { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% for metatags_column in metatags_columns %}
-          { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-        {% for metachecks_column in metachecks_columns %}
-          { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-        {% endfor %}
-    ],
-});
 </script>
 {% endblock %}
 
@@ -354,6 +278,7 @@ document.getElementById("download-html").addEventListener("click", function(){
     <div style="width: 200px;"><canvas id="ChartResourceId"></canvas></div>
   </div>
 </div>
+
 <script>
 // SeverityLabel
 var statsSeverityLabelData = [
@@ -463,192 +388,48 @@ var statsTitleLabels = [
   {% endfor %}
 ]
 </script>
-<script>
-  const ctxSeverityLabel = document.getElementById('ChartSeverityLabel');
 
-  new Chart(ctxSeverityLabel, {
-    type: 'pie',
-    data: {
-      labels: statsSeverityLabelLabels,
-      datasets: [{
-        data: statsSeverityLabelData,
-        borderWidth: 1
-      }]
-    },
-    options: {
+<script>
+  // Helper function to create a chart
+  function createChart(canvasId, labels, data, title) {
+    const ctx = document.getElementById(canvasId);
+
+    if (!ctx) {
+      console.error(`Canvas element with id '${canvasId}' not found.`);
+      return;
+    }
+
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          borderWidth: 1
+        }]
+      },
+      options: {
         responsive: true,
         plugins: {
           legend: {
-              display: false
+            display: false
           },
           title: {
             display: true,
-            text: 'SeverityLabel'
+            text: title
           }
         }
-    }
-  });
-</script>
+      }
+    });
+  }
 
-<script>
-  const ctxRegion = document.getElementById('ChartRegion');
-
-  new Chart(ctxRegion, {
-    type: 'pie',
-    data: {
-      labels: statsRegionLabels,
-      datasets: [{
-        data: statsRegionData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'Region'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxAwsAccountId = document.getElementById('ChartAwsAccountId');
-
-  new Chart(ctxAwsAccountId, {
-    type: 'pie',
-    data: {
-      labels: statsAwsAccountIdLabels,
-      datasets: [{
-        data: statsAwsAccountIdData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'AwsAccountId'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxAwsAccountAlias = document.getElementById('ChartAwsAccountAlias');
-
-  new Chart(ctxAwsAccountAlias, {
-    type: 'pie',
-    data: {
-      labels: statsAwsAccountAliasLabels,
-      datasets: [{
-        data: statsAwsAccountAliasData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'AwsAccountAlias'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxResourceType = document.getElementById('ChartResourceType');
-
-  new Chart(ctxResourceType, {
-    type: 'pie',
-    data: {
-      labels: statsResourceTypeLabels,
-      datasets: [{
-        data: statsResourceTypeData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'ResourceType'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxResourceId = document.getElementById('ChartResourceId');
-
-  new Chart(ChartResourceId, {
-    type: 'pie',
-    data: {
-      labels: statsResourceIdLabels,
-      datasets: [{
-        data: statsResourceIdData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'ARN'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxTitle = document.getElementById('ChartTitle');
-
-  new Chart(ctxTitle, {
-    type: 'pie',
-    data: {
-      labels: statsTitleLabels,
-      datasets: [{
-        data: statsTitleData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'Title'
-          }
-        }
-    }
-  });
+  // Chart data
+  createChart('ChartSeverityLabel', statsSeverityLabelLabels, statsSeverityLabelData, 'SeverityLabel');
+  createChart('ChartRegion', statsRegionLabels, statsRegionData, 'Region');
+  createChart('ChartAwsAccountId', statsAwsAccountIdLabels, statsAwsAccountIdData, 'AwsAccountId');
+  // createChart('ChartAwsAccountAlias', statsAwsAccountAliasLabels, statsAwsAccountAliasData, 'AwsAccountAlias');
+  createChart('ChartResourceType', statsResourceTypeLabels, statsResourceTypeData, 'ResourceType');
+  createChart('ChartResourceId', statsResourceIdLabels, statsResourceIdData, 'ARN');
+  createChart('ChartTitle', statsTitleLabels, statsTitleData, 'Title');
 </script>
 {% endblock %}

@@ -24,6 +24,7 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
+from lib.impact import Impact
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -71,7 +72,6 @@ def generate_findings(
         def process_finding(finding):
             # Get the resource_arn from the finding
             resource_arn, finding_parsed = parse_finding(finding)
-
             # Get the lock for this resource
             lock = resource_locks.get(resource_arn)
 
@@ -145,6 +145,16 @@ def generate_findings(
                 )  # shutdown executor without waiting for all threads to finish
 
     mh_statistics = generate_statistics(mh_findings)
+
+    def generate_impact():
+        for resource_arn in mh_findings_short:
+            # Impact
+            impact = Impact(logger).get_impact(mh_findings[resource_arn])
+            mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
+                "impact"
+            ] = impact
+
+    generate_impact()
 
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
@@ -269,7 +279,10 @@ def validate_arguments(args, logger):
 
     # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
-        default_sh_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
+        default_sh_filters = {
+            "RecordState": ["ACTIVE"],
+            "WorkflowStatus": ["NEW"],
+        }
         sh_filters = set_sh_filters(default_sh_filters)
     elif args.sh_template:
         from pathlib import Path
@@ -398,6 +411,8 @@ def generate_outputs(
     metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
     metatags_columns = args.output_meta_tags_columns or mh_statistics["metatags"]
     metaaccount_columns = mh_statistics["metaaccount"]
+    # Hardcoded for now
+    impact_columns = ["Impact"]
 
     if mh_findings:
         for ouput_mode in args.output_modes:
@@ -432,6 +447,7 @@ def generate_outputs(
                         metatags_columns,
                         metachecks_columns,
                         metaaccount_columns,
+                        impact_columns,
                     )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)

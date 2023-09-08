@@ -13,6 +13,7 @@
 - [Description](#description)
 - [Context](#context)
 - [Ownership](#ownership)
+- [Impact](#impact)
 - [Architecture](#architecture)
 - [Use Cases](#use-cases)
 - [Features](#features)
@@ -63,6 +64,58 @@ MetaHub can determine the owner of the affected resource through different metho
   - With MetaTrails (AWS CloudTrail)
   - With MetaAccount (Information about the account where the resource is running)
   - With MetaChecks (Information about the resource itself and it's associations)
+
+# Impact
+
+> :warning: This is an experimental feature. If you find it useful, please provide feedback. 
+
+Most security scanners only provide you with the severity of the findings, which is not sufficient to assess their impact in your specific context. For instance, a critical-severity finding like "security group with unrestricted access to a high-risk port" may not be as critical if the security group is unattached to any resource compared to when it's attached to a production EC2 instance.
+
+MetaHub can automatically generate an impact score for each security finding by considering both the context of the affected resource and the severities of all findings affecting that resource. This score is invaluable for prioritizing findings, directing attention to critical issues, and automating alerts and escalations.
+
+The impact score comprises two factors:
+
+- **Impact Meta Score**: Reflecting the context of the affected resource based on Meta* outputs.
+- **Impact Findings Score**: Accounting for all affecting findings and their severities.
+
+The final impact score is the product of these two scores, resulting in a value between 0 and 1. A lower impact score suggests a relatively lower impact of the finding, while a higher score indicates a more significant impact on the affected resources.
+
+If there is no context available for the affected resource, the Impact Meta Score will be "n/a", and the impact score will be calculated based on the Impact Findings Score only.
+
+## Impact Meta Score
+
+The Impact Meta Score is determined by considering the context of the affected resource, which is derived from Meta* outputs such as MetaTags, MetaTrails, MetaChecks, and MetaAccount. By default, MetaHub attempts to evaluate six impact properties: **Attachment**, **Status**, **Network**, **Policy**, **Encryption**, and **Environment**. Each property carries a specific weight and offers different possible values and scores. For example, if the affected resource is attached, the value score for the Attachment property will be 1. If the resource isn't attached to any other resource, the value score will be 0.
+
+You have the flexibility to modify or define your impact properties and weights using the [impact yaml](lib/config/impact.yaml)  file, tailored to your specific context. For instance, you can specify that resources with certain tags are more critical than others or that resources in a particular account should be prioritized differently.
+
+- **Attachment**: Checks if the affected resource is attached, based on the MetaCheck `is_attached`.
+Weight: 10
+- **Status**: Checks if the affected resource is running, based on the MetaCheck `is_running`.
+Weight: 5
+- **Network**: Checks if the affected resource is effectively public, based on MetaCheck `is_public`.
+Weight: 1
+- **Policy**: Checks if the affected resource is effectively unrestricted, based on MetaCheck `is_unrestricted`.
+Weight: 1
+- **Encryption**: Checks if the affected resource is effectively encrypted, based on MetaCheck `is_encrypted`.
+Weight: 0.1
+- **Environment**: Checks if the affected resource is in production, staging, or development based on MetaTag `Environment`.
+Weight: 1
+
+The Impact Meta Score is calculated using the following formula:
+
+`Impact Meta Score = (Sum of all available impact properties' scores * weights) / (Sum of all available impact properties' weights)`
+
+For example, if the known properties of the affected resource indicate that it's in production but not attached to any other resource, the Impact Meta Score will be: `((Attachment: 10 * 0) + (Status: -) + (Network: n/a) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 11 = 0.09`
+
+## Impact Findings Score
+
+The **Impact Findings Score** is determined based on the severity of all findings affecting the same resource.
+
+The calculation of the Impact Findings Score is done using the following formula:
+
+`Impact Findings Score = (Sum of all (Finding Severity / Highest Severity) with a maximum of 1)`
+
+For example, if the affected resource has two findings affecting it, one with `CRITICAL` severity and another with `LOW` severity, the **Impact Findings Score** will be: `HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4) = 0.875`
 
 # Architecture
 
