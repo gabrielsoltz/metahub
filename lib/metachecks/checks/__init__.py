@@ -1,5 +1,7 @@
 from lib.metachecks.checks import (
+    AwsApiGatewayV2Api,
     AwsApiGatewayV2Route,
+    AwsApiGatewayV2Stage,
     AwsAutoScalingAutoScalingGroup,
     AwsAutoScalingLaunchConfiguration,
     AwsCloudFrontDistribution,

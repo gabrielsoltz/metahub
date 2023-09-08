@@ -1,4 +1,4 @@
-"""MetaCheck: AwsApiGatewayV2Route"""
+"""MetaCheck: AwsApiGatewayV2Api"""
 
 from botocore.exceptions import ClientError
 
@@ -24,7 +24,12 @@ class Metacheck(MetaChecksBase):
             self.finding = finding
             self.sess = sess
             self.resource_id = (
-                finding["Resources"][0]["Id"].split("/")[1] if not drilled else drilled
+                finding["Resources"][0]["Id"]
+                .split(":")[-1]
+                .split("apis/")[1]
+                .split("/")[0]
+                if not drilled
+                else drilled.split(":")[-1].split("apis/")[1].split("/")[0]
             )
             self.resource_arn = (
                 finding["Resources"][0]["Id"] if not drilled else drilled
@@ -34,46 +39,31 @@ class Metacheck(MetaChecksBase):
                 self.logger, "apigatewayv2", self.region, self.sess
             )
             # Describe
-            self.app_id = self.resource_id.split("api-id:")[1].split(":")[0]
-            self.route_id = self.resource_id.split("route-id:")[1].split(":")[0]
-            self.route = self.get_route()
-            if not self.route:
+            self.api = self.get_api()
+            if not self.api:
                 return False
-            self.route_authorization_type = self.route["AuthorizationType"]
-            self.route_target = self.route["Target"]
             # Drilled MetaChecks
-            self.api_gwv2_apis = self.it_associated_with_api_gateway_v2()
 
     # Describe function
 
-    def get_route(self):
+    def get_api(self):
         try:
-            response = self.client.get_route(ApiId=self.app_id, RouteId=self.route_id)
+            response = self.client.get_api(ApiId=self.resource_id)
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NotFoundException":
                 self.logger.error(
-                    "Failed to get_route: {}, {}".format(self.route_id, err)
+                    "Failed to get_api: {}, {}".format(self.resource_id, err)
                 )
             return False
         return response
 
-    def it_associated_with_api_gateway_v2(self):
-        # temp
-        api_gateway_api = {}
-        arn = "arn:aws:apigateway2:{}:{}:/apis/{}".format(
-            self.region, self.account, self.app_id
-        )
-        api_gateway_api[arn] = {}
-        return api_gateway_api
-
     # MetaChecks
 
-    def it_has_authorization_type(self):
-        if self.route_authorization_type:
-            if self.route_authorization_type != "NONE":
-                return self.route_authorization_type
+    def it_has_endpoint(self):
+        if self.api["ApiEndpoint"]:
+            return self.api["ApiEndpoint"]
         return False
 
     def checks(self):
-        checks = ["it_has_authorization_type", "it_associated_with_api_gateway_v2"]
+        checks = ["it_has_endpoint"]
         return checks
