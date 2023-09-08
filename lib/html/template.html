@@ -278,6 +278,7 @@ document.getElementById("download-html").addEventListener("click", function(){
     <div style="width: 200px;"><canvas id="ChartResourceId"></canvas></div>
   </div>
 </div>
+
 <script>
 // SeverityLabel
 var statsSeverityLabelData = [
@@ -387,192 +388,48 @@ var statsTitleLabels = [
   {% endfor %}
 ]
 </script>
-<script>
-  const ctxSeverityLabel = document.getElementById('ChartSeverityLabel');
 
-  new Chart(ctxSeverityLabel, {
-    type: 'pie',
-    data: {
-      labels: statsSeverityLabelLabels,
-      datasets: [{
-        data: statsSeverityLabelData,
-        borderWidth: 1
-      }]
-    },
-    options: {
+<script>
+  // Helper function to create a chart
+  function createChart(canvasId, labels, data, title) {
+    const ctx = document.getElementById(canvasId);
+
+    if (!ctx) {
+      console.error(`Canvas element with id '${canvasId}' not found.`);
+      return;
+    }
+
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          borderWidth: 1
+        }]
+      },
+      options: {
         responsive: true,
         plugins: {
           legend: {
-              display: false
+            display: false
           },
           title: {
             display: true,
-            text: 'SeverityLabel'
+            text: title
           }
         }
-    }
-  });
-</script>
+      }
+    });
+  }
 
-<script>
-  const ctxRegion = document.getElementById('ChartRegion');
-
-  new Chart(ctxRegion, {
-    type: 'pie',
-    data: {
-      labels: statsRegionLabels,
-      datasets: [{
-        data: statsRegionData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'Region'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxAwsAccountId = document.getElementById('ChartAwsAccountId');
-
-  new Chart(ctxAwsAccountId, {
-    type: 'pie',
-    data: {
-      labels: statsAwsAccountIdLabels,
-      datasets: [{
-        data: statsAwsAccountIdData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'AwsAccountId'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxAwsAccountAlias = document.getElementById('ChartAwsAccountAlias');
-
-  new Chart(ctxAwsAccountAlias, {
-    type: 'pie',
-    data: {
-      labels: statsAwsAccountAliasLabels,
-      datasets: [{
-        data: statsAwsAccountAliasData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'AwsAccountAlias'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxResourceType = document.getElementById('ChartResourceType');
-
-  new Chart(ctxResourceType, {
-    type: 'pie',
-    data: {
-      labels: statsResourceTypeLabels,
-      datasets: [{
-        data: statsResourceTypeData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'ResourceType'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxResourceId = document.getElementById('ChartResourceId');
-
-  new Chart(ChartResourceId, {
-    type: 'pie',
-    data: {
-      labels: statsResourceIdLabels,
-      datasets: [{
-        data: statsResourceIdData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'ARN'
-          }
-        }
-    }
-  });
-</script>
-
-<script>
-  const ctxTitle = document.getElementById('ChartTitle');
-
-  new Chart(ctxTitle, {
-    type: 'pie',
-    data: {
-      labels: statsTitleLabels,
-      datasets: [{
-        data: statsTitleData,
-        borderWidth: 1
-      }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-          legend: {
-              display: false
-          },
-          title: {
-            display: true,
-            text: 'Title'
-          }
-        }
-    }
-  });
+  // Chart data
+  createChart('ChartSeverityLabel', statsSeverityLabelLabels, statsSeverityLabelData, 'SeverityLabel');
+  createChart('ChartRegion', statsRegionLabels, statsRegionData, 'Region');
+  createChart('ChartAwsAccountId', statsAwsAccountIdLabels, statsAwsAccountIdData, 'AwsAccountId');
+  // createChart('ChartAwsAccountAlias', statsAwsAccountAliasLabels, statsAwsAccountAliasData, 'AwsAccountAlias');
+  createChart('ChartResourceType', statsResourceTypeLabels, statsResourceTypeData, 'ResourceType');
+  createChart('ChartResourceId', statsResourceIdLabels, statsResourceIdData, 'ARN');
+  createChart('ChartTitle', statsTitleLabels, statsTitleData, 'Title');
 </script>
 {% endblock %}
