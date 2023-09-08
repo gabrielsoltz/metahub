@@ -1,7 +1,7 @@
 """MetaCheck: AwsApiGatewayV2Route"""
 
-from aws_arn import generate_arn
 from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
 
@@ -49,10 +49,7 @@ class Metacheck(MetaChecksBase):
 
     def get_route(self):
         try:
-            response = self.client.get_route(
-                    ApiId=self.app_id,
-                    RouteId=self.route_id
-            )
+            response = self.client.get_route(ApiId=self.app_id, RouteId=self.route_id)
         except ClientError as err:
             if not err.response["Error"]["Code"] == "NotFoundException":
                 self.logger.error(
@@ -70,7 +67,5 @@ class Metacheck(MetaChecksBase):
         return False
 
     def checks(self):
-        checks = [
-            "it_has_authorization_type"
-        ]
+        checks = ["it_has_authorization_type"]
         return checks

@@ -1,10 +1,11 @@
 """MetaCheck: AwsEfsFileSystem"""
 
-from aws_arn import generate_arn
+import json
+
 from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-import json
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
@@ -34,9 +35,7 @@ class Metacheck(MetaChecksBase):
                 finding["Resources"][0]["Id"] if not drilled else drilled
             )
             self.mh_filters_checks = mh_filters_checks
-            self.client = get_boto3_client(
-                self.logger, "efs", self.region, self.sess
-            )
+            self.client = get_boto3_client(self.logger, "efs", self.region, self.sess)
             # Describe
             self.fs = self.describe_file_systems()
             if not self.fs:
@@ -49,12 +48,14 @@ class Metacheck(MetaChecksBase):
     def describe_file_systems(self):
         try:
             response = self.client.describe_file_systems(
-                    FileSystemId=self.resource_id
+                FileSystemId=self.resource_id
             ).get("FileSystems")
         except ClientError as err:
             if not err.response["Error"]["Code"] == "FileSystemNotFound":
                 self.logger.error(
-                    "Failed to describe_file_systems: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_file_systems: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
             return False
         return response
@@ -62,11 +63,15 @@ class Metacheck(MetaChecksBase):
     def describe_file_system_policy(self):
         if self.fs:
             try:
-                response = self.client.describe_file_system_policy(FileSystemId=self.resource_id)
+                response = self.client.describe_file_system_policy(
+                    FileSystemId=self.resource_id
+                )
             except ClientError as err:
                 if not err.response["Error"]["Code"] == "PolicyNotFound":
                     self.logger.error(
-                        "Failed to describe_file_system_policy {}, {}".format(self.resource_id, err)
+                        "Failed to describe_file_system_policy {}, {}".format(
+                            self.resource_id, err
+                        )
                     )
                 return False
 
@@ -85,7 +90,7 @@ class Metacheck(MetaChecksBase):
         if self.fs[0]["Encrypted"]:
             return True
         return False
-    
+
     def it_has_mount_targets(self):
         if self.fs[0]["NumberOfMountTargets"] > 0:
             return self.fs[0]["NumberOfMountTargets"]

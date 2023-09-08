@@ -2,10 +2,9 @@
 
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-import json
-from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -34,9 +33,7 @@ class Metacheck(MetaChecksBase):
                 finding["Resources"][0]["Id"] if not drilled else drilled
             )
             self.mh_filters_checks = mh_filters_checks
-            self.client = get_boto3_client(
-                self.logger, "elbv2", self.region, self.sess
-            )
+            self.client = get_boto3_client(self.logger, "elbv2", self.region, self.sess)
             # Describe
             self.elb = self.describe_load_balancers()
             if not self.elb:
@@ -49,14 +46,16 @@ class Metacheck(MetaChecksBase):
     def describe_load_balancers(self):
         try:
             response = self.client.describe_load_balancers(
-                    LoadBalancerArns=[
+                LoadBalancerArns=[
                     self.resource_arn,
                 ],
             ).get("LoadBalancers")[0]
         except ClientError as err:
             if not err.response["Error"]["Code"] == "LoadBalancerNotFound":
                 self.logger.error(
-                    "Failed to describe_load_balancers: {}, {}".format(self.resource_id, err)
+                    "Failed to describe_load_balancers: {}, {}".format(
+                        self.resource_id, err
+                    )
                 )
             return False
         return response
@@ -96,19 +95,19 @@ class Metacheck(MetaChecksBase):
         if self.elb.get("DNSName"):
             return self.elb.get("DNSName")
         return False
-    
+
     def it_has_scheme(self):
         if self.elb.get("Scheme"):
             return self.elb.get("Scheme")
         return False
-    
+
     # Drilled MetaChecks
 
     def its_associated_with_security_groups(self):
         if self.security_groups:
             return self.security_groups
         return False
-    
+
     def is_public(self):
         public_dict = {}
         if self.elb.get("Scheme") == "internet-facing":

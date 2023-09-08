@@ -1,11 +1,9 @@
 """MetaCheck: AwsKinesisStream"""
 
-from aws_arn import generate_arn
 from botocore.exceptions import ClientError
+
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-import json
-from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -47,9 +45,9 @@ class Metacheck(MetaChecksBase):
 
     def describe_stream(self):
         try:
-            response = self.client.describe_stream(
-                    StreamName=self.resource_id
-            ).get("StreamDescription")
+            response = self.client.describe_stream(StreamName=self.resource_id).get(
+                "StreamDescription"
+            )
         except ClientError as err:
             if not err.response["Error"]["Code"] == "ResourceNotFoundException":
                 self.logger.error(
