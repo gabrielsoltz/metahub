@@ -176,7 +176,7 @@ The code will create a zip file for the lambda code and a zip file for the pytho
 
 ## Customize Lambda behaviour
 
-You can customize MetaHub options for your lambda by editing the [lib/lambda.py](lambda.py file). You can change the default options for MetaHub, such as the output modes, the filters, the Meta* options, and more.
+You can customize MetaHub options for your lambda by editing the file [lib/lambda.py](lib/lambda.py). You can change the default options for MetaHub, such as the output modes, the filters, the Meta* options, and more.
 
 # Run with Security Hub Custom Action
 
