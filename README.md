@@ -168,36 +168,15 @@ You can customize the Lambda behavior by editing the `lib/lambda.py` file, for e
 
 ## Deploying Lambda
 
-For deploying the Lambda function:
+The terraform code for deploying the Lambda function is provided under the `terraform/` folder.
 
-1. Create a MetaHub Zip package
-2. Create a MetaHub layer package
-3. Deploy Lambda function
+Just run the following commands:
 
-### Create a MetaHub Zip package
+1. `cd terraform`
+2. `terraform init`
+3. `terraform apply`
 
-You will need to create a zip package for the lambda with MetaHub code, for doing this:
-
-- `cd metahub`
-- `zip -r terraform/zip/lambda.zip lib`
-
-### Create a MetaHub layer package
-
-You will need to create a Lambda layer with all MetaHub python dependencies. 
-
-- `cd metahub`
-- `mkdir -p layer/python/lib/python3.9/site-packages`
-- `pip3 install -r requirements.txt --target layer/python/lib/python3.9/site-packages`
-- `cd layer && zip -r9 ../terraform/zip/metahub-layer.zip . && cd ..`
-- `rm -r layer`
-
-### Deploy Lambda
-
-You can find the code for deploying the lambda function under the `terraform/` folder.
-
-- `terraform init`
-- `terraform apply`
-
+The code will create a zip file for the lambda code and a zip file for the python dependencies. It will also create a Lambda function and all the required resources.
 
 # Run with Security Hub Custom Action
 
