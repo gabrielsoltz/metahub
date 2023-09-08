@@ -31,17 +31,26 @@ class Impact:
             property_values = config[property]["values"]
             property_weight = config[property]["weight"]
             if not isinstance(property_weight, (int, float)):
-                self.logger.error("Error validating impact.yaml: weight is not int %s", property_weight)
+                self.logger.error(
+                    "Error validating impact.yaml: weight is not int %s",
+                    property_weight,
+                )
                 return False
             for value in property_values:
                 for value_key, value_data in value.items():
                     score = value_data["score"]
                     matchs = value_data["matchs"]
                     if not isinstance(score, (int, float)):
-                        self.logger.error("Error validating impact.yaml: score is not int %s", property_weight)
+                        self.logger.error(
+                            "Error validating impact.yaml: score is not int %s",
+                            property_weight,
+                        )
                         return False
                     if score > 1:
-                        self.logger.error("Error validating impact.yaml: score is greater than 1 %s", property_weight)
+                        self.logger.error(
+                            "Error validating impact.yaml: score is greater than 1 %s",
+                            property_weight,
+                        )
                         return False
         return True
 
