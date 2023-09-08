@@ -158,20 +158,21 @@
 </script>
 
   <div class="navbar">
+    <a href="javascript:show('#findings-groupped');" class=
+    "active">Resources</a> 
     <a href="javascript:show('#findings');" class=
-    "active">Findings</a> <a href=
-    "javascript:show('#findings-groupped');" class=
-    "active">Groupped</a> <a href="javascript:show('#pies');"
+    "active">Findings</a> 
+    <a href="javascript:show('#pies');"
     class="active">Statistics</a>
   </div><script type="text/javascript">
 function show(section) {
   if (jQuery(section).css('display') == 'none'){
     $(section).css('display','');
-    if (section == '#findings-groupped'){
-      $("#findings").css('display','none');
-    }
     if (section == '#findings'){
       $("#findings-groupped").css('display','none');
+    }
+    if (section == '#findings-groupped'){
+      $("#findings").css('display','none');
     }
   }
   else {
