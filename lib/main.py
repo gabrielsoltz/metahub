@@ -14,6 +14,7 @@ from lib.findings import evaluate_finding
 from lib.helpers import (
     confirm_choice,
     generate_output_csv,
+    generate_output_xlsx,
     generate_output_html,
     generate_rich,
     get_logger,
@@ -463,6 +464,11 @@ def generate_outputs(
                     dict_writer.writeheader()
                     dict_writer.writerows(csv_list)
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
+
+                # Output XLSX files
+                generate_output_xlsx(
+                    mh_findings, metatags_columns, metachecks_columns
+                )
 
 
 def main(args):
