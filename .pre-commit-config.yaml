@@ -1,20 +1,28 @@
 # pre-commit install
 
 repos:
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
       - id: check-merge-conflict
       - id: check-yaml
         args: ["--unsafe"]
-      - id: check-json
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: no-commit-to-branch
-      - id: pretty-format-json
-        args: ["--autofix", --no-sort-keys, --no-ensure-ascii]
       - id: requirements-txt-fixer
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+      - id: prettier
+        files: \.(js|ts|jsx|tsx|css|less|html|json|markdown|md|yaml|yml)$
+
+  - repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.26.3
+    hooks:
+      - id: check-github-actions
+      - id: check-github-workflows
 
   - repo: https://github.com/myint/autoflake
     rev: v2.2.1
@@ -37,18 +45,24 @@ repos:
     rev: 23.9.0
     hooks:
       - id: black
+        args: ["lib/"]
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
       - id: flake8
-        args: ["--ignore=E266,W503,E203,E501,W605 --exclude __pycache__,venv"]
+        args:
+          [
+            "--exclude=lib/metachecks/checks/__init__.py",
+            "--ignore=E501,W503,W605,E203",
+            "lib/",
+          ]
 
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.1-beta
     hooks:
       - id: hadolint
-        args: ["--ignore=DL3013"]
+        args: ["Dockerfile", "Dockerfile-lambda"]
 
   - repo: local
     hooks:
@@ -68,7 +82,7 @@ repos:
       - id: bandit
         name: bandit
         description: "Bandit is a tool for finding common security issues in Python code"
-        entry: bash -c 'bandit -q -lll -x '*_test.py,./contrib/' -r .'
+        entry: bash -c 'bandit -q -lll -r lib/'
         language: system
         files: '.*\.py'
 
@@ -81,6 +95,6 @@ repos:
       - id: vulture
         name: vulture
         description: "Vulture finds unused code in Python programs."
-        entry: bash -c 'vulture --exclude "contrib" --min-confidence 100 .'
+        entry: bash -c 'vulture --min-confidence 100 lib/'
         language: system
         files: '.*\.py'

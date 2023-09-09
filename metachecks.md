@@ -62,7 +62,7 @@ class Metacheck(MetaChecksBase):
         return checks
 ```
 
-3. Define *describe functions* for the ResourceType. These functions will fetch the information you need to then create checks on top of it. For example, if you want to check if an S3 bucket has a public ACL, you first describe the ACLS and then create a function to check if those ACLS are public. This way, you can re-use the describe output for any necessary check. Describe functions in MetaHub are named starting with a `_` as a naming convention. These describe functions will be then be class attributes.
+3. Define _describe functions_ for the ResourceType. These functions will fetch the information you need to then create checks on top of it. For example, if you want to check if an S3 bucket has a public ACL, you first describe the ACLS and then create a function to check if those ACLS are public. This way, you can re-use the describe output for any necessary check. Describe functions in MetaHub are named starting with a `_` as a naming convention. These describe functions will be then be class attributes.
 
 ```
 def _get_bucket_acl(self):
@@ -115,13 +115,13 @@ class Metacheck(MetaChecksBase):
         return checks
 ```
 
-5. Import Metacheck in metachecks/checks/__init__.py file
+5. Import Metacheck in metachecks/checks/**init**.py file
 
 ## Creating MetaChecks
 
-You can code any check you need on top of the data fetched by the *describe functions*.
+You can code any check you need on top of the data fetched by the _describe functions_.
 
-A MetaCheck should be defined as a yes/no question; when the answer is yes, we can add extra information. When it is no, we can return False or empty data ("", [], {}). For example, if we check if an S3 ACL is public, we can return the permissions that make that ACL public, like READ or FULL_CONTROL. 
+A MetaCheck should be defined as a yes/no question; when the answer is yes, we can add extra information. When it is no, we can return False or empty data ("", [], {}). For example, if we check if an S3 ACL is public, we can return the permissions that make that ACL public, like READ or FULL_CONTROL.
 When filtering using Meta Checks, we evaluate True as True and True if we return data. So you can output extra information for your resources this way and then integrate it with other tools. As another example, if you are checking a Security Group for unrestrictive open ports, you can output which ports are open and then use that to integrate with Nmap for scanning.
 
 ```

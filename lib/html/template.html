@@ -1,387 +1,400 @@
-{% extends "lib/html/base.html" %}
-
-{% block data %}
+{% extends "lib/html/base.html" %} {% block data %}
 <script>
-var tableData = [
-  {% for resource, resource_value in data.items() %}
-    {% for finding in resource_value.findings %} 
-      {% for finding_name, finding_values in finding.items() %}
-        {
-            ARN: "{{ resource|e }}",
-            AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
-            {% if 'metaaccount' in resource_value %}
-              {% for metaaccount_column in metaaccount_columns %}
-                "{{ metaaccount_column }}": "{{ resource_value.metaaccount[metaaccount_column]|e }}",
-              {% endfor %}
-            {% endif %}
-            Region: "{{ resource_value.Region|e }}",
-            ResourceType: "{{ resource_value.ResourceType|e }}",
-            Severity: "{{ finding_values.SeverityLabel|e }}",
-            Title: "{{ finding_name }}",
-            WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
-            RecordState: "{{ finding_values.RecordState|e }}",
-            ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
-            {% if 'metatags' in resource_value %}
-              {% for metatags_column in metatags_columns %}
-                "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
-              {% endfor %}
-            {% endif %}
-            {% if 'metachecks' in resource_value %}
-              {% for metachecks_column in metachecks_columns %}
-                "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
-              {% endfor %}
-            {% endif %}
-            {% if 'impact' in resource_value %}
-              {% for impact_column in impact_columns %}
-                "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
-              {% endfor %}
-            {% endif %}
-        },
+  var tableData = [
+    {% for resource, resource_value in data.items() %}
+      {% for finding in resource_value.findings %}
+        {% for finding_name, finding_values in finding.items() %}
+          {
+              ARN: "{{ resource|e }}",
+              AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
+              {% if 'metaaccount' in resource_value %}
+                {% for metaaccount_column in metaaccount_columns %}
+                  "{{ metaaccount_column }}": "{{ resource_value.metaaccount[metaaccount_column]|e }}",
+                {% endfor %}
+              {% endif %}
+              Region: "{{ resource_value.Region|e }}",
+              ResourceType: "{{ resource_value.ResourceType|e }}",
+              Severity: "{{ finding_values.SeverityLabel|e }}",
+              Title: "{{ finding_name }}",
+              WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
+              RecordState: "{{ finding_values.RecordState|e }}",
+              ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
+              {% if 'metatags' in resource_value %}
+                {% for metatags_column in metatags_columns %}
+                  "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
+                {% endfor %}
+              {% endif %}
+              {% if 'metachecks' in resource_value %}
+                {% for metachecks_column in metachecks_columns %}
+                  "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
+                {% endfor %}
+              {% endif %}
+              {% if 'impact' in resource_value %}
+                {% for impact_column in impact_columns %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
+                {% endfor %}
+              {% endif %}
+          },
+        {% endfor %}
       {% endfor %}
     {% endfor %}
-  {% endfor %}
-]
+  ]
 </script>
-{% endblock %}
-
-{% block table_common %}
-<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_modern.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %} {% block table_common %}
+<link
+  href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_modern.min.css"
+  rel="stylesheet"
+/>
+<script
+  type="text/javascript"
+  src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.js"
+></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+/>
 <script>
-//define column header menu as column visibility toggle
-var headerMenu = function(){
-    var menu = [];
-    var columns = this.getColumns();
+  //define column header menu as column visibility toggle
+  var headerMenu = function(){
+      var menu = [];
+      var columns = this.getColumns();
 
-    for(let column of columns){
+      for(let column of columns){
 
-        //create checkbox element using font awesome icons
-        let icon = document.createElement("i");
-        icon.classList.add("fa");
-        icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
+          //create checkbox element using font awesome icons
+          let icon = document.createElement("i");
+          icon.classList.add("fa");
+          icon.classList.add(column.isVisible() ? "fa-check-square" : "fa-square");
 
-        //build label
-        let label = document.createElement("span");
-        let title = document.createElement("span");
+          //build label
+          let label = document.createElement("span");
+          let title = document.createElement("span");
 
-        title.textContent = " " + column.getDefinition().title;
+          title.textContent = " " + column.getDefinition().title;
 
-        label.appendChild(icon);
-        label.appendChild(title);
+          label.appendChild(icon);
+          label.appendChild(title);
 
-        //create menu item
-        menu.push({
-            label:label,
-            action:function(e){
-                //prevent menu closing
-                e.stopPropagation();
+          //create menu item
+          menu.push({
+              label:label,
+              action:function(e){
+                  //prevent menu closing
+                  e.stopPropagation();
 
-                //toggle current column visibility
-                column.toggle();
+                  //toggle current column visibility
+                  column.toggle();
 
-                //change menu item icon
-                if(column.isVisible()){
-                    icon.classList.remove("fa-square");
-                    icon.classList.add("fa-check-square");
-                }else{
-                    icon.classList.remove("fa-check-square");
-                    icon.classList.add("fa-square");
-                }
-            }
-        });
-    }
+                  //change menu item icon
+                  if(column.isVisible()){
+                      icon.classList.remove("fa-square");
+                      icon.classList.add("fa-check-square");
+                  }else{
+                      icon.classList.remove("fa-check-square");
+                      icon.classList.add("fa-square");
+                  }
+              }
+          });
+      }
 
-   return menu;
-};
+     return menu;
+  };
 
-//create row popup contents
-var rowPopupFormatter = function(e, row, onRendered){
-    var data = row.getData(),
-    container = document.createElement("div"),
-    contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
-    contents += "<li><strong>Name:</strong> " + data.name + "</li>";
-    contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
-    contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
-    contents += "</ul>";
+  //create row popup contents
+  var rowPopupFormatter = function(e, row, onRendered){
+      var data = row.getData(),
+      container = document.createElement("div"),
+      contents = "<strong style='font-size:1.2em;'>Row Details</strong><br/><ul style='padding:0;  margin-top:10px; margin-bottom:0;'>";
+      contents += "<li><strong>Name:</strong> " + data.name + "</li>";
+      contents += "<li><strong>Gender:</strong> " + data.gender + "</li>";
+      contents += "<li><strong>Favourite Colour:</strong> " + data.col + "</li>";
+      contents += "</ul>";
 
-    container.innerHTML = contents;
+      container.innerHTML = contents;
 
-    return container;
-};
+      return container;
+  };
 
-//create header popup contents
-var headerPopupFormatter = function(e, column, onRendered){
-    var container = document.createElement("div");
+  //create header popup contents
+  var headerPopupFormatter = function(e, column, onRendered){
+      var container = document.createElement("div");
 
-    var label = document.createElement("label");
-    label.innerHTML = "Filter Column:";
-    label.style.display = "block";
-    label.style.fontSize = ".7em";
+      var label = document.createElement("label");
+      label.innerHTML = "Filter Column:";
+      label.style.display = "block";
+      label.style.fontSize = ".7em";
 
-    var input = document.createElement("input");
-    input.placeholder = "Filter Column...";
-    input.value = column.getHeaderFilterValue() || "";
+      var input = document.createElement("input");
+      input.placeholder = "Filter Column...";
+      input.value = column.getHeaderFilterValue() || "";
 
-    input.addEventListener("keyup", (e) => {
-        column.setHeaderFilterValue(input.value);
-    });
+      input.addEventListener("keyup", (e) => {
+          column.setHeaderFilterValue(input.value);
+      });
 
-    container.appendChild(label);
-    container.appendChild(input);
+      container.appendChild(label);
+      container.appendChild(input);
 
-    return container;
-}
+      return container;
+  }
 
-//create dummy header filter to allow popup to filter
-var emptyHeaderFilter = function(){
-    return document.createElement("div");;
-}
+  //create dummy header filter to allow popup to filter
+  var emptyHeaderFilter = function(){
+      return document.createElement("div");;
+  }
 
-var tableColumns = [
-    {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, formatter:function(cell, formatterParams){
-      var value = cell.getValue();
-        if(value === "CRITICAL"){
+  var tableColumns = [
+      {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, formatter:function(cell, formatterParams){
+        var value = cell.getValue();
+          if(value === "CRITICAL"){
+              return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
+          } else if (value === "HIGH") {
             return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
-        } else if (value === "HIGH") {
-          return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
-        } else if (value === "MEDIUM") {
-          return "<span style='text-align: center; color:orange; font-weight:bold;'>" + value + "</span>";
-        } else if (value === "LOW") {
-          return "<span style='text-align: center; color:blue; font-weight:bold;'>" + value + "</span>";
-        }else{
-            return value;
-        }
-    }},
-    {% for impact_column in impact_columns %}
-      { title: "{{impact_column}}", field: "{{impact_column}}", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% endfor %}
-    {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% for metaaccount_column in metaaccount_columns %}
-      { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% endfor %}
-    {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% for metatags_column in metatags_columns %}
-      { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% endfor %}
-    {% for metachecks_column in metachecks_columns %}
-      { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-    {% endfor %}
-];
-
+          } else if (value === "MEDIUM") {
+            return "<span style='text-align: center; color:orange; font-weight:bold;'>" + value + "</span>";
+          } else if (value === "LOW") {
+            return "<span style='text-align: center; color:blue; font-weight:bold;'>" + value + "</span>";
+          }else{
+              return value;
+          }
+      }},
+      {% for impact_column in impact_columns %}
+        { title: "{{impact_column}}", field: "{{impact_column}}", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% endfor %}
+      {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for metaaccount_column in metaaccount_columns %}
+        { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% endfor %}
+      {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"ARN", field:"ARN", headerPopup:headerPopupFormatter, headerPopupIcon:"<i class='fa fa-filter'></i>", headerFilterFunc:"like", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for metatags_column in metatags_columns %}
+        { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% endfor %}
+      {% for metachecks_column in metachecks_columns %}
+        { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% endfor %}
+  ];
 </script>
-{% endblock %}
-
-{% block table %}
+{% endblock %} {% block table %}
 <div id="findings-table"></div>
 <script>
+  var tableConfig = {
+    data: tableData,
+    layout: "fitDataStretch",
+    pagination: true,
+    paginationSize: 25,
+    paginationCounter: "rows",
+    columnDefaults: {
+      tooltip: true,
+    },
+    columns: tableColumns,
+  };
 
-var tableConfig = {
-  data: tableData,
-  layout: "fitDataStretch",
-  pagination: true,
-  paginationSize: 25,
-  paginationCounter: "rows",
-  columnDefaults: {
-    tooltip: true,
-  },
-  columns:tableColumns,
-};
-
-var table = new Tabulator("#findings-table", tableConfig);
-
+  var table = new Tabulator("#findings-table", tableConfig);
 </script>
-{% endblock %}
-
-{% block table_groupped %}
+{% endblock %} {% block table_groupped %}
 <div id="findings-table-groupped"></div>
 
 <script>
-var tableConfig = {
-  data: tableData,
-  layout: "fitDataStretch",
-  pagination: true,
-  paginationSize: 25,
-  paginationCounter: "rows",
-  columnDefaults: {
-    tooltip: true,
-  },
-  columns:tableColumns,
-  groupBy: "ARN",
-};
-var table = new Tabulator("#findings-table-groupped", tableConfig);
+  var tableConfig = {
+    data: tableData,
+    layout: "fitDataStretch",
+    pagination: true,
+    paginationSize: 25,
+    paginationCounter: "rows",
+    columnDefaults: {
+      tooltip: true,
+    },
+    columns: tableColumns,
+    groupBy: "ARN",
+  };
+  var table = new Tabulator("#findings-table-groupped", tableConfig);
 </script>
-{% endblock %}
-
-{% block export %}
+{% endblock %} {% block export %}
 <!-- Export Data Scripts -->
-<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+<script
+  type="text/javascript"
+  src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"
+></script>
 <div>
-  <button class="btn" id="download-csv"><i class="fa fa-download"></i> Download CSV</button>
-  <button class="btn" id="download-json"><i class="fa fa-download"></i> Download JSON</button>
-  <button class="btn" id="download-xlsx"><i class="fa fa-download"></i> Download XLSX</button>
-  <button class="btn" id="download-html"><i class="fa fa-download"></i> Download HTML</button>
+  <button class="btn" id="download-csv">
+    <i class="fa fa-download"></i> Download CSV
+  </button>
+  <button class="btn" id="download-json">
+    <i class="fa fa-download"></i> Download JSON
+  </button>
+  <button class="btn" id="download-xlsx">
+    <i class="fa fa-download"></i> Download XLSX
+  </button>
+  <button class="btn" id="download-html">
+    <i class="fa fa-download"></i> Download HTML
+  </button>
 </div>
 <script>
-//trigger download of data.csv file
-document.getElementById("download-csv").addEventListener("click", function(){
-    table.download("csv", "data.csv");
-});
+  //trigger download of data.csv file
+  document
+    .getElementById("download-csv")
+    .addEventListener("click", function () {
+      table.download("csv", "data.csv");
+    });
 
-//trigger download of data.json file
-document.getElementById("download-json").addEventListener("click", function(){
-    table.download("json", "data.json");
-});
+  //trigger download of data.json file
+  document
+    .getElementById("download-json")
+    .addEventListener("click", function () {
+      table.download("json", "data.json");
+    });
 
-//trigger download of data.xlsx file
-document.getElementById("download-xlsx").addEventListener("click", function(){
-    table.download("xlsx", "data.xlsx", {sheetName:"My Data"});
-});
+  //trigger download of data.xlsx file
+  document
+    .getElementById("download-xlsx")
+    .addEventListener("click", function () {
+      table.download("xlsx", "data.xlsx", { sheetName: "My Data" });
+    });
 
-//trigger download of data.html file
-document.getElementById("download-html").addEventListener("click", function(){
-    table.download("html", "data.html", {style:true});
-});
+  //trigger download of data.html file
+  document
+    .getElementById("download-html")
+    .addEventListener("click", function () {
+      table.download("html", "data.html", { style: true });
+    });
 </script>
-{% endblock %}
-
-{% block pies %}
+{% endblock %} {% block pies %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div class="row">
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartTitle"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartTitle"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartSeverityLabel"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartSeverityLabel"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartAwsAccountId"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartAwsAccountId"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartRegion"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartRegion"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartResourceType"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartResourceType"></canvas></div>
   </div>
   <div class="column">
-    <div style="width: 200px;"><canvas id="ChartResourceId"></canvas></div>
+    <div style="width: 200px"><canvas id="ChartResourceId"></canvas></div>
   </div>
 </div>
 
 <script>
-// SeverityLabel
-var statsSeverityLabelData = [
-  {% for stat, value in statistics["SeverityLabel"].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // SeverityLabel
+  var statsSeverityLabelData = [
+    {% for stat, value in statistics["SeverityLabel"].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsSeverityLabelLabels = [
-  {% for stat, value in statistics['SeverityLabel'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsSeverityLabelLabels = [
+    {% for stat, value in statistics['SeverityLabel'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 
-// Region
-var statsRegionData = [
-  {% for stat, value in statistics['Region'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // Region
+  var statsRegionData = [
+    {% for stat, value in statistics['Region'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsRegionLabels = [
-  {% for stat, value in statistics['Region'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsRegionLabels = [
+    {% for stat, value in statistics['Region'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 
-// AwsAccountId
-var statsAwsAccountIdData = [
-  {% for stat, value in statistics['AwsAccountId'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // AwsAccountId
+  var statsAwsAccountIdData = [
+    {% for stat, value in statistics['AwsAccountId'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsAwsAccountIdLabels = [
-  {% for stat, value in statistics['AwsAccountId'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsAwsAccountIdLabels = [
+    {% for stat, value in statistics['AwsAccountId'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 
-// AwsAccountAlias
-{% if 'metaaccount' in statistics %}
-  {% if 'Alias' in  statistics['metaaccount'] %}
-    var statsAwsAccountAliasData = [
-      {% for stat, value in statistics['metaaccount']['Alias'].items() %}
-        {
-          stat: "{{ stat|e }}", value: {{ value|e }}
-        },
-      {% endfor %}
-    ]
-    var statsAwsAccountAliasLabels = [
-      {% for stat, value in statistics['metaaccount']['Alias'].items() %}
-        "{{ stat|e }}",
-      {% endfor %}
-    ]
+  // AwsAccountAlias
+  {% if 'metaaccount' in statistics %}
+    {% if 'Alias' in  statistics['metaaccount'] %}
+      var statsAwsAccountAliasData = [
+        {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+          {
+            stat: "{{ stat|e }}", value: {{ value|e }}
+          },
+        {% endfor %}
+      ]
+      var statsAwsAccountAliasLabels = [
+        {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+          "{{ stat|e }}",
+        {% endfor %}
+      ]
+    {% endif %}
   {% endif %}
-{% endif %}
 
-// ResourceType
-var statsResourceTypeData = [
-  {% for stat, value in statistics['ResourceType'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // ResourceType
+  var statsResourceTypeData = [
+    {% for stat, value in statistics['ResourceType'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsResourceTypeLabels = [
-  {% for stat, value in statistics['ResourceType'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsResourceTypeLabels = [
+    {% for stat, value in statistics['ResourceType'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 
-// ResourceId
-var statsResourceIdData = [
-  {% for stat, value in statistics['ResourceId'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // ResourceId
+  var statsResourceIdData = [
+    {% for stat, value in statistics['ResourceId'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsResourceIdLabels = [
-  {% for stat, value in statistics['ResourceId'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsResourceIdLabels = [
+    {% for stat, value in statistics['ResourceId'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 
-// Title
-var statsTitleData = [
-  {% for stat, value in statistics['Title'].items() %}
-    {
-      stat: "{{ stat|e }}", value: {{ value|e }}
-    },
-  {% endfor %}
-]
+  // Title
+  var statsTitleData = [
+    {% for stat, value in statistics['Title'].items() %}
+      {
+        stat: "{{ stat|e }}", value: {{ value|e }}
+      },
+    {% endfor %}
+  ]
 
-var statsTitleLabels = [
-  {% for stat, value in statistics['Title'].items() %}
-    "{{ stat|e }}",
-  {% endfor %}
-]
+  var statsTitleLabels = [
+    {% for stat, value in statistics['Title'].items() %}
+      "{{ stat|e }}",
+    {% endfor %}
+  ]
 </script>
 
 <script>
@@ -395,36 +408,58 @@ var statsTitleLabels = [
     }
 
     new Chart(ctx, {
-      type: 'pie',
+      type: "pie",
       data: {
         labels: labels,
-        datasets: [{
-          data: data,
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            data: data,
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
         plugins: {
           legend: {
-            display: false
+            display: false,
           },
           title: {
             display: true,
-            text: title
-          }
-        }
-      }
+            text: title,
+          },
+        },
+      },
     });
   }
 
   // Chart data
-  createChart('ChartSeverityLabel', statsSeverityLabelLabels, statsSeverityLabelData, 'SeverityLabel');
-  createChart('ChartRegion', statsRegionLabels, statsRegionData, 'Region');
-  createChart('ChartAwsAccountId', statsAwsAccountIdLabels, statsAwsAccountIdData, 'AwsAccountId');
+  createChart(
+    "ChartSeverityLabel",
+    statsSeverityLabelLabels,
+    statsSeverityLabelData,
+    "SeverityLabel",
+  );
+  createChart("ChartRegion", statsRegionLabels, statsRegionData, "Region");
+  createChart(
+    "ChartAwsAccountId",
+    statsAwsAccountIdLabels,
+    statsAwsAccountIdData,
+    "AwsAccountId",
+  );
   // createChart('ChartAwsAccountAlias', statsAwsAccountAliasLabels, statsAwsAccountAliasData, 'AwsAccountAlias');
-  createChart('ChartResourceType', statsResourceTypeLabels, statsResourceTypeData, 'ResourceType');
-  createChart('ChartResourceId', statsResourceIdLabels, statsResourceIdData, 'ARN');
-  createChart('ChartTitle', statsTitleLabels, statsTitleData, 'Title');
+  createChart(
+    "ChartResourceType",
+    statsResourceTypeLabels,
+    statsResourceTypeData,
+    "ResourceType",
+  );
+  createChart(
+    "ChartResourceId",
+    statsResourceIdLabels,
+    statsResourceIdData,
+    "ARN",
+  );
+  createChart("ChartTitle", statsTitleLabels, statsTitleData, "Title");
 </script>
 {% endblock %}

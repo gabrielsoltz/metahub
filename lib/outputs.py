@@ -61,10 +61,10 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
 
 
 def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file):
-    ### Create a workbook and add a worksheet
+    # Create a workbook and add a worksheet
     workbook = xlsxwriter.Workbook(xlsx_file)
     worksheet = workbook.add_worksheet("findings")
-    ### Adding columns
+    # Columns
     worksheet.set_default_row(35)
     worksheet.set_column(0, 0, 145)  # Resource ID.
     worksheet.set_column(1, 1, 15)  # Severity.
@@ -154,7 +154,7 @@ def generate_output_html(
     impact_columns,
 ):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
-    templateEnv = jinja2.Environment(loader=templateLoader)
+    templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
     TEMPLATE_FILE = "lib/html/template.html"
     template = templateEnv.get_template(TEMPLATE_FILE)
     # Convert MetaChecks to Boolean

@@ -5,4 +5,4 @@ from sys import argv
 import lib.main
 
 if __name__ == "__main__":
-   lib.main.main(argv[1:])
+    lib.main.main(argv[1:])
