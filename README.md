@@ -471,7 +471,7 @@ If you are reading from both sources, only the findings from AWS Security Hub wi
 
 They are the different ways to show the results.
 
-By default, all outputs modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html` and `csv`.
+By default, all outputs modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html`, `csv` and `xlsx`.
 
 The Outputs will be saved in the folder `/outputs` with the execution date.
 
