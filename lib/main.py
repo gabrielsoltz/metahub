@@ -243,7 +243,6 @@ def set_sh_filters(sh_filters):
 
 
 def validate_arguments(args, logger):
-
     # Validate no filters when using file-asff only
     if "file-asff" in args.inputs and "securityhub" not in args.inputs:
         if args.sh_template or args.sh_filters:
@@ -404,7 +403,6 @@ def validate_arguments(args, logger):
 def generate_outputs(
     args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
 ):
-
     # Columns for CSV and HTML
     metachecks_columns = args.output_meta_checks_columns or list(
         mh_statistics["metachecks"].keys()
@@ -418,7 +416,6 @@ def generate_outputs(
 
     if mh_findings:
         for ouput_mode in args.output_modes:
-
             # Output JSON files
             if ouput_mode.startswith("json"):
                 json_mode = ouput_mode.split("-")[1]
@@ -530,7 +527,12 @@ def main(args):
 
     # Generate Findings
     print_title_line("Generating Findings", banners=banners)
-    (mh_findings, mh_findings_short, mh_inventory, mh_statistics,) = generate_findings(
+    (
+        mh_findings,
+        mh_findings_short,
+        mh_inventory,
+        mh_statistics,
+    ) = generate_findings(
         logger,
         sh_filters,
         metachecks=args.meta_checks,

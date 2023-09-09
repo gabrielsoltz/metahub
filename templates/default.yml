@@ -1,10 +1,10 @@
 Default:
-    WorkflowStatus:
-      - Value: 'NEW'
-        Comparison: EQUALS
-    RecordState:
-      - Value: 'ACTIVE'
-        Comparison: EQUALS
-    ProductName:
-      - Value: 'Security Hub'
-        Comparison: EQUALS
+  WorkflowStatus:
+    - Value: "NEW"
+      Comparison: EQUALS
+  RecordState:
+    - Value: "ACTIVE"
+      Comparison: EQUALS
+  ProductName:
+    - Value: "Security Hub"
+      Comparison: EQUALS

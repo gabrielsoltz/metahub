@@ -51,7 +51,6 @@ class MetaChecksBase:
         return mh_values_checks, mh_matched_checks
 
     def execute_drilled_metachecks(self):
-
         # Optimize drilled metachecks by keeping a cache of drilled resources
         self.drilled_cache = {}
 

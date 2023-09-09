@@ -39,7 +39,6 @@ class Impact:
             for value in property_values:
                 for value_key, value_data in value.items():
                     score = value_data["score"]
-                    matchs = value_data["matchs"]
                     if not isinstance(score, (int, float)):
                         self.logger.error(
                             "Error validating impact.yaml: score is not int %s",

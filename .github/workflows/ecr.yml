@@ -13,50 +13,78 @@ on:
 
 env:
   IMAGE_NAME: metahub
-  TAG: latest
-  LAMBDA_TAG: lambda
+  LATEST_TAG: latest
+  STABLE_TAG: stable
+  LAMBDA_LATEST_TAG: lambda-latest
+  LAMBDA_STABLE_TAG: lambda-stable
+  STANDARD_DOCKERFILE_PATH: ./Dockerfile
+  LAMBDA_DOCKERFILE_PATH: ./Dockerfile-lambda
 
 jobs:
-  
   build:
-    
     name: Build Image
     runs-on: ubuntu-latest
-
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
 
-    - name: Login to Amazon ECR Public
-      id: login-ecr-public
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        registry-type: public
+      - name: Build, tag, and push docker image to Amazon ECR Public (LATEST)
+        if: github.event_name == 'push'
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: n2p8q5p4
+          REPOSITORY: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.LATEST_TAG }}
+        run: |
+          docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
 
-    - name: Build, tag, and push docker image to Amazon ECR Public
-      env:
-        REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-        REGISTRY_ALIAS: n2p8q5p4
-        REPOSITORY: ${{ env.IMAGE_NAME }}
-        IMAGE_TAG: ${{ env.TAG }}
-      run: |
-        docker build -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
-        docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+      - name: Build, tag, and push docker image to Amazon ECR Public (LAMBDA-LATEST)
+        if: github.event_name == 'push'
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: n2p8q5p4
+          REPOSITORY: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.LAMBDA_TAG }}
+        run: |
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
 
-    - name: Build, tag, and push docker image to Amazon ECR Public Lambda
-      env:
-        REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-        REGISTRY_ALIAS: n2p8q5p4
-        REPOSITORY: ${{ env.IMAGE_NAME }}
-        IMAGE_TAG: ${{ env.LAMBDA_TAG }}
-      run: |
-        docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
-        docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+      - name: Build, tag, and push docker image to Amazon ECR Public (RELEASE)
+        if: github.event_name == 'release'
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: n2p8q5p4
+          REPOSITORY: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.STABLE_TAG }}
+        run: |
+          docker build -f ./Dockerfile -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+          docker build -f ./Dockerfile -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }} .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }}
+
+      - name: Build, tag, and push docker image to Amazon ECR Public (LAMBDA-RELEASE)
+        if: github.event_name == 'release'
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: n2p8q5p4
+          REPOSITORY: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.LAMBDA_STABLE_TAG }}
+        run: |
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }} .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }}

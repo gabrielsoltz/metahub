@@ -136,7 +136,7 @@ def get_account_alternate_contact(
         alternate_contact = account_client.get_alternate_contact(
             AccountId=aws_account_number, AlternateContactType=alternate_contact_type
         ).get("AlternateContact")
-    except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
+    except (NoCredentialsError, ClientError, EndpointConnectionError):
         try:
             alternate_contact = account_client.get_alternate_contact(
                 AlternateContactType=alternate_contact_type
@@ -144,7 +144,6 @@ def get_account_alternate_contact(
         except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 logger.info("No alternate contact found")
-                pass
             else:
                 logger.warning(
                     "Error getting alternate contact for account {}: {}".format(
@@ -162,7 +161,7 @@ def get_boto3_client(logger, service, region, sess, profile=None):
             return boto3.Session(profile_name=profile).client(
                 service_name=service, region_name=region
             )
-        except (ProfileNotFound) as e:
+        except ProfileNotFound as e:
             logger.error(
                 "Error getting boto3 client using AWS profile (check --sh-profile): {}".format(
                     e

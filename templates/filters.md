@@ -1,622 +1,640 @@
-# Full Filters Available
+# AWS Security Hub Api filters available
 
-'ProductArn': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'AwsAccountId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Id': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'GeneratorId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Region': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Type': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'FirstObservedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'LastObservedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'CreatedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'UpdatedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'SeverityProduct': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'SeverityNormalized': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'SeverityLabel': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Confidence': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'Criticality': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'Title': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Description': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'RecommendationText': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'SourceUrl': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ProductFields': [
-    {
-        'Key': 'string',
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'NOT_EQUALS'
-    },
-],
-'ProductName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'CompanyName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'UserDefinedFields': [
-    {
-        'Key': 'string',
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'NOT_EQUALS'
-    },
-],
-'MalwareName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'MalwareType': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'MalwarePath': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'MalwareState': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NetworkDirection': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NetworkProtocol': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NetworkSourceIpV4': [
-    {
-        'Cidr': 'string'
-    },
-],
-'NetworkSourceIpV6': [
-    {
-        'Cidr': 'string'
-    },
-],
-'NetworkSourcePort': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'NetworkSourceDomain': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NetworkSourceMac': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NetworkDestinationIpV4': [
-    {
-        'Cidr': 'string'
-    },
-],
-'NetworkDestinationIpV6': [
-    {
-        'Cidr': 'string'
-    },
-],
-'NetworkDestinationPort': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'NetworkDestinationDomain': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ProcessName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ProcessPath': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ProcessPid': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'ProcessParentPid': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'ProcessLaunchedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ProcessTerminatedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ThreatIntelIndicatorType': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ThreatIntelIndicatorValue': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ThreatIntelIndicatorCategory': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ThreatIntelIndicatorLastObservedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ThreatIntelIndicatorSource': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ThreatIntelIndicatorSourceUrl': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceType': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourcePartition': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceRegion': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceTags': [
-    {
-        'Key': 'string',
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceType': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceImageId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceIpV4Addresses': [
-    {
-        'Cidr': 'string'
-    },
-],
-'ResourceAwsEc2InstanceIpV6Addresses': [
-    {
-        'Cidr': 'string'
-    },
-],
-'ResourceAwsEc2InstanceKeyName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceIamInstanceProfileArn': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceVpcId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceSubnetId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsEc2InstanceLaunchedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ResourceAwsS3BucketOwnerId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsS3BucketOwnerName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsIamAccessKeyUserName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsIamAccessKeyPrincipalName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsIamAccessKeyStatus': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceAwsIamAccessKeyCreatedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ResourceAwsIamUserUserName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceContainerName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceContainerImageId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceContainerImageName': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'ResourceContainerLaunchedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'ResourceDetailsOther': [
-    {
-        'Key': 'string',
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'NOT_EQUALS'
-    },
-],
-'ComplianceStatus': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'VerificationState': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'WorkflowState': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'WorkflowStatus': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'RecordState': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'RelatedFindingsProductArn': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'RelatedFindingsId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NoteText': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'NoteUpdatedAt': [
-    {
-        'Start': 'string',
-        'End': 'string',
-        'DateRange': {
-            'Value': 123,
-            'Unit': 'DAYS'
-        }
-    },
-],
-'NoteUpdatedBy': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Keyword': [
-    {
-        'Value': 'string'
-    },
-],
-'FindingProviderFieldsConfidence': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'FindingProviderFieldsCriticality': [
-    {
-        'Gte': 123.0,
-        'Lte': 123.0,
-        'Eq': 123.0
-    },
-],
-'FindingProviderFieldsRelatedFindingsId': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'FindingProviderFieldsRelatedFindingsProductArn': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'FindingProviderFieldsSeverityLabel': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'FindingProviderFieldsSeverityOriginal': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'FindingProviderFieldsTypes': [
-    {
-        'Value': 'string',
-        'Comparison': 'EQUALS'|'PREFIX'|'NOT_EQUALS'|'PREFIX_NOT_EQUALS'
-    },
-],
-'Sample': [
-    {
-        'Value': True|False
-    },
-]
+https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/securityhub/client/get_findings.html
+
+```
+{
+   "ProductArn":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "AwsAccountId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Id":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "GeneratorId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Region":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Type":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "FirstObservedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "LastObservedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "CreatedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "UpdatedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "SeverityProduct":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "SeverityNormalized":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "SeverityLabel":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Confidence":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "Criticality":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "Title":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Description":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "RecommendationText":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "SourceUrl":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ProductFields":[
+      {
+         "Key":"string",
+         "Value":"string",
+         "Comparison":"EQUALS""|""NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ProductName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "CompanyName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "UserDefinedFields":[
+      {
+         "Key":"string",
+         "Value":"string",
+         "Comparison":"EQUALS""|""NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "MalwareName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "MalwareType":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "MalwarePath":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "MalwareState":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NetworkDirection":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NetworkProtocol":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NetworkSourceIpV4":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "NetworkSourceIpV6":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "NetworkSourcePort":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "NetworkSourceDomain":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NetworkSourceMac":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NetworkDestinationIpV4":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "NetworkDestinationIpV6":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "NetworkDestinationPort":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "NetworkDestinationDomain":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ProcessName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ProcessPath":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ProcessPid":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "ProcessParentPid":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "ProcessLaunchedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ProcessTerminatedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ThreatIntelIndicatorType":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ThreatIntelIndicatorValue":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ThreatIntelIndicatorCategory":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ThreatIntelIndicatorLastObservedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ThreatIntelIndicatorSource":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ThreatIntelIndicatorSourceUrl":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceType":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourcePartition":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceRegion":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceTags":[
+      {
+         "Key":"string",
+         "Value":"string",
+         "Comparison":"EQUALS""|""NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceType":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceImageId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceIpV4Addresses":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "ResourceAwsEc2InstanceIpV6Addresses":[
+      {
+         "Cidr":"string"
+      }
+   ],
+   "ResourceAwsEc2InstanceKeyName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceIamInstanceProfileArn":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceVpcId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceSubnetId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsEc2InstanceLaunchedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ResourceAwsS3BucketOwnerId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsS3BucketOwnerName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsIamAccessKeyUserName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsIamAccessKeyPrincipalName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsIamAccessKeyStatus":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceAwsIamAccessKeyCreatedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ResourceAwsIamUserUserName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceContainerName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceContainerImageId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceContainerImageName":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ResourceContainerLaunchedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "ResourceDetailsOther":[
+      {
+         "Key":"string",
+         "Value":"string",
+         "Comparison":"EQUALS""|""NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ComplianceStatus":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "VerificationState":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "WorkflowState":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "WorkflowStatus":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "RecordState":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "RelatedFindingsProductArn":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "RelatedFindingsId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NoteText":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "NoteUpdatedAt":[
+      {
+         "Start":"string",
+         "End":"string",
+         "DateRange":{
+            "Value":123,
+            "Unit":"DAYS"
+         }
+      }
+   ],
+   "NoteUpdatedBy":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Keyword":[
+      {
+         "Value":"string"
+      }
+   ],
+   "FindingProviderFieldsConfidence":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "FindingProviderFieldsCriticality":[
+      {
+         "Gte":123.0,
+         "Lte":123.0,
+         "Eq":123.0
+      }
+   ],
+   "FindingProviderFieldsRelatedFindingsId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "FindingProviderFieldsRelatedFindingsProductArn":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "FindingProviderFieldsSeverityLabel":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "FindingProviderFieldsSeverityOriginal":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "FindingProviderFieldsTypes":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "Sample":[
+      {
+         "Value":"True|False"
+      }
+   ],
+   "ComplianceSecurityControlId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ],
+   "ComplianceAssociatedStandardsId":[
+      {
+         "Value":"string",
+         "Comparison":"EQUALS""|""PREFIX""|""NOT_EQUALS""|""PREFIX_NOT_EQUALS""|""CONTAINS""|""NOT_CONTAINS"
+      }
+   ]
+}
+```

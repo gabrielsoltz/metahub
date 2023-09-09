@@ -1,6 +1,7 @@
-boto3
-pyyaml
 alive_progress
-jinja2
 aws-arn==0.0.10
+boto3
+jinja2
+pyyaml
 rich
+xlsxwriter

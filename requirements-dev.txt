@@ -1,5 +1,6 @@
+bandit
 black
-isort
 flake8
-
-# flake8 --ignore=E266,W503,E203,E501,W605 --exclude __pycache__,venv
+isort
+safety
+vulture
