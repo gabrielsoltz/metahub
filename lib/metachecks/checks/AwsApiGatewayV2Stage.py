@@ -42,7 +42,7 @@ class Metacheck(MetaChecksBase):
             if not self.stage:
                 return False
             # Drilled MetaChecks
-            self.api_gwv2_apis = self.it_associated_with_api_gateway_v2()
+            self.api_gwv2_apis = self._get_stage_api()
 
     # Describe function
 
@@ -59,14 +59,18 @@ class Metacheck(MetaChecksBase):
             return False
         return response
 
-    def it_associated_with_api_gateway_v2(self):
-        # temp
+    # Drilled MetaChecks
+
+    def _get_stage_api(self):
         api_gateway_api = {}
         arn = "arn:aws:apigateway2:{}:{}:/apis/{}".format(
             self.region, self.account, self.app_id
         )
         api_gateway_api[arn] = {}
         return api_gateway_api
+
+    def it_associated_with_api_gateway_v2(self):
+        return self.api_gwv2_apis
 
     # MetaChecks
 

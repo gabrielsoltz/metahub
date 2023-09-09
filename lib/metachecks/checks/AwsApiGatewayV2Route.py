@@ -42,7 +42,7 @@ class Metacheck(MetaChecksBase):
             self.route_authorization_type = self.route["AuthorizationType"]
             self.route_target = self.route["Target"]
             # Drilled MetaChecks
-            self.api_gwv2_apis = self.it_associated_with_api_gateway_v2()
+            self.api_gwv2_apis = self._get_route_api()
 
     # Describe function
 
@@ -57,8 +57,9 @@ class Metacheck(MetaChecksBase):
             return False
         return response
 
-    def it_associated_with_api_gateway_v2(self):
-        # temp
+    # Drilled MetaChecks
+
+    def _get_route_api(self):
         api_gateway_api = {}
         arn = "arn:aws:apigateway2:{}:{}:/apis/{}".format(
             self.region, self.account, self.app_id
@@ -67,6 +68,9 @@ class Metacheck(MetaChecksBase):
         return api_gateway_api
 
     # MetaChecks
+
+    def it_associated_with_api_gateway_v2(self):
+        return self.api_gwv2_apis
 
     def it_has_authorization_type(self):
         if self.route_authorization_type:
