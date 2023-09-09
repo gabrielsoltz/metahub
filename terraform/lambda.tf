@@ -24,7 +24,7 @@ resource "null_resource" "create_lambda" {
 
 data "local_file" "code_hash" {
   depends_on = [null_resource.create_lambda]
-  filename = "zip/lambda_code_sha256.txt"
+  filename   = "zip/lambda_code_sha256.txt"
 }
 
 resource "aws_lambda_function" "lambda_zip" {
@@ -77,15 +77,15 @@ resource "null_resource" "create_layer" {
 
 data "local_file" "layer_hash" {
   depends_on = [null_resource.create_layer]
-  filename = "zip/metahub_layer_sha256.txt"
+  filename   = "zip/metahub_layer_sha256.txt"
 }
 
 resource "aws_lambda_layer_version" "lambda_layer" {
   depends_on = [null_resource.create_layer]
 
-  filename   = "zip/metahub_layer.zip"
-  layer_name = "metahub_layer"
-  source_code_hash = data.local_file.layer_hash.content
+  filename            = "zip/metahub_layer.zip"
+  layer_name          = "metahub_layer"
+  source_code_hash    = data.local_file.layer_hash.content
   compatible_runtimes = ["python3.9"]
 }
 

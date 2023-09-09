@@ -30,6 +30,8 @@ repos:
       - id: autoflake
         args:
           [
+            "--exclude",
+            "lib/metachecks/checks/__init__.py",
             "--in-place",
             "--remove-all-unused-imports",
             "--remove-unused-variable",
@@ -68,7 +70,6 @@ repos:
     rev: v1.83.2
     hooks:
       - id: terraform_fmt
-      - id: terraform_docs
 
   - repo: local
     hooks:
