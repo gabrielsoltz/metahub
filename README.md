@@ -178,13 +178,7 @@ Alternatively, you can run this tool using Docker.
 
 # Run with Docker
 
-You can run MetaHub using Docker, either building the docker image locally or using the publicly available image from AWS Registry.
-
-You can set your AWS credentials using environment adding to your docker run command:
-
-```
--e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN
-```
+You can run MetaHub using Docker, either building the docker image locally or using the publicly available image from AWS ECR Registry.
 
 ## Run it using Public Docker Image
 
@@ -193,6 +187,14 @@ You can set your AWS credentials using environment adding to your docker run com
 </p>
 
 1. Run: `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
+
+## AWS credentials and Docker
+
+If you are logged in in the host machine to AWS, you can use the same credentials in the docker container by passing the environment variables to the container or mounting the credentials file.
+
+For example: `docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
+
+If not, you will need to log in again from the container itself.
 
 ## Build and Run Docker locally
 

@@ -64,6 +64,12 @@ repos:
       - id: hadolint
         args: ["Dockerfile", "Dockerfile-lambda"]
 
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.83.2
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_docs
+
   - repo: local
     hooks:
       - id: pylint
