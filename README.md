@@ -38,7 +38,7 @@
 
 # Description
 
-**MetaHub** is a powerful security findings **context** and **ownership** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanner. It helps automate the process of contextualizing your findings with information from your environment, such as tags, trails, associations, related findings, and more. MetaHub can also be used to filter, deduplicate, group, report, suppress, or update your findings in automated workflows.
+**MetaHub** is a powerful security findings **context**, **ownership** and **impact** enrichment tool designed for use with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanner. It helps automate the process of contextualizing your findings with information from your environment, such as tags, trails, associations, related findings, and more. MetaHub can also be used to filter, deduplicate, group, report, suppress, or update your findings in automated workflows.
 
 When analyzing a security finding, the severity alone is not sufficient to determine the issue's impact. To understand the importance of the finding, you need to gather additional information about the affected resource from your context, which is not available in the finding itself. Manually collecting this information from other sources can be time-consuming and error-prone, especially when dealing with multiple findings. **MetaHub** automates this process for you, allowing you to focus on the real issues, reduce noise and false positives, and improve the time it takes to detect and respond to genuine security issues in your environment.
 
@@ -46,7 +46,7 @@ MetaHub is designed for use as a CLI tool or within automated workflows, such as
 
 With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them or not. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings at once.
 
-<img src="metahub-min.gif" />
+<img src="docs/imgs/metahub-min.gif" />
 
 # Context
 
@@ -459,6 +459,7 @@ If you want to only generate a specific output mode, you can use the option `--o
 - [JSON](#json)
 - [HTML](#html)
 - [CSV](#csv)
+- [XLSX](#xlsx)
 
 ## JSON
 
@@ -614,7 +615,16 @@ You can create a CSV custom report from your findings, adding MetaChecks and Met
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>
 </p>
 
-## Customize HTML or CSV Outputs
+## XLSX
+
+Similar to csv but with more features like formatting. 
+
+<p align="center">
+  <img src="docs/imgs/xlsx-export.png" alt="xlsx-example"/>
+</p>
+
+
+## Customize HTML, CSV or XLSX outputs
 
 You can customize which MetaChecks and MetaTags to use as column headers using the options `--output-meta-tags-columns` and `--output-meta-checks-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns don't exist for the affected resource, they will be empty. You need to be running MetaHub with the options `--meta-checks` or `--meta-tags` to be able to fill those columns. If you don't specify columns, all MetaChecks and all MetaTags that appear in your outputs will be used as columns (if they are enabled `--meta-checks --meta-tags`)
 
