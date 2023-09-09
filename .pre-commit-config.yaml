@@ -30,6 +30,8 @@ repos:
       - id: autoflake
         args:
           [
+            "--exclude",
+            "lib/metachecks/checks/__init__.py",
             "--in-place",
             "--remove-all-unused-imports",
             "--remove-unused-variable",
@@ -63,6 +65,11 @@ repos:
     hooks:
       - id: hadolint
         args: ["Dockerfile", "Dockerfile-lambda"]
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.83.2
+    hooks:
+      - id: terraform_fmt
 
   - repo: local
     hooks:

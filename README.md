@@ -8,6 +8,10 @@
   <b>MetaHub</b> is the automated contextual enrichment tool for AWS Security Hub and ASFF security findings.
 </p>
 
+<p align="center">
+  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width=120 height=19 alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
+</p>
+
 # Table of Contents
 
 - [Description](#description)
@@ -178,28 +182,42 @@ Alternatively, you can run this tool using Docker.
 
 # Run with Docker
 
-You can run MetaHub using Docker, either building the docker image locally or using the publicly available image from AWS Registry.
+MetaHub is also available as a Docker image. You can run it directly from the public Docker image or build it locally.
 
-You can set your AWS credentials using environment adding to your docker run command:
+The available tagging for MetaHub containers are the following:
+
+- `latest`: in sync with master branch
+- `<x.y.z>`: you can find the releases [here](https://github.com/gabrielsoltz/metahub/releases)
+- `stable`: this tag always point to the latest release.
+
+For running from the public registry, you can run the following command:
 
 ```
--e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN
+docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h
 ```
 
-## Run it using Public Docker Image
+## AWS credentials and Docker
 
-<p align="center">
-  <a href="https://gallery.ecr.aws/n2p8q5p4/metahub"><img width="120" height=19" alt="AWS ECR Gallery" src="https://user-images.githubusercontent.com/3985464/151531396-b6535a68-c907-44eb-95a1-a09508178616.png"></a>
-</p>
+If you are already logged into the AWS host machine, you can seamlessly use the same credentials within a Docker container. You can achieve this by either passing the necessary environment variables to the container or by mounting the credentials file.
 
-1. Run: `docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h`
+For instance, you can run the following command:
+
+```
+docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h
+```
+
+On the other hand, if you are not logged in on the host machine, you will need to log in again from within the container itself.
 
 ## Build and Run Docker locally
 
-1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
-2. Change to repostiory dir: `cd metahub`
-3. Build docker image: `docker build -t metahub .`
-4. Run: `docker run -ti metahub ./metahub -h`
+Or you can also build it locally:
+
+```
+git clone git@github.com:gabrielsoltz/metahub.git
+cd metahub
+docker build -t metahub .
+docker run -ti metahub ./metahub -h
+```
 
 # Run with Lambda
 
