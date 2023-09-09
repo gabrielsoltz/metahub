@@ -1,10 +1,7 @@
 import argparse
 import logging
 import sys
-import datetime
-import xlsxwriter
 
-import jinja2
 from rich.panel import Panel
 
 from lib.AwsHelpers import get_available_regions
@@ -225,6 +222,7 @@ def get_parser():
             "json-inventory",
             "html",
             "csv",
+            "xlsx",
             "lambda",
         ],
         default=[
@@ -234,6 +232,7 @@ def get_parser():
             "json-inventory",
             "html",
             "csv",
+            "xlsx",
         ],
         nargs="*",
         help="Specify the output mode, by default json. Combine one or more using spaces",
@@ -241,14 +240,14 @@ def get_parser():
     )
     group_output.add_argument(
         "--output-meta-tags-columns",
-        help="Specify which Meta Tags to unroll as Columns for output csv and html",
+        help="Specify which Meta Tags to unroll as Columns for outputs (csv, html and xlsx)",
         default=[],
         nargs="+",
         required=False,
     )
     group_output.add_argument(
         "--output-meta-checks-columns",
-        help="Specify which Meta Checks to unroll as Columns for output csv and html",
+        help="Specify which Meta Checks to unroll as Columns for outputs (csv, html and xlsx)",
         default=[],
         nargs="+",
         required=False,
@@ -418,106 +417,6 @@ def rich_box_severity(severity, values):
     title = "[" + color[severity] + "] " + severity + "[/]"
     value = values
     return f"[b]{title.center(5)}[/b]\n[bold]{str(value).center(5)}"
-
-
-def generate_output_csv(output, metatags_columns, metachecks_columns):
-    new_list = []
-    for key, dictionary in output.items():
-        new_dict = {"ARN": key}
-        for column in metatags_columns:
-            try:
-                dictionary[column] = dictionary["metatags"][column]
-            except (KeyError, TypeError):
-                dictionary[column] = ""
-        for column in metachecks_columns:
-            try:
-                dictionary[column] = dictionary["metachecks"][column]
-            except (KeyError, TypeError):
-                dictionary[column] = ""
-        new_dict.update(dictionary)
-        new_list.append(new_dict)
-    columns = new_list[0].keys()
-    return columns, new_list
-
-def generate_output_xlsx(output, metatags_columns, metachecks_columns):
-    ### Create an XLSX file with the sorted Security Findings in the /tmp directory
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    filename = f'security_findings_{timestamp}.xlsx'
-    xlsx_file = f'/tmp/{filename}'
-    ### Create a workbook and add a worksheet
-    workbook = xlsxwriter.Workbook(xlsx_file)
-    worksheet = workbook.add_worksheet("findings")
-    ### Adding columns
-    worksheet.set_default_row(30) # Sets the default row height to 30 pixels
-    worksheet.set_column(0, 0, 145) # Column used for Resource ID.
-    worksheet.set_column(1, 1, 15) # 1 column width. Column used for Severity.
-    worksheet.set_column(2, 2, 105) # 2 column width. Column used for Title.
-    worksheet.set_column(3, 3, 15) # 3 column width. Column used for Account ID.
-    worksheet.set_column(4, 4, 15) # 4 column width. Column used for Region.
-    worksheet.set_column(5, 5, 25) # 6 column width. Column used for Resource Type.
-    # Formats
-    title_format = workbook.add_format({'bold': True, 'border': 1})
-    raws_format = workbook.add_format({'text_wrap': True, 'border': 1})
-    critical_format = workbook.add_format({'bg_color': '#7d2105', 'border': 1})
-    high_format = workbook.add_format({'bg_color': '#ba2e0f', 'border': 1})
-    medium_format = workbook.add_format({'bg_color': '#cc6021', 'border': 1})
-    low_format = workbook.add_format({'bg_color': '#b49216', 'border': 1}) # Low and Informal
-    worksheet.write_row(0, 0, ['Resource ID', 'Severity', 'Title', 'AWS Account ID', "Region", 'Resource Type'], title_format)
-    # Iterate over the resources
-    current_line = 1
-    for resource, values in output.items():
-        for finding in values['findings']:
-            for f, v in finding.items():
-                worksheet.write_row(current_line, 0, [resource], raws_format)
-                severity = v['SeverityLabel']
-                if severity == 'CRITICAL':
-                    # Apply the critical_format to the "Severity" column cell
-                    worksheet.write(current_line, 1, severity, critical_format)
-                elif severity == 'HIGH':
-                    # Apply the high_format to the "Severity" column cell
-                    worksheet.write(current_line, 1, severity, high_format)
-                elif severity == 'MEDIUM':
-                    # Apply the medium_format to the "Severity" column cell
-                    worksheet.write(current_line, 1, severity, medium_format)
-                else:
-                    worksheet.write(current_line, 1, severity, low_format)
-                worksheet.write_row(current_line, 2, [f, values['AwsAccountId'], values["Region"], values['ResourceType']], raws_format)
-                current_line+=1
-    workbook.close()
-
-def generate_output_html(
-    mh_findings,
-    mh_statistics,
-    metatags_columns,
-    metachecks_columns,
-    metaaccount_columns,
-    impact_columns,
-):
-    templateLoader = jinja2.FileSystemLoader(searchpath="./")
-    templateEnv = jinja2.Environment(loader=templateLoader)
-    TEMPLATE_FILE = "lib/html/template.html"
-    template = templateEnv.get_template(TEMPLATE_FILE)
-    # Convert MetaChecks to Boolean
-    for resource_arn in mh_findings:
-        if (
-            "metachecks" in mh_findings[resource_arn]
-            and mh_findings[resource_arn]["metachecks"]
-        ):
-            for metacheck in mh_findings[resource_arn]["metachecks"]:
-                if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
-                    mh_findings[resource_arn]["metachecks"][metacheck] = True
-                else:
-                    mh_findings[resource_arn]["metachecks"][metacheck] = False
-    html = template.render(
-        data=mh_findings,
-        statistics=mh_statistics,
-        title="MetaHub",
-        metachecks_columns=metachecks_columns,
-        metatags_columns=metatags_columns,
-        metaaccount_columns=metaaccount_columns,
-        impact_columns=impact_columns,
-    )
-    return html
 
 
 def generate_rich(mh_statistics):
