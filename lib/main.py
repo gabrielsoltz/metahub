@@ -1,4 +1,3 @@
-import csv
 import json
 from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from sys import argv, exit
@@ -13,8 +12,6 @@ from lib.AwsHelpers import get_account_alias, get_account_id, get_region
 from lib.findings import evaluate_finding
 from lib.helpers import (
     confirm_choice,
-    generate_output_csv,
-    generate_output_html,
     generate_rich,
     get_logger,
     get_parser,
@@ -25,6 +22,7 @@ from lib.helpers import (
     test_python_version,
 )
 from lib.impact import Impact
+from lib.outputs import generate_output_csv, generate_output_html, generate_output_xlsx
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -408,8 +406,12 @@ def generate_outputs(
 ):
 
     # Columns for CSV and HTML
-    metachecks_columns = args.output_meta_checks_columns or mh_statistics["metachecks"]
-    metatags_columns = args.output_meta_tags_columns or mh_statistics["metatags"]
+    metachecks_columns = args.output_meta_checks_columns or list(
+        mh_statistics["metachecks"].keys()
+    )
+    metatags_columns = args.output_meta_tags_columns or list(
+        mh_statistics["metatags"].keys()
+    )
     metaaccount_columns = mh_statistics["metaaccount"]
     # Hardcoded for now
     impact_columns = ["Impact"]
@@ -455,14 +457,18 @@ def generate_outputs(
             # Output CSV files
             if ouput_mode == "csv":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
-                with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
-                    columns, csv_list = generate_output_csv(
-                        mh_findings_short, metatags_columns, metachecks_columns
-                    )
-                    dict_writer = csv.DictWriter(output_file, columns)
-                    dict_writer.writeheader()
-                    dict_writer.writerows(csv_list)
+                generate_output_csv(
+                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
+                )
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
+
+            # Output XLSX files
+            if ouput_mode == "xlsx":
+                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
+                generate_output_xlsx(
+                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
+                )
+                print_table("XLSX:   ", WRITE_FILE, banners=banners)
 
 
 def main(args):

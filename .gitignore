@@ -135,6 +135,7 @@ jinja_templates/*
 outputs/*.html
 outputs/*.csv
 outputs/*.json
+outputs/*.xlsx
 
 # Local .terraform directories
 **/.terraform/*
