@@ -1,0 +1,86 @@
+# pre-commit install
+
+repos:
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: ["--unsafe"]
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+      - id: pretty-format-json
+        args: ["--autofix", --no-sort-keys, --no-ensure-ascii]
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/myint/autoflake
+    rev: v2.2.1
+    hooks:
+      - id: autoflake
+        args:
+          [
+            "--in-place",
+            "--remove-all-unused-imports",
+            "--remove-unused-variable",
+          ]
+
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 23.9.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+        args: ["--ignore=E266,W503,E203,E501,W605 --exclude __pycache__,venv"]
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.1-beta
+    hooks:
+      - id: hadolint
+        args: ["--ignore=DL3013"]
+
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: bash -c 'pylint --disable=W,C,R,E -j 0 -rn -sn lib/'
+        language: system
+        files: '.*\.py'
+
+      - id: trufflehog
+        name: TruffleHog
+        description: Detect secrets in your data.
+        entry: bash -c 'docker run -v "$(pwd):/workdir" -i --rm trufflesecurity/trufflehog:latest git file:///workdir --only-verified --fail'
+        language: system
+        stages: ["commit", "push"]
+
+      - id: bandit
+        name: bandit
+        description: "Bandit is a tool for finding common security issues in Python code"
+        entry: bash -c 'bandit -q -lll -x '*_test.py,./contrib/' -r .'
+        language: system
+        files: '.*\.py'
+
+      - id: safety
+        name: safety
+        description: "Safety is a tool that checks your installed dependencies for known security vulnerabilities"
+        entry: bash -c 'safety check'
+        language: system
+
+      - id: vulture
+        name: vulture
+        description: "Vulture finds unused code in Python programs."
+        entry: bash -c 'vulture --exclude "contrib" --min-confidence 100 .'
+        language: system
+        files: '.*\.py'
