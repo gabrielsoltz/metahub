@@ -58,7 +58,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: n2p8q5p4
           REPOSITORY: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ env.LAMBDA_TAG }}
+          IMAGE_TAG: ${{ env.LAMBDA_LATEST_TAG }}
         run: |
           docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
