@@ -3,7 +3,6 @@ from lib.helpers import get_logger
 
 
 def lambda_handler(event, context):
-
     logger = get_logger("INFO")
 
     LAMBDA_OPTIONS = ["--output-modes", "lambda", "--no-banners"]

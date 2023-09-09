@@ -1,10 +1,12 @@
 """MetaCheck: AwsSecretsManagerSecret"""
 
 import json
+from datetime import datetime, timezone
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
+from lib.config.configuration import days_to_consider_unrotated
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
@@ -95,11 +97,21 @@ class Metacheck(MetaChecksBase):
                 return self.policy["is_unrestricted"]
         return False
 
+    def is_unrotated(self):
+        if self.secret:
+            current_date = datetime.now(timezone.utc)
+            last_change_date = self.secret.get("LastChangedDate")
+            date_difference = current_date - last_change_date
+            if date_difference.days > days_to_consider_unrotated:
+                return str(date_difference.days)
+        return False
+
     def checks(self):
         checks = [
             "it_has_name",
             "it_has_resource_policy",
             "it_has_rotation_enabled",
             "is_unrestricted",
+            "is_unrotated",
         ]
         return checks

@@ -1,9 +1,12 @@
 """MetaCheck: AwsIamUser"""
 
 
+from datetime import datetime, timezone
+
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
+from lib.config.configuration import days_to_consider_unrotated
 from lib.metachecks.checks.Base import MetaChecksBase
 from lib.metachecks.checks.MetaChecksHelpers import PolicyHelper
 
@@ -39,6 +42,7 @@ class Metacheck(MetaChecksBase):
             self.user = self.get_user()
             if not self.user:
                 return False
+            self.user_access_keys = self.list_access_keys()
             self.iam_inline_policies = self.list_user_policies()
             # Drilled MetaChecks
             self.iam_policies = self.list_attached_user_policies()
@@ -82,6 +86,24 @@ class Metacheck(MetaChecksBase):
                 iam_inline_policies[policy_name] = checked_policy
 
         return iam_inline_policies
+
+    def list_access_keys(self):
+        iam_user_access_keys = {}
+
+        try:
+            list_access_keys = self.client.list_access_keys(UserName=self.resource_id)
+        except ClientError as err:
+            if err.response["Error"]["Code"] == "NoSuchEntity":
+                return False
+            else:
+                self.logger.error(
+                    "Failed to list_access_keys {}, {}".format(self.resource_id, err)
+                )
+                return False
+        if list_access_keys["AccessKeyMetadata"]:
+            iam_user_access_keys = list_access_keys["AccessKeyMetadata"]
+
+        return iam_user_access_keys
 
     # Drilled MetaChecks
     # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
@@ -137,10 +159,22 @@ class Metacheck(MetaChecksBase):
                     )
         return False
 
+    def is_unrotated(self):
+        if self.user_access_keys:
+            current_date = datetime.now(timezone.utc)
+            for key in self.user_access_keys:
+                if key.get("Status") == "Active":
+                    create_date = key.get("CreateDate")
+                    date_difference = current_date - create_date
+                    if date_difference.days > days_to_consider_unrotated:
+                        return str(date_difference.days)
+        return False
+
     def checks(self):
         checks = [
             "it_has_iam_inline_policies",
             "its_associated_with_iam_policies",
             "is_unrestricted",
+            "is_unrotated",
         ]
         return checks

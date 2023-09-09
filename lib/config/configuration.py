@@ -7,3 +7,6 @@
 
 # List of AWS accounts ids that are trusted and not considered as external. This is used in the is_principal_external MetaCheck for policies.
 trusted_accounts = []
+
+# Days to consider a resource (key) unrotated
+days_to_consider_unrotated = 90
