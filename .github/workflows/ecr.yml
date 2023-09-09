@@ -5,11 +5,15 @@ name: Deploy to ECR
 on:
   push:
     branches:
-      - "main"
+      - "master"
     paths-ignore:
-      - ".github/**"
+      - ".github/dependabot.yml"
       - "README.md"
       - "docs/**"
+      - "outputs/**"
+
+  release:
+    types: [published]
 
 env:
   IMAGE_NAME: metahub
@@ -17,8 +21,6 @@ env:
   STABLE_TAG: stable
   LAMBDA_LATEST_TAG: lambda-latest
   LAMBDA_STABLE_TAG: lambda-stable
-  STANDARD_DOCKERFILE_PATH: ./Dockerfile
-  LAMBDA_DOCKERFILE_PATH: ./Dockerfile-lambda
 
 jobs:
   build:
