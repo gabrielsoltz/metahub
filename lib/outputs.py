@@ -125,8 +125,6 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
                         metachecks_column_values.append("")
                 row = (
                     [
-                        resource,
-                        v.get("SeverityLabel", None),
                         f,
                         values.get("AwsAccountId", None),
                         values.get("Region", None),
