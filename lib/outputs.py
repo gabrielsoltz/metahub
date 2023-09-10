@@ -9,6 +9,7 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
         colums = [
             "Resource ID",
             "Severity",
+            "Impact",
             "Title",
             "AWS Account ID",
             "Region",
@@ -42,6 +43,9 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
                         [
                             resource,
                             v.get("SeverityLabel", None),
+                            values.get("impact", None).get("Impact", None)
+                            if values.get("impact")
+                            else None,
                             f,
                             values.get("AwsAccountId", None),
                             values.get("Region", None),
@@ -65,16 +69,17 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
     workbook = xlsxwriter.Workbook(xlsx_file)
     worksheet = workbook.add_worksheet("findings")
     # Columns
-    worksheet.set_default_row(35)
+    worksheet.set_default_row(25)
     worksheet.set_column(0, 0, 145)  # Resource ID.
     worksheet.set_column(1, 1, 15)  # Severity.
-    worksheet.set_column(2, 2, 105)  # Title.
-    worksheet.set_column(3, 3, 15)  # Account ID.
-    worksheet.set_column(4, 4, 15)  # Region.
-    worksheet.set_column(5, 5, 25)  # Resource Type.
-    worksheet.set_column(6, 6, 25)  # WorkflowStatus.
-    worksheet.set_column(7, 7, 25)  # RecordState.
-    worksheet.set_column(8, 8, 25)  # ComplianceStatus.
+    worksheet.set_column(2, 2, 15)  # Impact.
+    worksheet.set_column(3, 3, 105)  # Title.
+    worksheet.set_column(4, 4, 15)  # Account ID.
+    worksheet.set_column(5, 5, 15)  # Region.
+    worksheet.set_column(6, 6, 25)  # Resource Type.
+    worksheet.set_column(7, 7, 25)  # WorkflowStatus.
+    worksheet.set_column(8, 8, 25)  # RecordState.
+    worksheet.set_column(9, 9, 25)  # ComplianceStatus.
     # Formats
     title_format = workbook.add_format({"bold": True, "border": 1})
     raws_format = workbook.add_format({"text_wrap": True, "border": 1})
@@ -85,6 +90,7 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
     colums = [
         "Resource ID",
         "Severity",
+        "Impact",
         "Title",
         "AWS Account ID",
         "Region",
@@ -125,6 +131,9 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
                         metachecks_column_values.append("")
                 row = (
                     [
+                        values.get("impact", None).get("Impact", None)
+                        if values.get("impact")
+                        else None,
                         f,
                         values.get("AwsAccountId", None),
                         values.get("Region", None),
