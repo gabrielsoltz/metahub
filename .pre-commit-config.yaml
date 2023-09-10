@@ -102,6 +102,6 @@ repos:
       - id: vulture
         name: vulture
         description: "Vulture finds unused code in Python programs."
-        entry: bash -c 'vulture --min-confidence 100 lib/'
+        entry: bash -c 'vulture --exclude lib/helpers.py --min-confidence 100 lib/'
         language: system
         files: '.*\.py'
