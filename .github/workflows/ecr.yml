@@ -19,8 +19,6 @@ env:
   IMAGE_NAME: metahub
   LATEST_TAG: latest
   STABLE_TAG: stable
-  LAMBDA_LATEST_TAG: lambda-latest
-  LAMBDA_STABLE_TAG: lambda-stable
 
 jobs:
   build:
@@ -60,10 +58,10 @@ jobs:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: n2p8q5p4
           REPOSITORY: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ env.LAMBDA_LATEST_TAG }}
+          IMAGE_TAG: ${{ env.LATEST_TAG }}
         run: |
-          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-$IMAGE_TAG
 
       - name: Build, tag, and push docker image to Amazon ECR Public (RELEASE)
         if: github.event_name == 'release'
@@ -84,9 +82,9 @@ jobs:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: n2p8q5p4
           REPOSITORY: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ env.LAMBDA_STABLE_TAG }}
+          IMAGE_TAG: ${{ env.STABLE_TAG }}
         run: |
-          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG .
-          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG
-          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }} .
-          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:${{ github.event.release.tag_name }}
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-$IMAGE_TAG .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-$IMAGE_TAG
+          docker build -f ./Dockerfile-lambda -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-${{ github.event.release.tag_name }} .
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:lambda-${{ github.event.release.tag_name }}
