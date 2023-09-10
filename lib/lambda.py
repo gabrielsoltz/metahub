@@ -5,12 +5,34 @@ from lib.helpers import get_logger
 def lambda_handler(event, context):
     logger = get_logger("INFO")
 
-    LAMBDA_OPTIONS = ["--output-modes", "lambda", "--no-banners"]
-    # Add your custom options here (e.g. ["--sh-filters", "Id=arn::::010101010101", "--meta-checks"])
-    CUSTOM_OPTIONS = []
-    # Add your custom actions here (e.g. ["--enrich-findings", "--no-actions-confirmation"])
-    CUSTOM_ACTIONS = ["--no-actions-confirmation"]
+    # Add your custom options here (e.g. Only Critical: ["--sh-filters", "SeverityLabel=CRITICAL"])
 
+    # - Options for running Lambda from Security Hub Custom Actions
+    SH_CUSTOM_OPTIONS = [
+        "--meta-checks",
+        "--meta-tags",
+        "--meta-trails",
+        "--meta-account",
+        "--enrich-findings",
+    ]
+
+    # - Options when running Lambda from any other source
+    CUSTOM_OPTIONS = [
+        "--meta-checks",
+        "--meta-tags",
+        "--meta-trails",
+        "--meta-account",
+    ]
+
+    # This are the minimum options required to run the Lambda, don't change this
+    LAMBDA_OPTIONS = [
+        "--output-modes",
+        "lambda",
+        "--no-banners",
+        "--no-actions-confirmation",
+    ]
+
+    # Lambda execution
     event_source = event.get("source")
     event_detail_type = event.get("detail-type")
     logger.info("Event Source: %s (%s)", event_source, event_detail_type)
@@ -26,24 +48,18 @@ def lambda_handler(event, context):
         for finding in event_detail.get("findings"):
             finding_id = finding.get("Id")
             logger.info("Security Hub Finding: %s", finding_id)
-            LAMBDA_OPTIONS = [
+            CUSTOM_OPTIONS = SH_CUSTOM_OPTIONS
+            LAMBDA_OPTIONS = [  # You shouldn't need to change this
                 "--output-modes",
                 "lambda",
                 "--no-banners",
                 "--sh-filters",
                 f"Id={finding_id}",
+                "--no-actions-confirmation",
             ]
-            CUSTOM_OPTIONS = [
-                "--meta-checks",
-                "--meta-tags",
-                "--meta-trails",
-                "--meta-account",
-            ]
-            CUSTOM_ACTIONS = ["--enrich-findings", "--no-actions-confirmation"]
 
-    OPTIONS = LAMBDA_OPTIONS + CUSTOM_OPTIONS + CUSTOM_ACTIONS
+    OPTIONS = CUSTOM_OPTIONS + LAMBDA_OPTIONS
 
     logger.info("Executing with options: %s", OPTIONS)
     exec = lib.main.main(OPTIONS)
-    print(exec)
     return exec

@@ -240,15 +240,21 @@ The terraform code for deploying the Lambda function is provided under the `terr
 
 Just run the following commands:
 
-1. `cd terraform`
-2. `terraform init`
-3. `terraform apply`
+```
+cd terraform
+terraform init
+terraform apply
+```
 
 The code will create a zip file for the lambda code and a zip file for the python dependencies. It will also create a Lambda function and all the required resources.
 
 ## Customize Lambda behaviour
 
-You can customize MetaHub options for your lambda by editing the file [lib/lambda.py](lib/lambda.py). You can change the default options for MetaHub, such as the output modes, the filters, the Meta\* options, and more.
+You can customize MetaHub options for your lambda by editing the file [lib/lambda.py](lib/lambda.py). You can change the default options for MetaHub, such as the the filters, the Meta\* options, and more.
+
+## Lambda Permissions
+
+Terraform will create the minimum required permissions for the Lambda function to run locally (in the same account). If you want your Lambda to assume a role in other accounts (for example you will need this if you are executig the Lambda in the Security Hub master account that is aggregating findings from other accounts) you will need to specified the role to assume adding the option `--mh-assume-role` in the Lambda function configuration (See previous step) and adding the corresponding policy to allow the lambda to assume that role in the lambda role.
 
 # Run with Security Hub Custom Action
 
@@ -258,13 +264,31 @@ You can customize MetaHub options for your lambda by editing the file [lib/lambd
   <img src="docs/imgs/custom_action.png" alt="custom_action" width="850"/>
 </p>
 
-The custom action then will triggered a Lambda function that will run MetaHub for the selected findings.
+The custom action then will triggered a Lambda function that will run MetaHub for the selected findings. By default, the Lambda function will run MetaHub with the option `--enrich-findings` which means, that it will update your finding back with MetaHub outputs. If you want to change this, see [Customize Lambda behaviour](#customize-lambda-behaviour)
 
 You need to first create the Lambda function and then create the custom action in Security Hub.
 
 For creating the lambda function, follow the instructions in the [Run with Lambda](#run-with-lambda) section.
 
-For creating the AWS Security Hub custom action, follow this step by step [guide](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-custom-actions.html).
+For creating the AWS Security Hub custom action:
+
+1. In Security Hub, choose Settings and then choose Custom actions.
+2. Choose Create custom action.
+3. Provide a Name, Description, and Custom action ID for the action.
+4. Choose Create custom action. (Make a note of the Custom action ARN. You need to use the ARN when you create a rule to associate with this action in EventBridge.)
+5. In EventBridge, choose Rules and then choose Create rule.
+6. Enter a name and description for the rule.
+7. For Event bus, choose the event bus that you want to associate with this rule. If you want this rule to match events that come from your account, select default. When an AWS service in your account emits an event, it always goes to your account’s default event bus.
+8. For Rule type, choose Rule with an event pattern and then press Next.
+9. For Event source, choose AWS events.
+10. For Creation method, choose Use pattern form.
+11. For Event source, choose AWS services.
+12. For AWS service, choose Security Hub.
+13. For Event type, choose Security Hub Findings - Custom Action.
+14. Choose Specific custom action ARNs, add a custom action ARN.
+15. Choose Next.
+16. Under Select targets, choose Lambda function
+17. Select the Lambda function you created for MetaHub.
 
 # AWS Authentication
 
