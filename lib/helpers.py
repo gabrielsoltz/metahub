@@ -10,7 +10,7 @@ from lib.AwsHelpers import get_available_regions
 class KeyValueWithList(argparse.Action):
     """Parser keyvalue with list Action"""
 
-    def __call__(self, parser, namespace, values):
+    def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, Dictlist())
         logger = get_logger("ERROR")
         for value in values:
@@ -27,7 +27,7 @@ class KeyValueWithList(argparse.Action):
 class KeyValue(argparse.Action):
     """Parser keyvalue Action"""
 
-    def __call__(self, parser, namespace, values):
+    def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, dict())
         logger = get_logger("ERROR")
         for value in values:

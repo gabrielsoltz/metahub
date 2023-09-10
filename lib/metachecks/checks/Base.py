@@ -183,6 +183,14 @@ class MetaChecksBase:
 
             execute(self.route_tables, RouteTableMetacheck)
 
+        # Api Gateway V2 Api
+        if hasattr(self, "api_gwv2_apis") and self.api_gwv2_apis:
+            from lib.metachecks.checks.AwsApiGatewayV2Api import (
+                Metacheck as ApiGatewayV2ApiMetacheck,
+            )
+
+            execute(self.api_gwv2_apis, ApiGatewayV2ApiMetacheck)
+
     def output_checks_drilled(self):
         mh_values_checks = {}
         for check in self.checks():

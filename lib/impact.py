@@ -152,7 +152,7 @@ class Impact:
         if not context:
             meta_score = "n/a"
         else:
-            meta_score = (score_total / weight_total) * 100
+            meta_score = score_total / weight_total
 
         self.logger.info(
             "Impact Meta Score %s, details:: %s", meta_score, meta_score_details
@@ -161,6 +161,7 @@ class Impact:
         return meta_score
 
     def get_impact(self, resource):
+        self.logger.info("Calculating impact score for resource")
         if not self.impact_config:
             return False
 
@@ -175,7 +176,7 @@ class Impact:
         # Check if the meta score is not "n/a" (i.e., there's context)
         if impact["meta_score"] != "n/a":
             # Calculate the overall impact score as the product of findings_score and meta_score
-            impact_score = impact["findings_score"] * impact["meta_score"]
+            impact_score = impact["findings_score"] * impact["meta_score"] * 100
         else:
             # If there's no context, calculate the impact score as findings_score * 100
             impact_score = impact["findings_score"] * 100
