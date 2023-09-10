@@ -58,7 +58,7 @@ class Metacheck(MetaChecksBase):
 
     # Drilled MetaChecks
 
-    # # MetaChecks
+    # MetaChecks
     def it_has_name(self):
         if self.distribution.get("DomainName"):
             return self.distribution.get("DomainName")
@@ -90,6 +90,26 @@ class Metacheck(MetaChecksBase):
             return self.distribution.get("DistributionConfig").get("ViewerCertificate")
         return False
 
+    def it_has_field_level_encryption(self):
+        if self.distribution.get("DistributionConfig").get("FieldLevelEncryptionId"):
+            return self.distribution.get("DistributionConfig").get(
+                "FieldLevelEncryptionId"
+            )
+        return False
+
+    def it_has_viewer_protocol_policy(self):
+        if (
+            self.distribution.get("DistributionConfig")
+            .get("DefaultCacheBehavior")
+            .get("ViewerProtocolPolicy")
+        ):
+            return (
+                self.distribution.get("DistributionConfig")
+                .get("DefaultCacheBehavior")
+                .get("ViewerProtocolPolicy")
+            )
+        return False
+
     def it_has_waf_web_acl(self):
         if self.distribution.get("DistributionConfig").get("WebACLId"):
             return self.distribution.get("DistributionConfig").get("WebACLId")
@@ -114,7 +134,14 @@ class Metacheck(MetaChecksBase):
             return public_dict
         return False
 
-    # is_encrypted
+    def is_encrypted(self):
+        if self.it_has_certificate() and self.it_has_viewer_protocol_policy():
+            if (
+                self.it_has_viewer_protocol_policy() == "redirect-to-https"
+                or self.it_has_viewer_protocol_policy() == "https-only"
+            ):
+                return True
+        return False
 
     def checks(self):
         checks = [
@@ -123,7 +150,10 @@ class Metacheck(MetaChecksBase):
             "it_has_origin",
             "it_has_default_root_object",
             "it_has_certificate",
+            "it_has_viewer_protocol_policy",
+            "it_has_field_level_encryption",
             "it_has_waf_web_acl",
             "is_public",
+            "is_encrypted",
         ]
         return checks
