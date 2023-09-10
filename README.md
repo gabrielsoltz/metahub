@@ -842,6 +842,7 @@ The following is the list of drilled MetaChecks:
 - `its_associated_with_vpc`: If it's True, runs MetaChecks from: `AwsEc2Vpc`
 - `its_associated_with_subnets`: If it's True, runs MetaChecks from: `AwsEc2Subnet`
 - `its_associated_with_route_tables`: If it's True, runs MetaChecks from: `AwsEc2RouteTable`
+- `it_associated_with_api_gateway_v2`: If it's True, runs MetaChecks from: `AwsApiGatewayV2Api`
 
 ## Impact MetaChecks
 

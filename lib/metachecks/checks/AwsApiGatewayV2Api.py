@@ -42,6 +42,7 @@ class Metacheck(MetaChecksBase):
             self.api = self.get_api()
             if not self.api:
                 return False
+            self.authorizers = self.get_authorizers()
             # Drilled MetaChecks
 
     # Describe function
@@ -57,6 +58,17 @@ class Metacheck(MetaChecksBase):
             return False
         return response
 
+    def get_authorizers(self):
+        try:
+            response = self.client.get_api(ApiId=self.resource_id).get("Items")
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "NotFoundException":
+                self.logger.error(
+                    "Failed to get_authorizers: {}, {}".format(self.resource_id, err)
+                )
+            return False
+        return response
+
     # MetaChecks
 
     def it_has_endpoint(self):
@@ -64,6 +76,23 @@ class Metacheck(MetaChecksBase):
             return self.api["ApiEndpoint"]
         return False
 
+    def it_has_authorizers(self):
+        if self.authorizers:
+            return self.authorizers
+        return False
+
+    def is_public(self):
+        public_dict = {}
+        if self.it_has_endpoint() and not self.it_has_authorizers():
+            public_dict[self.it_has_endpoint()] = {
+                "from_port": 443,
+                "to_port": 443,
+                "ip_protocol": "tcp",
+            }
+        if public_dict:
+            return public_dict
+        return False
+
     def checks(self):
-        checks = ["it_has_endpoint"]
+        checks = ["it_has_endpoint", "it_has_authorizers", "is_public"]
         return checks
