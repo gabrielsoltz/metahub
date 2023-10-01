@@ -46,11 +46,13 @@
 
 When analyzing a security finding, the severity alone is not sufficient to determine the issue's impact. To understand the importance of the finding, you need to gather additional information about the affected resource from your context, which is not available in the finding itself. Manually collecting this information from other sources can be time-consuming and error-prone, especially when dealing with multiple findings. **MetaHub** automates this process for you, allowing you to focus on the real issues, reduce noise and false positives, and improve the time it takes to detect and respond to genuine security issues in your environment.
 
+<img src="docs/imgs/severity_impact.png"/>
+
 MetaHub is designed for use as a CLI tool or within automated workflows, such as AWS Security Hub custom actions or AWS Lambda functions.
 
 With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them or not. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings at once.
 
-<img src="docs/imgs/metahub-min.gif" />
+<img src="docs/imgs/metahub-min.gif"/>
 
 # Context
 
@@ -60,7 +62,7 @@ MetaHub doesn't stop at the affected resource itself; it also analyzes any assoc
 
 # Ownership
 
-MetaHub also focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information, such as automated remediations.
+MetaHub also focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information.
 
 MetaHub can determine the owner of the affected resource through different methods:
 
@@ -73,9 +75,7 @@ MetaHub can determine the owner of the affected resource through different metho
 
 > :warning: This is an experimental feature. If you find it useful, please provide feedback.
 
-Most security scanners only provide you with the severity of the findings, which is not sufficient to assess their impact in your specific context. For instance, a critical-severity finding like "security group with unrestricted access to a high-risk port" may not be as critical if the security group is unattached to any resource compared to when it's attached to a production EC2 instance.
-
-MetaHub can automatically generate an impact score for each security finding by considering both the context of the affected resource and the severities of all findings affecting that resource. This score is invaluable for prioritizing findings, directing attention to critical issues, and automating alerts and escalations.
+MetaHub can automatically generate an impact score for each security finding by considering both the context of the affected resource and the severities of all findings affecting that resource. This score is important for prioritizing findings (where should you start?), directing attention to critical issues, and automating alerts and escalations.
 
 The impact score comprises two factors:
 
@@ -109,7 +109,7 @@ The Impact Meta Score is calculated using the following formula:
 
 `Impact Meta Score = (Sum of all available impact properties' scores * weights) / (Sum of all available impact properties' weights)`
 
-For example, if the known properties of the affected resource indicate that it's in production but not attached to any other resource, the Impact Meta Score will be: `((Attachment: 10 * 0) + (Status: -) + (Network: n/a) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 11 = 0.09`
+For example, if the known properties of the affected resource indicate that it's in production but not attached to any other resource, the Impact Meta Score will be: `((Attachment: 10 * 0) + (Status: n/a) + (Network: n/a) + (Policy: n/a) + (Encryption: n/a) + (Environment: 1 * 1)) / 11 = 0.09`
 
 ## Impact Findings Score
 
@@ -119,7 +119,7 @@ The calculation of the Impact Findings Score is done using the following formula
 
 `Impact Findings Score = (Sum of all (Finding Severity / Highest Severity) with a maximum of 1)`
 
-For example, if the affected resource has two findings affecting it, one with `CRITICAL` severity and another with `LOW` severity, the **Impact Findings Score** will be: `HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4) = 0.875`
+For example, if the affected resource has two findings affecting it, one with `HIGH` and another with `LOW` severity, the **Impact Findings Score** will be: `HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4) = 0.875`
 
 # Architecture
 
