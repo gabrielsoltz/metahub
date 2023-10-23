@@ -65,82 +65,82 @@ def generate_findings(
         findings.extend(sh_findings)
         print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
 
-        resource_locks = {}
+    resource_locks = {}
 
-        def process_finding(finding):
-            # Get the resource_arn from the finding
-            resource_arn, finding_parsed = parse_finding(finding)
-            # Get the lock for this resource
-            lock = resource_locks.get(resource_arn)
+    def process_finding(finding):
+        # Get the resource_arn from the finding
+        resource_arn, finding_parsed = parse_finding(finding)
+        # Get the lock for this resource
+        lock = resource_locks.get(resource_arn)
 
-            # If the lock does not exist, create it
-            if lock is None:
-                lock = Lock()
-                resource_locks[resource_arn] = lock
+        # If the lock does not exist, create it
+        if lock is None:
+            lock = Lock()
+            resource_locks[resource_arn] = lock
 
-            # Acquire the lock for this resource
-            with lock:
-                # Now process the finding
-                return evaluate_finding(
-                    logger,
-                    finding,
-                    mh_findings,
-                    mh_findings_not_matched_findings,
-                    mh_inventory,
-                    mh_findings_short,
-                    AwsAccountData,
-                    mh_role,
-                    metachecks,
-                    mh_filters_checks,
-                    drill_down,
-                    metatags,
-                    mh_filters_tags,
-                    metatrails,
-                    metaaccount,
-                )
+        # Acquire the lock for this resource
+        with lock:
+            # Now process the finding
+            return evaluate_finding(
+                logger,
+                finding,
+                mh_findings,
+                mh_findings_not_matched_findings,
+                mh_inventory,
+                mh_findings_short,
+                AwsAccountData,
+                mh_role,
+                metachecks,
+                mh_filters_checks,
+                drill_down,
+                metatags,
+                mh_filters_tags,
+                metatrails,
+                metaaccount,
+            )
 
-        with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
+    with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
+        try:
+            executor = (
+                ThreadPoolExecutor()
+            )  # create executor outside of context manager
+            # Create future tasks
+            futures = {
+                executor.submit(process_finding, finding) for finding in findings
+            }
+
             try:
-                executor = (
-                    ThreadPoolExecutor()
-                )  # create executor outside of context manager
-                # Create future tasks
-                futures = {
-                    executor.submit(process_finding, finding) for finding in findings
-                }
-
-                try:
-                    # Process futures as they complete
-                    for future in as_completed(futures):
-                        (
-                            mh_findings,
-                            mh_findings_not_matched_findings,
-                            mh_findings_short,
-                            mh_inventory,
-                            AwsAccountData,
-                        ) = future.result()
-                        bar()
-
-                except KeyboardInterrupt:
-                    print(
-                        "Keyboard interrupt detected, shutting down all tasks, please wait..."
-                    )
-                    for future in futures:
-                        future.cancel()  # cancel each future
-
-                    # Wait for all futures to be cancelled
-                    for future in as_completed(futures):
-                        try:
-                            future.result()  # this will raise a CancelledError if the future was cancelled
-                        except CancelledError:
-                            pass
+                # Process futures as they complete
+                for future in as_completed(futures):
+                    (
+                        mh_findings,
+                        mh_findings_not_matched_findings,
+                        mh_findings_short,
+                        mh_inventory,
+                        AwsAccountData,
+                    ) = future.result()
+                    bar()
 
             except KeyboardInterrupt:
-                print("Keyboard interrupt detected during shutdown. Exiting...")
-            finally:
-                executor.shutdown(
-                    wait=False
-                )  # shutdown executor without waiting for all threads to finish
+                print(
+                    "Keyboard interrupt detected, shutting down all tasks, please wait..."
+                )
+                for future in futures:
+                    future.cancel()  # cancel each future
+
+                # Wait for all futures to be cancelled
+                for future in as_completed(futures):
+                    try:
+                        future.result()  # this will raise a CancelledError if the future was cancelled
+                    except CancelledError:
+                        pass
+
+        except KeyboardInterrupt:
+            print("Keyboard interrupt detected during shutdown. Exiting...")
+        finally:
+            executor.shutdown(
+                wait=False
+            )  # shutdown executor without waiting for all threads to finish
 
     mh_statistics = generate_statistics(mh_findings)
 
