@@ -459,7 +459,12 @@ def generate_outputs(
             if ouput_mode == "csv":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
                 generate_output_csv(
-                    mh_findings, tag_columns, config_columns, WRITE_FILE
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    WRITE_FILE,
                 )
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
 
@@ -467,7 +472,12 @@ def generate_outputs(
             if ouput_mode == "xlsx":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
                 generate_output_xlsx(
-                    mh_findings, tag_columns, config_columns, WRITE_FILE
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    WRITE_FILE,
                 )
                 print_table("XLSX:   ", WRITE_FILE, banners=banners)
 

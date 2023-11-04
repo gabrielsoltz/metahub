@@ -224,7 +224,7 @@ def get_parser():
         required=False,
     )
     group_output.add_argument(
-        "--output-tags-columns",
+        "--output-tag-columns",
         help="Specify which Tags to unroll as Columns for outputs (csv, html and xlsx)",
         default=[],
         nargs="+",

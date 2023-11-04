@@ -189,7 +189,7 @@
                       </span>`;
             }
           },
-        {% if 'score' == impact_column %}
+        {% elif 'score' == impact_column %}
           {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
         { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
