@@ -93,6 +93,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "subnets": self.subnets,
@@ -103,5 +106,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "cidr": self.cidr(),
             "is_default": self.is_default(),
+            "public": self.public(),
         }
         return checks

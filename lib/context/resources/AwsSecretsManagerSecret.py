@@ -103,6 +103,9 @@ class Metacheck(MetaChecksBase):
                 return str(date_difference.days)
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -114,5 +117,6 @@ class Metacheck(MetaChecksBase):
             "rotation_enabled": self.rotation_enabled(),
             "is_unrestricted": self.is_unrestricted(),
             "is_unrotated": self.is_unrotated(),
+            "public": self.public(),
         }
         return checks

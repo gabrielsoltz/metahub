@@ -90,6 +90,9 @@ class Metacheck(MetaChecksBase):
                 return self.resource_policy["is_unrestricted"]
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -99,5 +102,6 @@ class Metacheck(MetaChecksBase):
             "resource_policy": self.resource_policy,
             "is_encrypted": self.is_encrypted(),
             "is_unrestricted": self.is_unrestricted(),
+            "public": self.public(),
         }
         return checks

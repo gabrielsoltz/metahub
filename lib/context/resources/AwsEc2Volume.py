@@ -68,6 +68,9 @@ class Metacheck(MetaChecksBase):
                     return True
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -76,5 +79,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
+            "public": self.public(),
         }
         return checks

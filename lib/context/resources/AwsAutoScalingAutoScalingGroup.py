@@ -117,6 +117,9 @@ class Metacheck(MetaChecksBase):
             return self.autoscaling_group.get("AutoScalingGroupName", False)
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "instances": self.instances,
@@ -128,5 +131,6 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "name": self.name(),
+            "public": self.public(),
         }
         return checks

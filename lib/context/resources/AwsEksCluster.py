@@ -116,27 +116,9 @@ class Metacheck(MetaChecksBase):
                 return self.eks_cluster.get("endpoint", False)
         return False
 
-    def is_public(self):
-        public_dict = {}
+    def public(self):
         if self.public_endpoint():
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.public_endpoint()] = []
-                    for rule in self.security_groups[sg].get(
-                        "is_ingress_rules_unrestricted"
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.public_endpoint()].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-        if public_dict:
-            return public_dict
+            return True
         return False
 
     def associations(self):
@@ -150,6 +132,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "endpoint": self.endpoint(),
             "public_endpoint": self.public_endpoint(),
-            "is_public": self.is_public(),
+            "public": self.public(),
         }
         return checks

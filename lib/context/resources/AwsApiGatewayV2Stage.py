@@ -83,6 +83,9 @@ class Metacheck(MetaChecksBase):
             client_certificate_id = self.stage.get("clientCertificateId")
         return client_certificate_id
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "api_gateway_v2": self.api_gwv2_apis,
@@ -93,5 +96,6 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "client_certificate_id": self.client_certificate_id(),
+            "public": self.public(),
         }
         return checks

@@ -104,6 +104,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -115,5 +118,6 @@ class Metacheck(MetaChecksBase):
             "route_to_nat_gateway": self.route_to_nat_gateway(),
             "route_to_transit_gateway": self.route_to_transit_gateway(),
             "route_to_vpc_peering": self.route_to_vpc_peering(),
+            "public": self.public(),
         }
         return checks

@@ -26,10 +26,12 @@ class MetaChecksBase:
 
         # Config
         context_config = self.checks()
-        for check, value in context_config.items():
+        context_associations = self.associations()
+        context_all = {**context_config, **context_associations}
+        for check, value in context_all.items():
             if check in self.mh_filters_checks:
                 self.logger.info(
-                    "Evaluating MetaCheck filter ("
+                    "Evaluating Config filter ("
                     + check
                     + "). Expected: "
                     + str(self.mh_filters_checks[check])
@@ -42,9 +44,6 @@ class MetaChecksBase:
                     mh_matched_checks = True
                 else:
                     mh_matched_checks_all_checks = False
-
-        # Associations
-        context_associations = self.associations()
 
         # Add to output
         mh_values_checks.update(

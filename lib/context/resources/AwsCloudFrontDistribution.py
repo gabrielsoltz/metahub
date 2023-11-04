@@ -115,25 +115,6 @@ class Metacheck(MetaChecksBase):
             )
         return False
 
-    def is_public(self):
-        public_dict = {}
-        if self.aliases():
-            for alias in self.aliases():
-                public_dict[alias] = {
-                    "from_port": 443,
-                    "to_port": 443,
-                    "ip_protocol": "tcp",
-                }
-        elif self.name():
-            public_dict[self.name()] = {
-                "from_port": 443,
-                "to_port": 443,
-                "ip_protocol": "tcp",
-            }
-        if public_dict:
-            return public_dict
-        return False
-
     def is_encrypted(self):
         if self.certificate() and self.viewer_protocol_policy():
             if (
@@ -143,6 +124,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def public(self):
+        return True
+
     def associations(self):
         associations = {
             "waf_web_acls": self.waf_web_acls,
@@ -151,8 +135,6 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = {
-            "is_public": self.is_public(),
-            "is_encrypted": self.is_encrypted(),
             "name": self.name(),
             "aliases": self.aliases(),
             "origin": self.origin(),
@@ -160,5 +142,7 @@ class Metacheck(MetaChecksBase):
             "certificate": self.certificate(),
             "field_level_encryption": self.field_level_encryption(),
             "viewer_protocol_policy": self.viewer_protocol_policy(),
+            "public": self.public(),
+            "is_encrypted": self.is_encrypted(),
         }
         return checks

@@ -45,16 +45,22 @@ class Context:
         except (AttributeError, Exception) as err:
             if "has no attribute '" + self.resource_type in str(err):
                 self.logger.info(
-                    "No MetaChecks for ResourceType: %s", self.resource_type
+                    "get_handler undefined resource type - %s (%s)",
+                    self.resource_arn,
+                    self.resource_type,
                 )
             elif "should return None" in str(err):
-                self.logger.info("Resource not found: %s", self.resource_arn)
+                self.logger.info(
+                    "get_handler resource not found - %s (%s)",
+                    self.resource_arn,
+                    self.resource_type,
+                )
             else:
                 self.logger.error(
-                    "Error running MetaChecks for ResourceType: %s %s (%s)",
-                    self.resource_type,
-                    self.resource_arn,
+                    "get_handler error: %s - %s (%s)",
                     err,
+                    self.resource_arn,
+                    self.resource_type,
                 )
             hndl = None
         return hndl
@@ -74,7 +80,7 @@ class Context:
         # If the resources lives in another account, we need the --mh-assume-role
         if self.resource_account_id != self.current_account_id and not self.sess:
             self.logger.warning(
-                "Resource %s lives in AWS Account %s, but you are logged in to AWS Account %s and not --mh-assume-role was provided. Ignoring MetaChecks...",
+                "get_context_config resource %s lives in AWS Account %s, but you are logged in to AWS Account %s and not --mh-assume-role was provided. Ignoring...",
                 self.resource_arn,
                 self.resource_account_id,
                 self.current_account_id,
@@ -93,30 +99,31 @@ class Context:
             except (AttributeError, Exception) as err:
                 if "should return None" in str(err):
                     self.logger.info(
-                        "Drilled Resources for resource: %s not found!",
+                        "Drilled get_handler resource not found - %s (%s)",
                         self.resource_arn,
+                        self.resource_type,
                     )
                 else:
                     self.logger.error(
-                        "Error running Drilled MetaChecks for ResourceType: %s %s (%s)",
-                        self.resource_type,
-                        self.resource_arn,
+                        "execute_drilled_metachecks error: %s - %s (%s)",
                         err,
+                        self.resource_arn,
+                        self.resource_type,
                     )
 
         # Execute MetaChecks
         try:
             resource_config, resource_matched = hnld.output_checks()
             self.logger.debug(
-                "MetaChecks Result for ResourceType: %s (%s): \nConfig: %s \nMatched: %s",
-                self.resource_type,
+                "Config Result for Resource: %s (%s): \nConfig: %s \nMatched: %s",
                 self.resource_arn,
+                self.resource_type,
                 resource_config,
                 resource_matched,
             )
         except (AttributeError, Exception) as err:
             self.logger.error(
-                "Error running MetaChecks output_checks() for ResourceType: %s (%s), %s",
+                "output_checks error: %s - %s (%s)",
                 self.resource_type,
                 self.resource_arn,
                 err,
@@ -154,9 +161,18 @@ class Context:
             try:
                 tags = response["ResourceTagMappingList"][0]["Tags"]
             except IndexError:
-                self.logger.info("No Tags found for resource: %s", self.resource_arn)
+                self.logger.info(
+                    "No Tags found for resource: %s (%s)",
+                    self.resource_arn,
+                    self.resource_type,
+                )
         except (ClientError, ParamValidationError, Exception) as err:
-            self.logger.warning("Error Fetching Tags %s: %s", self.resource_arn, err)
+            self.logger.warning(
+                "Error Fetching Tags for resource %s (%s) - %s",
+                self.resource_arn,
+                self.resource_type,
+                err,
+            )
 
         if tags:
             for tag in tags:
@@ -177,7 +193,7 @@ class Context:
                     and mh_tags_values_lower[k] == mh_filters_tags_lower[k]
                 }
                 self.logger.info(
-                    "Evaluating MetaTag filter. Expected: "
+                    "Evaluating Tags filter. Expected: "
                     + str(self.mh_filters_tags)
                     + " Found: "
                     + str(bool(compare))
@@ -204,9 +220,9 @@ class Context:
 
     def get_account_organizations(self):
         self.logger.info(
-            "Getting Context: organizations for account {}".format(
-                self.resource_account_id
-            )
+            "get_account_organizations for account: %s (%s)",
+            self.resource_account_id,
+            self.resource_arn,
         )
         # Organizations
         organizations = False
@@ -248,9 +264,9 @@ class Context:
         # https://aws.amazon.com/blogs/mt/programmatically-managing-alternate-contacts-on-member-accounts-with-aws-organizations/
 
         self.logger.info(
-            "Getting Context: alternate contact for account {}".format(
-                self.resource_account_id
-            )
+            "get_account_alternate_contact for account: %s (%s)",
+            self.resource_account_id,
+            self.resource_arn,
         )
         alternate_contact = ""
 
@@ -267,30 +283,48 @@ class Context:
                 alternate_contact = account_client.get_alternate_contact(
                     AlternateContactType=alternate_contact_type
                 ).get("AlternateContact")
-            except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-                if e.response["Error"]["Code"] == "ResourceNotFoundException":
-                    self.logger.info("No alternate contact found")
+            except (NoCredentialsError, ClientError, EndpointConnectionError) as err:
+                if err.response["Error"]["Code"] == "ResourceNotFoundException":
+                    self.logger.info(
+                        "No alternate contact found for account %s (%s) - %s",
+                        self.resource_account_id,
+                        self.resource_arn,
+                        err,
+                    )
                 else:
                     self.logger.warning(
-                        "Error getting alternate contact for account {}: {}".format(
-                            self.resource_account_id, e
-                        )
+                        "Failed to get_alternate_contact for account %s (%s) - %s",
+                        self.resource_account_id,
+                        self.resource_arn,
+                        err,
                     )
         return alternate_contact
 
     def get_account_alias(self):
         self.logger.info(
-            "Getting Context: alias for account {}".format(self.resource_account_id)
+            "get_account_alias for account: %s (%s)",
+            self.resource_account_id,
+            self.resource_arn,
         )
         aliases = ""
 
         iam_client = get_boto3_client(self.logger, "iam", "us-east-1", self.sess)
         try:
             aliases = iam_client.list_account_aliases()["AccountAliases"][0]
-        except (NoCredentialsError, ClientError, EndpointConnectionError) as e:
-            self.logger.error("Error getting account alias: {}".format(e))
-        except IndexError:
-            self.logger.info("No account alias found")
+        except (NoCredentialsError, ClientError, EndpointConnectionError) as err:
+            self.logger.error(
+                "Failed to list_account_aliases: %s, for resource: %s - %s",
+                self.resource_account_id,
+                self.resource_arn,
+                err,
+            )
+        except IndexError as err:
+            self.logger.info(
+                "No account alias found for account %s (%s) - %s",
+                self.resource_account_id,
+                self.resource_arn,
+                err,
+            )
         return aliases
 
     def get_context_cloudtrail(self):
@@ -344,6 +378,11 @@ class Context:
                                 }
 
         except (ClientError, ParamValidationError, Exception) as err:
-            self.logger.warning("Error Fetching Trails %s: %s", self.resource_arn, err)
+            self.logger.warning(
+                "Error Fetching CloudTrail for resource %s (%s) - %s",
+                self.resource_arn,
+                self.resource_type,
+                err,
+            )
 
         return trails

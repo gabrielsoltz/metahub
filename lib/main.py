@@ -140,12 +140,18 @@ def generate_findings(
     mh_statistics = generate_statistics(mh_findings)
 
     def generate_impact():
-        for resource_arn in mh_findings_short:
+        for resource_arn, resource_values in mh_findings_short.items():
             # Impact
             impact = Impact(logger).get_impact(mh_findings[resource_arn])
             mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
                 "impact"
             ] = impact
+
+            # Get Exposure
+            exposure = Impact(logger).resource_exposure(resource_arn, resource_values)
+            mh_findings[resource_arn]["impact"]["exposure"] = mh_findings_short[
+                resource_arn
+            ]["impact"]["exposure"] = exposure
 
     generate_impact()
 
@@ -390,16 +396,27 @@ def validate_arguments(args, logger):
 def generate_outputs(
     args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
 ):
+    from lib.config.configuration import (
+        account_columns,
+        config_columns,
+        impact_columns,
+        tags_columns,
+    )
+
     # Columns for CSV and HTML
-    metachecks_columns = args.output_meta_checks_columns or list(
-        mh_statistics["metachecks"].keys()
+    output_config_columns = (
+        args.output_config_columns
+        or config_columns
+        or list(mh_statistics["config"].keys())
     )
-    metatags_columns = args.output_meta_tags_columns or list(
-        mh_statistics["metatags"].keys()
+    output_tags_columns = (
+        args.output_tags_columns or tags_columns or list(mh_statistics["tags"].keys())
     )
-    metaaccount_columns = mh_statistics["metaaccount"]
+    output_account_columns = (
+        args.output_account_columns or account_columns or mh_statistics["account"]
+    )
     # Hardcoded for now
-    impact_columns = ["Impact"]
+    output_impact_columns = impact_columns or mh_statistics["impact"]
 
     if mh_findings:
         for ouput_mode in args.output_modes:
@@ -430,10 +447,10 @@ def generate_outputs(
                     html = generate_output_html(
                         mh_findings,
                         mh_statistics,
-                        metatags_columns,
-                        metachecks_columns,
-                        metaaccount_columns,
-                        impact_columns,
+                        output_config_columns,
+                        output_tags_columns,
+                        output_account_columns,
+                        output_impact_columns,
                     )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)
@@ -442,7 +459,7 @@ def generate_outputs(
             if ouput_mode == "csv":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
                 generate_output_csv(
-                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
+                    mh_findings, tags_columns, config_columns, WRITE_FILE
                 )
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
 
@@ -450,7 +467,7 @@ def generate_outputs(
             if ouput_mode == "xlsx":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
                 generate_output_xlsx(
-                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
+                    mh_findings, tags_columns, config_columns, WRITE_FILE
                 )
                 print_table("XLSX:   ", WRITE_FILE, banners=banners)
 

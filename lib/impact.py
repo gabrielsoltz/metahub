@@ -188,7 +188,77 @@ class Impact:
         if impact_score % 1 == 0:
             impact_score = int(impact_score)  # Return the integer part
 
-        impact["Impact"] = impact_score
+        impact["score"] = impact_score
 
         # Return the dictionary containing impact scores
         return impact
+
+    def resource_exposure(self, resource_arn, resource_values):
+        self.logger.info("Calculating exposure for resource: %s", resource_arn)
+
+        # Public Config
+        config_public = resource_values.get("config").get("public")
+
+        # To Do: Standarize Entrypoints
+        if resource_values.get("config").get("public_endpoint"):
+            entrypoint = resource_values.get("config").get("public_endpoint")
+        elif resource_values.get("config").get("public_ip"):
+            entrypoint = resource_values.get("config").get("public_ip")
+        elif resource_values.get("config").get("public_dns"):
+            entrypoint = resource_values.get("config").get("public_dns")
+        elif resource_values.get("config").get("endpoint"):
+            entrypoint = resource_values.get("config").get("endpoint")
+        elif resource_values.get("config").get("private_ip"):
+            entrypoint = resource_values.get("config").get("private_ip")
+        elif resource_values.get("config").get("private_dns"):
+            entrypoint = resource_values.get("config").get("private_dns")
+        else:
+            entrypoint = "unknown entrypoint"
+
+        public_rules = {}
+        if resource_values.get("associations") and resource_values.get(
+            "associations"
+        ).get("security_groups"):
+            security_groups = resource_values.get("associations").get("security_groups")
+            for security_group in security_groups:
+                if (
+                    security_groups[security_group]
+                    .get("config")
+                    .get("is_ingress_rules_unrestricted")
+                ):
+                    for rule in (
+                        security_groups[security_group]
+                        .get("config")
+                        .get("is_ingress_rules_unrestricted")
+                    ):
+                        from_port = rule.get("FromPort")
+                        to_port = rule.get("ToPort")
+                        ip_protocol = rule.get("IpProtocol")
+                        public_rules[entrypoint] = {
+                            "from_port": from_port,
+                            "to_port": to_port,
+                            "ip_protocol": ip_protocol,
+                        }
+
+        if config_public is True and public_rules:
+            exposure = "effectively-public"
+        elif config_public is True and not public_rules:
+            exposure = "restricted-public"
+        elif config_public is None and public_rules:
+            exposure = "unknown-public"
+        elif config_public is False and public_rules:
+            exposure = "open-private"
+        else:
+            exposure = "restricted"
+
+        exposure_dict = {
+            exposure: {
+                "entrypoint": entrypoint,
+                "public_rules": public_rules,
+            }
+        }
+
+        return exposure_dict
+
+    def resource_access(self, resource_arn, resource_values):
+        self.logger.info("Calculating access for resource: %s", resource_arn)

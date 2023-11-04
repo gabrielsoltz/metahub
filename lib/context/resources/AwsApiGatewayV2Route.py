@@ -77,6 +77,9 @@ class Metacheck(MetaChecksBase):
             route_target = self.route.get("Target")
         return route_target
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "api_gateway_v2": self.api_gwv2_apis,
@@ -87,5 +90,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "authorization_type": self.authorization_type(),
             "route_target": self.route_target(),
+            "public": self.public(),
         }
         return checks

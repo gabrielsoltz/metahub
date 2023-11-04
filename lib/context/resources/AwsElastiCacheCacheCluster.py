@@ -132,28 +132,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def is_public(self):
-        public_dict = {}
+    def public(self):
         if self.endpoint():
-            for endpoint in self.endpoint():
-                for sg in self.security_groups:
-                    if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                        public_dict[endpoint] = []
-                        for rule in self.security_groups[sg].get(
-                            "is_ingress_rules_unrestricted"
-                        ):
-                            from_port = rule.get("FromPort")
-                            to_port = rule.get("ToPort")
-                            ip_protocol = rule.get("IpProtocol")
-                            public_dict[endpoint].append(
-                                {
-                                    "from_port": from_port,
-                                    "to_port": to_port,
-                                    "ip_protocol": ip_protocol,
-                                }
-                            )
-        if public_dict:
-            return public_dict
+            return True
         return False
 
     def associations(self):
@@ -169,6 +150,6 @@ class Metacheck(MetaChecksBase):
             "is_rest_encrypted": self.is_rest_encrypted(),
             "is_transit_encrypted": self.is_transit_encrypted(),
             "is_encrypted": self.is_encrypted(),
-            "is_public": self.is_public(),
+            "public": self.public(),
         }
         return checks

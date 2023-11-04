@@ -89,21 +89,17 @@ def evaluate_finding(
                 "AwsAccountId"
             ] = finding["AwsAccountId"]
             # Add Context
-            mh_findings[resource_arn]["context"] = mh_findings_short[resource_arn][
-                "context"
-            ] = {}
-            mh_findings[resource_arn]["context"]["config"] = mh_findings_short[
-                resource_arn
-            ]["context"]["config"] = mh_config
-            mh_findings[resource_arn]["context"]["tags"] = mh_findings_short[
-                resource_arn
-            ]["context"]["tags"] = mh_tags
-            mh_findings[resource_arn]["context"]["account"] = mh_findings_short[
-                resource_arn
-            ]["context"]["account"] = mh_account
-            mh_findings[resource_arn]["context"]["cloudtrail"] = mh_findings_short[
-                resource_arn
-            ]["context"]["cloudtrail"] = mh_trails
+            mh_findings[resource_arn].update(mh_config)
+            mh_findings_short[resource_arn].update(mh_config)
+            mh_findings[resource_arn]["tags"] = mh_findings_short[resource_arn][
+                "tags"
+            ] = mh_tags
+            mh_findings[resource_arn]["account"] = mh_findings_short[resource_arn][
+                "account"
+            ] = mh_account
+            mh_findings[resource_arn]["cloudtrail"] = mh_findings_short[resource_arn][
+                "cloudtrail"
+            ] = mh_trails
 
         # Add Findings
         mh_findings_short[resource_arn]["findings"].append(

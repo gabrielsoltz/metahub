@@ -10,3 +10,12 @@ trusted_accounts = []
 
 # Days to consider a resource (key) unrotated
 days_to_consider_unrotated = 90
+
+# Output Columns
+# You can define the columns that will be displayed in the output HTML, CSV AND XLSX.
+# You can also use `--output-config-columns` and `--output-tags-columns` to override these values.
+# If you want all fields as columns, comment the following lines.
+config_columns = ["public"]
+tags_colums = ["Owner"]
+account_columns = ["AccountAlias"]
+impact_columns = ["score", "exposure"]

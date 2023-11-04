@@ -173,6 +173,9 @@ class Metacheck(MetaChecksBase):
             return self.checked_policy_version["is_actions_and_resource_wildcard"]
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "iam_roles": self.iam_roles,
@@ -192,5 +195,6 @@ class Metacheck(MetaChecksBase):
             "is_actions_and_resource_wildcard": self.is_actions_and_resource_wildcard(),
             "is_attached": self.is_attached(),
             "is_unrestricted": self.is_unrestricted(),
+            "public": self.public(),
         }
         return checks

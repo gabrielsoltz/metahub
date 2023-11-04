@@ -182,24 +182,11 @@ class Metacheck(MetaChecksBase):
                     return self.function_url_config["FunctionUrl"]
         return False
 
-    def is_public(self):
-        public_dict = {}
+    def public(self):
         if self.function:
             if self.function_url_config:
                 if self.endpoint() and self.function_url_config["AuthType"] == "NONE":
-                    public_dict[self.endpoint()] = []
-                    from_port = "443"
-                    to_port = "443"
-                    ip_protocol = "tcp"
-                    public_dict[self.endpoint()].append(
-                        {
-                            "from_port": from_port,
-                            "to_port": to_port,
-                            "ip_protocol": ip_protocol,
-                        }
-                    )
-        if public_dict:
-            return public_dict
+                    return True
         return False
 
     def associations(self):
@@ -216,6 +203,6 @@ class Metacheck(MetaChecksBase):
             "resource_policy": self.resource_policy,
             "is_unrestricted": self.is_unrestricted(),
             "endpoint": self.endpoint(),
-            "is_public": self.is_public(),
+            "public": self.public(),
         }
         return checks

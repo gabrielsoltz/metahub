@@ -156,6 +156,9 @@ class Metacheck(MetaChecksBase):
                         return str(date_difference.days)
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "iam_policies": self.iam_policies,
@@ -167,5 +170,6 @@ class Metacheck(MetaChecksBase):
             "iam_inline_policies": self.iam_inline_policies,
             "is_unrestricted": self.is_unrestricted(),
             "is_unrotated": self.is_unrotated(),
+            "public": self.public(),
         }
         return checks

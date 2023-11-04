@@ -99,27 +99,9 @@ class Metacheck(MetaChecksBase):
             return self.elb.get("Scheme")
         return False
 
-    def is_public(self):
-        public_dict = {}
+    def public(self):
         if self.elb.get("Scheme") == "internet-facing":
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.endpoint()] = []
-                    for rule in self.security_groups[sg].get(
-                        "is_ingress_rules_unrestricted"
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.endpoint()].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-        if public_dict:
-            return public_dict
+            return True
         return False
 
     def associations(self):
@@ -134,6 +116,6 @@ class Metacheck(MetaChecksBase):
             "type": self.type(),
             "endpoint": self.endpoint(),
             "scheme": self.scheme(),
-            "is_public": self.is_public(),
+            "public": self.public(),
         }
         return checks

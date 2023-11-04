@@ -26,7 +26,7 @@ class Metacheck(MetaChecksBase):
         self.api = self.describe_api()
         if not self.api:
             return False
-        self.api_authorizers = self.describe_api_authorizers()
+        self.authorizers = self.describe_authorizers()
         # Drilled Associations
 
     def parse_finding(self, finding, drilled):
@@ -55,7 +55,7 @@ class Metacheck(MetaChecksBase):
             return False
         return response
 
-    def describe_api_authorizers(self):
+    def describe_authorizers(self):
         try:
             response = self.client.get_authorizers(ApiId=self.resource_id).get("Items")
         except ClientError as err:
@@ -73,21 +73,9 @@ class Metacheck(MetaChecksBase):
             return self.api["ApiEndpoint"]
         return False
 
-    def authorizers(self):
-        if self.api_authorizers:
-            return self.api_authorizers
-        return False
-
-    def is_public(self):
-        public_dict = {}
-        if self.endpoint() and not self.authorizers():
-            public_dict[self.endpoint()] = {
-                "from_port": 443,
-                "to_port": 443,
-                "ip_protocol": "tcp",
-            }
-        if public_dict:
-            return public_dict
+    def public(self):
+        if self.endpoint() and not self.authorizers:
+            return True
         return False
 
     def associations(self):
@@ -97,7 +85,7 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "endpoint": self.endpoint(),
-            "authorizers": self.authorizers(),
-            "is_public": self.is_public(),
+            "authorizers": self.authorizers,
+            "public": self.public(),
         }
         return checks

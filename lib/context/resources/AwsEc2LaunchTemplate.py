@@ -137,15 +137,6 @@ class Metacheck(MetaChecksBase):
             name = self.launch_template.get("LaunchTemplateName")
         return name
 
-    def is_public(self):
-        sg_ingress_unrestricted = False
-        for sg in self.security_groups:
-            if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                sg_ingress_unrestricted = True
-        if self.associates_public_ip() and sg_ingress_unrestricted:
-            return True
-        return False
-
     def is_encrypted(self):
         if self.launch_template:
             if self.launch_template.get("LaunchTemplateData").get(
@@ -175,6 +166,11 @@ class Metacheck(MetaChecksBase):
                     return self.iam_roles[role].get("is_unrestricted")
         return False
 
+    def public(self):
+        if self.associates_public_ip():
+            return True
+        return False
+
     def associations(self):
         associations = {
             "security_groups": self.security_groups,
@@ -188,7 +184,7 @@ class Metacheck(MetaChecksBase):
             "metadata_options": self.metadata_options(),
             "associates_public_ip": self.associates_public_ip(),
             "name": self.name(),
-            "is_public": self.is_public(),
+            "public": self.public(),
             "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
             "is_unrestricted": self.is_unrestricted(),

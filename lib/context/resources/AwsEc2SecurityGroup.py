@@ -196,27 +196,6 @@ class Metacheck(MetaChecksBase):
             return is_egress_rules_unrestricted
         return False
 
-    def is_public(self):
-        public_dict = {}
-        if self.public_ips() and self.is_ingress_rules_unrestricted():
-            for ip in self.public_ips():
-                public_dict[ip] = []
-                if self.is_ingress_rules_unrestricted():
-                    for rule in self.is_ingress_rules_unrestricted():
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[ip].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-        if public_dict:
-            return public_dict
-        return False
-
     def is_default(self):
         if self.security_group:
             if self.security_group["GroupName"] == "default":
@@ -237,6 +216,11 @@ class Metacheck(MetaChecksBase):
         }
         return associations
 
+    def public(self):
+        if self.public_ips():
+            return True
+        return False
+
     def checks(self):
         checks = {
             "public_ips": self.public_ips(),
@@ -244,7 +228,7 @@ class Metacheck(MetaChecksBase):
             "its_referenced_by_a_security_group": self.its_referenced_by_a_security_group(),
             "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
-            "is_public": self.is_public(),
+            "public": self.public(),
             "is_default": self.is_default(),
             "is_attached": self.is_attached(),
         }

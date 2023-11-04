@@ -67,69 +67,67 @@ def generate_statistics(mh_findings):
 
         return root_level_statistics
 
-    def statistics_metatags(mh_findings_short):
-        metatags_statistics = {}
+    def statistics_tags(mh_findings_short):
+        tags_statistics = {}
         for resource_arn in mh_findings_short:
-            if "metatags" in mh_findings_short[resource_arn]:
-                if mh_findings_short[resource_arn]["metatags"]:
+            if "tags" in mh_findings_short[resource_arn]:
+                if mh_findings_short[resource_arn]["tags"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
                         for tag, value in mh_findings_short[resource_arn][
-                            "metatags"
+                            "tags"
                         ].items():
-                            if tag not in metatags_statistics:
-                                metatags_statistics[tag] = {}
-                            if value not in metatags_statistics[tag]:
-                                metatags_statistics[tag][value] = 1
+                            if tag not in tags_statistics:
+                                tags_statistics[tag] = {}
+                            if value not in tags_statistics[tag]:
+                                tags_statistics[tag][value] = 1
                             else:
-                                metatags_statistics[tag][value] += 1
-        return metatags_statistics
+                                tags_statistics[tag][value] += 1
+        return tags_statistics
 
-    def statistics_metachecks(mh_findings_short):
-        metachecks_statistics = {}
+    def statistics_config(mh_findings_short):
+        config_statistics = {}
         for resource_arn in mh_findings_short:
-            if "metachecks" in mh_findings_short[resource_arn]:
-                if mh_findings_short[resource_arn]["metachecks"]:
+            if "config" in mh_findings_short[resource_arn]:
+                if mh_findings_short[resource_arn]["config"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
                         for check, value in mh_findings_short[resource_arn][
-                            "metachecks"
+                            "config"
                         ].items():
-                            if check not in metachecks_statistics:
-                                metachecks_statistics[check] = {False: 0, True: 0}
-                            if bool(
-                                mh_findings_short[resource_arn]["metachecks"][check]
-                            ):
-                                metachecks_statistics[check][True] += 1
+                            if check not in config_statistics:
+                                config_statistics[check] = {False: 0, True: 0}
+                            if bool(mh_findings_short[resource_arn]["config"][check]):
+                                config_statistics[check][True] += 1
                             else:
-                                metachecks_statistics[check][False] += 1
-        return metachecks_statistics
+                                config_statistics[check][False] += 1
+        return config_statistics
 
-    def statistics_metaaccount(mh_findings_short):
-        metaaccount_statistics = {}
+    def statistics_account(mh_findings_short):
+        account_statistics = {}
         for resource_arn in mh_findings_short:
-            if "metaaccount" in mh_findings_short[resource_arn]:
-                if mh_findings_short[resource_arn]["metaaccount"]:
+            if "account" in mh_findings_short[resource_arn]:
+                if mh_findings_short[resource_arn]["account"]:
                     for finding in mh_findings_short[resource_arn]["findings"]:
                         for tag, value in mh_findings_short[resource_arn][
-                            "metaaccount"
+                            "account"
                         ].items():
                             if tag == "AlternateContact":
                                 continue
-                            if tag not in metaaccount_statistics:
-                                metaaccount_statistics[tag] = {}
-                            if value not in metaaccount_statistics[tag]:
-                                metaaccount_statistics[tag][value] = 1
+                            if tag not in account_statistics:
+                                account_statistics[tag] = {}
+                            if value not in account_statistics[tag]:
+                                account_statistics[tag][value] = 1
                             else:
-                                metaaccount_statistics[tag][value] += 1
-        return metaaccount_statistics
+                                account_statistics[tag][value] += 1
+        return account_statistics
 
     mh_statistics = statistics_findings(mh_findings)
-    mh_statistics["metatags"] = statistics_metatags(mh_findings)
-    mh_statistics["metachecks"] = statistics_metachecks(mh_findings)
-    mh_statistics["metaaccount"] = statistics_metaaccount(mh_findings)
+    mh_statistics["tags"] = statistics_tags(mh_findings)
+    mh_statistics["config"] = statistics_config(mh_findings)
+    mh_statistics["account"] = statistics_account(mh_findings)
 
     # Sort Statistics
     for key_to_sort in mh_statistics:
-        if key_to_sort not in ("metatags", "metachecks", "metaaccount"):
+        if key_to_sort not in ("tags", "config", "account"):
             mh_statistics[key_to_sort] = dict(
                 sorted(
                     mh_statistics[key_to_sort].items(),

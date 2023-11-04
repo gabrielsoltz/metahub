@@ -91,29 +91,6 @@ class Metacheck(MetaChecksBase):
                 return self.rds_cluster.get("Endpoint")
         return False
 
-    def is_public(self):
-        public_dict = {}
-        if self.endpoint():
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.endpoint()] = []
-                    for rule in self.security_groups[sg].get(
-                        "is_ingress_rules_unrestricted"
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.endpoint()].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-            if public_dict:
-                return public_dict
-        return False
-
     def is_encrypted(self):
         if self.rds_cluster:
             if self.rds_cluster.get("StorageEncrypted"):
@@ -127,6 +104,11 @@ class Metacheck(MetaChecksBase):
                     return self.iam_roles[role].get("is_unrestricted")
         return False
 
+    def public(self):
+        if self.endpoint():
+            return True
+        return False
+
     def associations(self):
         associations = {
             "iam_roles": self.iam_roles,
@@ -137,7 +119,7 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "endpoint": self.endpoint(),
-            "is_public": self.is_public(),
+            "public": self.public(),
             "is_encrypted": self.is_encrypted(),
             "is_unrestricted": self.is_unrestricted(),
         }

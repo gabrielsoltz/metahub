@@ -27,7 +27,7 @@ class Metacheck(MetaChecksBase):
         self.fs = self.describe_file_systems()
         if not self.fs:
             return False
-        self.fs_policy = self.describe_file_system_policy()
+        self.resource_policy = self.describe_file_system_policy()
         # Drilled MetaChecks
 
     def parse_finding(self, finding, drilled):
@@ -91,15 +91,13 @@ class Metacheck(MetaChecksBase):
             return self.fs[0]["NumberOfMountTargets"]
         return False
 
-    def resource_policy(self):
-        if self.fs_policy:
-            return self.fs_policy
-        return False
-
     def is_encrypted(self):
         if self.fs[0]["Encrypted"]:
             return True
         return False
+
+    def public(self):
+        return None
 
     def associations(self):
         associations = {}
@@ -109,6 +107,7 @@ class Metacheck(MetaChecksBase):
         checks = {
             "is_encrypted": self.is_encrypted(),
             "mount_targets": self.mount_targets(),
-            "resource_policy": self.resource_policy(),
+            "resource_policy": self.resource_policy,
+            "public": self.public(),
         }
         return checks

@@ -113,6 +113,9 @@ class Metacheck(MetaChecksBase):
             return self.topic_kms_master_key_id
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -124,5 +127,6 @@ class Metacheck(MetaChecksBase):
             "name": self.name(),
             "is_encrypted": self.is_encrypted(),
             "is_unrestricted": self.is_unrestricted(),
+            "public": self.public(),
         }
         return checks

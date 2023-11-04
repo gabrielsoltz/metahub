@@ -231,7 +231,12 @@ class Metacheck(MetaChecksBase):
                     return self.bucket_acl_public()
         return False
 
-    def is_public(self):
+    def is_encrypted(self):
+        if self.get_bucket_encryption():
+            return True
+        return False
+
+    def public(self):
         public_dict = {}
         if self.website_enabled():
             if self.resource_policy:
@@ -251,11 +256,6 @@ class Metacheck(MetaChecksBase):
             return public_dict
         return False
 
-    def is_encrypted(self):
-        if self.get_bucket_encryption():
-            return True
-        return False
-
     def associations(self):
         associations = {}
         return associations
@@ -269,7 +269,7 @@ class Metacheck(MetaChecksBase):
             "bucket_acl_public": self.bucket_acl_public(),
             "public_access_block_enabled": self.public_access_block_enabled(),
             "account_public_access_block_enabled": self.account_public_access_block_enabled(),
-            "is_public": self.is_public(),
+            "public": self.public(),
             "is_unrestricted": self.is_unrestricted(),
             "is_encrypted": self.is_encrypted(),
         }

@@ -171,31 +171,9 @@ class Metacheck(MetaChecksBase):
                 return self.es_resource_policy["is_unrestricted"]
         return False
 
-    def is_public(self):
-        public_dict = {}
-        if self.public_endpoint() and self.es_resource_policy["is_unrestricted"]:
-            public_dict[self.public_endpoint()] = [
-                {"from_port": "443", "to_port": "443", "ip_protocol": "tcp"}
-            ]
-        if self.private_endpoint():
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.private_endpoint()] = []
-                    for rule in self.security_groups[sg].get(
-                        "is_ingress_rules_unrestricted"
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.private_endpoint()].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-        if public_dict:
-            return public_dict
+    def public(self):
+        if self.public_endpoint():
+            return True
         return False
 
     def advanced_security_enabled(self):
@@ -237,6 +215,6 @@ class Metacheck(MetaChecksBase):
             "advanced_security_enabled": self.advanced_security_enabled(),
             "is_encrypted": self.is_encrypted(),
             "is_unrestricted": self.is_unrestricted(),
-            "is_public": self.is_public(),
+            "public": self.public(),
         }
         return checks

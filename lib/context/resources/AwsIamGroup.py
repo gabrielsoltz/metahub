@@ -123,6 +123,9 @@ class Metacheck(MetaChecksBase):
                     )
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "iam_policies": self.iam_policies,
@@ -133,5 +136,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "iam_inline_policies": self.iam_inline_policies,
             "is_unrestricted": self.is_unrestricted(),
+            "public": self.public(),
         }
         return checks

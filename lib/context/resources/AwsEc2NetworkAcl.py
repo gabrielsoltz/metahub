@@ -136,6 +136,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {
             "subnets": self.subnets,
@@ -148,5 +151,6 @@ class Metacheck(MetaChecksBase):
             "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
             "is_attached": self.is_attached(),
+            "public": self.public(),
         }
         return checks

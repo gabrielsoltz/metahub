@@ -224,15 +224,22 @@ def get_parser():
         required=False,
     )
     group_output.add_argument(
-        "--output-meta-tags-columns",
-        help="Specify which Meta Tags to unroll as Columns for outputs (csv, html and xlsx)",
+        "--output-tags-columns",
+        help="Specify which Tags to unroll as Columns for outputs (csv, html and xlsx)",
         default=[],
         nargs="+",
         required=False,
     )
     group_output.add_argument(
-        "--output-meta-checks-columns",
-        help="Specify which Meta Checks to unroll as Columns for outputs (csv, html and xlsx)",
+        "--output-config-columns",
+        help="Specify which Configs to unroll as Columns for outputs (csv, html and xlsx)",
+        default=[],
+        nargs="+",
+        required=False,
+    )
+    group_output.add_argument(
+        "--output-account-columns",
+        help="Specify which Account to unroll as Columns for outputs (csv, html and xlsx)",
         default=[],
         nargs="+",
         required=False,

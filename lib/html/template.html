@@ -7,9 +7,9 @@
           {
               ARN: "{{ resource|e }}",
               AwsAccountId: "{{ resource_value.AwsAccountId|e }}",
-              {% if 'metaaccount' in resource_value %}
-                {% for metaaccount_column in metaaccount_columns %}
-                  "{{ metaaccount_column }}": "{{ resource_value.metaaccount[metaaccount_column]|e }}",
+              {% if 'account' in resource_value %}
+                {% for account_column in account_columns %}
+                  "{{ account_column }}": "{{ resource_value.account[account_column]|e }}",
                 {% endfor %}
               {% endif %}
               Region: "{{ resource_value.Region|e }}",
@@ -19,21 +19,23 @@
               WorkflowStatus: "{{ finding_values.Workflow.Status|e }}",
               RecordState: "{{ finding_values.RecordState|e }}",
               ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
-              {% if 'metatags' in resource_value %}
-                {% for metatags_column in metatags_columns %}
-                  "{{ metatags_column }}": "{{ resource_value.metatags[metatags_column]|e }}",
+              {% if 'tags' in resource_value %}
+                {% for tags_column in tags_columns %}
+                  "{{ tags_column }}": "{{ resource_value.tags[tags_column]|e }}",
                 {% endfor %}
               {% endif %}
-              {% if 'metachecks' in resource_value %}
-                {% for metachecks_column in metachecks_columns %}
-                  "{{ metachecks_column }}": "{{ resource_value.metachecks[metachecks_column]|e }}",
+              {% if 'config' in resource_value %}
+                {% for config_column in config_columns %}
+                  "{{ config_column }}": "{{ resource_value.config[config_column]|e }}",
                 {% endfor %}
               {% endif %}
-              {% if 'impact' in resource_value %}
-                {% for impact_column in impact_columns %}
-                  "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
-                {% endfor %}
-              {% endif %}
+              {% for impact_column in impact_columns %}
+                {% if 'exposure' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% else %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e  }}",
+                {% endif %}
+              {% endfor %}
           },
         {% endfor %}
       {% endfor %}
@@ -145,26 +147,57 @@
 
   var tableColumns = [
       {title:"Title", field:"Title", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-      {title:"Severity", field:"Severity", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, formatter:function(cell, formatterParams){
+      {title:"Severity", field:"Severity", hozAlign:"center", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, formatter:function(cell, formatterParams){
         var value = cell.getValue();
-          if(value === "CRITICAL"){
-              return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
-          } else if (value === "HIGH") {
-            return "<span style='text-align: center; color:red; font-weight:bold;'>" + value + "</span>";
-          } else if (value === "MEDIUM") {
-            return "<span style='text-align: center; color:orange; font-weight:bold;'>" + value + "</span>";
-          } else if (value === "LOW") {
-            return "<span style='text-align: center; color:blue; font-weight:bold;'>" + value + "</span>";
-          }else{
-              return value;
-          }
+        var color;
+        if(value === "CRITICAL"){
+            color = "red";
+        } else if (value === "HIGH") {
+          color = "red";
+        } else if (value === "MEDIUM") {
+          color = "orange";
+        } else if (value === "LOW") {
+          color = "blue";
+        }else{
+            return value;
+        }
+        return `<span style="color: ${color}; text-align: center; font-size: 1.2em; font-weight: bold;">
+                  ${value}
+                </span>`;
       }},
       {% for impact_column in impact_columns %}
-        { title: "{{impact_column}}", field: "{{impact_column}}", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% if 'exposure' == impact_column %}
+            {title:"exposure", field:"exposure", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
+              var value = cell.getValue();
+              var color;
+              var emoji;
+              if (value === "effectively-public") {
+                color = "red";
+                emoji = "🔴";
+              } else if (value === "restricted-public" || value === "unknown-public" || value === "open-private") {
+                color = "orange";
+                emoji = "🟠";
+              } else if (value === "restricted") {
+                color = "green";
+                emoji = "🟢";
+              } else {
+                return value;
+              }
+              return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
+                        <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
+                        ${value}
+                      </span>`;
+            }
+          },
+        {% if 'score' == impact_column %}
+          {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% else %}
+        { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+        {% endif %}
       {% endfor %}
       {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-      {% for metaaccount_column in metaaccount_columns %}
-        { title: "{{metaaccount_column}}", field: "{{metaaccount_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for account_column in account_columns %}
+        { title: "{{account_column}}", field: "{{account_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {% endfor %}
       {title:"Region", field:"Region", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {title:"ResourceType", field:"ResourceType", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -172,11 +205,11 @@
       {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-      {% for metatags_column in metatags_columns %}
-        { title: "{{metatags_column}}", field: "{{metatags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for tags_column in tags_columns %}
+        { title: "{{tags_column}}", field: "{{tags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {% endfor %}
-      {% for metachecks_column in metachecks_columns %}
-        { title: "{{metachecks_column}}", field: "{{metachecks_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for config_column in config_columns %}
+        { title: "{{config_column}}", field: "{{config_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {% endfor %}
   ];
 </script>
@@ -334,17 +367,17 @@
   ]
 
   // AwsAccountAlias
-  {% if 'metaaccount' in statistics %}
-    {% if 'Alias' in  statistics['metaaccount'] %}
+  {% if 'account' in statistics %}
+    {% if 'Alias' in  statistics['account'] %}
       var statsAwsAccountAliasData = [
-        {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+        {% for stat, value in statistics['account']['Alias'].items() %}
           {
             stat: "{{ stat|e }}", value: {{ value|e }}
           },
         {% endfor %}
       ]
       var statsAwsAccountAliasLabels = [
-        {% for stat, value in statistics['metaaccount']['Alias'].items() %}
+        {% for stat, value in statistics['account']['Alias'].items() %}
           "{{ stat|e }}",
         {% endfor %}
       ]

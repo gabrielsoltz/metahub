@@ -64,6 +64,9 @@ class Metacheck(MetaChecksBase):
             return self.table.get("SSEDescription")
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -72,5 +75,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "name": self.name(),
             "is_encrypted": self.is_encrypted(),
+            "public": self.public(),
         }
         return checks

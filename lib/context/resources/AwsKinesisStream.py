@@ -61,6 +61,9 @@ class Metacheck(MetaChecksBase):
             return self.stream["EncryptionType"]
         return False
 
+    def public(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -68,5 +71,6 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "is_encrypted": self.is_encrypted(),
+            "public": self.public(),
         }
         return checks

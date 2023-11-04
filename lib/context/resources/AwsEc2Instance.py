@@ -231,29 +231,6 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def is_public(self):
-        public_dict = {}
-        if self.public_ip():
-            for sg in self.security_groups:
-                if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.public_ip()] = []
-                    for rule in self.security_groups[sg].get(
-                        "is_ingress_rules_unrestricted"
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.public_ip()].append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
-        if public_dict:
-            return public_dict
-        return False
-
     def is_encrypted(self):
         for volume in self.volumes:
             if self.volumes[volume].get("is_encrypted"):
@@ -265,6 +242,11 @@ class Metacheck(MetaChecksBase):
             for role in self.iam_roles:
                 if self.iam_roles[role].get("is_unrestricted"):
                     return self.iam_roles[role].get("is_unrestricted")
+        return False
+
+    def public(self):
+        if self.public_ip():
+            return True
         return False
 
     def associations(self):
@@ -288,7 +270,7 @@ class Metacheck(MetaChecksBase):
             "metadata_options": self.metadata_options(),
             "iam_profile": self.iam_profile(),
             "is_running": self.is_running(),
-            "is_public": self.is_public(),
+            "public": self.public(),
             "is_encrypted": self.is_encrypted(),
             "is_unrestricted": self.is_unrestricted(),
         }

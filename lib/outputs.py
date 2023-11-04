@@ -4,7 +4,9 @@ import jinja2
 import xlsxwriter
 
 
-def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
+def generate_output_csv(
+    output, config_columns, tags_columns, account_columns, impact_columns, csv_file
+):
     with open(csv_file, "w", encoding="utf-8", newline="") as output_file:
         colums = [
             "Resource ID",
@@ -18,7 +20,9 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
             "RecordState",
             "ComplianceStatus",
         ]
-        colums = colums + metatags_columns + metachecks_columns
+        colums = (
+            colums + config_columns + tags_columns + account_columns + impact_columns
+        )
         dict_writer = csv.DictWriter(output_file, fieldnames=colums)
         dict_writer.writeheader()
         # Iterate over the resources
@@ -26,13 +30,13 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
             for finding in values["findings"]:
                 for f, v in finding.items():
                     metatags_column_values = []
-                    for column in metatags_columns:
+                    for column in tags_columns:
                         try:
                             metatags_column_values.append(values["metatags"][column])
                         except (KeyError, TypeError):
                             metatags_column_values.append("")
                     metachecks_column_values = []
-                    for column in metachecks_columns:
+                    for column in config_columns:
                         try:
                             metachecks_column_values.append(
                                 values["metachecks"][column]
@@ -64,7 +68,9 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
                     dict_writer.writerow(dict(zip(colums, row)))
 
 
-def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file):
+def generate_output_xlsx(
+    output, config_columns, tags_columns, account_columns, impact_columns, xlsx_file
+):
     # Create a workbook and add a worksheet
     workbook = xlsxwriter.Workbook(xlsx_file)
     worksheet = workbook.add_worksheet("findings")
@@ -100,7 +106,10 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
         "ComplianceStatus",
     ]
     worksheet.write_row(
-        0, 0, colums + metatags_columns + metachecks_columns, title_format
+        0,
+        0,
+        colums + config_columns + tags_columns + account_columns + impact_columns,
+        title_format,
     )
     # Iterate over the resources
     current_line = 1
@@ -118,15 +127,15 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
                 else:
                     worksheet.write(current_line, 1, severity, low_format)
                 metatags_column_values = []
-                for column in metatags_columns:
+                for column in tags_columns:
                     try:
-                        metatags_column_values.append(values["metatags"][column])
+                        metatags_column_values.append(values["tags"][column])
                     except (KeyError, TypeError):
                         metatags_column_values.append("")
                 metachecks_column_values = []
-                for column in metachecks_columns:
+                for column in config_columns:
                     try:
-                        metachecks_column_values.append(values["metachecks"][column])
+                        metachecks_column_values.append(values["config"][column])
                     except (KeyError, TypeError):
                         metachecks_column_values.append("")
                 row = (
@@ -157,9 +166,9 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
 def generate_output_html(
     mh_findings,
     mh_statistics,
-    metatags_columns,
-    metachecks_columns,
-    metaaccount_columns,
+    config_columns,
+    tags_columns,
+    account_columns,
     impact_columns,
 ):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
@@ -169,21 +178,21 @@ def generate_output_html(
     # Convert MetaChecks to Boolean
     for resource_arn in mh_findings:
         if (
-            "metachecks" in mh_findings[resource_arn]
-            and mh_findings[resource_arn]["metachecks"]
+            "config" in mh_findings[resource_arn]
+            and mh_findings[resource_arn]["config"]
         ):
-            for metacheck in mh_findings[resource_arn]["metachecks"]:
-                if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
-                    mh_findings[resource_arn]["metachecks"][metacheck] = True
+            for config in mh_findings[resource_arn]["config"]:
+                if bool(mh_findings[resource_arn]["config"][config]):
+                    mh_findings[resource_arn]["config"][config] = True
                 else:
-                    mh_findings[resource_arn]["metachecks"][metacheck] = False
+                    mh_findings[resource_arn]["config"][config] = False
     html = template.render(
         data=mh_findings,
         statistics=mh_statistics,
         title="MetaHub",
-        metachecks_columns=metachecks_columns,
-        metatags_columns=metatags_columns,
-        metaaccount_columns=metaaccount_columns,
+        config_columns=config_columns,
+        tags_columns=tags_columns,
+        account_columns=account_columns,
         impact_columns=impact_columns,
     )
     return html

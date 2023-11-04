@@ -118,6 +118,11 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def public(self):
+        if self.map_public_ip_on_launch_enabled():
+            return True
+        return False
+
     def associations(self):
         associations = {
             "route_tables": self.route_tables,
@@ -129,5 +134,6 @@ class Metacheck(MetaChecksBase):
             "cidr": self.cidr(),
             "map_public_ip_on_launch_enabled": self.map_public_ip_on_launch_enabled(),
             "is_default": self.is_default(),
+            "public": self.public(),
         }
         return checks
