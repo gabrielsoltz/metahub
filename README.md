@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is an automated security contextual enrichment and impact evaluation tool for vulnerability management. You can use it with AWS Security Hub or any ASFF-compatible security scanner. Stop relying on useless Severities and switch impact scoring defintion based on YOUR context.
+  <b>MetaHub</b> is an automated security contextual enrichment and impact evaluation tool for vulnerability management. You can use it with AWS Security Hub or any ASFF-compatible security scanner. Stop relying on useless severities and switch to **impact** scoring defintions based on YOUR context.
 </p>
 
 <p align="center">
@@ -21,24 +21,22 @@
 - [Architecture](#architecture)
 - [Use Cases](#use-cases)
 - [Features](#features)
+- [Configuration](#customizing-configuration)
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
 - [Run with Security Hub Custom Action](#run-with-security-hub-custom-action)
 - [AWS Authentication](#aws-authentication)
 - [Configuring Security Hub](#configuring-security-hub)
-- [Configuring MetaChecks, MetaTags and MetaTrails](#configuring-metachecks-metatags-and-metatrails)
-- [Quick Run](#quick-run)
+- [Configuring Context](#configuring-context)
+- [Examples](#Examples)
 - [Inputs](#Inputs)
 - [Output Modes](#output-modes)
 - [Findings Aggregation](#findings-aggregation)
-- [MetaChecks](#metachecks)
-- [MetaTags](#metatags)
-- [MetaTrails](#metatrails)
-- [Filtering](#Filtering)
+- [Context Module](#context-module)
+- [Filters](#filters)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
-- [Configuration](#configuration)
 
 # Description
 
@@ -92,7 +90,7 @@ The following are the impact criterias that MetaHub evaluates by default:
 
 ### Environment
 
-## Findings Metric
+### Findings Metric Calculation
 
 The **Impact Findings Metric** is determined based on the severity of all findings affecting the same resource.
 
@@ -110,13 +108,13 @@ For example, if the affected resource has two findings affecting it, one with `H
 
 # Use Cases
 
-You can read the following articles on MetaHub practical use-cases:
+Some use-cases for MetaHub include:
 
 - [MetaHub integration with Prowler as a local scanner for context enrichment](https://medium.com/@gabriel_87/metahub-use-cases-part-i-metahub-integration-with-prowler-as-a-local-scanner-for-context-f3540e18eaa1)
-- Automatic Security Hub findings suppression using MetaTags
-- Utilizing MetaHub as an AWS Security Hub Custom Action
-- Generating Custom Enriched Dashboards
-- AWS Security Hub Insights based on Context.
+- Automating Security Hub findings suppression based on Tagging
+- Integrate MetaHub directly as Security Hub custom action to use it directly from the AWS Console
+- Created enriched HTML reports for your findings that you can filter, sort, group, and download
+- Create Security Hub Insights based on MetaHub context
 
 # Features
 
@@ -788,9 +786,7 @@ You can add/modify the critical events for each resource type by editing the con
 
 ## Account
 
-# MetaTrails
-
-# Filtering
+# Filters
 
 You can filter the findings and resources that you get from Security Hub in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create alerts.
 
