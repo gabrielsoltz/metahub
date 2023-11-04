@@ -5,7 +5,7 @@ import xlsxwriter
 
 
 def generate_output_csv(
-    output, config_columns, tags_columns, account_columns, impact_columns, csv_file
+    output, config_columns, tag_columns, account_columns, impact_columns, csv_file
 ):
     with open(csv_file, "w", encoding="utf-8", newline="") as output_file:
         colums = [
@@ -21,7 +21,7 @@ def generate_output_csv(
             "ComplianceStatus",
         ]
         colums = (
-            colums + config_columns + tags_columns + account_columns + impact_columns
+            colums + config_columns + tag_columns + account_columns + impact_columns
         )
         dict_writer = csv.DictWriter(output_file, fieldnames=colums)
         dict_writer.writeheader()
@@ -30,7 +30,7 @@ def generate_output_csv(
             for finding in values["findings"]:
                 for f, v in finding.items():
                     metatags_column_values = []
-                    for column in tags_columns:
+                    for column in tag_columns:
                         try:
                             metatags_column_values.append(values["metatags"][column])
                         except (KeyError, TypeError):
@@ -69,7 +69,7 @@ def generate_output_csv(
 
 
 def generate_output_xlsx(
-    output, config_columns, tags_columns, account_columns, impact_columns, xlsx_file
+    output, config_columns, tag_columns, account_columns, impact_columns, xlsx_file
 ):
     # Create a workbook and add a worksheet
     workbook = xlsxwriter.Workbook(xlsx_file)
@@ -108,7 +108,7 @@ def generate_output_xlsx(
     worksheet.write_row(
         0,
         0,
-        colums + config_columns + tags_columns + account_columns + impact_columns,
+        colums + config_columns + tag_columns + account_columns + impact_columns,
         title_format,
     )
     # Iterate over the resources
@@ -127,7 +127,7 @@ def generate_output_xlsx(
                 else:
                     worksheet.write(current_line, 1, severity, low_format)
                 metatags_column_values = []
-                for column in tags_columns:
+                for column in tag_columns:
                     try:
                         metatags_column_values.append(values["tags"][column])
                     except (KeyError, TypeError):
@@ -167,7 +167,7 @@ def generate_output_html(
     mh_findings,
     mh_statistics,
     config_columns,
-    tags_columns,
+    tag_columns,
     account_columns,
     impact_columns,
 ):
@@ -191,7 +191,7 @@ def generate_output_html(
         statistics=mh_statistics,
         title="MetaHub",
         config_columns=config_columns,
-        tags_columns=tags_columns,
+        tag_columns=tag_columns,
         account_columns=account_columns,
         impact_columns=impact_columns,
     )

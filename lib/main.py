@@ -400,7 +400,7 @@ def generate_outputs(
         account_columns,
         config_columns,
         impact_columns,
-        tags_columns,
+        tag_columns,
     )
 
     # Columns for CSV and HTML
@@ -409,8 +409,8 @@ def generate_outputs(
         or config_columns
         or list(mh_statistics["config"].keys())
     )
-    output_tags_columns = (
-        args.output_tags_columns or tags_columns or list(mh_statistics["tags"].keys())
+    output_tag_columns = (
+        args.output_tag_columns or tag_columns or list(mh_statistics["tags"].keys())
     )
     output_account_columns = (
         args.output_account_columns or account_columns or mh_statistics["account"]
@@ -448,7 +448,7 @@ def generate_outputs(
                         mh_findings,
                         mh_statistics,
                         output_config_columns,
-                        output_tags_columns,
+                        output_tag_columns,
                         output_account_columns,
                         output_impact_columns,
                     )
@@ -459,7 +459,7 @@ def generate_outputs(
             if ouput_mode == "csv":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
                 generate_output_csv(
-                    mh_findings, tags_columns, config_columns, WRITE_FILE
+                    mh_findings, tag_columns, config_columns, WRITE_FILE
                 )
                 print_table("CSV:   ", WRITE_FILE, banners=banners)
 
@@ -467,7 +467,7 @@ def generate_outputs(
             if ouput_mode == "xlsx":
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
                 generate_output_xlsx(
-                    mh_findings, tags_columns, config_columns, WRITE_FILE
+                    mh_findings, tag_columns, config_columns, WRITE_FILE
                 )
                 print_table("XLSX:   ", WRITE_FILE, banners=banners)
 

@@ -16,6 +16,6 @@ days_to_consider_unrotated = 90
 # You can also use `--output-config-columns` and `--output-tags-columns` to override these values.
 # If you want all fields as columns, comment the following lines.
 config_columns = ["public"]
-tags_colums = ["Owner"]
+tag_columns = ["Owner"]
 account_columns = ["AccountAlias"]
 impact_columns = ["score", "exposure"]
