@@ -71,6 +71,8 @@ def generate_findings(
         # Get the resource_arn from the finding
         resource_arn, finding_parsed = parse_finding(finding)
         # Get the lock for this resource
+        # To Do: If more than one finding for the same account, account_context could execute more than once for the same account
+        # Split the findings by account and execute the account_context only once per account
         lock = resource_locks.get(resource_arn)
 
         # If the lock does not exist, create it

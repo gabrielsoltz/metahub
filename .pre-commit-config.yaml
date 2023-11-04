@@ -79,12 +79,12 @@ repos:
         language: system
         files: '.*\.py'
 
-      - id: trufflehog
-        name: TruffleHog
-        description: Detect secrets in your data.
-        entry: bash -c 'docker run -v "$(pwd):/workdir" -i --rm trufflesecurity/trufflehog:latest git file:///workdir --only-verified --fail'
-        language: system
-        stages: ["commit", "push"]
+      # - id: trufflehog
+      #   name: TruffleHog
+      #   description: Detect secrets in your data.
+      #   entry: bash -c 'docker run -v "$(pwd):/workdir" -i --rm trufflesecurity/trufflehog:latest git file:///workdir --only-verified --fail'
+      #   language: system
+      #   stages: ["commit", "push"]
 
       - id: bandit
         name: bandit

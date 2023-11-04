@@ -361,6 +361,7 @@ This is the minimum IAM policy you need to read and write from AWS Security Hub.
   - `cloudtrail:LookupEvents`
 - For MetaAccount, you need a policy allowing the action:
   - `account:GetAlternateContact`
+  - `organizations:DescribeAccount`
   - `iam:ListAccountAliases`
 
 # Quick Run

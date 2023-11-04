@@ -30,7 +30,7 @@ If you want to add MetaChecks for a ResourceType that has not yet been defined i
 
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import IamHelper
+from lib.context.resources.MetaChecksHelpers import IamHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -81,7 +81,7 @@ def _get_bucket_acl(self):
 
 from lib.AwsHelpers import get_boto3_client
 from lib.metachecks.checks.Base import MetaChecksBase
-from lib.metachecks.checks.MetaChecksHelpers import IamHelper
+from lib.context.resources.MetaChecksHelpers import IamHelper
 
 
 class Metacheck(MetaChecksBase):
