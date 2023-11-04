@@ -33,21 +33,18 @@ TIMESTRF = strftime("%Y%m%d-%H%M%S")
 def generate_findings(
     logger,
     sh_filters,
-    metachecks,
-    mh_filters_checks,
-    metatags,
-    mh_filters_tags,
-    sh_account,
-    sh_role,
-    mh_role,
     sh_region,
+    sh_account,
+    sh_profile,
+    sh_role,
+    context,
+    mh_role,
+    mh_filters_checks,
+    mh_filters_tags,
     inputs,
     asff_findings,
-    metatrails,
     banners,
     drill_down,
-    metaaccount,
-    sh_profile,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -92,13 +89,9 @@ def generate_findings(
                 mh_findings_short,
                 AwsAccountData,
                 mh_role,
-                metachecks,
                 mh_filters_checks,
-                drill_down,
-                metatags,
                 mh_filters_tags,
-                metatrails,
-                metaaccount,
+                context,
             )
 
     with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
@@ -300,10 +293,6 @@ def validate_arguments(args, logger):
         sh_filters = set_sh_filters(sh_filters)
 
     # Validate MetaChecks filters
-    if args.mh_filters_checks and not args.meta_checks:
-        logger.error(
-            "--mh-filters-checks provided but --meta-checks are disabled, ignoring..."
-        )
     mh_filters_checks = args.mh_filters_checks or {}
     for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
         if mh_filters_checks[mh_filter_check_key].lower() == "true":
@@ -318,10 +307,6 @@ def validate_arguments(args, logger):
             exit(1)
 
     # Validate MetaTags filters
-    if args.mh_filters_tags and not args.meta_tags:
-        logger.error(
-            "--mh-filters-tags provided but --meta-tags are disabled, ignoring..."
-        )
     mh_filters_tags = args.mh_filters_tags or {}
 
     # Parameter Validation: --sh-account and --sh-assume-role
@@ -479,13 +464,6 @@ def main(args):
         exit(1)
     logger = get_logger(args.log_level)
 
-    if args.list_meta_checks:
-        from lib.metachecks.metachecks import list_metachecks
-
-        print_title_line("List MetaChecks", banners=banners)
-        list_metachecks(logger)
-        return
-
     (
         asff_findings,
         sh_filters,
@@ -511,13 +489,10 @@ def main(args):
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)
     print_table("Input File: ", str(args.input_asff), banners=banners)
     print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
-    print_table("MetaChecks: ", str(args.meta_checks), banners=banners)
+    print_table("Context: ", str(args.context), banners=banners)
     print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
-    print_table("Drilled Down Mode: ", str(args.drill_down), banners=banners)
-    print_table("MetaTags: ", str(args.meta_tags), banners=banners)
     print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
-    print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
-    print_table("MetaAccount: ", str(args.meta_account), banners=banners)
+    print_table("Drilled Down Mode: ", str(args.drill_down), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
     print_table(
@@ -537,21 +512,18 @@ def main(args):
     ) = generate_findings(
         logger,
         sh_filters,
-        metachecks=args.meta_checks,
-        mh_filters_checks=mh_filters_checks,
-        metatags=args.meta_tags,
-        mh_filters_tags=mh_filters_tags,
-        sh_account=sh_account,
-        sh_role=args.sh_assume_role,
-        mh_role=args.mh_assume_role,
         sh_region=sh_region,
+        sh_account=sh_account,
+        sh_profile=args.sh_profile,
+        sh_role=args.sh_assume_role,
+        context=args.context,
+        mh_role=args.mh_assume_role,
+        mh_filters_checks=mh_filters_checks,
+        mh_filters_tags=mh_filters_tags,
         inputs=args.inputs,
         asff_findings=asff_findings,
-        metatrails=args.meta_trails,
         banners=banners,
         drill_down=args.drill_down,
-        metaaccount=args.meta_account,
-        sh_profile=args.sh_profile,
     )
 
     if mh_findings:

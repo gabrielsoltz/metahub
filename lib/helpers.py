@@ -143,36 +143,12 @@ def get_parser():
     # Group: Meta Options
     group_meta_checks = parser.add_argument_group("Meta Options")
     group_meta_checks.add_argument(
-        "--list-meta-checks",
-        help="Use this option to list all available Meta Checks",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    group_meta_checks.add_argument(
-        "--meta-checks",
-        help="Use this option to enable Meta Checks",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    group_meta_checks.add_argument(
         "--mh-filters-checks",
         default=None,
         help="Use this option to filter the resources based on Meta Checks results using key=value pairs, for example is_public=True. Only True or False. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
-    )
-    group_meta_checks.add_argument(
-        "--meta-tags",
-        help="Use this option to enable Meta Tags",
-        required=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    group_meta_checks.add_argument(
-        "--meta-trails",
-        help="Use this option to enable Meta Trails",
-        required=False,
-        action=argparse.BooleanOptionalAction,
     )
     group_meta_checks.add_argument(
         "--mh-filters-tags",
@@ -196,10 +172,20 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
     group_meta_checks.add_argument(
-        "--meta-account",
-        help="Use this option to enable Meta Account",
+        "--context",
+        help="",
+        choices=[
+            "config",
+            "tags",
+            "account",
+            "cloudtrail",
+        ],
+        default=[
+            "config",
+            "tags",
+        ],
+        nargs="*",
         required=False,
-        action=argparse.BooleanOptionalAction,
     )
 
     # Group: Output Options

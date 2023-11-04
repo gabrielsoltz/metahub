@@ -7,6 +7,7 @@ from botocore.exceptions import (
 
 import lib.context.resources
 from lib.AwsHelpers import assume_role, get_account_id, get_boto3_client
+from lib.config.resources import MetaHubResourcesConfig
 
 
 class Context:
@@ -189,9 +190,9 @@ class Context:
         )
 
         account_config = {
-            # "Alias": self.get_account_alias(),
-            # "AlternateContact": self.get_account_alternate_contact(),
-            # "Organizataions": self.get_account_organizations()
+            "Alias": self.get_account_alias(),
+            "AlternateContact": self.get_account_alternate_contact(),
+            "Organizataions": self.get_account_organizations(),
         }
 
         return account_config
@@ -286,3 +287,58 @@ class Context:
         except IndexError:
             self.logger.info("No account alias found")
         return aliases
+
+    def get_context_cloudtrail(self):
+        self.logger.info(
+            "Running Get Context CloudTrail for Resource: %s (%s)",
+            self.resource_arn,
+            self.resource_type,
+        )
+
+        client = get_boto3_client(
+            self.logger, "cloudtrail", self.resource_region, self.sess
+        )
+
+        trails = {}
+        try:
+            paginator = client.get_paginator("lookup_events")
+
+            try:
+                parsing_char = MetaHubResourcesConfig[self.resource_type][
+                    "ResourceName"
+                ]["parsing_char"]
+                parsing_pos = MetaHubResourcesConfig[self.resource_type][
+                    "ResourceName"
+                ]["parsing_pos"]
+                if parsing_char is not None:
+                    ResourceName = self.resource_arn.split(parsing_char)[parsing_pos]
+                else:
+                    ResourceName = self.resource_arn
+                event_names = MetaHubResourcesConfig[self.resource_type][
+                    "metatrails_events"
+                ]
+            except KeyError:
+                # No Config Defined
+                return False
+
+            page_iterator = paginator.paginate(
+                LookupAttributes=[
+                    {"AttributeKey": "ResourceName", "AttributeValue": ResourceName}
+                ]
+            )
+
+            if event_names:
+                for page in page_iterator:
+                    for event in page["Events"]:
+                        for event_name in event_names:
+                            if event["EventName"] == event_name:
+                                trails[event["EventName"]] = {
+                                    "Username": event["Username"],
+                                    "EventTime": str(event["EventTime"]),
+                                    "EventId": event["EventId"],
+                                }
+
+        except (ClientError, ParamValidationError, Exception) as err:
+            self.logger.warning("Error Fetching Trails %s: %s", self.resource_arn, err)
+
+        return trails
