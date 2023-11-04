@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.MetaChecksHelpers import SGHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -26,8 +27,13 @@ class Metacheck(MetaChecksBase):
         self.security_group = self._describe_security_group()
         if not self.security_group:
             return False
-        self.network_interfaces = self.describe_network_interfaces()
+        self.all_network_interfaces = self.describe_network_interfaces()
+        self.network_interfaces = self._describe_network_interfaces_interfaces()
+        self.instances = self._describe_network_interfaces_instances()
         self.security_group_rules = self.describe_security_group_rules()
+        self.checked_security_group_rules = SGHelper(
+            self.logger, self.security_group_rules
+        ).check_security_group_rules()
         # Drilled MetaChecks
         self.vpcs = self._describe_security_group_vpc()
 
@@ -79,6 +85,37 @@ class Metacheck(MetaChecksBase):
         )
         return response["NetworkInterfaces"]
 
+    def _describe_network_interfaces_interfaces(self):
+        network_interfaces = {}
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                arn = generate_arn(
+                    network_interface["NetworkInterfaceId"],
+                    "ec2",
+                    "network_interface",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                network_interfaces[arn] = {}
+        return network_interfaces
+
+    def _describe_network_interfaces_instances(self):
+        instances = {}
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("Attachment").get("InstanceId"):
+                    arn = generate_arn(
+                        network_interface.get("Attachment").get("InstanceId"),
+                        "ec2",
+                        "instance",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    instances[arn] = {}
+        return instances
+
     def describe_security_group_rules(self):
         response = self.client.describe_security_group_rules(
             Filters=[
@@ -103,53 +140,23 @@ class Metacheck(MetaChecksBase):
             vcps[arn] = {}
         return vcps
 
-    # MetaChecks
+    def managed_services(self):
+        managed_services = []
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("RequesterManaged"):
+                    managed_services.append(network_interface.get("Description"))
+        return managed_services
 
-    def its_associated_with_network_interfaces(self):
-        NetworkInterfaces = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                NetworkInterfaces.append(NetworkInterface["NetworkInterfaceId"])
-            return NetworkInterfaces
-        return False
-
-    def its_associated_with_ec2_instances(self):
-        Ec2Instances = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    Ec2Instances.append(NetworkInterface["Attachment"]["InstanceId"])
-                except KeyError:
-                    continue
-            if Ec2Instances:
-                return Ec2Instances
-        return False
-
-    def its_associated_with_managed_services(self):
-        ManagedServices = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    RequesterId = NetworkInterface["RequesterManaged"]
-                    if RequesterId:
-                        ManagedServices.append(NetworkInterface["Description"])
-                except KeyError:
-                    continue
-            if ManagedServices:
-                return ManagedServices
-        return False
-
-    def its_associated_with_ips_public(self):
-        PublicIPs = []
-        if self.network_interfaces:
-            for NetworkInterface in self.network_interfaces:
-                try:
-                    PublicIPs.append(NetworkInterface["Association"]["PublicIp"])
-                except KeyError:
-                    continue
-            if PublicIPs:
-                return PublicIPs
-        return False
+    def public_ips(self):
+        public_ips = []
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("Association"):
+                    public_ips.append(
+                        network_interface.get("Association").get("PublicIp")
+                    )
+        return public_ips
 
     def its_referenced_by_a_security_group(self):
         references = []
@@ -170,47 +177,8 @@ class Metacheck(MetaChecksBase):
             return references
         return False
 
-    def is_ingress_rule_unrestricted(self, rule):
-        """ """
-        if "CidrIpv4" in rule:
-            if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
-                return True
-        if "CidrIpv6" in rule:
-            if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
-                return True
-        return False
-
-    def is_egress_rule_unrestricted(self, rule):
-        """ """
-        if "CidrIpv4" in rule:
-            if "0.0.0.0/0" in rule["CidrIpv4"] and rule["IsEgress"]:
-                return True
-        if "CidrIpv6" in rule:
-            if "::/0" in rule["CidrIpv6"] and rule["IsEgress"]:
-                return True
-        return False
-
-    def check_security_group(self):
-        failed_rules = {
-            "is_ingress_rules_unrestricted": [],
-            "is_egress_rules_unrestricted": [],
-        }
-        if self.security_group_rules:
-            for rule in self.security_group_rules:
-                if (
-                    self.is_ingress_rule_unrestricted(rule)
-                    and rule not in failed_rules["is_ingress_rules_unrestricted"]
-                ):
-                    failed_rules["is_ingress_rules_unrestricted"].append(rule)
-                if (
-                    self.is_egress_rule_unrestricted(rule)
-                    and rule not in failed_rules["is_egress_rules_unrestricted"]
-                ):
-                    failed_rules["is_egress_rules_unrestricted"].append(rule)
-        return failed_rules
-
     def is_ingress_rules_unrestricted(self):
-        is_ingress_rules_unrestricted = self.check_security_group()[
+        is_ingress_rules_unrestricted = self.checked_security_group_rules[
             "is_ingress_rules_unrestricted"
         ]
         if is_ingress_rules_unrestricted:
@@ -218,7 +186,7 @@ class Metacheck(MetaChecksBase):
         return False
 
     def is_egress_rules_unrestricted(self):
-        is_egress_rules_unrestricted = self.check_security_group()[
+        is_egress_rules_unrestricted = self.checked_security_group_rules[
             "is_egress_rules_unrestricted"
         ]
         if is_egress_rules_unrestricted:
@@ -227,11 +195,8 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         public_dict = {}
-        if (
-            self.its_associated_with_ips_public()
-            and self.is_ingress_rules_unrestricted()
-        ):
-            for ip in self.its_associated_with_ips_public():
+        if self.public_ips() and self.is_ingress_rules_unrestricted():
+            for ip in self.public_ips():
                 public_dict[ip] = []
                 if self.is_ingress_rules_unrestricted():
                     for rule in self.is_ingress_rules_unrestricted():
@@ -257,27 +222,22 @@ class Metacheck(MetaChecksBase):
 
     def is_attached(self):
         if self.security_group:
-            if (
-                self.its_associated_with_network_interfaces()
-                or self.its_associated_with_ec2_instances()
-                or self.its_associated_with_ips_public()
-                or self.its_associated_with_managed_services()
-            ):
+            if self.network_interfaces:
                 return True
         return False
 
     def associations(self):
         associations = {
             "vpcs": self.vpcs,
+            "network_interfaces": self.network_interfaces,
+            "instances": self.instances,
         }
         return associations
 
     def checks(self):
         checks = {
-            "its_associated_with_network_interfaces": self.its_associated_with_network_interfaces(),
-            "its_associated_with_ec2_instances": self.its_associated_with_ec2_instances(),
-            "its_associated_with_ips_public": self.its_associated_with_ips_public(),
-            "its_associated_with_managed_services": self.its_associated_with_managed_services(),
+            "public_ips": self.public_ips(),
+            "managed_services": self.managed_services(),
             "its_referenced_by_a_security_group": self.its_referenced_by_a_security_group(),
             "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),

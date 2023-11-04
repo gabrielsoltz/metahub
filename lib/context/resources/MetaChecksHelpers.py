@@ -272,3 +272,47 @@ class IamHelper:
             return False
 
         return response["InstanceProfile"]["Roles"][0]["Arn"]
+
+
+class SGHelper:
+    def __init__(self, logger, sg_rules):
+        self.logger = logger
+        self.sg_rules = sg_rules
+
+    def check_security_group_rules(self):
+        failed_rules = {
+            "is_ingress_rules_unrestricted": [],
+            "is_egress_rules_unrestricted": [],
+        }
+        for rule in self.sg_rules:
+            if (
+                self.is_ingress_rule_unrestricted(rule)
+                and rule not in failed_rules["is_ingress_rules_unrestricted"]
+            ):
+                failed_rules["is_ingress_rules_unrestricted"].append(rule)
+            if (
+                self.is_egress_rule_unrestricted(rule)
+                and rule not in failed_rules["is_egress_rules_unrestricted"]
+            ):
+                failed_rules["is_egress_rules_unrestricted"].append(rule)
+        return failed_rules
+
+    def is_ingress_rule_unrestricted(self, rule):
+        """ """
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and not rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and not rule["IsEgress"]:
+                return True
+        return False
+
+    def is_egress_rule_unrestricted(self, rule):
+        """ """
+        if "CidrIpv4" in rule:
+            if "0.0.0.0/0" in rule["CidrIpv4"] and rule["IsEgress"]:
+                return True
+        if "CidrIpv6" in rule:
+            if "::/0" in rule["CidrIpv6"] and rule["IsEgress"]:
+                return True
+        return False
