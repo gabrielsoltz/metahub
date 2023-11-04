@@ -116,8 +116,9 @@ class Context:
             )
         except (AttributeError, Exception) as err:
             self.logger.error(
-                "Error running MetaChecks output_checks() for ResourceType: %s, %s",
+                "Error running MetaChecks output_checks() for ResourceType: %s (%s), %s",
                 self.resource_type,
+                self.resource_arn,
                 err,
             )
 
@@ -134,6 +135,10 @@ class Context:
         # If there are no filters, we forced to return True as we expected a Match always
         resource_matched = False if self.mh_filters_tags else True
         resource_tags = {}
+
+        # Non-Taggable Resources
+        if self.resource_type in ("AwsAccount"):
+            return resource_tags, resource_matched
 
         # Execute Tags
         tags = False

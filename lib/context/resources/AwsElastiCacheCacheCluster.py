@@ -37,6 +37,7 @@ class Metacheck(MetaChecksBase):
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
         self.resource_arn = finding["Resources"][0]["Id"]
+        self.resource_type = finding["Resources"][0]["Type"]
         if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
             self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
         elif finding["Resources"][0]["Id"].split(":")[5] == "cluster":

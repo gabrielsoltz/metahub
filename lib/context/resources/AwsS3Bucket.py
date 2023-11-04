@@ -43,6 +43,7 @@ class Metacheck(MetaChecksBase):
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
+        self.resource_type = finding["Resources"][0]["Type"]
         self.resource_arn = finding["Resources"][0]["Id"]
         self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
 
@@ -159,12 +160,6 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def bucket_acl(self):
-        bucket_acl = False
-        if self.bucket_acl:
-            bucket_acl = self.bucket_acl
-        return bucket_acl
-
     def bucket_acl_cross_account(self):
         acl_with_cross_account = []
         if self.bucket_acl:
@@ -269,7 +264,7 @@ class Metacheck(MetaChecksBase):
         checks = {
             "resource_policy": self.resource_policy,
             "website_enabled": self.website_enabled(),
-            "bucket_acl": self.bucket_acl(),
+            "bucket_acl": self.bucket_acl,
             "bucket_acl_cross_account": self.bucket_acl_cross_account(),
             "bucket_acl_public": self.bucket_acl_public(),
             "public_access_block_enabled": self.public_access_block_enabled(),

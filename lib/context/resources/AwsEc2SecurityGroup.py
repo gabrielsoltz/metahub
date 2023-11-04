@@ -42,6 +42,7 @@ class Metacheck(MetaChecksBase):
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
+        self.resource_type = finding["Resources"][0]["Type"]
         self.resource_id = (
             finding["Resources"][0]["Id"].split("/")[1]
             if not drilled
@@ -104,7 +105,9 @@ class Metacheck(MetaChecksBase):
         instances = {}
         if self.all_network_interfaces:
             for network_interface in self.all_network_interfaces:
-                if network_interface.get("Attachment").get("InstanceId"):
+                if network_interface.get("Attachment") and network_interface.get(
+                    "Attachment"
+                ).get("InstanceId"):
                     arn = generate_arn(
                         network_interface.get("Attachment").get("InstanceId"),
                         "ec2",

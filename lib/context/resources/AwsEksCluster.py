@@ -34,6 +34,7 @@ class Metacheck(MetaChecksBase):
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
+        self.resource_type = finding["Resources"][0]["Type"]
         self.resource_id = (
             finding["Resources"][0]["Id"].split("/")[1]
             if not drilled
