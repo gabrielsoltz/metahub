@@ -118,6 +118,12 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.map_public_ip_on_launch_enabled():
             return True
@@ -135,5 +141,6 @@ class Metacheck(MetaChecksBase):
             "map_public_ip_on_launch_enabled": self.map_public_ip_on_launch_enabled(),
             "is_default": self.is_default(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

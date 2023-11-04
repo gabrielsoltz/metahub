@@ -1,12 +1,10 @@
 """MetaCheck: AwsSnsTopic"""
 
-import json
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -70,12 +68,7 @@ class Metacheck(MetaChecksBase):
         if self.topic_atributes:
             try:
                 if self.topic_atributes["Policy"]:
-                    checked_policy = PolicyHelper(
-                        self.logger,
-                        self.finding,
-                        json.loads(self.topic_atributes["Policy"]),
-                    ).check_policy()
-                    return checked_policy
+                    return self.topic_atributes["Policy"]
             except KeyError:
                 return False
         return False
@@ -102,16 +95,13 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    def is_unrestricted(self):
-        if self.resource_policy:
-            if self.resource_policy["is_unrestricted"]:
-                return self.resource_policy["is_unrestricted"]
-        return False
-
     def is_encrypted(self):
         if self.topic_kms_master_key_id:
             return self.topic_kms_master_key_id
         return False
+
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None
@@ -126,7 +116,6 @@ class Metacheck(MetaChecksBase):
             "subscriptions_confirmed": self.subscriptions_confirmed(),
             "name": self.name(),
             "is_encrypted": self.is_encrypted(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
         }
         return checks

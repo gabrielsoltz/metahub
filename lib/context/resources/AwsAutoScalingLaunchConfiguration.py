@@ -136,12 +136,11 @@ class Metacheck(MetaChecksBase):
             return True
         return False
 
-    def is_unrestricted(self):
-        if self.iam_roles:
-            for role in self.iam_roles:
-                if self.iam_roles[role].get("is_unrestricted"):
-                    return self.iam_roles[role].get("is_unrestricted")
-        return False
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
 
     def public(self):
         if self.associates_public_ip():
@@ -163,6 +162,6 @@ class Metacheck(MetaChecksBase):
             "public": self.public(),
             "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
-            "is_unrestricted": self.is_unrestricted(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

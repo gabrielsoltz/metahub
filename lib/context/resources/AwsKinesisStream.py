@@ -61,6 +61,12 @@ class Metacheck(MetaChecksBase):
             return self.stream["EncryptionType"]
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 
@@ -72,5 +78,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "is_encrypted": self.is_encrypted(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

@@ -68,6 +68,12 @@ class Metacheck(MetaChecksBase):
                     return True
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 
@@ -80,5 +86,6 @@ class Metacheck(MetaChecksBase):
             "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

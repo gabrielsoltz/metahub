@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 from lib.AwsHelpers import get_boto3_client
 from lib.config.configuration import days_to_consider_unrotated
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -80,10 +79,7 @@ class Metacheck(MetaChecksBase):
                 policy_document = self.client.get_user_policy(
                     PolicyName=policy_name, UserName=self.resource_id
                 ).get("PolicyDocument")
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, policy_document
-                ).check_policy()
-                iam_inline_policies[policy_name] = checked_policy
+                iam_inline_policies[policy_name] = policy_document
 
         return iam_inline_policies
 
@@ -128,23 +124,6 @@ class Metacheck(MetaChecksBase):
 
         return iam_policies
 
-    def is_unrestricted(self):
-        if self.iam_policies:
-            for policy in self.iam_policies:
-                if self.iam_policies[policy].get("is_actions_and_resource_wildcard"):
-                    return self.iam_policies[policy].get(
-                        "is_actions_and_resource_wildcard"
-                    )
-        if self.iam_inline_policies:
-            for policy in self.iam_inline_policies:
-                if self.iam_inline_policies[policy].get(
-                    "is_actions_and_resource_wildcard"
-                ):
-                    return self.iam_inline_policies[policy].get(
-                        "is_actions_and_resource_wildcard"
-                    )
-        return False
-
     def is_unrotated(self):
         if self.user_access_keys:
             current_date = datetime.now(timezone.utc)
@@ -155,6 +134,12 @@ class Metacheck(MetaChecksBase):
                     if date_difference.days > days_to_consider_unrotated:
                         return str(date_difference.days)
         return False
+
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None
@@ -168,8 +153,8 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "iam_inline_policies": self.iam_inline_policies,
-            "is_unrestricted": self.is_unrestricted(),
             "is_unrotated": self.is_unrotated(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

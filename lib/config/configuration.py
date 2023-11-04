@@ -8,6 +8,24 @@
 # List of AWS accounts ids that are trusted and not considered as external. This is used in the is_principal_external MetaCheck for policies.
 trusted_accounts = []
 
+# Dangereous IAM actions that should be considered as a finding if used in a policy
+dangereous_iam_actions = [
+    "iam:CreatePolicyVersion",
+    "iam:SetDefaultPolicyVersion",
+    "iam:PassRole",
+    "iam:CreateAccessKey",
+    "iam:CreateLoginProfile",
+    "iam:UpdateLoginProfile",
+    "iam:AttachUserPolicy",
+    "iam:AttachGroupPolicy",
+    "iam:AttachRolePolicy",
+    "iam:PutGroupPolicy",
+    "iam:PutRolePolicy",
+    "iam:PutUserPolicy",
+    "iam:AddUserToGroup",
+    "iam:UpdateAssumeRolePolicy",
+]
+
 # Days to consider a resource (key) unrotated
 days_to_consider_unrotated = 90
 
@@ -18,4 +36,7 @@ days_to_consider_unrotated = 90
 config_columns = ["public"]
 tag_columns = ["Owner"]
 account_columns = ["AccountAlias"]
-impact_columns = ["score", "exposure"]
+impact_columns = ["score", "exposure", "access"]
+
+# Decide if you want to output as part of the findings the whole json resource policy
+output_resource_policy = False

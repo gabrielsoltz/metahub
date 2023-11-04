@@ -89,8 +89,12 @@ def evaluate_finding(
                 "AwsAccountId"
             ] = finding["AwsAccountId"]
             # Add Context
-            mh_findings[resource_arn].update(mh_config)
-            mh_findings_short[resource_arn].update(mh_config)
+            if mh_config:
+                mh_findings[resource_arn].update(mh_config)
+                mh_findings_short[resource_arn].update(mh_config)
+            else:
+                mh_findings[resource_arn]["config"] = False
+                mh_findings_short[resource_arn]["config"] = False
             mh_findings[resource_arn]["tags"] = mh_findings_short[resource_arn][
                 "tags"
             ] = mh_tags

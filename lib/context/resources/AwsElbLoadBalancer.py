@@ -93,6 +93,12 @@ class Metacheck(MetaChecksBase):
             return self.elb.get("Scheme")
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.elb.get("Scheme") == "internet-facing":
             return True
@@ -110,5 +116,6 @@ class Metacheck(MetaChecksBase):
             "endpoint": self.endpoint(),
             "scheme": self.scheme(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

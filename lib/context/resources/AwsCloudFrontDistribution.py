@@ -124,6 +124,12 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return True
 
@@ -144,5 +150,6 @@ class Metacheck(MetaChecksBase):
             "viewer_protocol_policy": self.viewer_protocol_policy(),
             "public": self.public(),
             "is_encrypted": self.is_encrypted(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

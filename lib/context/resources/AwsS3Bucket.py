@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -151,10 +150,7 @@ class Metacheck(MetaChecksBase):
 
         if response["Policy"]:
             policy_json = json.loads(response["Policy"])
-            checked_policy = PolicyHelper(
-                self.logger, self.finding, policy_json
-            ).check_policy()
-            return checked_policy
+            return policy_json
 
         return False
 
@@ -221,40 +217,18 @@ class Metacheck(MetaChecksBase):
             return url
         return False
 
-    def is_unrestricted(self):
-        if not self.account_public_access_block and not self.bucket_public_access_block:
-            if self.resource_policy:
-                if self.resource_policy["is_unrestricted"]:
-                    return self.resource_policy["is_unrestricted"]
-            if self.bucket_acl:
-                if self.bucket_acl_public():
-                    return self.bucket_acl_public()
-        return False
-
     def is_encrypted(self):
         if self.get_bucket_encryption():
             return True
         return False
 
     def public(self):
-        public_dict = {}
         if self.website_enabled():
-            if self.resource_policy:
-                if self.resource_policy["is_unrestricted"] or self.bucket_acl_public():
-                    public_dict[self.website_enabled()] = []
-                    from_port = "443"
-                    to_port = "443"
-                    ip_protocol = "tcp"
-                    public_dict[self.website_enabled()].append(
-                        {
-                            "from_port": from_port,
-                            "to_port": to_port,
-                            "ip_protocol": ip_protocol,
-                        }
-                    )
-        if public_dict:
-            return public_dict
+            return True
         return False
+
+    def trust_policy(self):
+        return None
 
     def associations(self):
         associations = {}
@@ -270,7 +244,6 @@ class Metacheck(MetaChecksBase):
             "public_access_block_enabled": self.public_access_block_enabled(),
             "account_public_access_block_enabled": self.account_public_access_block_enabled(),
             "public": self.public(),
-            "is_unrestricted": self.is_unrestricted(),
             "is_encrypted": self.is_encrypted(),
         }
         return checks

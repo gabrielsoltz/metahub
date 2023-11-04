@@ -97,12 +97,8 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
-    def is_unrestricted(self):
-        if self.iam_roles:
-            for role in self.iam_roles:
-                if self.iam_roles[role].get("is_unrestricted"):
-                    return self.iam_roles[role].get("is_unrestricted")
-        return False
+    def trust_policy(self):
+        return None
 
     def public(self):
         if self.endpoint():
@@ -121,6 +117,5 @@ class Metacheck(MetaChecksBase):
             "endpoint": self.endpoint(),
             "public": self.public(),
             "is_encrypted": self.is_encrypted(),
-            "is_unrestricted": self.is_unrestricted(),
         }
         return checks

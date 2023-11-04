@@ -216,6 +216,12 @@ class Metacheck(MetaChecksBase):
         }
         return associations
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.public_ips():
             return True
@@ -231,5 +237,6 @@ class Metacheck(MetaChecksBase):
             "public": self.public(),
             "is_default": self.is_default(),
             "is_attached": self.is_attached(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

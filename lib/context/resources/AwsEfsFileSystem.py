@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -77,10 +76,7 @@ class Metacheck(MetaChecksBase):
 
             if response["Policy"]:
                 policy_json = json.loads(response["Policy"])
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, policy_json
-                ).check_policy()
-                return checked_policy
+                return policy_json
 
         return False
 
@@ -95,6 +91,9 @@ class Metacheck(MetaChecksBase):
         if self.fs[0]["Encrypted"]:
             return True
         return False
+
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None

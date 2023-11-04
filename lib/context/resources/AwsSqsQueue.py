@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -68,12 +67,7 @@ class Metacheck(MetaChecksBase):
         if self.queue_attributes:
             try:
                 if self.queue_attributes["Policy"]:
-                    checked_policy = PolicyHelper(
-                        self.logger,
-                        self.finding,
-                        json.loads(self.queue_attributes["Policy"]),
-                    ).check_policy()
-                    return checked_policy
+                    return json.loads(self.queue_attributes["Policy"])
             except KeyError:
                 return False
         return False
@@ -84,11 +78,8 @@ class Metacheck(MetaChecksBase):
         if self.queue_attributes:
             return self.queue_attributes["SqsManagedSseEnabled"]
 
-    def is_unrestricted(self):
-        if self.resource_policy:
-            if self.resource_policy["is_unrestricted"]:
-                return self.resource_policy["is_unrestricted"]
-        return False
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None
@@ -101,7 +92,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "resource_policy": self.resource_policy,
             "is_encrypted": self.is_encrypted(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
         }
         return checks

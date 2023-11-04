@@ -93,6 +93,12 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 

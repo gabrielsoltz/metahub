@@ -22,7 +22,12 @@ from lib.helpers import (
     test_python_version,
 )
 from lib.impact import Impact
-from lib.outputs import generate_output_csv, generate_output_html, generate_output_xlsx
+from lib.outputs import (
+    generate_output_csv,
+    generate_output_html,
+    generate_output_json,
+    generate_output_xlsx,
+)
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -152,6 +157,12 @@ def generate_findings(
             mh_findings[resource_arn]["impact"]["exposure"] = mh_findings_short[
                 resource_arn
             ]["impact"]["exposure"] = exposure
+
+            # Get Access
+            access = Impact(logger).resource_access(resource_arn, resource_values)
+            mh_findings[resource_arn]["impact"]["access"] = mh_findings_short[
+                resource_arn
+            ]["impact"]["access"] = access
 
     generate_impact()
 
@@ -425,19 +436,14 @@ def generate_outputs(
                 json_mode = ouput_mode.split("-")[1]
                 WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
                 with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    # try:
-                    json.dump(
-                        {
-                            "short": mh_findings_short,
-                            "inventory": mh_inventory,
-                            "statistics": mh_statistics,
-                            "full": mh_findings,
-                        }[json_mode],
+                    generate_output_json(
+                        mh_findings_short,
+                        mh_findings,
+                        mh_inventory,
+                        mh_statistics,
+                        json_mode,
                         f,
-                        indent=2,
                     )
-                    # except TypeError:
-                    #     print ("Error generating JSON output: " + str(json_mode))
                 print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=banners)
 
             # Output HTML files

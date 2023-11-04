@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -98,11 +97,7 @@ class Metacheck(MetaChecksBase):
                 policy_document = self.client.get_role_policy(
                     PolicyName=policy_name, RoleName=self.resource_id
                 ).get("PolicyDocument")
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, policy_document
-                ).check_policy()
-                # policy = {"policy_checks": checked_policy, "policy": access_policies}
-                iam_inline_policies[policy_name] = checked_policy
+                iam_inline_policies[policy_name] = policy_document
 
         return iam_inline_policies
 
@@ -131,36 +126,19 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def assume_policy(self):
-        if self.role:
-            if self.role.get("AssumeRolePolicyDocument"):
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, self.role.get("AssumeRolePolicyDocument")
-                ).check_policy()
-                return checked_policy
-        return False
-
     def permissions_boundary(self):
         if self.role:
             if self.role.get("PermissionsBoundary"):
                 return self.role.get("PermissionsBoundary")
         return False
 
-    def is_unrestricted(self):
-        if self.iam_policies:
-            for policy in self.iam_policies:
-                if self.iam_policies[policy].get("is_actions_and_resource_wildcard"):
-                    return self.iam_policies[policy].get(
-                        "is_actions_and_resource_wildcard"
-                    )
-        if self.iam_inline_policies:
-            for policy in self.iam_inline_policies:
-                if self.iam_inline_policies[policy].get(
-                    "is_actions_and_resource_wildcard"
-                ):
-                    return self.iam_inline_policies[policy].get(
-                        "is_actions_and_resource_wildcard"
-                    )
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        if self.role:
+            if self.role.get("AssumeRolePolicyDocument"):
+                return self.role.get("AssumeRolePolicyDocument")
         return False
 
     def public(self):
@@ -176,9 +154,9 @@ class Metacheck(MetaChecksBase):
         checks = {
             "iam_inline_policies": self.iam_inline_policies,
             "instance_profile": self.instance_profile,
-            "assume_policy": self.assume_policy(),
+            "trust_policy": self.trust_policy(),
             "permissions_boundary": self.permissions_boundary(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

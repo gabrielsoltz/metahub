@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 from lib.AwsHelpers import get_boto3_client
 from lib.config.configuration import days_to_consider_unrotated
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -64,10 +63,7 @@ class Metacheck(MetaChecksBase):
         if self.secret:
             response = self.client.get_resource_policy(SecretId=self.resource_arn)
         if response.get("ResourcePolicy"):
-            checked_policy = PolicyHelper(
-                self.logger, self.finding, json.loads(response["ResourcePolicy"])
-            ).check_policy()
-            return checked_policy
+            return json.loads(response["ResourcePolicy"])
         return False
 
     # MetaChecks
@@ -88,12 +84,6 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    def is_unrestricted(self):
-        if self.policy:
-            if self.policy["is_unrestricted"]:
-                return self.policy["is_unrestricted"]
-        return False
-
     def is_unrotated(self):
         if self.secret:
             current_date = datetime.now(timezone.utc)
@@ -106,6 +96,9 @@ class Metacheck(MetaChecksBase):
     def public(self):
         return None
 
+    def trust_policy(self):
+        return None
+
     def associations(self):
         associations = {}
         return associations
@@ -115,7 +108,6 @@ class Metacheck(MetaChecksBase):
             "resource_policy": self.resource_policy,
             "name": self.name(),
             "rotation_enabled": self.rotation_enabled(),
-            "is_unrestricted": self.is_unrestricted(),
             "is_unrotated": self.is_unrotated(),
             "public": self.public(),
         }

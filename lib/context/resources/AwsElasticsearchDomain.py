@@ -7,7 +7,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -32,7 +31,7 @@ class Metacheck(MetaChecksBase):
             self._describe_elasticsearch_domain_advanced_security()
         )
         # Resource Policy
-        self.es_resource_policy = self.describe_resource_policy()
+        self.resource_policy = self.describe_resource_policy()
         # Drilled MetaChecks
         self.security_groups = self._describe_elasticsearch_domain_security_groups()
         self.vpcs = self._describe_elasticsearch_domain_vpc()
@@ -135,11 +134,7 @@ class Metacheck(MetaChecksBase):
                     self.elasticsearch_domain["AccessPolicies"]
                 )
                 if access_policies:
-                    checked_policy = PolicyHelper(
-                        self.logger, self.finding, access_policies
-                    ).check_policy()
-                    # policy = {"policy_checks": checked_policy, "policy": access_policies}
-                    return checked_policy
+                    return access_policies
             except KeyError:
                 return False
         return False
@@ -158,17 +153,10 @@ class Metacheck(MetaChecksBase):
                 return self.elasticsearch_domain.get("Endpoint")
         return False
 
-    def resource_policy(self):
-        return self.es_resource_policy
-
-    def is_unrestricted(self):
-        if self.es_resource_policy:
-            if (
-                self.es_resource_policy["is_unrestricted"]
-                and self.elasticsearch_domain_as
-                and not self.elasticsearch_domain_as["InternalUserDatabaseEnabled"]
-            ):
-                return self.es_resource_policy["is_unrestricted"]
+    def internal_user_database(self):
+        if self.elasticsearch_domain_as:
+            if self.elasticsearch_domain_as.get("InternalUserDatabaseEnabled"):
+                return self.elasticsearch_domain.get("InternalUserDatabaseEnabled")
         return False
 
     def public(self):
@@ -197,6 +185,9 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def trust_policy(self):
+        return None
+
     def associations(self):
         associations = {
             "security_groups": self.security_groups,
@@ -207,14 +198,14 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = {
-            "resource_policy": self.resource_policy(),
+            "resource_policy": self.resource_policy,
             "private_endpoint": self.private_endpoint(),
             "public_endpoint": self.public_endpoint(),
+            "internal_user_database": self.internal_user_database(),
             "is_rest_encrypted": self.is_rest_encrypted(),
             "is_transit_encrypted": self.is_transit_encrypted(),
             "advanced_security_enabled": self.advanced_security_enabled(),
             "is_encrypted": self.is_encrypted(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
         }
         return checks

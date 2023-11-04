@@ -1,42 +1,40 @@
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.config import configuration
+from lib.config.configuration import dangereous_iam_actions, trusted_accounts
 
 
 class PolicyHelper:
-    def __init__(self, logger, finding, policy):
+    def __init__(self, logger, resource_arn, resource_account_id, policy):
         self.logger = logger
-        self.resource = finding["Resources"][0]["Id"]
-        self.account_id = finding["AwsAccountId"]
+        self.resource = resource_arn
+        self.account_id = resource_account_id
         self.policy = policy
 
     def check_policy(self):
         self.logger.info("Checking policy for resource: %s", self.resource)
         failed_statements = {
-            "is_principal_wildcard": [],
-            "is_principal_cross_account": [],
-            "is_principal_external": [],
-            "is_unrestricted": [],
-            "is_actions_wildcard": [],
-            "is_actions_and_resource_wildcard": [],
+            "wildcard_principal": [],
+            "cross_account_principal": [],
+            "untrusted_principal": [],
+            "wildcard_actions": [],
+            "unrestricted": [],
+            "dangereous_actions": [],
         }
-        statements = self.policy["Statement"]
-        if type(statements) is not list:
-            statements = [statements]
+        statements = self.standardize_statements(self.policy["Statement"])
         for statement in statements:
-            if self.is_principal_wildcard(statement):
-                failed_statements["is_principal_wildcard"].append(statement)
-            if self.is_principal_cross_account(statement):
-                failed_statements["is_principal_cross_account"].append(statement)
-            if self.is_principal_external(statement):
-                failed_statements["is_principal_external"].append(statement)
-            if self.is_unrestricted(statement):
-                failed_statements["is_unrestricted"].append(statement)
-            if self.is_actions_wildcard(statement):
-                failed_statements["is_actions_wildcard"].append(statement)
-            if self.is_actions_and_resource_wildcard(statement):
-                failed_statements["is_actions_and_resource_wildcard"].append(statement)
+            if self.wildcard_principal(statement):
+                failed_statements["wildcard_principal"].append(statement)
+            if self.cross_account_principal(statement):
+                failed_statements["cross_account_principal"].append(statement)
+            if self.untrusted_principal(statement):
+                failed_statements["untrusted_principal"].append(statement)
+            if self.wildcard_actions(statement):
+                failed_statements["wildcard_actions"].append(statement)
+            if self.unrestricted(statement):
+                failed_statements["unrestricted"].append(statement)
+            if self.dangereous_actions(statement):
+                failed_statements["dangereous_actions"].append(statement)
         return failed_statements
 
     def parse_statement(self, statement):
@@ -55,7 +53,32 @@ class PolicyHelper:
             return None, None, None, None, None, None, None
         return effect, principal, not_principal, condition, action, not_action, resource
 
-    def is_principal_wildcard(self, statement):
+    def santandarize_principals(self, principal):
+        if "AWS" in principal:
+            principals = principal["AWS"]
+        elif "Service" in principal:
+            return False
+        elif "Federated" in principal:
+            principals = principal["Federated"]
+        else:
+            principals = principal
+        if type(principals) is not list:
+            principals = [principals]
+        return principals
+
+    def standardize_actions(self, action):
+        actions = action
+        if type(action) is not list:
+            actions = [action]
+        return actions
+
+    def standardize_statements(self, statement):
+        statements = statement
+        if type(statement) is not list:
+            statements = [statement]
+        return statements
+
+    def wildcard_principal(self, statement):
         """
         Check if resource policy (S3, SQS) is allowed for principal wildcard
         """
@@ -73,7 +96,7 @@ class PolicyHelper:
                 return statement
         return False
 
-    def is_principal_cross_account(self, statement):
+    def cross_account_principal(self, statement):
         """
         Check if policy is allowed for principal cross account
         """
@@ -89,16 +112,7 @@ class PolicyHelper:
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
-                if "AWS" in principal:
-                    principals = principal["AWS"]
-                elif "Service" in principal:
-                    return False
-                elif "Federated" in principal:
-                    principals = principal["Federated"]
-                else:
-                    principals = principal
-                if type(principals) is not list:
-                    principals = [principals]
+                principals = self.santandarize_principals(principal)
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]
@@ -118,9 +132,8 @@ class PolicyHelper:
                         # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
-    def is_principal_external(self, statement):
+    def untrusted_principal(self, statement):
         """ """
-        trusted_accounts = configuration.trusted_accounts
         if not trusted_accounts:
             self.logger.info(
                 "No trusted accounts defined in configuration, skipping check for resource %s",
@@ -139,16 +152,7 @@ class PolicyHelper:
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
-                if "AWS" in principal:
-                    principals = principal["AWS"]
-                elif "Service" in principal:
-                    return False
-                elif "Federated" in principal:
-                    principals = principal["Federated"]
-                else:
-                    principals = principal
-                if type(principals) is not list:
-                    principals = [principals]
+                principals = self.santandarize_principals(principal)
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]
@@ -168,7 +172,7 @@ class PolicyHelper:
                         # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
-    def is_actions_wildcard(self, statement):
+    def wildcard_actions(self, statement):
         """ """
         (
             effect,
@@ -181,9 +185,8 @@ class PolicyHelper:
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if action:
-                if type(action) is not list:
-                    action = [action]
-                for a in action:
+                actions = self.standardize_actions(action)
+                for a in actions:
                     if "*" in a:
                         return statement
             # Not Action (all other actions are allowed)
@@ -191,7 +194,7 @@ class PolicyHelper:
                 return statement
         return False
 
-    def is_actions_and_resource_wildcard(self, statement):
+    def dangereous_actions(self, statement):
         """ """
         (
             effect,
@@ -204,22 +207,13 @@ class PolicyHelper:
         ) = self.parse_statement(statement)
         if effect == "Allow":
             if action:
-                if type(action) is not list:
-                    action = [action]
-                for a in action:
-                    if "*" in a:
-                        if resource:
-                            if type(resource) is not list:
-                                resource = [resource]
-                            for r in resource:
-                                if ":*" in r or "*" == r:
-                                    return statement
-            # Not Action (all other actions are allowed)
-            if not_action:
-                return statement
+                actions = self.standardize_actions(action)
+                for a in actions:
+                    if a in dangereous_iam_actions:
+                        return statement
         return False
 
-    def is_unrestricted(self, statement):
+    def unrestricted(self, statement):
         """
         There is no principal defined. This means that the resource is unrestricted if the policy is attached to a resource.
         """

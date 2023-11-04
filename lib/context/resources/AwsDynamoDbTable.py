@@ -64,6 +64,12 @@ class Metacheck(MetaChecksBase):
             return self.table.get("SSEDescription")
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 
@@ -76,5 +82,6 @@ class Metacheck(MetaChecksBase):
             "name": self.name(),
             "is_encrypted": self.is_encrypted(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

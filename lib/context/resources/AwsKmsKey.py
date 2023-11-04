@@ -6,7 +6,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -69,10 +68,7 @@ class Metacheck(MetaChecksBase):
                 )
             return False
         if response.get("Policy"):
-            checked_policy = PolicyHelper(
-                self.logger, self.finding, json.loads(response["Policy"])
-            ).check_policy()
-            return checked_policy
+            return json.loads(response["Policy"])
         return False
 
     # MetaChecks
@@ -95,11 +91,8 @@ class Metacheck(MetaChecksBase):
             signing_algorithms = self.kms_key.get("SigningAlgorithms")
         return signing_algorithms
 
-    def is_unrestricted(self):
-        if self.resource_policy:
-            if self.resource_policy["is_unrestricted"]:
-                return self.resource_policy["is_unrestricted"]
-        return False
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None
@@ -114,7 +107,6 @@ class Metacheck(MetaChecksBase):
             "origin": self.origin(),
             "encryption_algorithms": self.encryption_algorithms(),
             "signing_algorithms": self.signing_algorithms(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
         }
         return checks

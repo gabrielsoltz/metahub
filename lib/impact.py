@@ -2,6 +2,8 @@ from pathlib import Path
 
 import yaml
 
+from lib.context.resources.MetaChecksHelpers import PolicyHelper
+
 
 class Impact:
     def __init__(self, logger):
@@ -196,30 +198,36 @@ class Impact:
     def resource_exposure(self, resource_arn, resource_values):
         self.logger.info("Calculating exposure for resource: %s", resource_arn)
 
-        # Public Config
-        config_public = resource_values.get("config").get("public")
+        # Config
+        config_public = None
+        entrypoint = None
+        public_rules = None
 
-        # To Do: Standarize Entrypoints
-        if resource_values.get("config").get("public_endpoint"):
-            entrypoint = resource_values.get("config").get("public_endpoint")
-        elif resource_values.get("config").get("public_ip"):
-            entrypoint = resource_values.get("config").get("public_ip")
-        elif resource_values.get("config").get("public_dns"):
-            entrypoint = resource_values.get("config").get("public_dns")
-        elif resource_values.get("config").get("endpoint"):
-            entrypoint = resource_values.get("config").get("endpoint")
-        elif resource_values.get("config").get("private_ip"):
-            entrypoint = resource_values.get("config").get("private_ip")
-        elif resource_values.get("config").get("private_dns"):
-            entrypoint = resource_values.get("config").get("private_dns")
-        else:
-            entrypoint = "unknown entrypoint"
+        if resource_values.get("config"):
+            # Public
+            config_public = resource_values.get("config").get("public")
+            # Entrypoints
+            # To Do: Standarize Entrypoints
+            if resource_values.get("config").get("public_endpoint"):
+                entrypoint = resource_values.get("config").get("public_endpoint")
+            elif resource_values.get("config").get("public_ip"):
+                entrypoint = resource_values.get("config").get("public_ip")
+            elif resource_values.get("config").get("public_dns"):
+                entrypoint = resource_values.get("config").get("public_dns")
+            elif resource_values.get("config").get("endpoint"):
+                entrypoint = resource_values.get("config").get("endpoint")
+            elif resource_values.get("config").get("private_ip"):
+                entrypoint = resource_values.get("config").get("private_ip")
+            elif resource_values.get("config").get("private_dns"):
+                entrypoint = resource_values.get("config").get("private_dns")
 
-        public_rules = {}
+        # SG
         if resource_values.get("associations") and resource_values.get(
             "associations"
         ).get("security_groups"):
             security_groups = resource_values.get("associations").get("security_groups")
+            if security_groups:
+                public_rules = []
             for security_group in security_groups:
                 if (
                     security_groups[security_group]
@@ -234,20 +242,24 @@ class Impact:
                         from_port = rule.get("FromPort")
                         to_port = rule.get("ToPort")
                         ip_protocol = rule.get("IpProtocol")
-                        public_rules[entrypoint] = {
-                            "from_port": from_port,
-                            "to_port": to_port,
-                            "ip_protocol": ip_protocol,
-                        }
+                        public_rules.append(
+                            {
+                                "from_port": from_port,
+                                "to_port": to_port,
+                                "ip_protocol": ip_protocol,
+                            }
+                        )
 
         if config_public is True and public_rules:
             exposure = "effectively-public"
-        elif config_public is True and not public_rules:
+        elif config_public is True:
             exposure = "restricted-public"
         elif config_public is None and public_rules:
             exposure = "unknown-public"
         elif config_public is False and public_rules:
-            exposure = "open-private"
+            exposure = "unrestricted-private"
+        elif config_public is None and public_rules is None:
+            exposure = "unknown"
         else:
             exposure = "restricted"
 
@@ -262,3 +274,114 @@ class Impact:
 
     def resource_access(self, resource_arn, resource_values):
         self.logger.info("Calculating access for resource: %s", resource_arn)
+
+        resource_account_id = resource_values["AwsAccountId"]
+        access_dict = {
+            "unrestricted": {},
+            "wildcard_principal": {},
+            "untrusted_principal": {},
+            "cross_account_principal": {},
+            "wildcard_actions": {},
+        }
+
+        # All Together IAM Policies to Check
+        iam_associated_policies_all = {}
+
+        # Config
+        if resource_values.get("config"):
+            # Resource Policy
+            config_resource_policy = resource_values.get("config").get(
+                "resource_policy"
+            )
+            if config_resource_policy:
+                resource_policy_checks = PolicyHelper(
+                    self.logger,
+                    resource_arn,
+                    resource_account_id,
+                    config_resource_policy,
+                ).check_policy()
+                for check in resource_policy_checks:
+                    if resource_policy_checks[check]:
+                        access_dict[check].update(
+                            {"resource-policy": resource_policy_checks[check]}
+                        )
+
+            # Inline Polcy
+            config_inline_policies = resource_values.get("config").get(
+                "iam_inline_policies"
+            )
+            if config_inline_policies:
+                iam_associated_policies_all = {
+                    **iam_associated_policies_all,
+                    **config_inline_policies,
+                }
+
+        if resource_values.get("associations"):
+            # Associated with IAM Roles wich is Associated with Policies
+            associated_roles = resource_values.get("associations").get("iam_roles")
+            if associated_roles:
+                for role_arn, role_config in associated_roles.items():
+                    role_associated_policies = role_config.get("associations").get(
+                        "iam_policies"
+                    )
+                    if role_associated_policies:
+                        iam_associated_policies_all = {
+                            **iam_associated_policies_all,
+                            **role_associated_policies,
+                        }
+
+            # Associated with IAM Policies
+            associated_policies = resource_values.get("associations").get(
+                "iam_policies"
+            )
+            if associated_policies:
+                iam_associated_policies_all = {
+                    **iam_associated_policies_all,
+                    **associated_policies,
+                }
+
+        # I build only one dictionary with all the associated policies
+        if iam_associated_policies_all:
+            for policy_arn, policy_config in iam_associated_policies_all.items():
+                policy_json = policy_config.get("config").get("resource_policy")
+                iam_associated_policies_all_checks = PolicyHelper(
+                    self.logger, resource_arn, resource_account_id, policy_json
+                ).check_policy()
+                for check in iam_associated_policies_all_checks:
+                    if iam_associated_policies_all_checks[check]:
+                        access_dict[check].update(
+                            {policy_arn: iam_associated_policies_all_checks[check]}
+                        )
+
+        for access in list(access_dict):
+            if not access_dict[access]:
+                access_dict.pop(access)
+
+        if access_dict == {}:
+            final_access_dict = {"restricted": {}}
+        elif "unrestricted" in access_dict:
+            final_access_dict = {"unrestricted": access_dict["unrestricted"]}
+        elif "untrusted_principal" in access_dict:
+            final_access_dict = {
+                "untrusted-principal": access_dict["untrusted_principal"]
+            }
+        elif "wildcard_principal" in access_dict and config_resource_policy:
+            final_access_dict = {
+                "unrestricted-resource-principal": access_dict["wildcard_principal"]
+            }
+        elif "cross_account_principal" in access_dict:
+            final_access_dict = {
+                "cross-account-principal": access_dict["cross_account_principal"]
+            }
+        elif "wildcard_actions" in access_dict:
+            final_access_dict = {
+                "unrestricted-actions": access_dict["wildcard_actions"]
+            }
+        elif "dangereous_actions" in access_dict:
+            final_access_dict = {
+                "dangereous-actions": access_dict["dangereous_actions"]
+            }
+        else:
+            final_access_dict = {"unknown": access_dict}
+
+        return final_access_dict

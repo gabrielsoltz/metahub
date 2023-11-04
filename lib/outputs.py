@@ -1,7 +1,23 @@
 import csv
+import json
 
 import jinja2
 import xlsxwriter
+
+
+def generate_output_json(
+    mh_findings_short, mh_findings, mh_inventory, mh_statistics, json_mode, f
+):
+    json.dump(
+        {
+            "short": mh_findings_short,
+            "full": mh_findings,
+            "inventory": mh_inventory,
+            "statistics": mh_statistics,
+        }[json_mode],
+        f,
+        indent=2,
+    )
 
 
 def generate_output_csv(

@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -26,13 +25,9 @@ class Metacheck(MetaChecksBase):
         self.policy = self.describe_policy()
         if not self.policy:
             return False
-        self.policy_version = self.get_policy_version()
-        if self.policy_version:
-            self.checked_policy_version = PolicyHelper(
-                self.logger, finding, self.policy_version
-            ).check_policy()
-        self.policy_entities = self.list_entities_for_policy()
+        self.resource_policy = self.get_policy_version()
         # Drilled Metachecks
+        self.policy_entities = self.list_entities_for_policy()
         self.iam_roles = self._list_entities_for_policy_roles()
         self.iam_groups = self._list_entities_for_policy_groups()
         self.iam_users = self._list_entities_for_policy_users()
@@ -148,30 +143,8 @@ class Metacheck(MetaChecksBase):
             return True
         return False
 
-    def is_principal_cross_account(self):
-        if self.policy_version:
-            return self.checked_policy_version["is_principal_cross_account"]
-        return False
-
-    def is_principal_wildcard(self):
-        if self.policy_version:
-            return self.checked_policy_version["is_principal_wildcard"]
-        return False
-
-    def is_unrestricted(self):
-        if self.policy_version:
-            return self.checked_policy_version["is_unrestricted"]
-        return False
-
-    def is_actions_wildcard(self):
-        if self.policy_version:
-            return self.checked_policy_version["is_actions_wildcard"]
-        return False
-
-    def is_actions_and_resource_wildcard(self):
-        if self.policy_version:
-            return self.checked_policy_version["is_actions_and_resource_wildcard"]
-        return False
+    def trust_policy(self):
+        return None
 
     def public(self):
         return None
@@ -189,12 +162,8 @@ class Metacheck(MetaChecksBase):
             "name": self.name(),
             "description": self.description(),
             "is_customer_managed": self.is_customer_managed(),
-            "is_principal_cross_account": self.is_principal_cross_account(),
-            "is_principal_wildcard": self.is_principal_wildcard(),
-            "is_actions_wildcard": self.is_actions_wildcard(),
-            "is_actions_and_resource_wildcard": self.is_actions_and_resource_wildcard(),
             "is_attached": self.is_attached(),
-            "is_unrestricted": self.is_unrestricted(),
             "public": self.public(),
+            "resource_policy": self.resource_policy,
         }
         return checks

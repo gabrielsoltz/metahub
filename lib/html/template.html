@@ -20,8 +20,8 @@
               RecordState: "{{ finding_values.RecordState|e }}",
               ComplianceStatus: "{{ finding_values.Compliance.Status|e }}",
               {% if 'tags' in resource_value %}
-                {% for tags_column in tags_columns %}
-                  "{{ tags_column }}": "{{ resource_value.tags[tags_column]|e }}",
+                {% for tag_column in tag_columns %}
+                  "{{ tag_column }}": "{{ resource_value.tags[tag_column]|e }}",
                 {% endfor %}
               {% endif %}
               {% if 'config' in resource_value %}
@@ -31,6 +31,8 @@
               {% endif %}
               {% for impact_column in impact_columns %}
                 {% if 'exposure' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% elif 'access' == impact_column %}
                   "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
                 {% else %}
                   "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e  }}",
@@ -174,12 +176,15 @@
               if (value === "effectively-public") {
                 color = "red";
                 emoji = "🔴";
-              } else if (value === "restricted-public" || value === "unknown-public" || value === "open-private") {
+              } else if (value === "restricted-public" || value === "unknown-public" || value === "unrestricted-private") {
                 color = "orange";
                 emoji = "🟠";
               } else if (value === "restricted") {
                 color = "green";
                 emoji = "🟢";
+              } else if (value === "unknown") {
+                color = "blue";
+                emoji = "🔵";
               } else {
                 return value;
               }
@@ -189,10 +194,36 @@
                       </span>`;
             }
           },
+        {% elif 'access' == impact_column %}
+          {title:"access", field:"access", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
+                var value = cell.getValue();
+                var color;
+                var emoji;
+                if (value === "unrestricted") || value === "untrusted-principal" {
+                  color = "red";
+                  emoji = "🔴";
+                } else if (value === "unrestricted-resource-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || vale == "dangereous-actions") {
+                  color = "orange";
+                  emoji = "🟠";
+                } else if (value === "restricted") {
+                  color = "green";
+                  emoji = "🟢";
+                } else if (value === "unknown") {
+                color = "blue";
+                emoji = "🔵";
+                } else {
+                  return value;
+                }
+                return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
+                          <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
+                          ${value}
+                        </span>`;
+              }
+            },
         {% elif 'score' == impact_column %}
           {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
-        { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+          { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endif %}
       {% endfor %}
       {title:"AwsAccountId", field:"AwsAccountId", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
@@ -205,8 +236,8 @@
       {title:"WorkflowStatus", field:"WorkflowStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {title:"RecordState", field:"RecordState", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {title:"ComplianceStatus", field:"ComplianceStatus", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
-      {% for tags_column in tags_columns %}
-        { title: "{{tags_column}}", field: "{{tags_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+      {% for tag_column in tag_columns %}
+        { title: "{{tag_column}}", field: "{{tag_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
       {% endfor %}
       {% for config_column in config_columns %}
         { title: "{{config_column}}", field: "{{config_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},

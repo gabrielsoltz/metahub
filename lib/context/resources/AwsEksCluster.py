@@ -116,6 +116,12 @@ class Metacheck(MetaChecksBase):
                 return self.eks_cluster.get("endpoint", False)
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.public_endpoint():
             return True
@@ -133,5 +139,6 @@ class Metacheck(MetaChecksBase):
             "endpoint": self.endpoint(),
             "public_endpoint": self.public_endpoint(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

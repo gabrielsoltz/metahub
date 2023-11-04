@@ -117,6 +117,12 @@ class Metacheck(MetaChecksBase):
             return self.autoscaling_group.get("AutoScalingGroupName", False)
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 
@@ -132,5 +138,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "name": self.name(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

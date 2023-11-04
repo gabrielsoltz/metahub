@@ -73,6 +73,12 @@ class Metacheck(MetaChecksBase):
             return self.api["ApiEndpoint"]
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.endpoint() and not self.authorizers:
             return True
@@ -87,5 +93,6 @@ class Metacheck(MetaChecksBase):
             "endpoint": self.endpoint(),
             "authorizers": self.authorizers,
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

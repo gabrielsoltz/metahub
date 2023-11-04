@@ -132,6 +132,12 @@ class Metacheck(MetaChecksBase):
                 return True
         return False
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         if self.endpoint():
             return True
@@ -151,5 +157,6 @@ class Metacheck(MetaChecksBase):
             "is_transit_encrypted": self.is_transit_encrypted(),
             "is_encrypted": self.is_encrypted(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

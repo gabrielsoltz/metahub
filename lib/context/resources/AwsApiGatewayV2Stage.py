@@ -83,6 +83,12 @@ class Metacheck(MetaChecksBase):
             client_certificate_id = self.stage.get("clientCertificateId")
         return client_certificate_id
 
+    def resource_policy(self):
+        return None
+
+    def trust_policy(self):
+        return None
+
     def public(self):
         return None
 
@@ -97,5 +103,6 @@ class Metacheck(MetaChecksBase):
         checks = {
             "client_certificate_id": self.client_certificate_id(),
             "public": self.public(),
+            "resource_policy": self.resource_policy(),
         }
         return checks

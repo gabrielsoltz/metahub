@@ -7,7 +7,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import MetaChecksBase
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
 
 
 class Metacheck(MetaChecksBase):
@@ -105,10 +104,7 @@ class Metacheck(MetaChecksBase):
                     )
                     return False
             if response["Policy"]:
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, json.loads(response["Policy"])
-                ).check_policy()
-                return checked_policy
+                return json.loads(response["Policy"])
         return False
 
     def _describe_function_security_groups(self):
@@ -169,18 +165,15 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def is_unrestricted(self):
-        if self.resource_policy:
-            if self.resource_policy["is_unrestricted"]:
-                return self.resource_policy["is_unrestricted"]
-        return False
-
     def endpoint(self):
         if self.function:
             if self.function_url_config:
                 if self.function_url_config["FunctionUrl"]:
                     return self.function_url_config["FunctionUrl"]
         return False
+
+    def trust_policy(self):
+        return None
 
     def public(self):
         if self.function:
@@ -201,7 +194,6 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "resource_policy": self.resource_policy,
-            "is_unrestricted": self.is_unrestricted(),
             "endpoint": self.endpoint(),
             "public": self.public(),
         }
