@@ -72,10 +72,6 @@ class Metacheck(MetaChecksBase):
                         self.finding,
                         json.loads(self.queue_attributes["Policy"]),
                     ).check_policy()
-                    # policy = {
-                    #     "policy_checks": checked_policy,
-                    #     "policy": json.loads(self.queue_attributes["Policy"]),
-                    # }
                     return checked_policy
             except KeyError:
                 return False
@@ -87,15 +83,20 @@ class Metacheck(MetaChecksBase):
         if self.queue_attributes:
             return self.queue_attributes["SqsManagedSseEnabled"]
 
-    def it_has_resource_policy(self):
-        return self.resource_policy
-
     def is_unrestricted(self):
         if self.resource_policy:
             if self.resource_policy["is_unrestricted"]:
                 return self.resource_policy["is_unrestricted"]
         return False
 
+    def associations(self):
+        associations = {}
+        return associations
+
     def checks(self):
-        checks = ["it_has_resource_policy", "is_encrypted", "is_unrestricted"]
+        checks = {
+            "resource_policy": self.resource_policy,
+            "is_encrypted": self.is_encrypted(),
+            "is_unrestricted": self.is_unrestricted(),
+        }
         return checks

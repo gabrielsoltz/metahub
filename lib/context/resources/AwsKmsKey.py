@@ -24,9 +24,11 @@ class Metacheck(MetaChecksBase):
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "kms", self.region, self.sess)
         # Describe
-        self.policy = self.get_key_policy()
-        if not self.policy:
+        self.kms_key = self.describe_key()
+        if not self.kms_key:
             return False
+        self.resource_policy = self.get_key_policy()
+
         # Drilled Metachecks
 
     def parse_finding(self, finding, drilled):
@@ -42,6 +44,17 @@ class Metacheck(MetaChecksBase):
         self.resource_arn = finding["Resources"][0]["Id"] if not drilled else drilled
 
     # Describe Functions
+
+    def describe_key(self):
+        try:
+            response = self.client.describe_key(KeyId=self.resource_id)
+            return response.get("KeyMetadata")
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "NotFoundException":
+                self.logger.error(
+                    "Failed to describe_key {}, {}".format(self.resource_id, err)
+                )
+        return False
 
     def get_key_policy(self):
         try:
@@ -63,13 +76,28 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def it_has_resource_policy(self):
-        return self.policy
+    def origin(self):
+        origin = False
+        if self.kms_key:
+            origin = self.kms_key.get("Origin")
+        return origin
+
+    def encryption_algorithms(self):
+        encryption_algorithms = False
+        if self.kms_key:
+            encryption_algorithms = self.kms_key.get("EncryptionAlgorithms")
+        return encryption_algorithms
+
+    def signing_algorithms(self):
+        signing_algorithms = False
+        if self.kms_key:
+            signing_algorithms = self.kms_key.get("SigningAlgorithms")
+        return signing_algorithms
 
     def is_unrestricted(self):
-        if self.policy:
-            if self.policy["is_unrestricted"]:
-                return self.policy["is_unrestricted"]
+        if self.resource_policy:
+            if self.resource_policy["is_unrestricted"]:
+                return self.resource_policy["is_unrestricted"]
         return False
 
     def associations(self):
@@ -78,7 +106,10 @@ class Metacheck(MetaChecksBase):
 
     def checks(self):
         checks = {
-            "resource_policy": self.it_has_resource_policy(),
+            "resource_policy": self.resource_policy,
+            "origin": self.origin(),
+            "encryption_algorithms": self.encryption_algorithms(),
+            "signing_algorithms": self.signing_algorithms(),
             "is_unrestricted": self.is_unrestricted(),
         }
         return checks

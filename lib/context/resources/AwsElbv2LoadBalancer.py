@@ -76,7 +76,7 @@ class Metacheck(MetaChecksBase):
 
         return security_groups
 
-    # # MetaChecks
+    # MetaChecks
 
     def name(self):
         if self.elb.get("LoadBalancerName"):

@@ -36,6 +36,7 @@ class Metacheck(MetaChecksBase):
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
+        self.resource_type = finding["Resources"][0]["Type"]
         self.resource_id = (
             finding["Resources"][0]["Id"].split("/")[1]
             if not drilled
@@ -130,6 +131,21 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
+    def assume_policy(self):
+        if self.role:
+            if self.role.get("AssumeRolePolicyDocument"):
+                checked_policy = PolicyHelper(
+                    self.logger, self.finding, self.role.get("AssumeRolePolicyDocument")
+                ).check_policy()
+                return checked_policy
+        return False
+
+    def permissions_boundary(self):
+        if self.role:
+            if self.role.get("PermissionsBoundary"):
+                return self.role.get("PermissionsBoundary")
+        return False
+
     def is_unrestricted(self):
         if self.iam_policies:
             for policy in self.iam_policies:
@@ -147,26 +163,6 @@ class Metacheck(MetaChecksBase):
                     )
         return False
 
-    def its_associated_with_instance_profile(self):
-        if self.instance_profile:
-            return self.instance_profile
-        return False
-
-    def it_has_assume_role_policy(self):
-        if self.role:
-            if self.role.get("AssumeRolePolicyDocument"):
-                checked_policy = PolicyHelper(
-                    self.logger, self.finding, self.role.get("AssumeRolePolicyDocument")
-                ).check_policy()
-                return checked_policy
-        return False
-
-    def it_has_permissions_boundary(self):
-        if self.role:
-            if self.role.get("PermissionsBoundary"):
-                return self.role.get("PermissionsBoundary")
-        return False
-
     def associations(self):
         associations = {
             "iam_policies": self.iam_policies,
@@ -176,9 +172,9 @@ class Metacheck(MetaChecksBase):
     def checks(self):
         checks = {
             "iam_inline_policies": self.iam_inline_policies,
-            "is_unrestricted": self.is_unrestricted(),
-            "its_associated_with_instance_profile": self.its_associated_with_instance_profile(),
-            "it_has_assume_role_policy": self.it_has_assume_role_policy(),
-            "it_has_permissions_boundary": self.it_has_permissions_boundary(),
+            "instance_profile": self.instance_profile,
+            "assume_policy": self.assume_policy(),
+            # "permissions_boundary": self.permissions_boundary(),
+            # "is_unrestricted": self.is_unrestricted(),
         }
         return checks

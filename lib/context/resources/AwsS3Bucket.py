@@ -159,13 +159,13 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def it_has_bucket_acl(self):
+    def bucket_acl(self):
         bucket_acl = False
         if self.bucket_acl:
             bucket_acl = self.bucket_acl
         return bucket_acl
 
-    def it_has_bucket_acl_cross_account(self):
+    def bucket_acl_cross_account(self):
         acl_with_cross_account = []
         if self.bucket_acl:
             for grant in self.bucket_acl:
@@ -177,7 +177,7 @@ class Metacheck(MetaChecksBase):
             return acl_with_cross_account
         return False
 
-    def it_has_bucket_acl_public(self):
+    def bucket_acl_public(self):
         public_acls = []
         if self.bucket_acl:
             for grant in self.bucket_acl:
@@ -195,10 +195,7 @@ class Metacheck(MetaChecksBase):
             return public_acls
         return False
 
-    def it_has_resource_policy(self):
-        return self.resource_policy
-
-    def it_has_public_access_block_enabled(self):
+    def public_access_block_enabled(self):
         if self.bucket_public_access_block:
             for key, value in self.bucket_public_access_block.items():
                 if value is False:
@@ -206,7 +203,7 @@ class Metacheck(MetaChecksBase):
             return self.bucket_public_access_block
         return False
 
-    def it_has_account_public_access_block_enabled(self):
+    def account_public_access_block_enabled(self):
         if self.account_public_access_block:
             for key, value in self.account_public_access_block.items():
                 if value is False:
@@ -214,7 +211,7 @@ class Metacheck(MetaChecksBase):
             return self.account_public_access_block
         return False
 
-    def it_has_website_enabled(self):
+    def website_enabled(self):
         if self.bucket_website:
             if self.region == "us-east-1":
                 url = "http://%s.s3-website-%s.amazonaws.com" % (
@@ -235,23 +232,20 @@ class Metacheck(MetaChecksBase):
                 if self.resource_policy["is_unrestricted"]:
                     return self.resource_policy["is_unrestricted"]
             if self.bucket_acl:
-                if self.it_has_bucket_acl_public():
-                    return self.it_has_bucket_acl_public()
+                if self.bucket_acl_public():
+                    return self.bucket_acl_public()
         return False
 
     def is_public(self):
         public_dict = {}
-        if self.it_has_website_enabled():
+        if self.website_enabled():
             if self.resource_policy:
-                if (
-                    self.resource_policy["is_unrestricted"]
-                    or self.it_has_bucket_acl_public()
-                ):
-                    public_dict[self.it_has_website_enabled()] = []
+                if self.resource_policy["is_unrestricted"] or self.bucket_acl_public():
+                    public_dict[self.website_enabled()] = []
                     from_port = "443"
                     to_port = "443"
                     ip_protocol = "tcp"
-                    public_dict[self.it_has_website_enabled()].append(
+                    public_dict[self.website_enabled()].append(
                         {
                             "from_port": from_port,
                             "to_port": to_port,
@@ -267,17 +261,21 @@ class Metacheck(MetaChecksBase):
             return True
         return False
 
+    def associations(self):
+        associations = {}
+        return associations
+
     def checks(self):
-        checks = [
-            "it_has_website_enabled",
-            "it_has_bucket_acl",
-            "it_has_bucket_acl_cross_account",
-            "it_has_bucket_acl_public",
-            "it_has_resource_policy",
-            "it_has_public_access_block_enabled",
-            "it_has_account_public_access_block_enabled",
-            "is_public",
-            "is_unrestricted",
-            "is_encrypted",
-        ]
+        checks = {
+            "resource_policy": self.resource_policy,
+            "website_enabled": self.website_enabled(),
+            "bucket_acl": self.bucket_acl(),
+            "bucket_acl_cross_account": self.bucket_acl_cross_account(),
+            "bucket_acl_public": self.bucket_acl_public(),
+            "public_access_block_enabled": self.public_access_block_enabled(),
+            "account_public_access_block_enabled": self.account_public_access_block_enabled(),
+            "is_public": self.is_public(),
+            "is_unrestricted": self.is_unrestricted(),
+            "is_encrypted": self.is_encrypted(),
+        }
         return checks

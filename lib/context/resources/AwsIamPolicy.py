@@ -42,6 +42,7 @@ class Metacheck(MetaChecksBase):
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
+        self.resource_type = finding["Resources"][0]["Type"]
         self.resource_id = (
             finding["Resources"][0]["Id"].split("/")[1]
             if not drilled
@@ -88,14 +89,34 @@ class Metacheck(MetaChecksBase):
         return roles
 
     def _list_entities_for_policy_groups(self):
+        groups = {}
         if self.policy_entities.get("PolicyGroups"):
-            return self.policy_entities["PolicyGroups"]
-        return False
+            for group in self.policy_entities["PolicyGroups"]:
+                arn = generate_arn(
+                    group.get("GroupName"),
+                    "iam",
+                    "group",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                groups[arn] = {}
+        return groups
 
     def _list_entities_for_policy_users(self):
+        users = {}
         if self.policy_entities.get("PolicyUsers"):
-            return self.policy_entities["PolicyUsers"]
-        return False
+            for user in self.policy_entities["PolicyUsers"]:
+                arn = generate_arn(
+                    user.get("UserName"),
+                    "iam",
+                    "user",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                users[arn] = {}
+        return users
 
     # MetaChecks
 

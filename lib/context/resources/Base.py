@@ -89,6 +89,7 @@ class MetaChecksBase:
                             and self.iam_roles
                             and hasattr(resource_drilled, "iam_policies")
                             and resource_drilled.iam_policies
+                            and self.resource_type != "AwsIamPolicy"
                         ):
                             from lib.context.resources.AwsIamPolicy import (
                                 Metacheck as IamPolicyMetacheck,
@@ -143,9 +144,11 @@ class MetaChecksBase:
 
         # IAM Roles
         if hasattr(self, "iam_roles") and self.iam_roles:
-            from lib.context.resources.AwsIamRole import Metacheck as IamRoleMetacheck
+            from lib.context.resources.AwsIamRole import (
+                Metacheck as AwsIamRoleMetaCheck,
+            )
 
-            execute(self.iam_roles, IamRoleMetacheck)
+            execute(self.iam_roles, AwsIamRoleMetaCheck)
 
         # IAM Policies
         if hasattr(self, "iam_policies") and self.iam_policies:
@@ -199,8 +202,9 @@ class MetaChecksBase:
 
     def output_checks_drilled(self):
         mh_values_checks = {}
-        for check in self.checks():
-            hndl = getattr(self, check)()
-            mh_values_checks.update({check: hndl})
-
+        context_config = self.checks()
+        context_associations = self.associations()
+        mh_values_checks.update(
+            {"associations": context_associations, "config": context_config}
+        )
         return mh_values_checks

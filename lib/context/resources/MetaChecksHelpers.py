@@ -93,6 +93,8 @@ class PolicyHelper:
                     principals = principal["AWS"]
                 elif "Service" in principal:
                     return False
+                elif "Federated" in principal:
+                    principals = principal["Federated"]
                 else:
                     principals = principal
                 if type(principals) is not list:
@@ -105,11 +107,12 @@ class PolicyHelper:
                             and account_id not in amazon_accounts
                         ):
                             return statement
-                    except IndexError:
+                    except (IndexError, TypeError) as err:
                         self.logger.warning(
-                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
+                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. - %s",
                             p,
                             self.resource,
+                            err,
                         )
                         # To DO: check identifiers-unique-ids
                         # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
@@ -140,6 +143,8 @@ class PolicyHelper:
                     principals = principal["AWS"]
                 elif "Service" in principal:
                     return False
+                elif "Federated" in principal:
+                    principals = principal["Federated"]
                 else:
                     principals = principal
                 if type(principals) is not list:

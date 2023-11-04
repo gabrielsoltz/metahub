@@ -31,7 +31,7 @@ class Metacheck(MetaChecksBase):
         self.secret = self.describe_secret()
         if not self.secret:
             return False
-        self.policy = self.get_resource_policy()
+        self.resource_policy = self.get_resource_policy()
         # Drilled Metachecks
 
     def parse_finding(self, finding, drilled):
@@ -71,7 +71,7 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def it_has_name(self):
+    def name(self):
         if self.secret:
             try:
                 return self.secret["Name"]
@@ -79,16 +79,13 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    def it_has_rotation_enabled(self):
+    def rotation_enabled(self):
         if self.secret:
             try:
                 return self.secret["RotationEnabled"]
             except KeyError:
                 return False
         return False
-
-    def it_has_resource_policy(self):
-        return self.policy
 
     def is_unrestricted(self):
         if self.policy:
@@ -105,12 +102,16 @@ class Metacheck(MetaChecksBase):
                 return str(date_difference.days)
         return False
 
+    def associations(self):
+        associations = {}
+        return associations
+
     def checks(self):
-        checks = [
-            "it_has_name",
-            "it_has_resource_policy",
-            "it_has_rotation_enabled",
-            "is_unrestricted",
-            "is_unrotated",
-        ]
+        checks = {
+            "resource_policy": self.resource_policy,
+            "name": self.name(),
+            "rotation_enabled": self.rotation_enabled(),
+            "is_unrestricted": self.is_unrestricted(),
+            "is_unrotated": self.is_unrotated(),
+        }
         return checks

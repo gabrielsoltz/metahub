@@ -81,8 +81,25 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def it_has_resource_policy(self):
-        return self.resource_policy
+    def subscriptions_confirmed(self):
+        if self.topic_atributes:
+            try:
+                if self.topic_atributes["SubscriptionsConfirmed"]:
+                    if int(self.topic_atributes["SubscriptionsConfirmed"]) == 0:
+                        return False
+                    return self.topic_atributes["SubscriptionsConfirmed"]
+            except KeyError:
+                return False
+        return False
+
+    def name(self):
+        if self.topic_atributes:
+            try:
+                if self.topic_atributes["DisplayName"]:
+                    return self.topic_atributes["DisplayName"]
+            except KeyError:
+                return False
+        return False
 
     def is_unrestricted(self):
         if self.resource_policy:
@@ -95,32 +112,16 @@ class Metacheck(MetaChecksBase):
             return self.topic_kms_master_key_id
         return False
 
-    def it_has_subscriptions_confirmed(self):
-        if self.topic_atributes:
-            try:
-                if self.topic_atributes["SubscriptionsConfirmed"]:
-                    if int(self.topic_atributes["SubscriptionsConfirmed"]) == 0:
-                        return False
-                    return self.topic_atributes["SubscriptionsConfirmed"]
-            except KeyError:
-                return False
-        return False
-
-    def it_has_name(self):
-        if self.topic_atributes:
-            try:
-                if self.topic_atributes["DisplayName"]:
-                    return self.topic_atributes["DisplayName"]
-            except KeyError:
-                return False
-        return False
+    def associations(self):
+        associations = {}
+        return associations
 
     def checks(self):
-        checks = [
-            "it_has_name",
-            "it_has_subscriptions_confirmed",
-            "it_has_resource_policy",
-            "is_unrestricted",
-            "is_encrypted",
-        ]
+        checks = {
+            "resource_policy": self.resource_policy,
+            "subscriptions_confirmed": self.subscriptions_confirmed(),
+            "name": self.name(),
+            "is_encrypted": self.is_encrypted(),
+            "is_unrestricted": self.is_unrestricted(),
+        }
         return checks

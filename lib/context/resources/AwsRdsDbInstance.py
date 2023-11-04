@@ -26,8 +26,8 @@ class Metacheck(MetaChecksBase):
         if not self.rds_instances:
             return False
         # Drilled MetaChecks
-        self.iam_roles = self.describe_iam_roles()
-        self.security_groups = self.describe_security_groups()
+        self.iam_roles = self._describe_db_instances_iam_roles()
+        self.security_groups = self._describe_db_instances_security_groups()
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -53,10 +53,7 @@ class Metacheck(MetaChecksBase):
             return response["DBInstances"][0]
         return False
 
-    # Drilled MetaChecks
-    # For drilled MetaChecks, describe functions must return a dictionary of resources {arn: {}}
-
-    def describe_iam_roles(self):
+    def _describe_db_instances_iam_roles(self):
         iam_roles = {}
         if self.rds_instances:
             if self.rds_instances.get("AssociatedRoles"):
@@ -66,7 +63,7 @@ class Metacheck(MetaChecksBase):
 
         return iam_roles
 
-    def describe_security_groups(self):
+    def _describe_db_instances_security_groups(self):
         security_groups = {}
         if self.rds_instances:
             if self.rds_instances["VpcSecurityGroups"]:
@@ -87,17 +84,7 @@ class Metacheck(MetaChecksBase):
 
     # MetaChecks
 
-    def its_associated_with_iam_roles(self):
-        if self.rds_instances:
-            return self.iam_roles
-        return False
-
-    def its_associated_with_security_groups(self):
-        if self.rds_instances:
-            return self.security_groups
-        return False
-
-    def it_has_endpoint(self):
+    def endpoint(self):
         if self.rds_instances:
             if self.rds_instances.get("Endpoint"):
                 return self.rds_instances.get("Endpoint")
@@ -105,17 +92,17 @@ class Metacheck(MetaChecksBase):
 
     def is_public(self):
         public_dict = {}
-        if self.it_has_endpoint():
+        if self.endpoint():
             for sg in self.security_groups:
                 if self.security_groups[sg].get("is_ingress_rules_unrestricted"):
-                    public_dict[self.it_has_endpoint()] = []
+                    public_dict[self.endpoint()] = []
                     for rule in self.security_groups[sg].get(
                         "is_ingress_rules_unrestricted"
                     ):
                         from_port = rule.get("FromPort")
                         to_port = rule.get("ToPort")
                         ip_protocol = rule.get("IpProtocol")
-                        public_dict[self.it_has_endpoint()].append(
+                        public_dict[self.endpoint()].append(
                             {
                                 "from_port": from_port,
                                 "to_port": to_port,
@@ -139,11 +126,16 @@ class Metacheck(MetaChecksBase):
                     return self.iam_roles[role].get("is_unrestricted")
         return False
 
+    def associations(self):
+        associations = {
+            "iam_roles": self.iam_roles,
+            "security_groups": self.security_groups,
+        }
+        return associations
+
     def checks(self):
         checks = [
-            "it_has_endpoint",
-            "its_associated_with_iam_roles",
-            "its_associated_with_security_groups",
+            "endpoint",
             "is_public",
             "is_encrypted",
             "is_unrestricted",
