@@ -282,6 +282,7 @@ class Impact:
             "untrusted_principal": {},
             "cross_account_principal": {},
             "wildcard_actions": {},
+            "dangereous_actions": {},
         }
 
         # All Together IAM Policies to Check

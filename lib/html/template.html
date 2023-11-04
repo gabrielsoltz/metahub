@@ -199,18 +199,18 @@
                 var value = cell.getValue();
                 var color;
                 var emoji;
-                if (value === "unrestricted") || value === "untrusted-principal" {
+                if (value === "unrestricted" || value === "untrusted-principal") {
                   color = "red";
                   emoji = "🔴";
-                } else if (value === "unrestricted-resource-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || vale == "dangereous-actions") {
+                } else if (value === "unrestricted-resource-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || value == "dangereous-actions" ) {
                   color = "orange";
                   emoji = "🟠";
                 } else if (value === "restricted") {
                   color = "green";
                   emoji = "🟢";
                 } else if (value === "unknown") {
-                color = "blue";
-                emoji = "🔵";
+                  color = "blue";
+                  emoji = "🔵";
                 } else {
                   return value;
                 }
