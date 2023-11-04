@@ -2,7 +2,7 @@ from pathlib import Path
 
 import yaml
 
-from lib.context.resources.MetaChecksHelpers import PolicyHelper
+from lib.context.resources.ContextHelpers import PolicyHelper
 
 
 class Impact:

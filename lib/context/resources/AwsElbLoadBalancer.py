@@ -1,31 +1,31 @@
-"""MetaCheck: AwsElbLoadBalancer"""
+"""ResourceType: AwsElbLoadBalancer"""
 
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "elb", self.region, self.sess)
         # Describe
         self.elb = self.describe_load_balancers()
         if not self.elb:
             return False
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.security_groups = self._describe_load_balancers_security_groups()
 
     def parse_finding(self, finding, drilled):
@@ -77,7 +77,7 @@ class Metacheck(MetaChecksBase):
 
         return security_groups
 
-    # # MetaChecks
+    # # Context Config
     def name(self):
         if self.elb.get("LoadBalancerName"):
             return self.elb.get("LoadBalancerName")

@@ -9,20 +9,11 @@ def lambda_handler(event, context):
 
     # - Options for running Lambda from Security Hub Custom Actions
     SH_CUSTOM_OPTIONS = [
-        "--meta-checks",
-        "--meta-tags",
-        "--meta-trails",
-        "--meta-account",
         "--enrich-findings",
     ]
 
     # - Options when running Lambda from any other source
-    CUSTOM_OPTIONS = [
-        "--meta-checks",
-        "--meta-tags",
-        "--meta-trails",
-        "--meta-account",
-    ]
+    CUSTOM_OPTIONS = []
 
     # This are the minimum options required to run the Lambda, don't change this
     LAMBDA_OPTIONS = [

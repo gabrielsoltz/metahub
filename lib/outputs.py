@@ -45,20 +45,30 @@ def generate_output_csv(
         for resource, values in output.items():
             for finding in values["findings"]:
                 for f, v in finding.items():
-                    metatags_column_values = []
+                    tag_column_values = []
                     for column in tag_columns:
                         try:
-                            metatags_column_values.append(values["metatags"][column])
+                            tag_column_values.append(values["tags"][column])
                         except (KeyError, TypeError):
-                            metatags_column_values.append("")
-                    metachecks_column_values = []
+                            tag_column_values.append("")
+                    config_column_values = []
                     for column in config_columns:
                         try:
-                            metachecks_column_values.append(
-                                values["metachecks"][column]
-                            )
+                            config_column_values.append(values["config"][column])
                         except (KeyError, TypeError):
-                            metachecks_column_values.append("")
+                            config_column_values.append("")
+                    impact_column_values = []
+                    for column in impact_columns:
+                        try:
+                            impact_column_values.append(values["impact"][column])
+                        except (KeyError, TypeError):
+                            impact_column_values.append("")
+                    account_column_values = []
+                    for column in account_columns:
+                        try:
+                            account_column_values.append(values["account"][column])
+                        except (KeyError, TypeError):
+                            account_column_values.append("")
                     row = (
                         [
                             resource,
@@ -78,8 +88,10 @@ def generate_output_csv(
                             if v.get("Compliance")
                             else None,
                         ]
-                        + metatags_column_values
-                        + metachecks_column_values
+                        # + impact_column_values
+                        + account_column_values
+                        + tag_column_values
+                        + config_column_values
                     )
                     dict_writer.writerow(dict(zip(colums, row)))
 
@@ -112,7 +124,6 @@ def generate_output_xlsx(
     colums = [
         "Resource ID",
         "Severity",
-        "Impact",
         "Title",
         "AWS Account ID",
         "Region",
@@ -142,23 +153,32 @@ def generate_output_xlsx(
                     worksheet.write(current_line, 1, severity, medium_format)
                 else:
                     worksheet.write(current_line, 1, severity, low_format)
-                metatags_column_values = []
+                tag_column_values = []
                 for column in tag_columns:
                     try:
-                        metatags_column_values.append(values["tags"][column])
+                        tag_column_values.append(values["tags"][column])
                     except (KeyError, TypeError):
-                        metatags_column_values.append("")
-                metachecks_column_values = []
+                        tag_column_values.append("")
+                config_column_values = []
                 for column in config_columns:
                     try:
-                        metachecks_column_values.append(values["config"][column])
+                        config_column_values.append(values["config"][column])
                     except (KeyError, TypeError):
-                        metachecks_column_values.append("")
+                        config_column_values.append("")
+                impact_column_values = []
+                for column in impact_columns:
+                    try:
+                        impact_column_values.append(values["impact"][column])
+                    except (KeyError, TypeError):
+                        impact_column_values.append("")
+                account_column_values = []
+                for column in account_columns:
+                    try:
+                        account_column_values.append(values["account"][column])
+                    except (KeyError, TypeError):
+                        account_column_values.append("")
                 row = (
                     [
-                        values.get("impact", None).get("Impact", None)
-                        if values.get("impact")
-                        else None,
                         f,
                         values.get("AwsAccountId", None),
                         values.get("Region", None),
@@ -171,8 +191,10 @@ def generate_output_xlsx(
                         if v.get("Compliance")
                         else None,
                     ]
-                    + metatags_column_values
-                    + metachecks_column_values
+                    # + impact_column_values
+                    + account_column_values
+                    + tag_column_values
+                    + config_column_values
                 )
                 worksheet.write_row(current_line, 2, row)
                 current_line += 1
@@ -191,7 +213,7 @@ def generate_output_html(
     templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
     TEMPLATE_FILE = "lib/html/template.html"
     template = templateEnv.get_template(TEMPLATE_FILE)
-    # Convert MetaChecks to Boolean
+    # Convert Config to Boolean
     for resource_arn in mh_findings:
         if (
             "config" in mh_findings[resource_arn]

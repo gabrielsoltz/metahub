@@ -1,25 +1,25 @@
-"""MetaCheck: AwsEfsFileSystem"""
+"""ResourceType: AwsEfsFileSystem"""
 
 import json
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "efs", self.region, self.sess)
         # Describe
@@ -27,7 +27,7 @@ class Metacheck(MetaChecksBase):
         if not self.fs:
             return False
         self.resource_policy = self.describe_file_system_policy()
-        # Drilled MetaChecks
+        # Associated MetaChecks
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -80,7 +80,7 @@ class Metacheck(MetaChecksBase):
 
         return False
 
-    # MetaChecks
+    # Context Config
 
     def mount_targets(self):
         if self.fs[0]["NumberOfMountTargets"] > 0:

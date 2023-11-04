@@ -1,30 +1,30 @@
-"""MetaCheck: AwsEc2NetworkAcl"""
+"""ResourceType: AwsEc2NetworkAcl"""
 
 from aws_arn import generate_arn
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "ec2", self.region, self.sess)
         # Describe
         self.network_acl = self.describe_network_acls()
         if not self.network_acl:
             return False
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.subnets = self._describe_network_acls_subnets()
 
     def parse_finding(self, finding, drilled):
@@ -67,7 +67,7 @@ class Metacheck(MetaChecksBase):
                     subnets[arn] = {}
         return subnets
 
-    # MetaChecks
+    # Context Config
 
     def is_default(self):
         if self.network_acl:

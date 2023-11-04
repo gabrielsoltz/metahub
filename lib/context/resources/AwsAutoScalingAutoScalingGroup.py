@@ -1,23 +1,23 @@
-"""MetaCheck: AwsAutoScalingAutoScalingGroup"""
+"""ResourceType: AwsAutoScalingAutoScalingGroup"""
 
 from aws_arn import generate_arn
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(
             self.logger, "autoscaling", self.region, self.sess
@@ -31,7 +31,7 @@ class Metacheck(MetaChecksBase):
         self.launch_configurations = (
             self._describe_auto_scaling_groups_launch_configuration()
         )
-        # Drilled MetaChecks
+        # Associated MetaChecks
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -110,7 +110,7 @@ class Metacheck(MetaChecksBase):
                 return {arn: {}}
         return {}
 
-    # MetaChecks
+    # Context Config
 
     def name(self):
         if self.autoscaling_group:

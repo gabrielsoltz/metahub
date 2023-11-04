@@ -1,31 +1,31 @@
-"""MetaCheck: AwsRdsDbInstance"""
+"""ResourceType: AwsRdsDbInstance"""
 
 from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "rds", self.region, self.sess)
         # Describe
         self.rds_instances = self.describe_db_instances()
         if not self.rds_instances:
             return False
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.iam_roles = self._describe_db_instances_iam_roles()
         self.security_groups = self._describe_db_instances_security_groups()
 
@@ -83,7 +83,7 @@ class Metacheck(MetaChecksBase):
             return security_groups
         return False
 
-    # MetaChecks
+    # Context Config
 
     def endpoint(self):
         if self.rds_instances:

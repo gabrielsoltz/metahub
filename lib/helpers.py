@@ -128,7 +128,7 @@ def get_parser():
     )
     group_actions.add_argument(
         "--enrich-findings",
-        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags. Use with --meta-checks and/or --meta-tags",
+        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags.",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
@@ -143,9 +143,9 @@ def get_parser():
     # Group: Meta Options
     group_meta_checks = parser.add_argument_group("Meta Options")
     group_meta_checks.add_argument(
-        "--mh-filters-checks",
+        "--mh-filters-config",
         default=None,
-        help="Use this option to filter the resources based on Meta Checks results using key=value pairs, for example is_public=True. Only True or False. You can combine one or more filters using spaces",
+        help="Use this option to filter the resources based on Context Config results using key=value pairs, for example is_public=True. Only True or False. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
@@ -153,7 +153,7 @@ def get_parser():
     group_meta_checks.add_argument(
         "--mh-filters-tags",
         default=None,
-        help="Use this option to filter the resources based on Meta Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
+        help="Use this option to filter the resources based on Context Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
@@ -163,13 +163,6 @@ def get_parser():
         default=None,
         help="Specify the AWS IAM role role to be assumed where the affected resources are running",
         required=False,
-    )
-    group_meta_checks.add_argument(
-        "--drill-down",
-        help="Use this option to execute Drilled MetaChecks. This option will be used only if you are using --meta-checks",
-        default=True,
-        required=False,
-        action=argparse.BooleanOptionalAction,
     )
     group_meta_checks.add_argument(
         "--context",

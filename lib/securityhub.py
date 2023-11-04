@@ -124,58 +124,54 @@ class SecurityHub:
 
     def update_findings_meta(self, mh_findings):
         response_multiple = []
-        # Convert metachecks to booleans
+        # Convert Config to booleans
         for resource_arn in mh_findings:
             if (
-                "metachecks" in mh_findings[resource_arn]
-                and mh_findings[resource_arn]["metachecks"]
+                "config" in mh_findings[resource_arn]
+                and mh_findings[resource_arn]["config"]
             ):
-                for metacheck in mh_findings[resource_arn]["metachecks"]:
-                    if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
-                        mh_findings[resource_arn]["metachecks"][metacheck] = True
+                for config in mh_findings[resource_arn]["config"]:
+                    if bool(mh_findings[resource_arn]["config"][config]):
+                        mh_findings[resource_arn]["config"][config] = True
                     else:
-                        mh_findings[resource_arn]["metachecks"][metacheck] = False
+                        mh_findings[resource_arn]["config"][config] = False
         for mh_finding in mh_findings:
-            # MetaTags
             try:
-                finding_metatags = mh_findings[mh_finding]["metatags"]
-                if not finding_metatags:
-                    finding_metatags = {}
+                findings_tags = mh_findings[mh_finding]["tags"]
+                if not findings_tags:
+                    findings_tags = {}
             except KeyError:
-                finding_metatags = {}
-            for key in list(finding_metatags):
-                finding_metatags[key] = str(finding_metatags[key])
-            # MetaChecks
+                findings_tags = {}
+            for key in list(findings_tags):
+                findings_tags[key] = str(findings_tags[key])
             try:
-                finding_metachecks = mh_findings[mh_finding]["metachecks"]
-                if not finding_metachecks:
-                    finding_metachecks = {}
+                findings_config = mh_findings[mh_finding]["config"]
+                if not findings_config:
+                    findings_config = {}
             except KeyError:
-                finding_metachecks = {}
-            for key in list(finding_metachecks):
-                finding_metachecks[key] = str(finding_metachecks[key])
-            # MetaAccount
+                findings_config = {}
+            for key in list(findings_config):
+                findings_config[key] = str(findings_config[key])
             try:
-                finding_metaaccount = mh_findings[mh_finding]["metaaccount"]
+                finding_metaaccount = mh_findings[mh_finding]["account"]
                 if not finding_metaaccount:
                     finding_metaaccount = {}
             except KeyError:
                 finding_metaaccount = {}
             for key in list(finding_metaaccount):
                 finding_metaaccount[key] = str(finding_metaaccount[key])
-            # MetaTrails
             try:
-                finding_metatrails = mh_findings[mh_finding]["metatrails"]
+                finding_metatrails = mh_findings[mh_finding]["cloudtrail"]
                 if not finding_metatrails:
                     finding_metatrails = {}
             except KeyError:
                 finding_metatrails = {}
             for key in list(finding_metatrails):
                 finding_metatrails[key] = str(finding_metatrails[key])
-            # Combining MetaChecks and MetaTags
+            # Combining Context outputs
             combined = {
-                **finding_metatags,
-                **finding_metachecks,
+                **findings_tags,
+                **findings_config,
                 **finding_metaaccount,
                 **finding_metatrails,
             }
@@ -186,7 +182,7 @@ class SecurityHub:
                 # To Do: Improve, only one update for resource.
                 if combined:
                     self.logger.info(
-                        "Enriching finding %s with MetaTags and MetaChecks: %s",
+                        "Enriching finding %s with Context: %s",
                         FindingIdentifier["Id"],
                         combined,
                     )
@@ -198,7 +194,7 @@ class SecurityHub:
                     response_multiple.append(response)
                 else:
                     self.logger.info(
-                        "Ignoring finding %s as it has not MetaTags and MetaChecks",
+                        "Ignoring finding %s as it has not Context",
                         FindingIdentifier["Id"],
                     )
         return response_multiple

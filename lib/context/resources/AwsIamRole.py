@@ -1,24 +1,24 @@
-"""MetaCheck: AwsIamRole"""
+"""ResourceType: AwsIamRole"""
 
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "iam", self.region, self.sess)
         # Describe
@@ -27,7 +27,7 @@ class Metacheck(MetaChecksBase):
             return False
         self.instance_profile = self.list_instance_profiles_for_role()
         self.iam_inline_policies = self.list_role_policies()
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.iam_policies = self.list_attached_role_policies()
 
     def parse_finding(self, finding, drilled):
@@ -124,7 +124,7 @@ class Metacheck(MetaChecksBase):
 
         return iam_policies
 
-    # MetaChecks
+    # Context Config
 
     def permissions_boundary(self):
         if self.role:

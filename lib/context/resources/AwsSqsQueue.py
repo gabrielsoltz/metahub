@@ -1,25 +1,25 @@
-"""MetaCheck: AwsSqsQueue"""
+"""ResourceType: AwsSqsQueue"""
 
 import json
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(self.logger, "sqs", self.region, self.sess)
         # Describe
@@ -29,7 +29,7 @@ class Metacheck(MetaChecksBase):
         self.queue_attributes = self.get_queue_atributes()
         # Resource Policy
         self.resource_policy = self.describe_resource_policy()
-        # Drilled Metachecks
+        # Associated MetaChecks
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -72,7 +72,7 @@ class Metacheck(MetaChecksBase):
                 return False
         return False
 
-    # MetaChecks
+    # Context Config
 
     def is_encrypted(self):
         if self.queue_attributes:

@@ -44,12 +44,11 @@ def generate_findings(
     sh_role,
     context,
     mh_role,
-    mh_filters_checks,
+    mh_filters_config,
     mh_filters_tags,
     inputs,
     asff_findings,
     banners,
-    drill_down,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -94,7 +93,7 @@ def generate_findings(
                 mh_findings_short,
                 AwsAccountData,
                 mh_role,
-                mh_filters_checks,
+                mh_filters_config,
                 mh_filters_tags,
                 context,
             )
@@ -309,21 +308,21 @@ def validate_arguments(args, logger):
         sh_filters = args.sh_filters
         sh_filters = set_sh_filters(sh_filters)
 
-    # Validate MetaChecks filters
-    mh_filters_checks = args.mh_filters_checks or {}
-    for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
-        if mh_filters_checks[mh_filter_check_key].lower() == "true":
-            mh_filters_checks[mh_filter_check_key] = bool(True)
-        elif mh_filters_checks[mh_filter_check_key].lower() == "false":
-            mh_filters_checks[mh_filter_check_key] = bool(False)
+    # Validate Config filters
+    mh_filters_config = args.mh_filters_config or {}
+    for mh_filter_config_key, mh_filter_config_value in mh_filters_config.items():
+        if mh_filters_config[mh_filter_config_key].lower() == "true":
+            mh_filters_config[mh_filter_config_key] = bool(True)
+        elif mh_filters_config[mh_filter_config_key].lower() == "false":
+            mh_filters_config[mh_filter_config_key] = bool(False)
         else:
             logger.error(
-                "Only True or False is supported for MetaChecks filters: "
-                + str(mh_filters_checks)
+                "Only True or False it is supported for Context Config filters: "
+                + str(mh_filters_config)
             )
             exit(1)
 
-    # Validate MetaTags filters
+    # Validate Tags filters
     mh_filters_tags = args.mh_filters_tags or {}
 
     # Parameter Validation: --sh-account and --sh-assume-role
@@ -395,7 +394,7 @@ def validate_arguments(args, logger):
     return (
         asff_findings,
         sh_filters,
-        mh_filters_checks,
+        mh_filters_config,
         mh_filters_tags,
         sh_account,
         sh_account_alias_str,
@@ -500,7 +499,7 @@ def main(args):
     (
         asff_findings,
         sh_filters,
-        mh_filters_checks,
+        mh_filters_config,
         mh_filters_tags,
         sh_account,
         sh_account_alias_str,
@@ -523,9 +522,8 @@ def main(args):
     print_table("Input File: ", str(args.input_asff), banners=banners)
     print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
     print_table("Context: ", str(args.context), banners=banners)
-    print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
-    print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
-    print_table("Drilled Down Mode: ", str(args.drill_down), banners=banners)
+    print_table("Config Filters: ", str(mh_filters_config), banners=banners)
+    print_table("Tags Filters: ", str(mh_filters_tags), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
     print_table(
@@ -551,12 +549,11 @@ def main(args):
         sh_role=args.sh_assume_role,
         context=args.context,
         mh_role=args.mh_assume_role,
-        mh_filters_checks=mh_filters_checks,
+        mh_filters_config=mh_filters_config,
         mh_filters_tags=mh_filters_tags,
         inputs=args.inputs,
         asff_findings=asff_findings,
         banners=banners,
-        drill_down=args.drill_down,
     )
 
     if mh_findings:

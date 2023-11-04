@@ -1,23 +1,23 @@
-"""MetaCheck: AwsApiGatewayV2Stage"""
+"""ResourceType: AwsApiGatewayV2Stage"""
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(
             self.logger, "apigatewayv2", self.region, self.sess
@@ -26,7 +26,7 @@ class Metacheck(MetaChecksBase):
         self.stage = self.describe_stage()
         if not self.stage:
             return False
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.api_gwv2_apis = self._describe_stage_api()
         self.waf_web_acls = self._describe_stage_waf_web_acls()
 
@@ -75,7 +75,7 @@ class Metacheck(MetaChecksBase):
             waf_web_acls[waf_web_acl_arn] = {}
         return waf_web_acls
 
-    # MetaChecks
+    # Context Config
 
     def client_certificate_id(self):
         client_certificate_id = False

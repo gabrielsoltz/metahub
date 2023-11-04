@@ -1,9 +1,9 @@
-class MetaChecksBase:
+class ContextBase:
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
@@ -20,7 +20,7 @@ class MetaChecksBase:
 
         mh_values_checks = {}
         # If there is no filters, we force match to True
-        mh_matched_checks = False if self.mh_filters_checks else True
+        mh_matched_checks = False if self.mh_filters_config else True
         # All Checks needs to be matched
         mh_matched_checks_all_checks = True
 
@@ -29,18 +29,18 @@ class MetaChecksBase:
         context_associations = self.associations()
         context_all = {**context_config, **context_associations}
         for check, value in context_all.items():
-            if check in self.mh_filters_checks:
+            if check in self.mh_filters_config:
                 self.logger.info(
                     "Evaluating Config filter ("
                     + check
                     + "). Expected: "
-                    + str(self.mh_filters_checks[check])
+                    + str(self.mh_filters_config[check])
                     + " Found: "
                     + str(bool(value))
                 )
-                if self.mh_filters_checks[check] and bool(value):
+                if self.mh_filters_config[check] and bool(value):
                     mh_matched_checks = True
-                elif not self.mh_filters_checks[check] and not value:
+                elif not self.mh_filters_config[check] and not value:
                     mh_matched_checks = True
                 else:
                     mh_matched_checks_all_checks = False
@@ -57,14 +57,14 @@ class MetaChecksBase:
         return mh_values_checks, mh_matched_checks
 
     def execute_drilled_metachecks(self):
-        # Optimize drilled metachecks by keeping a cache of drilled resources
+        # Optimize drilled context by keeping a cache of drilled resources
         self.drilled_cache = {}
 
         def execute(resources, MetaCheck):
             for resource in resources:
                 if resource not in self.drilled_cache:
                     self.logger.info(
-                        "Running Drilled MetaChecks for resource {} from resource: {}".format(
+                        "Running Drilled Context for resource {} from resource: {}".format(
                             resource, self.resource_arn
                         )
                     )

@@ -1,23 +1,23 @@
-"""MetaCheck: AwsCloudFrontDistribution"""
+"""ResourceType: AwsCloudFrontDistribution"""
 
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.context.resources.Base import MetaChecksBase
+from lib.context.resources.Base import ContextBase
 
 
-class Metacheck(MetaChecksBase):
+class Metacheck(ContextBase):
     def __init__(
         self,
         logger,
         finding,
-        mh_filters_checks,
+        mh_filters_config,
         sess,
         drilled=False,
     ):
         self.logger = logger
         self.sess = sess
-        self.mh_filters_checks = mh_filters_checks
+        self.mh_filters_config = mh_filters_config
         self.parse_finding(finding, drilled)
         self.client = get_boto3_client(
             self.logger, "cloudfront", self.region, self.sess
@@ -26,7 +26,7 @@ class Metacheck(MetaChecksBase):
         self.distribution = self.describe_distribution()
         if not self.distribution:
             return False
-        # Drilled MetaChecks
+        # Associated MetaChecks
         self.waf_web_acls = self._describe_distribution_waf_web_acls()
 
     def parse_finding(self, finding, drilled):
@@ -62,7 +62,7 @@ class Metacheck(MetaChecksBase):
             return {self.distribution.get("DistributionConfig").get("WebACLId"): {}}
         return False
 
-    # MetaChecks
+    # Context Config
 
     def name(self):
         if self.distribution.get("DomainName"):

@@ -11,7 +11,7 @@ def evaluate_finding(
     mh_findings_short,
     AwsAccountData,
     mh_role,
-    mh_filters_checks,
+    mh_filters_config,
     mh_filters_tags,
     context_options,
 ):
@@ -31,7 +31,7 @@ def evaluate_finding(
     elif resource_arn in mh_findings_not_matched_findings:
         mh_matched = False
     elif context_options:
-        context = Context(logger, finding, mh_filters_checks, mh_filters_tags, mh_role)
+        context = Context(logger, finding, mh_filters_config, mh_filters_tags, mh_role)
         if "config" in context_options:
             mh_config, mh_checks_matched = context.get_context_config()
         else:
@@ -54,20 +54,20 @@ def evaluate_finding(
                 mh_account = AwsAccountData[finding["AwsAccountId"]]
         else:
             mh_account = False
-        # If both checks are True we show the resource
+        # If both Tags and Config matchs are True we show the resource
         if mh_tags_matched and mh_checks_matched:
             mh_matched = True
     else:
-        # If no metachecks and no metatags, we enforce to True the match so we show the resource:
+        # If no filters for Config and Tags, we enforce to True the match so we show the resource:
         mh_matched = True
 
-    # We keep a dict with no matched resources so we don't run MetaChecks again
+    # We keep a dict with no matched resources so we don't run Context again
     if not mh_matched:
         # We add the resource in our output only once:
         if resource_arn not in mh_findings_not_matched_findings:
             mh_findings_not_matched_findings[resource_arn] = {}
 
-    # We show the resouce only if matched MetaChecks and MetaTags (or are disabled)
+    # We show the resouce only if matched Config and Tags (or are disabled)
     if mh_matched:
         # Resource (we add the resource only once, we check if it's already in the list)
         if resource_arn not in mh_findings:

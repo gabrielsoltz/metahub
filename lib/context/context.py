@@ -92,7 +92,7 @@ class Context:
         if not hnld:
             return resource_config, resource_matched
 
-        # Execute Drilled MetaChecks
+        # Execute Drilled
         if self.drilled_down:
             try:
                 hnld.execute_drilled_metachecks()
@@ -111,7 +111,7 @@ class Context:
                         self.resource_type,
                     )
 
-        # Execute MetaChecks
+        # Execute Config Context
         try:
             resource_config, resource_matched = hnld.output_checks()
             self.logger.debug(
