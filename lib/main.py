@@ -456,6 +456,7 @@ def generate_outputs(
                         output_tag_columns,
                         output_account_columns,
                         output_impact_columns,
+                        args,
                     )
                     f.write(html)
                 print_table("HTML:  ", WRITE_FILE, banners=banners)

@@ -120,10 +120,28 @@ def generate_statistics(mh_findings):
                                 account_statistics[tag][value] += 1
         return account_statistics
 
+    def statistics_impact(mh_findings_short):
+        impact_statistics = {}
+        for resource_arn in mh_findings_short:
+            if "impact" in mh_findings_short[resource_arn]:
+                if mh_findings_short[resource_arn]["impact"]:
+                    for finding in mh_findings_short[resource_arn]["findings"]:
+                        for check, value in mh_findings_short[resource_arn][
+                            "impact"
+                        ].items():
+                            if check not in impact_statistics:
+                                impact_statistics[check] = {False: 0, True: 0}
+                            if bool(mh_findings_short[resource_arn]["impact"][check]):
+                                impact_statistics[check][True] += 1
+                            else:
+                                impact_statistics[check][False] += 1
+        return impact_statistics
+
     mh_statistics = statistics_findings(mh_findings)
     mh_statistics["tags"] = statistics_tags(mh_findings)
     mh_statistics["config"] = statistics_config(mh_findings)
     mh_statistics["account"] = statistics_account(mh_findings)
+    mh_statistics["impact"] = statistics_impact(mh_findings)
 
     # Sort Statistics
     for key_to_sort in mh_statistics:

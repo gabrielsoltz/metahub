@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>MetaHub</b> is an automated security contextual enrichment and impact evaluation tool for vulnerability management. You can use it with AWS Security Hub or any ASFF-compatible security scanner. Stop relying on useless severities and switch to **impact** scoring defintions based on YOUR context.
+  <b>MetaHub</b> is an automated security contextual enrichment and impact evaluation tool for vulnerability management. You can use it with AWS Security Hub or any ASFF-compatible security scanner. Stop relying on useless severities and switch to impact scoring defintions based on YOUR context.
 </p>
 
 <p align="center">

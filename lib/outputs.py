@@ -208,6 +208,7 @@ def generate_output_html(
     tag_columns,
     account_columns,
     impact_columns,
+    args,
 ):
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
@@ -232,5 +233,6 @@ def generate_output_html(
         tag_columns=tag_columns,
         account_columns=account_columns,
         impact_columns=impact_columns,
+        parameters=args,
     )
     return html
