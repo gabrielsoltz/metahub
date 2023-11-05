@@ -54,7 +54,7 @@ You can rely on this **Impact Score** for prioritizing findings (where should yo
 
 **MetaHub** can also filter, deduplicate, group, report, suppress, or update your security findings in automated workflows. It is designed for use as a CLI tool or within automated workflows, such as AWS Security Hub custom actions or AWS Lambda functions.
 
-The following is the JSON output for a an EC2 instance; see how MetaHub organizes all the information about its context together, under `config`, `associations`, `tags`, `account` and `impact`
+The following is the JSON output for a an EC2 instance; see how MetaHub organizes all the information about its context together, under `associations`, `config`, `tags`, `account` `cloudtrail`, and `impact`
 
 <p align="center">
   <img src="docs/imgs/metahub-terminal.gif" alt="Diagram" width="850"/>
@@ -82,7 +82,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 ### Exposure
 
-Evaluates the exposure of the affected resource. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP and if it is protected by a firewall or a security group.
+**Exposure** evaluates the how the the affected resource is exposed to other networks. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP or if it is protected by a firewall or a security group.
 
 | **Possible Statuses**   | **Description** |
 | ----------------------- | --------------- |
@@ -95,7 +95,7 @@ Evaluates the exposure of the affected resource. For example, if the affected re
 
 ### Access
 
-Evaluates the policy layer that the affected resource is using. For example, if the affected resource is using an IAM role, or if it has a resource policy. We evaluate possible iam policies, inline iam policies, roles, resource policies, and more.
+**Access** evaluates the resource policy layer. MetaHub checks every available policy including: IAM Managed policies, IAM Inline policies, Resource Policies, and any association to other resources like IAM Roles which are then also analyzed as part of the affected resource. An unrestricted policy is not only an itsue itself of that policy, it afected any other resource which is using it.
 
 | **Possible Statuses**      | **Description** |
 | -------------------------- | --------------- |
@@ -110,7 +110,7 @@ Evaluates the policy layer that the affected resource is using. For example, if 
 
 ### Encryption
 
-Evaluate the encryption status of the affected resource. For example if at_rest and transit encryption are enabled.
+**Encryption** evaluate the different encryption layers based on each resource type. For example, for some resources it evaluates if `at_rest` and `in_transit` encryption configuration are both enabled.
 
 | **Possible Statuses** | **Description** |
 | --------------------- | --------------- |
@@ -120,7 +120,7 @@ Evaluate the encryption status of the affected resource. For example if at_rest 
 
 ### Status
 
-Evaluate the status of the affected resource. For example, if the resource is running, stopped, or terminated for resources like EC2 Instances, and if the resource is attached or not for resources like EBS Volumes, Security Groups, etc.
+**Status** evaluate the status of the affected resource in terms of attachment or functioning. For example, for an EC2 Instance we evaluate if the resource is running, stopped, or terminated, but for resources like EBS Volumes and Security Groups, we evaluate if those resources are attached to any other resource.
 
 | **Possible Statuses** | **Description** |
 | --------------------- | --------------- |
@@ -132,8 +132,7 @@ Evaluate the status of the affected resource. For example, if the resource is ru
 
 ### Environment
 
-Evaluate the environment of the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your tagging strategy in the configuration file (See [Customizing Configuration]
-(#customizing-configuration)).
+**Environment** evaluates the environment defined for the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your own tagging strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
 | **Possible Statuses** | **Description** |
 | --------------------- | --------------- |
@@ -144,7 +143,7 @@ Evaluate the environment of the affected resource. Supported environments are `p
 
 ### Findings Metric Calculation
 
-As part of the Impact Scoring calculation, we also evaluate the ammount of security findings affecting the affected resource and their severities. We use the following formula to calculate the metric:
+As part of the impact score calculation, we also evaluate the total ammount of security findings and their severities affecting the resource. We use the following formula to calculate this metric:
 
 ```sh
 (SUM of all (Finding Severity / Highest Severity) with a maximum of 1)
