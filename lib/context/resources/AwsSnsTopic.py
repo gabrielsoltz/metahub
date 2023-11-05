@@ -25,7 +25,6 @@ class Metacheck(ContextBase):
         self.topic_atributes = self.get_topic_attributes()
         if not self.topic_atributes:
             return False
-        self.topic_kms_master_key_id = self.get_topic_atributes_kms_master_key_id()
         # Resource Policy
         self.resource_policy = self.describe_resource_policy()
         # Associated MetaChecks
@@ -52,14 +51,6 @@ class Metacheck(ContextBase):
                         self.resource_id, err
                     )
                 )
-        return False
-
-    def get_topic_atributes_kms_master_key_id(self):
-        if self.topic_atributes:
-            try:
-                return self.topic_atributes["KmsMasterKeyId"]
-            except KeyError:
-                return False
         return False
 
     # Resource Policy
@@ -95,9 +86,12 @@ class Metacheck(ContextBase):
                 return False
         return False
 
-    def is_encrypted(self):
-        if self.topic_kms_master_key_id:
-            return self.topic_kms_master_key_id
+    def kms_master_key_id(self):
+        if self.topic_atributes:
+            try:
+                return self.topic_atributes["KmsMasterKeyId"]
+            except KeyError:
+                return False
         return False
 
     def trust_policy(self):
@@ -115,7 +109,7 @@ class Metacheck(ContextBase):
             "resource_policy": self.resource_policy,
             "subscriptions_confirmed": self.subscriptions_confirmed(),
             "name": self.name(),
-            "is_encrypted": self.is_encrypted(),
+            "kms_master_key_id": self.kms_master_key_id(),
             "public": self.public(),
         }
         return checks

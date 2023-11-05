@@ -54,7 +54,7 @@ class Metacheck(ContextBase):
 
     # Context Config
 
-    def is_encrypted(self):
+    def encrypted(self):
         if self.volume:
             for ebs in self.volume:
                 if ebs["Encrypted"]:
@@ -83,7 +83,7 @@ class Metacheck(ContextBase):
 
     def checks(self):
         checks = {
-            "is_encrypted": self.is_encrypted(),
+            "encrypted": self.encrypted(),
             "is_attached": self.is_attached(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),

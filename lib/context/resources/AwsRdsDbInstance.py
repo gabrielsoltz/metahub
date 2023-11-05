@@ -96,7 +96,7 @@ class Metacheck(ContextBase):
             return True
         return False
 
-    def is_encrypted(self):
+    def storage_encrypted(self):
         if self.rds_instances:
             if self.rds_instances.get("StorageEncrypted"):
                 return True
@@ -116,6 +116,6 @@ class Metacheck(ContextBase):
         checks = {
             "endpoint": self.endpoint(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
+            "encrypted": self.storage_encrypted(),
         }
         return checks

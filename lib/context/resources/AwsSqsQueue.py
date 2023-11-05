@@ -74,9 +74,10 @@ class Metacheck(ContextBase):
 
     # Context Config
 
-    def is_encrypted(self):
+    def sse_enabled(self):
         if self.queue_attributes:
             return self.queue_attributes["SqsManagedSseEnabled"]
+        return False
 
     def trust_policy(self):
         return None
@@ -91,7 +92,7 @@ class Metacheck(ContextBase):
     def checks(self):
         checks = {
             "resource_policy": self.resource_policy,
-            "is_encrypted": self.is_encrypted(),
+            "sse_enabled": self.sse_enabled(),
             "public": self.public(),
         }
         return checks

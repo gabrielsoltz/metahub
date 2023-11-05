@@ -198,70 +198,58 @@ class Impact:
     def resource_exposure(self, resource_arn, resource_values):
         self.logger.info("Calculating exposure for resource: %s", resource_arn)
 
-        # Config
+        public_rules = []
         config_public = None
         entrypoint = None
-        public_rules = None
 
-        if resource_values.get("config"):
-            # Public
-            config_public = resource_values.get("config").get("public")
-            # Entrypoints
-            # To Do: Standarize Entrypoints
-            if resource_values.get("config").get("public_endpoint"):
-                entrypoint = resource_values.get("config").get("public_endpoint")
-            elif resource_values.get("config").get("public_ip"):
-                entrypoint = resource_values.get("config").get("public_ip")
-            elif resource_values.get("config").get("public_dns"):
-                entrypoint = resource_values.get("config").get("public_dns")
-            elif resource_values.get("config").get("endpoint"):
-                entrypoint = resource_values.get("config").get("endpoint")
-            elif resource_values.get("config").get("private_ip"):
-                entrypoint = resource_values.get("config").get("private_ip")
-            elif resource_values.get("config").get("private_dns"):
-                entrypoint = resource_values.get("config").get("private_dns")
+        config = resource_values.get("config", {})
+        if config:
+            # Helper function to determine entrypoint
+            def get_entrypoint():
+                entrypoints = [
+                    "public_endpoint",
+                    "public_ip",
+                    "public_ips",
+                    "aliases",
+                    "public_dns",
+                    "endpoint",
+                    "private_ip",
+                    "private_dns",
+                ]
+                for ep in entrypoints:
+                    if config.get(ep):
+                        return config[ep]
 
-        # SG
-        if resource_values.get("associations") and resource_values.get(
-            "associations"
-        ).get("security_groups"):
-            security_groups = resource_values.get("associations").get("security_groups")
+            if config.get("public"):
+                config_public = config["public"]
+                entrypoint = get_entrypoint()
+
+            # Same Security Group
+            if config.get("is_ingress_rules_unrestricted"):
+                public_rules.extend(config.get("is_ingress_rules_unrestricted"))
+
+        # Associated with an Security Group
+        associations = resource_values.get("associations", {})
+        if associations:
+            security_groups = associations.get("security_groups", {})
             if security_groups:
-                public_rules = []
-            for security_group in security_groups:
-                if (
-                    security_groups[security_group]
-                    .get("config")
-                    .get("is_ingress_rules_unrestricted")
-                ):
-                    for rule in (
-                        security_groups[security_group]
-                        .get("config")
-                        .get("is_ingress_rules_unrestricted")
-                    ):
-                        from_port = rule.get("FromPort")
-                        to_port = rule.get("ToPort")
-                        ip_protocol = rule.get("IpProtocol")
-                        public_rules.append(
-                            {
-                                "from_port": from_port,
-                                "to_port": to_port,
-                                "ip_protocol": ip_protocol,
-                            }
-                        )
+                for sg_arn, sg_details in security_groups.items():
+                    sg_config = sg_details.get("config", {})
+                    if sg_config.get("is_ingress_rules_unrestricted"):
+                        public_rules.extend(sg_config["is_ingress_rules_unrestricted"])
 
-        if config_public is True and public_rules:
-            exposure = "effectively-public"
-        elif config_public is True:
-            exposure = "restricted-public"
-        elif config_public is None and public_rules:
-            exposure = "unknown-public"
-        elif config_public is False and public_rules:
-            exposure = "unrestricted-private"
-        elif config_public is None and public_rules is None:
-            exposure = "unknown"
+        if config_public:
+            if public_rules:
+                exposure = "effectively-public"
+            else:
+                exposure = "restricted-public"
+        elif config_public is None:
+            if public_rules:
+                exposure = "unknown-public"
+            else:
+                exposure = "restricted"
         else:
-            exposure = "restricted"
+            exposure = "unrestricted-private"
 
         exposure_dict = {
             exposure: {
@@ -275,114 +263,143 @@ class Impact:
     def resource_access(self, resource_arn, resource_values):
         self.logger.info("Calculating access for resource: %s", resource_arn)
 
-        resource_account_id = resource_values["AwsAccountId"]
-        access_dict = {
+        resource_account_id = resource_values.get("AwsAccountId")
+        access_checks = {
             "unrestricted": {},
             "wildcard_principal": {},
             "untrusted_principal": {},
             "cross_account_principal": {},
             "wildcard_actions": {},
-            "dangereous_actions": {},
+            "dangerous_actions": {},
         }
 
-        # All Together IAM Policies to Check
-        iam_associated_policies_all = {}
+        # Helper function to check policies and update access_checks
+        def check_policy_and_update(policy_json, policy_name):
+            policy_checks = PolicyHelper(
+                self.logger, resource_arn, resource_account_id, policy_json
+            ).check_policy()
+            for check_type, check_data in policy_checks.items():
+                if check_data:
+                    access_checks[check_type].update({policy_name: check_data})
 
-        # Config
-        if resource_values.get("config"):
-            # Resource Policy
-            config_resource_policy = resource_values.get("config").get(
+        config = resource_values.get("config", {})
+        if config:
+            # Check config resource policy
+            config_resource_policy = resource_values.get("config", {}).get(
                 "resource_policy"
             )
             if config_resource_policy:
-                resource_policy_checks = PolicyHelper(
-                    self.logger,
-                    resource_arn,
-                    resource_account_id,
-                    config_resource_policy,
-                ).check_policy()
-                for check in resource_policy_checks:
-                    if resource_policy_checks[check]:
-                        access_dict[check].update(
-                            {"resource-policy": resource_policy_checks[check]}
+                check_policy_and_update(config_resource_policy, "resource_policy")
+
+            # Check inline policies from config
+            config_inline_policies = resource_values.get("config", {}).get(
+                "iam_inline_policies", {}
+            )
+            for policy_arn, policy_config in config_inline_policies.items():
+                if policy_config.get("config") and policy_config["config"].get(
+                    "resource_policy"
+                ):
+                    check_policy_and_update(
+                        policy_config["config"]["resource_policy"], policy_arn
+                    )
+
+            # Check associated IAM policies
+            associated_policies = resource_values.get("associations", {}).get(
+                "iam_policies", {}
+            )
+            for policy_arn, policy_config in associated_policies.items():
+                if policy_config.get("config") and policy_config["config"].get(
+                    "resource_policy"
+                ):
+                    check_policy_and_update(
+                        policy_config["config"]["resource_policy"], policy_arn
+                    )
+
+        associations = resource_values.get("associations", {})
+        if associations:
+            # Check associated IAM roles with IAM policies
+            associated_roles = resource_values.get("associations", {}).get(
+                "iam_roles", {}
+            )
+            for role_arn, role_config in associated_roles.items():
+                role_associated_policies = role_config.get("associations", {}).get(
+                    "iam_policies", {}
+                )
+                for policy_arn, policy_config in role_associated_policies.items():
+                    if policy_config.get("config") and policy_config["config"].get(
+                        "resource_policy"
+                    ):
+                        check_policy_and_update(
+                            policy_config["config"]["resource_policy"], policy_arn
                         )
 
-            # Inline Polcy
-            config_inline_policies = resource_values.get("config").get(
-                "iam_inline_policies"
-            )
-            if config_inline_policies:
-                iam_associated_policies_all = {
-                    **iam_associated_policies_all,
-                    **config_inline_policies,
-                }
+        # Determine the final result
+        if not any(access_checks.values()):
+            return {"restricted": {}}
+        elif "unrestricted" in access_checks:
+            return {"unrestricted": access_checks["unrestricted"]}
+        elif "untrusted_principal" in access_checks:
+            return {"untrusted-principal": access_checks["untrusted_principal"]}
+        elif "wildcard_principal" in access_checks and config_resource_policy:
+            return {
+                "unrestricted-resource-principal": access_checks["wildcard_principal"]
+            }
+        elif "cross_account_principal" in access_checks:
+            return {"cross-account-principal": access_checks["cross_account_principal"]}
+        elif "wildcard_actions" in access_checks:
+            return {"unrestricted-actions": access_checks["wildcard_actions"]}
+        elif "dangerous_actions" in access_checks:
+            return {"dangerous-actions": access_checks["dangerous_actions"]}
+        else:
+            return {"unknown": access_checks}
+
+    def resource_encryption(self, resource_arn, resource_values):
+        self.logger.info("Calculating encryption for resource: %s", resource_arn)
+
+        unencrypted_resources = []
 
         if resource_values.get("associations"):
-            # Associated with IAM Roles wich is Associated with Policies
-            associated_roles = resource_values.get("associations").get("iam_roles")
-            if associated_roles:
-                for role_arn, role_config in associated_roles.items():
-                    role_associated_policies = role_config.get("associations").get(
-                        "iam_policies"
-                    )
-                    if role_associated_policies:
-                        iam_associated_policies_all = {
-                            **iam_associated_policies_all,
-                            **role_associated_policies,
-                        }
+            # Associated with EBS Volumes or Snapshots
+            associated_volumes = resource_values.get("associations").get("volumes")
+            if associated_volumes:
+                for id, config in associated_volumes.items():
+                    volume_encryption = config.get("config").get("encrypted")
+                    if not volume_encryption:
+                        unencrypted_resources.append(id)
 
-            # Associated with IAM Policies
-            associated_policies = resource_values.get("associations").get(
-                "iam_policies"
-            )
-            if associated_policies:
-                iam_associated_policies_all = {
-                    **iam_associated_policies_all,
-                    **associated_policies,
-                }
+            associated_snapshots = resource_values.get("associations").get("snapshots")
+            if associated_snapshots:
+                for id, config in associated_snapshots.items():
+                    snapshot_encryption = config.get("config").get("encrypted")
+                    if not snapshot_encryption:
+                        unencrypted_resources.append(id)
 
-        # I build only one dictionary with all the associated policies
-        if iam_associated_policies_all:
-            for policy_arn, policy_config in iam_associated_policies_all.items():
-                policy_json = policy_config.get("config").get("resource_policy")
-                iam_associated_policies_all_checks = PolicyHelper(
-                    self.logger, resource_arn, resource_account_id, policy_json
-                ).check_policy()
-                for check in iam_associated_policies_all_checks:
-                    if iam_associated_policies_all_checks[check]:
-                        access_dict[check].update(
-                            {policy_arn: iam_associated_policies_all_checks[check]}
-                        )
+        print(unencrypted_resources)
 
-        for access in list(access_dict):
-            if not access_dict[access]:
-                access_dict.pop(access)
+        resource_type = resource_values.get("ResourceType")
+        # Config
+        if resource_values.get("config"):
+            if resource_type in (
+                "AwsRdsDbCluster",
+                "AwsRdsDbInstance",
+                "AwsEc2Volume",
+                "AwsEc2Volume",
+            ):
+                resource_values.get("config").get("encrypted")
+            if resource_type in (
+                "AwsElasticsearchDomain",
+                "AwsElastiCacheCacheCluster",
+            ):
+                resource_values.get("config").get("at_rest_encryption")
+                resource_values.get("config").get("transit_encryption")
+            if resource_type in ("AwsS3Bucket"):
+                resource_values.get("config").get("bucket_encryption")
+            if resource_type in ("AwsCloudFrontDistribution"):
+                resource_values.get("config").get("viewer_protocol_policy")
+                resource_values.get("config").get("field_level_encryption")
 
-        if access_dict == {}:
-            final_access_dict = {"restricted": {}}
-        elif "unrestricted" in access_dict:
-            final_access_dict = {"unrestricted": access_dict["unrestricted"]}
-        elif "untrusted_principal" in access_dict:
-            final_access_dict = {
-                "untrusted-principal": access_dict["untrusted_principal"]
-            }
-        elif "wildcard_principal" in access_dict and config_resource_policy:
-            final_access_dict = {
-                "unrestricted-resource-principal": access_dict["wildcard_principal"]
-            }
-        elif "cross_account_principal" in access_dict:
-            final_access_dict = {
-                "cross-account-principal": access_dict["cross_account_principal"]
-            }
-        elif "wildcard_actions" in access_dict:
-            final_access_dict = {
-                "unrestricted-actions": access_dict["wildcard_actions"]
-            }
-        elif "dangereous_actions" in access_dict:
-            final_access_dict = {
-                "dangereous-actions": access_dict["dangereous_actions"]
-            }
-        else:
-            final_access_dict = {"unknown": access_dict}
+    def resource_status(self, resource_arn, resource_values):
+        self.logger.info("Calculating encryption for resource: %s", resource_arn)
 
-        return final_access_dict
+    def resource_environment(self, resource_arn, resource_values):
+        self.logger.info("Calculating encryption for resource: %s", resource_arn)

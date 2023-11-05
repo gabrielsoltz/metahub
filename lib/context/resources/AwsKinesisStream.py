@@ -56,7 +56,7 @@ class Metacheck(ContextBase):
 
     # Context Config
 
-    def is_encrypted(self):
+    def encryption_type(self):
         if self.stream["EncryptionType"] != "NONE":
             return self.stream["EncryptionType"]
         return False
@@ -76,7 +76,7 @@ class Metacheck(ContextBase):
 
     def checks(self):
         checks = {
-            "is_encrypted": self.is_encrypted(),
+            "encryption_type": self.encryption_type(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

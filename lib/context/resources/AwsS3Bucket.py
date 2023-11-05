@@ -33,6 +33,7 @@ class Metacheck(ContextBase):
         self.bucket_website = self.get_bucket_website()
         self.bucket_public_access_block = self.get_bucket_public_access_block()
         self.account_public_access_block = self.get_account_bucket_public_access_block()
+        self.bucket_encryption = self.get_bucket_encryption()
         # Resource Policy
         self.resource_policy = self.describe_resource_policy()
         # Associated MetaChecks
@@ -217,11 +218,6 @@ class Metacheck(ContextBase):
             return url
         return False
 
-    def is_encrypted(self):
-        if self.get_bucket_encryption():
-            return True
-        return False
-
     def public(self):
         if self.website_enabled():
             return True
@@ -244,6 +240,6 @@ class Metacheck(ContextBase):
             "public_access_block_enabled": self.public_access_block_enabled(),
             "account_public_access_block_enabled": self.account_public_access_block_enabled(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
+            "bucket_encryption": self.bucket_encryption,
         }
         return checks

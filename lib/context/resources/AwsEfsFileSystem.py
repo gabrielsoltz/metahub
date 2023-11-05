@@ -87,7 +87,7 @@ class Metacheck(ContextBase):
             return self.fs[0]["NumberOfMountTargets"]
         return False
 
-    def is_encrypted(self):
+    def encrypted(self):
         if self.fs[0]["Encrypted"]:
             return True
         return False
@@ -104,7 +104,7 @@ class Metacheck(ContextBase):
 
     def checks(self):
         checks = {
-            "is_encrypted": self.is_encrypted(),
+            "encrypted": self.encrypted(),
             "mount_targets": self.mount_targets(),
             "resource_policy": self.resource_policy,
             "public": self.public(),

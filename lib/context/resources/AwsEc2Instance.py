@@ -231,12 +231,6 @@ class Metacheck(ContextBase):
                 return True
         return False
 
-    def is_encrypted(self):
-        for volume in self.volumes:
-            if self.volumes[volume].get("is_encrypted"):
-                return True
-        return False
-
     def resource_policy(self):
         return None
 
@@ -270,7 +264,6 @@ class Metacheck(ContextBase):
             "iam_profile": self.iam_profile(),
             "is_running": self.is_running(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
             "resource_policy": self.resource_policy(),
         }
         return checks

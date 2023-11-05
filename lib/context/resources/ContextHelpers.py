@@ -19,7 +19,7 @@ class PolicyHelper:
             "untrusted_principal": [],
             "wildcard_actions": [],
             "unrestricted": [],
-            "dangereous_actions": [],
+            "dangerous_actions": [],
         }
         statements = self.standardize_statements(self.policy["Statement"])
         for statement in statements:
@@ -33,8 +33,8 @@ class PolicyHelper:
                 failed_statements["wildcard_actions"].append(statement)
             if self.unrestricted(statement):
                 failed_statements["unrestricted"].append(statement)
-            if self.dangereous_actions(statement):
-                failed_statements["dangereous_actions"].append(statement)
+            if self.dangerous_actions(statement):
+                failed_statements["dangerous_actions"].append(statement)
         return failed_statements
 
     def parse_statement(self, statement):
@@ -113,6 +113,10 @@ class PolicyHelper:
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
                 principals = self.santandarize_principals(principal)
+                # Debug
+                if type(principals) is bool:
+                    print("debug principal:", principals)
+                    return False
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]
@@ -194,7 +198,7 @@ class PolicyHelper:
                 return statement
         return False
 
-    def dangereous_actions(self, statement):
+    def dangerous_actions(self, statement):
         """ """
         (
             effect,
@@ -283,17 +287,18 @@ class SGHelper:
             "is_ingress_rules_unrestricted": [],
             "is_egress_rules_unrestricted": [],
         }
-        for rule in self.sg_rules:
-            if (
-                self.is_ingress_rule_unrestricted(rule)
-                and rule not in failed_rules["is_ingress_rules_unrestricted"]
-            ):
-                failed_rules["is_ingress_rules_unrestricted"].append(rule)
-            if (
-                self.is_egress_rule_unrestricted(rule)
-                and rule not in failed_rules["is_egress_rules_unrestricted"]
-            ):
-                failed_rules["is_egress_rules_unrestricted"].append(rule)
+        if self.sg_rules:
+            for rule in self.sg_rules:
+                if (
+                    self.is_ingress_rule_unrestricted(rule)
+                    and rule not in failed_rules["is_ingress_rules_unrestricted"]
+                ):
+                    failed_rules["is_ingress_rules_unrestricted"].append(rule)
+                if (
+                    self.is_egress_rule_unrestricted(rule)
+                    and rule not in failed_rules["is_egress_rules_unrestricted"]
+                ):
+                    failed_rules["is_egress_rules_unrestricted"].append(rule)
         return failed_rules
 
     def is_ingress_rule_unrestricted(self, rule):

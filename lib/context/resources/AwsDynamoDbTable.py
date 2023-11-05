@@ -59,7 +59,7 @@ class Metacheck(ContextBase):
     def name(self):
         return self.table.get("TableName")
 
-    def is_encrypted(self):
+    def sse_description(self):
         if self.table.get("SSEDescription"):
             return self.table.get("SSEDescription")
         return False
@@ -80,7 +80,6 @@ class Metacheck(ContextBase):
     def checks(self):
         checks = {
             "name": self.name(),
-            "is_encrypted": self.is_encrypted(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

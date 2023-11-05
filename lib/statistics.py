@@ -110,7 +110,7 @@ def generate_statistics(mh_findings):
                         for tag, value in mh_findings_short[resource_arn][
                             "account"
                         ].items():
-                            if tag == "AlternateContact":
+                            if tag in ("AlternateContact", "Organizations"):
                                 continue
                             if tag not in account_statistics:
                                 account_statistics[tag] = {}
@@ -130,11 +130,11 @@ def generate_statistics(mh_findings):
                             "impact"
                         ].items():
                             if check not in impact_statistics:
-                                impact_statistics[check] = {False: 0, True: 0}
-                            if bool(mh_findings_short[resource_arn]["impact"][check]):
-                                impact_statistics[check][True] += 1
+                                impact_statistics[check] = {}
+                            if value not in impact_statistics[check]:
+                                impact_statistics[check][value] = 1
                             else:
-                                impact_statistics[check][False] += 1
+                                impact_statistics[check][value] += 1
         return impact_statistics
 
     mh_statistics = statistics_findings(mh_findings)

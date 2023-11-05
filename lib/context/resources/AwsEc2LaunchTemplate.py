@@ -98,6 +98,15 @@ class Metacheck(ContextBase):
 
         return iam_roles
 
+    def _describe_launch_template_versions_snapshots(self):
+        snapshots = {}
+        if self.launch_template_data:
+            if self.launch_template_data["BlockDeviceMappings"]:
+                for ebs in self.launch_template_data["BlockDeviceMappings"]:
+                    if "SnapshotId" in ebs["Ebs"]:
+                        snapshots[ebs["Ebs"]["SnapshotId"]] = ebs
+        return snapshots
+
     def describe_auto_scaling_groups(self):
         autoscaling_group = {}
         if self.launch_template:
@@ -137,23 +146,6 @@ class Metacheck(ContextBase):
             name = self.launch_template.get("LaunchTemplateName")
         return name
 
-    def is_encrypted(self):
-        if self.launch_template:
-            if self.launch_template.get("LaunchTemplateData").get(
-                "BlockDeviceMappings"
-            ):
-                for device in self.launch_template.get("LaunchTemplateData").get(
-                    "BlockDeviceMappings"
-                ):
-                    if (
-                        device.get("Ebs").get("Encrypted")
-                        and device.get("Ebs").get("Encrypted") is True
-                    ):
-                        continue
-                    else:
-                        return False
-        return True
-
     def is_attached(self):
         if self.security_groups:
             return True
@@ -184,9 +176,7 @@ class Metacheck(ContextBase):
             "associates_public_ip": self.associates_public_ip(),
             "name": self.name(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
-            "unrestricted": self.is_unrestricted(),
             "resource_policy": self.resource_policy(),
         }
         return checks

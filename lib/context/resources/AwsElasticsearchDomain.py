@@ -167,21 +167,15 @@ class Metacheck(ContextBase):
     def advanced_security_enabled(self):
         return self.elasticsearch_domain_as
 
-    def is_rest_encrypted(self):
+    def at_rest_encryption(self):
         if self.elasticsearch_domain:
             if self.elasticsearch_domain["EncryptionAtRestOptions"]:
                 return True
         return False
 
-    def is_transit_encrypted(self):
+    def node_to_node_encryption(self):
         if self.elasticsearch_domain:
             if self.elasticsearch_domain["NodeToNodeEncryptionOptions"]:
-                return True
-        return False
-
-    def is_encrypted(self):
-        if self.elasticsearch_domain:
-            if self.is_rest_encrypted() and self.is_transit_encrypted():
                 return True
         return False
 
@@ -202,10 +196,9 @@ class Metacheck(ContextBase):
             "private_endpoint": self.private_endpoint(),
             "public_endpoint": self.public_endpoint(),
             "internal_user_database": self.internal_user_database(),
-            "is_rest_encrypted": self.is_rest_encrypted(),
-            "is_transit_encrypted": self.is_transit_encrypted(),
+            "at_rest_encryption": self.at_rest_encryption(),
+            "transit_encrypted": self.node_to_node_encryption(),
             "advanced_security_enabled": self.advanced_security_enabled(),
-            "is_encrypted": self.is_encrypted(),
             "public": self.public(),
         }
         return checks

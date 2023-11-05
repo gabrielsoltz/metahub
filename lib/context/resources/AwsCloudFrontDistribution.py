@@ -115,15 +115,6 @@ class Metacheck(ContextBase):
             )
         return False
 
-    def is_encrypted(self):
-        if self.certificate() and self.viewer_protocol_policy():
-            if (
-                self.viewer_protocol_policy() == "redirect-to-https"
-                or self.viewer_protocol_policy() == "https-only"
-            ):
-                return True
-        return False
-
     def resource_policy(self):
         return None
 
@@ -149,7 +140,6 @@ class Metacheck(ContextBase):
             "field_level_encryption": self.field_level_encryption(),
             "viewer_protocol_policy": self.viewer_protocol_policy(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
             "resource_policy": self.resource_policy(),
         }
         return checks

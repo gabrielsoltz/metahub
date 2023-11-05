@@ -114,21 +114,15 @@ class Metacheck(ContextBase):
             return endpoints
         return False
 
-    def is_rest_encrypted(self):
+    def at_rest_encryption(self):
         if self.elasticcache_cluster:
             if self.elasticcache_cluster["AtRestEncryptionEnabled"]:
                 return True
         return False
 
-    def is_transit_encrypted(self):
+    def transit_encryption(self):
         if self.elasticcache_cluster:
             if self.elasticcache_cluster["TransitEncryptionEnabled"]:
-                return True
-        return False
-
-    def is_encrypted(self):
-        if self.elasticcache_cluster:
-            if self.is_rest_encrypted() and self.is_transit_encrypted():
                 return True
         return False
 
@@ -153,9 +147,8 @@ class Metacheck(ContextBase):
     def checks(self):
         checks = {
             "endpoint": self.endpoint(),
-            "is_rest_encrypted": self.is_rest_encrypted(),
-            "is_transit_encrypted": self.is_transit_encrypted(),
-            "is_encrypted": self.is_encrypted(),
+            "rest_encrypted": self.at_rest_encryption(),
+            "transit_encrypted": self.transit_encryption(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

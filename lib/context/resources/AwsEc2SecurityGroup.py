@@ -120,13 +120,14 @@ class Metacheck(ContextBase):
         return instances
 
     def describe_security_group_rules(self):
-        response = self.client.describe_security_group_rules(
-            Filters=[
-                {"Name": "group-id", "Values": [self.resource_id]},
-            ],
-        )
-        if response["SecurityGroupRules"]:
-            return response["SecurityGroupRules"]
+        if self.security_group:
+            response = self.client.describe_security_group_rules(
+                Filters=[
+                    {"Name": "group-id", "Values": [self.resource_id]},
+                ],
+            )
+            if response["SecurityGroupRules"]:
+                return response["SecurityGroupRules"]
         return False
 
     def _describe_security_group_vpc(self):

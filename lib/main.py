@@ -145,23 +145,31 @@ def generate_findings(
 
     def generate_impact():
         for resource_arn, resource_values in mh_findings_short.items():
+            imp = Impact(logger)
+
             # Impact
-            impact = Impact(logger).get_impact(mh_findings[resource_arn])
+            impact = imp.get_impact(mh_findings[resource_arn])
             mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
                 "impact"
             ] = impact
 
             # Get Exposure
-            exposure = Impact(logger).resource_exposure(resource_arn, resource_values)
+            exposure = imp.resource_exposure(resource_arn, resource_values)
             mh_findings[resource_arn]["impact"]["exposure"] = mh_findings_short[
                 resource_arn
             ]["impact"]["exposure"] = exposure
 
             # Get Access
-            access = Impact(logger).resource_access(resource_arn, resource_values)
+            access = imp.resource_access(resource_arn, resource_values)
             mh_findings[resource_arn]["impact"]["access"] = mh_findings_short[
                 resource_arn
             ]["impact"]["access"] = access
+
+            # Get Encryption
+            encryption = imp.resource_encryption(resource_arn, resource_values)
+            mh_findings[resource_arn]["impact"]["encryption"] = mh_findings_short[
+                resource_arn
+            ]["impact"]["encryption"] = encryption
 
     generate_impact()
 

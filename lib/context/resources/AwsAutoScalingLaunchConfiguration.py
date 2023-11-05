@@ -28,6 +28,7 @@ class Metacheck(ContextBase):
         self.launch_configuration = self.describe_launch_configuration()
         if not self.launch_configuration:
             return False
+        self.snapshots = self._describe_launch_configuration_snapshots()
         # Associated MetaChecks
         self.security_groups = self._describe_launch_configuration_security_groups()
         self.iam_roles = self._describe_launch_configuration_iam_roles()
@@ -88,6 +89,15 @@ class Metacheck(ContextBase):
 
         return iam_roles
 
+    def _describe_launch_configuration_snapshots(self):
+        snapshots = {}
+        if self.launch_configuration:
+            if self.launch_configuration["BlockDeviceMappings"]:
+                for ebs in self.launch_configuration["BlockDeviceMappings"]:
+                    if "SnapshotId" in ebs["Ebs"]:
+                        snapshots[ebs["Ebs"]["SnapshotId"]] = ebs
+        return snapshots
+
     def _describe_launch_configuration_autoscaling_group(self):
         autoscaling_group = {}
         if self.launch_configuration:
@@ -118,19 +128,6 @@ class Metacheck(ContextBase):
             )
         return associates_public_ip
 
-    def is_encrypted(self):
-        if self.launch_configuration:
-            if self.launch_configuration["BlockDeviceMappings"]:
-                for device in self.launch_configuration["BlockDeviceMappings"]:
-                    if (
-                        device.get("Ebs").get("Encrypted")
-                        and device.get("Ebs").get("Encrypted") is True
-                    ):
-                        continue
-                    else:
-                        return False
-        return True
-
     def is_attached(self):
         if self.autoscaling_groups:
             return True
@@ -160,8 +157,8 @@ class Metacheck(ContextBase):
             "metadata_options": self.metadata_options(),
             "associates_public_ip": self.associates_public_ip(),
             "public": self.public(),
-            "is_encrypted": self.is_encrypted(),
             "is_attached": self.is_attached(),
             "resource_policy": self.resource_policy(),
+            "snapshots": self.snapshots,
         }
         return checks

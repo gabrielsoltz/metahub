@@ -144,7 +144,7 @@ class Context:
         resource_tags = {}
 
         # Non-Taggable Resources
-        if self.resource_type in ("AwsAccount", "Other"):
+        if self.resource_type in ("AwsAccount", "Other", "AwsIamAccessKey"):
             return resource_tags, resource_matched
 
         # Execute Tags
@@ -213,7 +213,7 @@ class Context:
         account_config = {
             "Alias": self.get_account_alias(),
             "AlternateContact": self.get_account_alternate_contact(),
-            "Organizataions": self.get_account_organizations(),
+            "Organizations": self.get_account_organizations(),
         }
 
         return account_config
