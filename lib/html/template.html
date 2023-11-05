@@ -29,9 +29,11 @@
                   "{{ config_column }}": "{{ resource_value.config[config_column]|e }}",
                 {% endfor %}
               {% endif %}
+              {% if 'impact' in resource_value %}
               {% for impact_column in impact_columns %}
-              "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
               {% endfor %}
+              {% endif %}
           },
         {% endfor %}
       {% endfor %}
@@ -151,7 +153,7 @@
         } else if (value === "HIGH") {
           color = "orange";
         } else if (value === "MEDIUM") {
-          color = "yellow";
+          color = "#ffcd47";
         } else if (value === "LOW") {
           color = "green";
         }else{
@@ -262,28 +264,28 @@
         }
       },
       {% elif 'environment' == impact_column %}
-      {title:"environment", field:"environment", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
-          var value = cell.getValue();
-          var color;
-          var emoji;
-          if (value === "production") {
-            color = "red";
-            emoji = "🔴";
-          } else if (value === "staging" || value === "development") {
-            color = "green";
-            emoji = "🟢";
-          } else if (value === "unknown") {
-            color = "blue";
-            emoji = "🔵";
-          } else {
-            return value;
+        {title:"environment", field:"environment", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
+            var value = cell.getValue();
+            var color;
+            var emoji;
+            if (value === "production") {
+              color = "red";
+              emoji = "🔴";
+            } else if (value === "staging" || value === "development") {
+              color = "green";
+              emoji = "🟢";
+            } else if (value === "unknown") {
+              color = "blue";
+              emoji = "🔵";
+            } else {
+              return value;
+            }
+            return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
+                      <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
+                      ${value}
+                    </span>`;
           }
-          return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
-                    <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
-                    ${value}
-                  </span>`;
-        }
-      },
+        },
         {% elif 'score' == impact_column %}
           {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
@@ -718,11 +720,13 @@
   </tr>
 </table>
 {% endblock %} {% block severities %}
+
 <div class="container">
-  <div class="box critical">CRITICAL<br />16</div>
-  <div class="box high">HIGH<br />18</div>
-  <div class="box medium">MEDIUM<br />1</div>
-  <div class="box low">LOW<br />0</div>
-  <div class="box informational">INFORMATIONAL<br />0</div>
+  {% set ordered_keys = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] %} {% for key in
+  ordered_keys %} {% if key in statistics["SeverityLabel"] %}
+  <div class="box {{ key }}">
+    {{ key }}<br />{{ statistics["SeverityLabel"][key] }}
+  </div>
+  {% endif %} {% endfor %}
 </div>
 {% endblock %}

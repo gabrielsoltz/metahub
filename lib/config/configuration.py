@@ -31,16 +31,24 @@ dangereous_iam_actions = [
 days_to_consider_unrotated = 90
 
 # Environment Tags Definition
+# tag_ENVIRONMENT = {"TAG-KEY": ["TAG-VALUE1", "TAG-VALUE1", "TAG-VALUE3"]}
 tags_production = {
     "Environment": ["Production", "production", "prd"],
     "Env": ["production"],
+    "environment": ["prd"],
 }
-tags_staging = {"Environment": ["Staging", "staging", "stg"], "Env": ["stg"]}
+tags_staging = {
+    "Environment": ["Staging", "staging", "stg"],
+    "Env": ["stg"],
+    "environment": ["stg"],
+}
 tags_development = {
     "Environment": ["Development", "development", "dev"],
     "Env": ["dev"],
+    "environment": ["dev"],
 }
 
+# Severity Values for Impact Findings Scores Calculation
 findings_severity_value = {
     "CRITICAL": 4,
     "HIGH": 3,
@@ -58,7 +66,7 @@ findings_severity_value = {
 config_columns = ["public"]
 tag_columns = ["Name", "Owner"]
 account_columns = ["AccountAlias"]
-impact_columns = ["score", "exposure", "access", "encryption", "status"]
+impact_columns = ["score", "exposure", "access", "encryption", "status", "environment"]
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = True

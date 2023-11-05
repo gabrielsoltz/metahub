@@ -119,6 +119,9 @@ class PolicyHelper:
             if principal and principal != "*" and principal.get("AWS") != "*":
                 principals = self.santandarize_principals(principal)
                 for p in principals:
+                    # We are only scanninng ARN principals
+                    if not p.startswith("arn:"):
+                        continue
                     try:
                         account_id = p.split(":")[4]
                         if (
@@ -133,8 +136,6 @@ class PolicyHelper:
                             self.resource,
                             err,
                         )
-                        # To DO: check identifiers-unique-ids
-                        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
     def untrusted_principal(self, statement):
@@ -159,6 +160,9 @@ class PolicyHelper:
             if principal and principal != "*" and principal.get("AWS") != "*":
                 principals = self.santandarize_principals(principal)
                 for p in principals:
+                    # We are only scanninng ARN principals
+                    if not p.startswith("arn:"):
+                        continue
                     try:
                         account_id = p.split(":")[4]
                         if (
@@ -173,8 +177,6 @@ class PolicyHelper:
                             p,
                             self.resource,
                         )
-                        # To DO: check identifiers-unique-ids
-                        # https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_identifiers.html#identifiers-unique-ids
         return False
 
     def wildcard_actions(self, statement):

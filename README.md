@@ -50,15 +50,19 @@ In the past, the limitations of unprioritized vulnerability management may have 
 
 After understanding your context, **MetaHub** will evaluate various impact criteria, including `exposure`, `access` layer, `encryption`, `status`, `age`, `environment`, and more. You can customize and add more impact criteria based on your needs.
 
-With all those criteria evaluated, MetaHub will generate a **Score** for each finding. You can rely on this score for prioritizing findings (where should you start?), directing attention to critical issues, and automating alerts and escalations.
+<img src="docs/imgs/html-dashboard.png"/>
 
-<img src="docs/imgs/severity_impact.png"/>
+With all those criteria evaluated, MetaHub will generate a **Score** for each finding. You can rely on this score for prioritizing findings (where should you start?), directing attention to critical issues, and automating alerts and escalations.
 
 MetaHub can also filter, deduplicate, group, report, suppress, or update your security findings in automated workflows. It is designed for use as a CLI tool or within automated workflows, such as AWS Security Hub custom actions or AWS Lambda functions.
 
 With MetaHub, you can combine security findings from any number of security scanners, regardless of whether findings are duplicated between them. This allows you to take advantage of each scanner's strengths, as one scanner may detect a finding that another misses. MetaHub automatically groups and deduplicates your findings by affected resources, enabling you to work with them as a single finding - for example, changing the workflow status of all related findings simultaneously.
 
-<img src="docs/imgs/metahub-min.gif"/>
+Check the amount of data we are collecting only for one resource!
+
+<p align="center">
+  <img src="docs/imgs/metahub-terminal.gif" alt="Diagram" width="850"/>
+</p>
 
 # Context
 
@@ -613,7 +617,7 @@ You can customize which Context columns to unroll using the options `--output-ta
 For example, you can generate an HTML output with Tags and add "Owner" and "Environment" as columns to your report using the:
 
 ```sh
-./metahub --output-modes HTML --output -tags-columns Owner Environment
+./metahub --output-modes html --output -tags-columns Owner Environment
 ```
 
 # Context Module
@@ -699,7 +703,7 @@ Passing filters using this option resets the default filters. If you want to add
 ./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW
 ```
 
-If a value contains spaces, you should specify it using double quotes: `ProductName=" Security Hub```sh
+If a value contains spaces, you should specify it using double quotes: `"ProductName="Security Hub"`
 
 You can add how many different filters you need to your query and also add the same filter key with different values:
 
@@ -821,7 +825,7 @@ For example, using the following filter: `./metahub --sh-filters ResourceType=Aw
 Running the following update command will update those six findings' workflow status to `NOTIFIED` with a Note:
 
 ```sh
---update-findings Workflow=NOTIFIED Note= "Enter your ticket ID or reason here as a note that you will add to the finding as part of this update."
+./metahub --update-findings Workflow=NOTIFIED Note="Enter your ticket ID or reason here as a note that you will add to the finding as part of this update."
 ```
 
 <p align="center">
@@ -843,7 +847,7 @@ By enriching your findings directly in AWS Security Hub, you can take advantage 
 For example, you want to enrich all AWS Security Hub findings with `WorkflowStatus=NEW`, `RecordState=ACTIVE`, and `ResourceType=AwsS3Bucket` that are `public=True` with Context outputs:
 
 ```sh
-./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket ----mh-filters-checks public=True --enrich-findings
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --mh-filters-checks public=True --enrich-findings
 ```
 
 <p align="center">

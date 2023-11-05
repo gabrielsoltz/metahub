@@ -120,7 +120,6 @@ class Impact:
                     "value": checked_property[0],
                     "score": checked_property[1],
                 }
-                print(meta_score_details)
                 # Update the total weight and value based on this property
                 weight_total += property_weight
                 score_total += property_weight * checked_property[1]
@@ -215,9 +214,12 @@ class Impact:
             security_groups = associations.get("security_groups", {})
             if security_groups:
                 for sg_arn, sg_details in security_groups.items():
-                    sg_config = sg_details.get("config", {})
-                    if sg_config.get("is_ingress_rules_unrestricted"):
-                        public_rules.extend(sg_config["is_ingress_rules_unrestricted"])
+                    if sg_details:
+                        sg_config = sg_details.get("config", {})
+                        if sg_config.get("is_ingress_rules_unrestricted"):
+                            public_rules.extend(
+                                sg_config["is_ingress_rules_unrestricted"]
+                            )
 
         if not config and not associations:
             exposure = "unknown"
@@ -353,15 +355,17 @@ class Impact:
             associated_volumes = resource_values.get("associations").get("volumes")
             if associated_volumes:
                 for id, config in associated_volumes.items():
-                    volume_encryption = config.get("config").get("encrypted")
-                    if not volume_encryption:
-                        unencrypted_resources.append(id)
+                    if config:
+                        volume_encryption = config.get("config").get("encrypted")
+                        if not volume_encryption:
+                            unencrypted_resources.append(id)
             associated_snapshots = resource_values.get("associations").get("snapshots")
             if associated_snapshots:
                 for id, config in associated_snapshots.items():
-                    snapshot_encryption = config.get("config").get("encrypted")
-                    if not snapshot_encryption:
-                        unencrypted_resources.append(id)
+                    if config:
+                        snapshot_encryption = config.get("config").get("encrypted")
+                        if not snapshot_encryption:
+                            unencrypted_resources.append(id)
 
         resource_type = resource_values.get("ResourceType")
         config = resource_values.get("config", {})
@@ -474,7 +478,7 @@ class Impact:
             "access": {},
             "encryption": {},
             "status": {},
-            "env": {},
+            "environment": {},
             "score": {},
         }
         impact_dict["exposure"].update(
@@ -489,7 +493,7 @@ class Impact:
         impact_dict["status"].update(
             self.resource_status(resource_arn, resource_values)
         )
-        impact_dict["env"].update(
+        impact_dict["environment"].update(
             self.resource_environment(resource_arn, resource_values)
         )
         return impact_dict
