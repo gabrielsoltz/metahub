@@ -369,7 +369,7 @@ class Impact:
 
         resource_type = resource_values.get("ResourceType")
         config = resource_values.get("config", {})
-        resource_encryption_config = "unknown"
+        resource_encryption_config = None
         # Configuration by resource type
         if config:
             if resource_type in (
@@ -409,7 +409,9 @@ class Impact:
                 else:
                     resource_encryption_config = False
 
-        if not config and not associations:
+        if (not config and not associations) or (
+            resource_encryption_config is None and not unencrypted_resources
+        ):
             return {
                 "unknown": {
                     "config": resource_encryption_config,
