@@ -9,8 +9,8 @@
 # This is used in check untrusted_principal for policies.
 trusted_accounts = []
 
-# Dangereous IAM actions that should be considered as a finding if used in a policy
-dangereous_iam_actions = [
+# Dangerous IAM actions that should be considered as a finding if used in a policy
+dangerous_iam_actions = [
     "iam:CreatePolicyVersion",
     "iam:SetDefaultPolicyVersion",
     "iam:PassRole",
