@@ -30,6 +30,11 @@ dangereous_iam_actions = [
 # Days to consider a resource (key) unrotated
 days_to_consider_unrotated = 90
 
+# Environment Tags Definition
+production = {"Environment": "Production", "Environment": "prd"}
+staging = {"Environment": "Staging", "Environment": "stg"}
+development = {"Environment": "Development", "Environment": "dev"}
+
 # Output Configurations
 
 # Columns

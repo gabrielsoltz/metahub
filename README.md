@@ -32,11 +32,11 @@
 - [Examples](#Examples)
 - [Inputs](#Inputs)
 - [Output Modes](#output-modes)
-- [Findings Aggregation](#findings-aggregation)
 - [Context Module](#context-module)
 - [Filters](#filters)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
+- [Findings Aggregation](#findings-aggregation)
 
 # Description
 
@@ -46,9 +46,9 @@ In the past, the limitations of unprioritized vulnerability management may have 
 
 **Metahub** approaches focus on context and impact. It considers a standard range of criteria to identify and prioritize the most critical findings, but those criteria are populated with information from your environment. These criteria are also completely customizable: A critical vulnerability for one organization may be well within the risk appetite of another.
 
-**MetaHub** Understand your context by connecting to your affected resources to understand your Tagging strategies, your CloudTrail events, your associations, and your configuration to enrich your security findings with the information needed to understand the impact of the finding.
+**MetaHub** Understand your context by connecting to your affected resources to understand your Tagging strategies, your CloudTrail events, your resource configuration and associations, to enrich your security findings with the information needed to understand the impact of the finding.
 
-After understanding your context, **MetaHub** will evaluate various impact criteria, including exposure, access layer, encryption, status, age, environment, and more. You can customize and add more impact criteria based on your needs.
+After understanding your context, **MetaHub** will evaluate various impact criteria, including `exposure`, `access` layer, `encryption`, `status`, `age`, `environment`, and more. You can customize and add more impact criteria based on your needs.
 
 With all those criteria evaluated, MetaHub will generate a **Score** for each finding. You can rely on this score for prioritizing findings (where should you start?), directing attention to critical issues, and automating alerts and escalations.
 
@@ -70,7 +70,7 @@ MetaHub doesn't stop at the affected resource but analyzes any associated or att
 
 MetaHub also focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information.
 
-An automated way to determine the owner of a resource is critical for security teams. It allows them to focus on the most critical issues and escalate them to the right people in automated workflows. But this is only viable if you have a reliable way to define the impact of a finding, which is why MetaHub also focuses on impact.
+An automated way to determine the owner of a resource is critical for security teams. It allows them to focus on the most critical issues and escalate them to the right people in automated workflows. But automating workflows this way, it is only viable if you have a reliable way to define the impact of a finding, which is why MetaHub also focuses on impact.
 
 # Impact
 
@@ -82,23 +82,57 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 ### Exposure
 
+Evaluates the exposure of the affected resource. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP and if it is protected by a firewall or a security group.
+
+| **Possible Statuses** | **Conditions**                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| effectively-public    | resource.config.public and resource.associations.security_groups.is_ingress_rules_unrestricted    |
+| unrestricted-public   | resource.config.public and no security_groups                                                     |
+| restricted-public     | resource.config.public and resource.associations.security_groups restricted                       |
+| unknown-public        | no resource.config.public and resource.associations.security_groups.is_ingress_rules_unrestricted |
+| restricted            | no resource.config.public and resource.associations.security_groups restricted                    |
+| unrestricted-private  | no resource.config.public                                                                         |
+
 ### Access
+
+Evaluates the policy layer that the affected resource is using. For example, if the affected resource is using an IAM role, or if it has a resource policy. We evaluate possible iam policies, inline iam policies, roles, resource policies, and more.
+
+| **Possible Statuses**           | **Conditions** |
+| ------------------------------- | -------------- |
+| unrestricted                    |                |
+| untrusted-principal             |                |
+| wildcard_principal              |                |
+| unrestricted-resource-principal |                |
+| cross-account-principal         |                |
+| unrestricted-actions            |                |
+| dangerous-actions               |                |
+| unknown                         |                |
 
 ### Encryption
 
-### Status and Attachment
+Evaluate the encryption status of the affected resource. For example if at_rest and transit encryption are enabled.
+
+### Status
+
+Evaluate the status of the affected resource. For example, if the resource is running, stopped, or terminated for resources like EC2 Instances, and if the resource is attached or not for resources like EBS Volumes, Security Groups, etc.
 
 ### Environment
 
+We evaluate the environment of the affected resource. For example, if the resource is tagged with the tag `Environment=production` or `Environment=development`. You can customize the environment tags in the configuration file.
+
 ### Findings Metric Calculation
 
-The **Impact Findings Metric** is determined based on the severity of all findings affecting the same resource.
+As part of the Impact Scoring calculation, we also evaluate the number of findings affecting the affected resource and their severities. We use the following formula to calculate the metric:
 
-The calculation of the Impact Findings Score is done using the following formula:
+```sh
+(SUM of all (Finding Severity / Highest Severity) with a maximum of 1)
+```
 
-`Impact Findings Score = (Sum of all (Finding Severity / Highest Severity) with a maximum of 1)`
+For example, if the affected resource has two findings affecting it, one with `HIGH` and another with `LOW` severity, the **Impact Findings Score** will be:
 
-For example, if the affected resource has two findings affecting it, one with `HIGH` and another with `LOW` severity, the **Impact Findings Score** will be: `HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4) = 0.875`
+```sh
+SUM(HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4)) = 0.875
+```
 
 # Architecture
 
@@ -214,7 +248,7 @@ Terraform code is provided for deploying the Lambda function and all its depende
 ## Lambda use-cases
 
 - Trigger the MetaHub Lambda function each time there is a new security finding to enrich that finding back in AWS Security Hub.
-- Trigger the MetaHub Lambda function each time there is a new security finding for suppression based on MetaChecks or MetaTags.
+- Trigger the MetaHub Lambda function each time there is a new security finding for suppression based on Context.
 - Trigger the MetaHub Lambda function to identify the affected owner of a security finding based on MetaTags or MetaTrails and assign it using your internal systems.
 - Trigger the MetaHub Lambda function to create a ticket with enriched context.
 
@@ -520,7 +554,7 @@ Show statistics for each field/value. In the output, you will see each field/val
 
 ## HTML
 
-You can create rich HTML reports of your findings, adding MetaChecks and MetaTags as part of them.
+You can create rich HTML reports of your findings, adding your context as part of them.
 
 HTML Reports are interactive in many ways:
 
@@ -536,7 +570,7 @@ HTML Reports are interactive in many ways:
 
 ## CSV
 
-You can create a CSV custom report from your findings, adding MetaChecks and MetaTags as part of them.
+You can create rich HTML reports of your findings, adding your context as part of them.
 
 <p align="center">
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>
@@ -544,7 +578,7 @@ You can create a CSV custom report from your findings, adding MetaChecks and Met
 
 ## XLSX
 
-Similar to CSV but with more features like formatting.
+Similar to CSV but with more formatting options.
 
 <p align="center">
   <img src="docs/imgs/xlsx-export.png" alt="xlsx-example"/>
@@ -552,7 +586,7 @@ Similar to CSV but with more features like formatting.
 
 ## Customize HTML, CSV or XLSX outputs
 
-You can customize which Context columns to unroll using the options `--output-tags-columns` and `--output-config-columns` as a list of columns. If the MetaChecks or MetaTags you specified as columns don't exist for the affected resource, they will be empty. There is a configuration file under `lib/config/confugration.py` where you can define the default columns for each output mode.
+You can customize which Context columns to unroll using the options `--output-tags-columns` and `--output-config-columns` as a list of columns. If the columns you specified as columns don't exist for the affected resource, they will be empty. There is a configuration file under `lib/config/confugration.py` where you can define the default columns for each output mode.
 
 For example, you can generate an HTML output with MetaTags and add "Owner" and "Environment" as columns to your report using the:
 
@@ -560,129 +594,15 @@ For example, you can generate an HTML output with MetaTags and add "Owner" and "
 ./metahub --output-modes HTML --output -tags-columns Owner Environment
 ```
 
-# Findings Aggregation
-
-Working with Security Findings sometimes introduces the problem of Shadowing and Duplication.
-
-Shadowing is when two checks refer to the same issue, but one in a more generic way than the other one.
-
-Duplication is when you use more than one scanner and get the same problem from more than one.
-
-Think of a Security Group with port 3389/TCP open to 0.0.0.0/0. Let's use Security Hub findings as an example.
-
-If you are using one of the default Security Standards like `AWS-Foundational-Security-Best-Practices,` you will get two findings for the same issue:
-
-- `EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports`
-- `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
-
-If you are also using the standard CIS AWS Foundations Benchmark, you will also get an extra finding:
-
-- `4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389`
-
-Now, imagine that SG is not in use. In that case, Security Hub will show an additional fourth finding for your resource!
-
-- `EC2.22 Unused EC2 security groups should be removed`
-
-So now you have in your dashboard four findings for one resource!
-
-Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
-
-**MetaHub** aggregates security findings under the affected resource.
-
-This is how MetaHub shows the previous example with output-mode json-short:
-
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-    "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
-    "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
-    "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
-    "EC2.22 Unused EC2 security groups should be removed"
-  ],
-  "AwsAccountId": "01234567890",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup"
-}
-```
-
-This is how MetaHub shows the previous example with output-mode json-full:
-
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-    {
-      "EC2.19 Security groups should not allow unrestricted access to ports with high risk": {
-        "SeverityLabel": "CRITICAL",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "EC2.22 Unused EC2 security groups should be removed": {
-        "SeverityLabel": "MEDIUM",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    }
-  ],
-  "AwsAccountId": "01234567890",
-  "AwsAccountAlias": "obfuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup"
-}
-```
-
-Your findings are combined under the ARN of the resource affected, ending in only one result or one non-compliant resource.
-
-You can now work in MetaHub with all these four findings together as if they were only one. For example, you can update these four Workflow Status findings using only one command: See [Updating Workflow Status](#updating-workflow-status)
-
 # Context Module
 
-The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and other related resources that are connected. The context module has five main parts:
+The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and other related resources that are connected. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`.
 
-You can follow this guide if you want to contribute to the Context module [guide](metachecks.md).
+By default, `config`, `associations` and `tags` are enabled. To enable or disable any of them, you can use:
+
+```sh
+./metahub --context config tags cloudtrail account
+```
 
 ## Config
 
@@ -977,3 +897,125 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 </p>
 
 The `--enrich-findings` will ask you for confirmation before enriching your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
+
+# Findings Aggregation
+
+Working with Security Findings sometimes introduces the problem of Shadowing and Duplication.
+
+Shadowing is when two checks refer to the same issue, but one in a more generic way than the other one.
+
+Duplication is when you use more than one scanner and get the same problem from more than one.
+
+Think of a Security Group with port 3389/TCP open to 0.0.0.0/0. Let's use Security Hub findings as an example.
+
+If you are using one of the default Security Standards like `AWS-Foundational-Security-Best-Practices,` you will get two findings for the same issue:
+
+- `EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports`
+- `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
+
+If you are also using the standard CIS AWS Foundations Benchmark, you will also get an extra finding:
+
+- `4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389`
+
+Now, imagine that SG is not in use. In that case, Security Hub will show an additional fourth finding for your resource!
+
+- `EC2.22 Unused EC2 security groups should be removed`
+
+So now you have in your dashboard four findings for one resource!
+
+Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
+
+**MetaHub** aggregates security findings under the affected resource.
+
+This is how MetaHub shows the previous example with output-mode json-short:
+
+```sh
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
+  "findings": [
+    "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
+    "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
+    "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
+    "EC2.22 Unused EC2 security groups should be removed"
+  ],
+  "AwsAccountId": "01234567890",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
+}
+```
+
+This is how MetaHub shows the previous example with output-mode json-full:
+
+```sh
+"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
+  "findings": [
+    {
+      "EC2.19 Security groups should not allow unrestricted access to ports with high risk": {
+        "SeverityLabel": "CRITICAL",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    },
+    {
+      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    },
+    {
+      "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    },
+    {
+      "EC2.22 Unused EC2 security groups should be removed": {
+        "SeverityLabel": "MEDIUM",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    }
+  ],
+  "AwsAccountId": "01234567890",
+  "AwsAccountAlias": "obfuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsEc2SecurityGroup"
+}
+```
+
+Your findings are combined under the ARN of the resource affected, ending in only one result or one non-compliant resource.
+
+You can now work in MetaHub with all these four findings together as if they were only one. For example, you can update these four Workflow Status findings using only one command: See [Updating Workflow Status](#updating-workflow-status)
+
+# Contributing
+
+You can follow this guide if you want to contribute to the Context module [guide](metachecks.md).
