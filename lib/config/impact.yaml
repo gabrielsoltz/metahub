@@ -5,119 +5,51 @@
 #   Values: List of values for this property
 #     - Name: Name of the value
 #       Score: Score for this value
-#       Match Criteria: List of match criteria to apply to this value
-#         - [MetaChecks|MetaTags|MetaAccount]: List of Meta* to apply to this value
-#           - Key: Value to match
-#           - Key: Value to match
 
-attachment:
+status:
   weight: 10
   values:
     - attached:
         score: 1
-        matchs:
-          - metachecks:
-              - "is_attached": True
     - unattached:
         score: 0
-        matchs:
-          - metachecks:
-              - "is_attached": False
-
-status:
-  weight: 5
-  values:
     - running:
         score: 1
-        matchs:
-          - metachecks:
-              - "is_running": True
     - not-running:
         score: 0
-        matchs:
-          - metachecks:
-              - "is_running": False
 
-network:
+exposure:
   weight: 1
   values:
     - public:
         score: 1
-        matchs:
-          - metachecks:
-              - "is_public": True
     - private:
         score: 0
-        matchs:
-          - metachecks:
-              - "is_public": False
 
-policy:
+access:
   weight: 1
   values:
     - unrestricted:
         score: 1
-        matchs:
-          - metachecks:
-              - "is_unrestricted": True
     - restricted:
         score: 0
-        matchs:
-          - metachecks:
-              - "is_unrestricted": False
-
-key:
-  weight: 1
-  values:
-    - not-rotated:
-        score: 1
-        matchs:
-          - metachecks:
-              - "is_unrotated": True
-    - rotated:
-        score: 0
-        matchs:
-          - metachecks:
-              - "is_unrotated": False
 
 encryption:
   weight: 0.1
   values:
     - unencrypted:
         score: 1
-        matchs:
-          - metachecks:
-              - "is_encrypted": False
     - encrypted:
         score: 0
-        matchs:
-          - metachecks:
-              - "is_encrypted": True
+    - unknown:
+        score: 0
 
 environment:
   weight: 1
   values:
     - production:
         score: 1
-        matchs:
-          - metatags:
-              - "Environment": "Production"
-              - "Environment": "production"
-          - metaaccount:
-              - "alias": "production"
     - staging:
         score: 0.3
-        matchs:
-          - metatags:
-              - "Environment": "Staging"
-              - "Environment": "staging"
-          - metaaccount:
-              - "alias": "staging"
     - development:
         score: 0
-        matchs:
-          - metatags:
-              - "Environment": "Development"
-              - "Environment": "development"
-          - metaaccount:
-              - "alias": "development"

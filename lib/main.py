@@ -139,14 +139,13 @@ def generate_findings(
     mh_statistics = generate_statistics(mh_findings)
 
     def generate_impact():
-        for resource_arn, resource_values in mh_findings_short.items():
+        for resource_arn, resource_values in mh_findings.items():
             imp = Impact(logger)
 
             # Impact
-            impact = imp.get_impact(mh_findings[resource_arn])
             mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
                 "impact"
-            ] = impact
+            ] = {}
 
             # Get Exposure
             exposure = imp.resource_exposure(resource_arn, resource_values)
@@ -171,6 +170,11 @@ def generate_findings(
             mh_findings[resource_arn]["impact"]["status"] = mh_findings_short[
                 resource_arn
             ]["impact"]["status"] = status
+
+            score = imp.get_impact(resource_values)
+            mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[
+                resource_arn
+            ]["impact"]["score"] = score
 
     generate_impact()
 

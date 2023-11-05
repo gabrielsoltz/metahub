@@ -35,6 +35,14 @@ production = {"Environment": "Production", "Environment": "prd"}
 staging = {"Environment": "Staging", "Environment": "stg"}
 development = {"Environment": "Development", "Environment": "dev"}
 
+findings_severity_value = {
+    "CRITICAL": 4,
+    "HIGH": 3,
+    "MEDIUM": 1,
+    "LOW": 0.5,
+    "INFORMATIONAL": 0,
+}
+
 # Output Configurations
 
 # Columns
@@ -48,3 +56,6 @@ impact_columns = ["score", "exposure", "access", "encryption", "status"]
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = True
+
+
+path_yaml_impact = "lib/config/impact.yaml"
