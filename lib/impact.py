@@ -241,6 +241,11 @@ class Impact:
         if config_public:
             if public_rules:
                 exposure = "effectively-public"
+            elif resource_values.get("ResourceType") != "AwsEc2SecurityGroup":
+                if resource_values.get("associations", {}):
+                    if not associations.get("security_groups"):
+                        exposure = "unrestricted-public"
+                exposure = "restricted-public"
             else:
                 exposure = "restricted-public"
         elif config_public is None:
@@ -333,6 +338,10 @@ class Impact:
                             policy_config["config"]["resource_policy"], policy_arn
                         )
 
+        for check_type, check_data in list(access_checks.items()):
+            if not check_data:
+                del access_checks[check_type]
+
         # Determine the final result
         if not any(access_checks.values()):
             return {"restricted": {}}
@@ -358,7 +367,8 @@ class Impact:
 
         unencrypted_resources = []
 
-        if resource_values.get("associations"):
+        associations = resource_values.get("associations", {})
+        if associations:
             # Associated with EBS Volumes or Snapshots
             associated_volumes = resource_values.get("associations").get("volumes")
             if associated_volumes:
@@ -366,7 +376,6 @@ class Impact:
                     volume_encryption = config.get("config").get("encrypted")
                     if not volume_encryption:
                         unencrypted_resources.append(id)
-
             associated_snapshots = resource_values.get("associations").get("snapshots")
             if associated_snapshots:
                 for id, config in associated_snapshots.items():
@@ -374,29 +383,68 @@ class Impact:
                     if not snapshot_encryption:
                         unencrypted_resources.append(id)
 
-        print(unencrypted_resources)
-
         resource_type = resource_values.get("ResourceType")
-        # Config
-        if resource_values.get("config"):
+        config = resource_values.get("config", {})
+        resource_encryption_config = "unknown"
+        # Configuration by resource type
+        if config:
             if resource_type in (
                 "AwsRdsDbCluster",
                 "AwsRdsDbInstance",
                 "AwsEc2Volume",
                 "AwsEc2Volume",
             ):
-                resource_values.get("config").get("encrypted")
+                if config.get("encrypted"):
+                    resource_encryption_config = True
+                else:
+                    resource_encryption_config = False
+
             if resource_type in (
                 "AwsElasticsearchDomain",
                 "AwsElastiCacheCacheCluster",
             ):
-                resource_values.get("config").get("at_rest_encryption")
-                resource_values.get("config").get("transit_encryption")
+                if config.get("at_rest_encryption") and config.get(
+                    "transit_encryption"
+                ):
+                    resource_encryption_config = True
+                else:
+                    resource_encryption_config = False
+
             if resource_type in ("AwsS3Bucket"):
-                resource_values.get("config").get("bucket_encryption")
+                if config.get("bucket_encryption"):
+                    resource_encryption_config = True
+                else:
+                    resource_encryption_config = False
+
             if resource_type in ("AwsCloudFrontDistribution"):
-                resource_values.get("config").get("viewer_protocol_policy")
-                resource_values.get("config").get("field_level_encryption")
+                if (
+                    config.get("viewer_protocol_policy") == "redirect-to-https"
+                    or config.get("viewer_protocol_policy") == "https-only"
+                ) and config.get("certificate"):
+                    resource_encryption_config = True
+                else:
+                    resource_encryption_config = False
+
+        if resource_encryption_config and not unencrypted_resources:
+            return {
+                "encrypted": {
+                    "config": resource_encryption_config,
+                }
+            }
+        elif not resource_encryption_config or unencrypted_resources:
+            return {
+                "unencrypted": {
+                    "config": resource_encryption_config,
+                    "unencrypted_resources": unencrypted_resources,
+                }
+            }
+        else:
+            return {
+                "unknown-encryption": {
+                    "config": resource_encryption_config,
+                    "unencrypted_resources": unencrypted_resources,
+                }
+            }
 
     def resource_status(self, resource_arn, resource_values):
         self.logger.info("Calculating encryption for resource: %s", resource_arn)

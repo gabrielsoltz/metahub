@@ -37,9 +37,9 @@ days_to_consider_unrotated = 90
 # You can also use `--output-config-columns` and `--output-tags-columns` to override these values.
 # If you want all fields as columns, comment the following lines.
 config_columns = ["public"]
-tag_columns = ["Owner"]
+tag_columns = ["Name", "Owner"]
 account_columns = ["AccountAlias"]
-impact_columns = ["score", "exposure", "access"]
+impact_columns = ["score", "exposure", "access", "encryption"]
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = False

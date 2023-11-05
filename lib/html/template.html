@@ -34,6 +34,8 @@
                   "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
                 {% elif 'access' == impact_column %}
                   "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% elif 'encryption' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
                 {% else %}
                   "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e  }}",
                 {% endif %}
@@ -221,6 +223,29 @@
                         </span>`;
               }
             },
+        {% elif 'encryption' == impact_column %}
+          {title:"encryption", field:"encryption", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
+          var value = cell.getValue();
+          var color;
+          var emoji;
+          if (value === "unencrypted") {
+            color = "red";
+            emoji = "🔴";
+          } else if (value === "encrypted") {
+            color = "green";
+            emoji = "🟢";
+          } else if (value === "unknown") {
+            color = "blue";
+            emoji = "🔵";
+          } else {
+            return value;
+          }
+          return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
+                    <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
+                    ${value}
+                  </span>`;
+        }
+      },
         {% elif 'score' == impact_column %}
           {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
