@@ -177,6 +177,4 @@ terraform.rc
 terraform/zip/*.txt
 terraform/zip/*.zip
 
-terminalizer/*.yml
-terminalizer/*.gif
-terminalizer/*.json
+terminalizer/
