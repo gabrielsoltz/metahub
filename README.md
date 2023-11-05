@@ -158,7 +158,7 @@ SUM(HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4)) = 0.875
 
 Some use cases for MetaHub include:
 
-- [MetaHub integration with Prowler as a local scanner for context enrichment](https://medium.com/@gabriel_87/meta hub-use-cases-part-i-meta hub-integration-with-prowler-as-a-local-scanner-for-context-f3540e18eaa1)
+- [MetaHub integration with Prowler as a local scanner for context enrichment](https://medium.com/@gabriel_87/metahub-use-cases-part-i-metahub-integration-with-prowler-as-a-local-scanner-for-context-f3540e18eaa1)
 - Automating Security Hub findings suppression based on Tagging
 - Integrate MetaHub directly as Security Hub custom action to use it directly from the AWS Console
 - Created enriched HTML reports for your findings that you can filter, sort, group, and download
@@ -620,31 +620,17 @@ By default, `config`, `associations` and `tags` are enabled. To enable or disabl
 
 ## Config
 
-You can filter your findings based on MetaChecks output using the option `--mh-filters-checks MetaCheckName=True/False`. See [MetaChecks Filtering](#metachecks-filtering)
+Under the `config` placeholder, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance.
+
+You can filter your findings based on Config output using the option `--mh-filters-config True/False`. See [Tags Filtering](#config-filtering)
 
 ## Associations
 
-Drilled MetaChecks can connect to the associated resources of the affected resource, for example, Security Groups, IAM Roles, IAM Policies, AutoScaling Groups, EBS, etc., and run MetaChecks on them.
+Under `associations` placeholder, you will find all the associated resources of the affected resource. For example, if the affected resource is an EC2 Instance, you will find all the associated Security Groups, IAM Roles, IAM Policies, etc.
 
-For example, each time you run a MetaCheck on an EC2 Instance, MetaHub will run the MetaCheck `its_associated_with_security_groups` to understand if the EC2 Instance is associated with any Security Group. If it is, MetaHub will run the MetaCheck drilled into those Security Groups and run all the related Security Group MetaChecks on them:
+Associations are key to understanding the context of your security findings by understanding the associated resources and their configuration.
 
-```
-<Affected Resource>
-└─ its_associated_with_security_groups
-    ├─ its_associated_with_network_interfaces
-    ├─ its_associated_with_ec2_instances
-    ├─ its_associated_with_ips_public
-    ├─ its_associated_with_managed_services
-    ├─ its_referenced_by_a_security_group
-    ├─ is_ingress_rules_unrestricted
-    ├─ is_egress_rules_unrestricted
-    ├─ is_public
-    └─ is_default
-```
-
-Drilled MetaChecks are key to understanding the context of your security findings by understanding the associated resources and their configuration.
-
-If you don't need to run drilled MetaChecks, you can disable them using the option `--no-drill-down`. See [Drilled MetaChecks](#drilled-metachecks). By default, they are enabled.
+Each time there is an association, MetaHub will connect to that resource and execute the Context module on it as well.
 
 ## Tags
 
@@ -661,57 +647,13 @@ Tags are a crucial part of understanding your context. Tagging strategies often 
 
 If you follow a proper tagging strategy, you can filter and generate interesting outputs. For example, you could list all findings related to a specific team and provide that data directly to that team.
 
-`./metahub --sh-filters ResourceId=arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890 --meta-tags`
-
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-  ...
-  ],
-  "AwsAccountId": "01234567890",
-  "AwsAccountAlias": "obfuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup",
-  "metatags": {
-    "Name": "testSG",
-    "Environment": "Production",
-    "Classification": "Restricted",
-    "Owner": "Security Team"
-  }
-}
-```
-
-So now, in addition to the `findings` section, we have an extra section, `metatags.` Each entry combines the Tag and Value associated with the affected resource.
-
-You can filter your findings based on MetaTags output using the option `--mh-filters-tags Tag=Value`. See [MetaTags Filtering](#metatags-filtering)
+You can filter your findings based on Tags output using the option `--mh-filters-tags Tag=Value`. See [Tags Filtering](#tags-filtering)
 
 ## CloudTrail
 
-MetaTrails queries CloudTrail in the affected account to identify critical events related to the affected resource, such as creating events, using the option `--meta-trails`.
+MetaTrails queries CloudTrail in the affected account to identify critical events related to the affected resource, such as creating events.
 
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-  ...
-  ],
-  "AwsAccountId": "01234567890",
-  "AwsAccountAlias": "obfuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup",
-  "metatrails": {
-    "AuthorizeSecurityGroupIngress": {
-      "Username": "root",
-      "EventTime": "2023-02-25 15:35:21-03:00"
-    },
-    "CreateSecurityGroup": {
-      "Username": "root",
-      "EventTime": "2023-02-25 15:35:21-03:00"
-    }
-  }
-}
-```
-
-For this resource type, you get two critical events:
+For example for an affeted Security Group, you get 2 events:
 
 - `CreateSecurityGroup`: Security Group Creation
 - `AuthorizeSecurityGroupIngress`: Security Group Rule Creation
@@ -719,6 +661,8 @@ For this resource type, you get two critical events:
 You can add/modify the critical events for each resource type by editing the configuration file: `config/resources.py`
 
 ## Account
+
+Under `account` you get information about the account where the affected resource is runnning.
 
 # Filters
 
@@ -813,7 +757,7 @@ Examples:
 ./metahub --sh-filters ComplianceStatus=FAILED
 ```
 
-## MetaChecks Filtering
+## Config Filtering
 
 **MetaHub** supports **MetaChecks filters** in the form of `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-checks`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **all** filters.
 
@@ -852,7 +796,7 @@ Examples:
 
 You can list all available MetaChecks using `--list-meta-checks`
 
-## MetaTags Filtering
+## Tags Filtering
 
 **MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and value is the Tag Value. You can use as many filters as you want and separate them using spaces. Specifying multiple filters will give you all resources that match **at least one** filter.
 
