@@ -47,4 +47,4 @@ account_columns = ["AccountAlias"]
 impact_columns = ["score", "exposure", "access", "encryption", "status"]
 
 # Decide if you want to output as part of the findings the whole json resource policy
-output_resource_policy = False
+output_resource_policy = True

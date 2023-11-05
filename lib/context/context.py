@@ -144,7 +144,12 @@ class Context:
         resource_tags = {}
 
         # Non-Taggable Resources
-        if self.resource_type in ("AwsAccount", "Other", "AwsIamAccessKey"):
+        if self.resource_type in (
+            "AwsAccount",
+            "Other",
+            "AwsIamAccessKey",
+            "AwsLogsLogGroup",
+        ):
             return resource_tags, resource_matched
 
         # Execute Tags

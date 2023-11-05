@@ -84,37 +84,51 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 Evaluates the exposure of the affected resource. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP and if it is protected by a firewall or a security group.
 
-| **Possible Statuses** | **Conditions**                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------- |
-| effectively-public    | resource.config.public and resource.associations.security_groups.is_ingress_rules_unrestricted    |
-| unrestricted-public   | resource.config.public and no security_groups                                                     |
-| restricted-public     | resource.config.public and resource.associations.security_groups restricted                       |
-| unknown-public        | no resource.config.public and resource.associations.security_groups.is_ingress_rules_unrestricted |
-| restricted            | no resource.config.public and resource.associations.security_groups restricted                    |
-| unrestricted-private  | no resource.config.public                                                                         |
+| **Possible Statuses**   | **Description** |
+| ----------------------- | --------------- |
+| 🔴 effectively-public   |                 |
+| 🟠 restricted-public    |                 |
+| 🟠 unknown-public       |                 |
+| 🟠 unrestricted-private |                 |
+| 🟢 restricted           |                 |
+| 🔵 unknown              |                 |
 
 ### Access
 
 Evaluates the policy layer that the affected resource is using. For example, if the affected resource is using an IAM role, or if it has a resource policy. We evaluate possible iam policies, inline iam policies, roles, resource policies, and more.
 
-| **Possible Statuses**           | **Conditions** |
-| ------------------------------- | -------------- |
-| unrestricted                    |                |
-| untrusted-principal             |                |
-| wildcard_principal              |                |
-| unrestricted-resource-principal |                |
-| cross-account-principal         |                |
-| unrestricted-actions            |                |
-| dangerous-actions               |                |
-| unknown                         |                |
+| **Possible Statuses**      | **Description** |
+| -------------------------- | --------------- |
+| 🔴 unrestricted            |                 |
+| 🔴 untrusted-principal     |                 |
+| 🟠 unrestricted-principal  |                 |
+| 🟠 cross-account-principal |                 |
+| 🟠 unrestricted-actions    |                 |
+| 🟠 dangerous-actions       |                 |
+| 🟢 restricted              |                 |
+| 🔵 unknown                 |                 |
 
 ### Encryption
 
 Evaluate the encryption status of the affected resource. For example if at_rest and transit encryption are enabled.
 
+| **Possible Statuses** | **Description** |
+| --------------------- | --------------- |
+| 🔴 unencrypted        |                 |
+| 🟢 encrypted          |                 |
+| 🔵 unknown            |                 |
+
 ### Status
 
 Evaluate the status of the affected resource. For example, if the resource is running, stopped, or terminated for resources like EC2 Instances, and if the resource is attached or not for resources like EBS Volumes, Security Groups, etc.
+
+| **Possible Statuses** | **Description** |
+| --------------------- | --------------- |
+| 🔴 not-attached       |                 |
+| 🔴 not-running        |                 |
+| 🟢 attached           |                 |
+| 🟢 running            |                 |
+| 🔵 unknown            |                 |
 
 ### Environment
 

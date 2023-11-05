@@ -133,9 +133,8 @@ class Metacheck(ContextBase):
 
     def attached(self):
         if self.policy:
-            if self.policy["AttachmentCount"] == 0:
-                return False
-            return self.policy["AttachmentCount"]
+            if self.policy["AttachmentCount"] > 0:
+                return True
         return False
 
     def is_customer_managed(self):

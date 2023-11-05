@@ -220,9 +220,9 @@ class Impact:
                     if config.get(ep):
                         return config[ep]
 
+            entrypoint = get_entrypoint()
             if config.get("public"):
                 config_public = config["public"]
-                entrypoint = get_entrypoint()
 
             # Same Security Group
             if config.get("is_ingress_rules_unrestricted"):
@@ -238,15 +238,11 @@ class Impact:
                     if sg_config.get("is_ingress_rules_unrestricted"):
                         public_rules.extend(sg_config["is_ingress_rules_unrestricted"])
 
-        if config_public:
+        if not config and not associations:
+            exposure = "unknown"
+        elif config_public:
             if public_rules:
                 exposure = "effectively-public"
-            elif resource_values.get("ResourceType") != "AwsEc2SecurityGroup":
-                if resource_values.get("associations", {}):
-                    associations = resource_values.get("associations", {})
-                    if not associations.get("security_groups"):
-                        exposure = "unrestricted-public"
-                exposure = "restricted-public"
             else:
                 exposure = "restricted-public"
         elif config_public is None:
@@ -255,7 +251,10 @@ class Impact:
             else:
                 exposure = "restricted"
         else:
-            exposure = "unrestricted-private"
+            if public_rules:
+                exposure = "unrestricted-private"
+            else:
+                exposure = "restricted"
 
         exposure_dict = {
             exposure: {
@@ -344,24 +343,22 @@ class Impact:
                 del access_checks[check_type]
 
         # Determine the final result
-        if not any(access_checks.values()):
-            return {"restricted": {}}
+        if not config and not associations:
+            return {"unknown": {}}
         elif "unrestricted" in access_checks:
-            return {"unrestricted": access_checks["unrestricted"]}
+            return {"unrestricted": access_checks}
         elif "untrusted_principal" in access_checks:
-            return {"untrusted-principal": access_checks["untrusted_principal"]}
+            return {"untrusted-principal": access_checks}
         elif "wildcard_principal" in access_checks and config_resource_policy:
-            return {
-                "unrestricted-resource-principal": access_checks["wildcard_principal"]
-            }
+            return {"unrestricted-principal": access_checks}
         elif "cross_account_principal" in access_checks:
-            return {"cross-account-principal": access_checks["cross_account_principal"]}
+            return {"cross-account-principal": access_checks}
         elif "wildcard_actions" in access_checks:
-            return {"unrestricted-actions": access_checks["wildcard_actions"]}
+            return {"unrestricted-actions": access_checks}
         elif "dangerous_actions" in access_checks:
-            return {"dangerous-actions": access_checks["dangerous_actions"]}
+            return {"dangerous-actions": access_checks}
         else:
-            return {"unknown": access_checks}
+            return {"restricted": access_checks}
 
     def resource_encryption(self, resource_arn, resource_values):
         self.logger.info("Calculating encryption for resource: %s", resource_arn)
@@ -426,22 +423,22 @@ class Impact:
                 else:
                     resource_encryption_config = False
 
-        if resource_encryption_config and not unencrypted_resources:
+        if not config and not associations:
+            return {
+                "unknown": {
+                    "config": resource_encryption_config,
+                    "unencrypted_resources": unencrypted_resources,
+                }
+            }
+        elif resource_encryption_config and not unencrypted_resources:
             return {
                 "encrypted": {
                     "config": resource_encryption_config,
                 }
             }
-        elif not resource_encryption_config or unencrypted_resources:
-            return {
-                "unencrypted": {
-                    "config": resource_encryption_config,
-                    "unencrypted_resources": unencrypted_resources,
-                }
-            }
         else:
             return {
-                "unknown-encryption": {
+                "unencrypted": {
                     "config": resource_encryption_config,
                     "unencrypted_resources": unencrypted_resources,
                 }
@@ -457,11 +454,10 @@ class Impact:
                     return {"running": config.get("status")}
                 else:
                     return {"not-running": config.get("status")}
-            if config.get("attached"):
-                if config.get("attached") is True:
-                    return {"attached": config.get("attached")}
-                else:
-                    return {"non-attached": config.get("attached")}
+            if config.get("attached") is True:
+                return {"attached": config.get("attached")}
+            if config.get("attached") is False:
+                return {"not-attached": config.get("attached")}
 
         return {"unknown": {}}
 

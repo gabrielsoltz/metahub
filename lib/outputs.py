@@ -1,29 +1,39 @@
 import csv
 import json
+from time import strftime
 
 import jinja2
 import xlsxwriter
 
+from lib.helpers import print_table
+
+OUTPUT_DIR = "outputs/"
+TIMESTRF = strftime("%Y%m%d-%H%M%S")
+
 
 def generate_output_json(
-    mh_findings_short, mh_findings, mh_inventory, mh_statistics, json_mode, f
+    mh_findings_short, mh_findings, mh_inventory, mh_statistics, json_mode, args
 ):
-    json.dump(
-        {
-            "short": mh_findings_short,
-            "full": mh_findings,
-            "inventory": mh_inventory,
-            "statistics": mh_statistics,
-        }[json_mode],
-        f,
-        indent=2,
-    )
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
+    with open(WRITE_FILE, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "short": mh_findings_short,
+                "full": mh_findings,
+                "inventory": mh_inventory,
+                "statistics": mh_statistics,
+            }[json_mode],
+            f,
+            indent=2,
+        )
+    print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=args.banners)
 
 
 def generate_output_csv(
-    output, config_columns, tag_columns, account_columns, impact_columns, csv_file
+    output, config_columns, tag_columns, account_columns, impact_columns, args
 ):
-    with open(csv_file, "w", encoding="utf-8", newline="") as output_file:
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
+    with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
         colums = [
             "Resource ID",
             "Severity",
@@ -94,13 +104,15 @@ def generate_output_csv(
                         + config_column_values
                     )
                     dict_writer.writerow(dict(zip(colums, row)))
+    print_table("CSV:   ", WRITE_FILE, banners=args.banners)
 
 
 def generate_output_xlsx(
-    output, config_columns, tag_columns, account_columns, impact_columns, xlsx_file
+    output, config_columns, tag_columns, account_columns, impact_columns, args
 ):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
     # Create a workbook and add a worksheet
-    workbook = xlsxwriter.Workbook(xlsx_file)
+    workbook = xlsxwriter.Workbook(WRITE_FILE)
     worksheet = workbook.add_worksheet("findings")
     # Columns
     worksheet.set_default_row(25)
@@ -199,6 +211,7 @@ def generate_output_xlsx(
                 worksheet.write_row(current_line, 2, row)
                 current_line += 1
     workbook.close()
+    print_table("XLSX:   ", WRITE_FILE, banners=args.banners)
 
 
 def generate_output_html(
@@ -210,6 +223,7 @@ def generate_output_html(
     impact_columns,
     args,
 ):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
     TEMPLATE_FILE = "lib/html/template.html"
@@ -225,14 +239,85 @@ def generate_output_html(
                     mh_findings[resource_arn]["config"][config] = True
                 else:
                     mh_findings[resource_arn]["config"][config] = False
-    html = template.render(
-        data=mh_findings,
-        statistics=mh_statistics,
-        title="MetaHub",
-        config_columns=config_columns,
-        tag_columns=tag_columns,
-        account_columns=account_columns,
-        impact_columns=impact_columns,
-        parameters=args,
+
+    with open(WRITE_FILE, "w", encoding="utf-8") as f:
+        html = template.render(
+            data=mh_findings,
+            statistics=mh_statistics,
+            title="MetaHub",
+            config_columns=config_columns,
+            tag_columns=tag_columns,
+            account_columns=account_columns,
+            impact_columns=impact_columns,
+            parameters=args,
+        )
+        f.write(html)
+
+    print_table("HTML:  ", WRITE_FILE, banners=args.banners)
+
+
+def generate_outputs(
+    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
+):
+    from lib.config.configuration import (
+        account_columns,
+        config_columns,
+        impact_columns,
+        tag_columns,
     )
-    return html
+
+    # Columns for CSV and HTML
+    output_config_columns = (
+        args.output_config_columns
+        or config_columns
+        or list(mh_statistics["config"].keys())
+    )
+    output_tag_columns = (
+        args.output_tag_columns or tag_columns or list(mh_statistics["tags"].keys())
+    )
+    output_account_columns = (
+        args.output_account_columns or account_columns or mh_statistics["account"]
+    )
+    # Hardcoded for now
+    output_impact_columns = impact_columns or mh_statistics["impact"]
+
+    if mh_findings:
+        for ouput_mode in args.output_modes:
+            if ouput_mode.startswith("json"):
+                json_mode = ouput_mode.split("-")[1]
+                generate_output_json(
+                    mh_findings_short,
+                    mh_findings,
+                    mh_inventory,
+                    mh_statistics,
+                    json_mode,
+                    args,
+                )
+            if ouput_mode == "html":
+                generate_output_html(
+                    mh_findings,
+                    mh_statistics,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )
+            if ouput_mode == "csv":
+                generate_output_csv(
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )
+            if ouput_mode == "xlsx":
+                generate_output_xlsx(
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )

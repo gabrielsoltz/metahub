@@ -21,7 +21,9 @@ class PolicyHelper:
             "unrestricted": [],
             "dangerous_actions": [],
         }
-        statements = self.standardize_statements(self.policy["Statement"])
+        statements = []
+        if "Statement" in self.policy:
+            statements = self.standardize_statements(self.policy["Statement"])
         for statement in statements:
             if self.wildcard_principal(statement):
                 failed_statements["wildcard_principal"].append(statement)
@@ -57,7 +59,7 @@ class PolicyHelper:
         if "AWS" in principal:
             principals = principal["AWS"]
         elif "Service" in principal:
-            return False
+            principals = principal["Service"]
         elif "Federated" in principal:
             principals = principal["Federated"]
         else:
@@ -113,10 +115,6 @@ class PolicyHelper:
         if effect == "Allow":
             if principal and principal != "*" and principal.get("AWS") != "*":
                 principals = self.santandarize_principals(principal)
-                # Debug
-                if type(principals) is bool:
-                    print("debug principal:", principals)
-                    return False
                 for p in principals:
                     try:
                         account_id = p.split(":")[4]

@@ -207,7 +207,7 @@
                 if (value === "unrestricted" || value === "untrusted-principal") {
                   color = "red";
                   emoji = "🔴";
-                } else if (value === "unrestricted-resource-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || value == "dangereous-actions" ) {
+                } else if (value === "unrestricted-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || value == "dangereous-actions" ) {
                   color = "orange";
                   emoji = "🟠";
                 } else if (value === "restricted") {
@@ -253,7 +253,7 @@
           var value = cell.getValue();
           var color;
           var emoji;
-          if (value === "non-attached" || value === "not-running") {
+          if (value === "not-attached" || value === "not-running") {
             color = "red";
             emoji = "🔴";
           } else if (value === "attached" || value === "running") {

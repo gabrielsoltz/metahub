@@ -22,12 +22,7 @@ from lib.helpers import (
     test_python_version,
 )
 from lib.impact import Impact
-from lib.outputs import (
-    generate_output_csv,
-    generate_output_html,
-    generate_output_json,
-    generate_output_xlsx,
-)
+from lib.outputs import generate_outputs
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -417,91 +412,6 @@ def validate_arguments(args, logger):
     )
 
 
-def generate_outputs(
-    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
-):
-    from lib.config.configuration import (
-        account_columns,
-        config_columns,
-        impact_columns,
-        tag_columns,
-    )
-
-    # Columns for CSV and HTML
-    output_config_columns = (
-        args.output_config_columns
-        or config_columns
-        or list(mh_statistics["config"].keys())
-    )
-    output_tag_columns = (
-        args.output_tag_columns or tag_columns or list(mh_statistics["tags"].keys())
-    )
-    output_account_columns = (
-        args.output_account_columns or account_columns or mh_statistics["account"]
-    )
-    # Hardcoded for now
-    output_impact_columns = impact_columns or mh_statistics["impact"]
-
-    if mh_findings:
-        for ouput_mode in args.output_modes:
-            # Output JSON files
-            if ouput_mode.startswith("json"):
-                json_mode = ouput_mode.split("-")[1]
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
-                with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    generate_output_json(
-                        mh_findings_short,
-                        mh_findings,
-                        mh_inventory,
-                        mh_statistics,
-                        json_mode,
-                        f,
-                    )
-                print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=banners)
-
-            # Output HTML files
-            if ouput_mode == "html":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
-                with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    html = generate_output_html(
-                        mh_findings,
-                        mh_statistics,
-                        output_config_columns,
-                        output_tag_columns,
-                        output_account_columns,
-                        output_impact_columns,
-                        args,
-                    )
-                    f.write(html)
-                print_table("HTML:  ", WRITE_FILE, banners=banners)
-
-            # Output CSV files
-            if ouput_mode == "csv":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
-                generate_output_csv(
-                    mh_findings,
-                    output_config_columns,
-                    output_tag_columns,
-                    output_account_columns,
-                    output_impact_columns,
-                    WRITE_FILE,
-                )
-                print_table("CSV:   ", WRITE_FILE, banners=banners)
-
-            # Output XLSX files
-            if ouput_mode == "xlsx":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
-                generate_output_xlsx(
-                    mh_findings,
-                    output_config_columns,
-                    output_tag_columns,
-                    output_account_columns,
-                    output_impact_columns,
-                    WRITE_FILE,
-                )
-                print_table("XLSX:   ", WRITE_FILE, banners=banners)
-
-
 def main(args):
     parser = get_parser()
     args = parser.parse_args(args)
@@ -535,8 +445,8 @@ def main(args):
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)
     print_table("Input File: ", str(args.input_asff), banners=banners)
-    print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
-    print_table("Context: ", str(args.context), banners=banners)
+    print_table("Context Role: ", str(args.mh_assume_role), banners=banners)
+    print_table("Context Options: ", str(args.context), banners=banners)
     print_table("Config Filters: ", str(mh_filters_config), banners=banners)
     print_table("Tags Filters: ", str(mh_filters_tags), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
