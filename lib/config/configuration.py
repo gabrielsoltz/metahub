@@ -31,9 +31,15 @@ dangereous_iam_actions = [
 days_to_consider_unrotated = 90
 
 # Environment Tags Definition
-production = {"Environment": "Production", "Environment": "prd"}
-staging = {"Environment": "Staging", "Environment": "stg"}
-development = {"Environment": "Development", "Environment": "dev"}
+tags_production = {
+    "Environment": ["Production", "production", "prd"],
+    "Env": ["production"],
+}
+tags_staging = {"Environment": ["Staging", "staging", "stg"], "Env": ["stg"]}
+tags_development = {
+    "Environment": ["Development", "development", "dev"],
+    "Env": ["dev"],
+}
 
 findings_severity_value = {
     "CRITICAL": 4,

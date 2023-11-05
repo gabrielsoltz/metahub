@@ -138,46 +138,18 @@ def generate_findings(
 
     mh_statistics = generate_statistics(mh_findings)
 
-    def generate_impact():
-        for resource_arn, resource_values in mh_findings.items():
-            imp = Impact(logger)
-
-            # Impact
-            mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
-                "impact"
-            ] = {}
-
-            # Get Exposure
-            exposure = imp.resource_exposure(resource_arn, resource_values)
-            mh_findings[resource_arn]["impact"]["exposure"] = mh_findings_short[
-                resource_arn
-            ]["impact"]["exposure"] = exposure
-
-            # Get Access
-            access = imp.resource_access(resource_arn, resource_values)
-            mh_findings[resource_arn]["impact"]["access"] = mh_findings_short[
-                resource_arn
-            ]["impact"]["access"] = access
-
-            # Get Encryption
-            encryption = imp.resource_encryption(resource_arn, resource_values)
-            mh_findings[resource_arn]["impact"]["encryption"] = mh_findings_short[
-                resource_arn
-            ]["impact"]["encryption"] = encryption
-
-            # Get Status
-            status = imp.resource_status(resource_arn, resource_values)
-            mh_findings[resource_arn]["impact"]["status"] = mh_findings_short[
-                resource_arn
-            ]["impact"]["status"] = status
-
-            score = imp.get_impact(resource_values)
-            mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[
-                resource_arn
-            ]["impact"]["score"] = score
-
-    generate_impact()
-
+    # Add Impact
+    imp = Impact(logger)
+    for resource_arn, resource_values in mh_findings.items():
+        impact_checks = imp.generate_impact_checks(resource_arn, resource_values)
+        mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
+            "impact"
+        ] = impact_checks
+    for resource_arn, resource_values in mh_findings.items():
+        impact_scoring = imp.generate_impact_scoring(resource_arn, resource_values)
+        mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[resource_arn][
+            "impact"
+        ]["score"] = impact_scoring
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 

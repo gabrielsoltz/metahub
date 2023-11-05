@@ -22,8 +22,11 @@ class PolicyHelper:
             "dangerous_actions": [],
         }
         statements = []
-        if "Statement" in self.policy:
+        try:
             statements = self.standardize_statements(self.policy["Statement"])
+        except TypeError:
+            self.logger.error("Failed to parse policy for resource %s", self.resource)
+            return failed_statements
         for statement in statements:
             if self.wildcard_principal(statement):
                 failed_statements["wildcard_principal"].append(statement)

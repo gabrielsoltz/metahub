@@ -95,7 +95,7 @@ class Metacheck(ContextBase):
                         routes_to_vpc_peering.append(route)
         return routes_to_vpc_peering
 
-    def is_default(self):
+    def default(self):
         if self.route_table:
             if (
                 self.route_table.get("Associations")
@@ -119,7 +119,7 @@ class Metacheck(ContextBase):
 
     def checks(self):
         checks = {
-            "is_default": self.is_default(),
+            "default": self.default(),
             "route_to_internet_gateway": self.route_to_internet_gateway(),
             "route_to_nat_gateway": self.route_to_nat_gateway(),
             "route_to_transit_gateway": self.route_to_transit_gateway(),

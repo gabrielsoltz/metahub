@@ -2,7 +2,13 @@ from pathlib import Path
 
 import yaml
 
-from lib.config.configuration import findings_severity_value, path_yaml_impact
+from lib.config.configuration import (
+    findings_severity_value,
+    path_yaml_impact,
+    tags_development,
+    tags_production,
+    tags_staging,
+)
 from lib.context.resources.ContextHelpers import PolicyHelper
 
 
@@ -48,7 +54,7 @@ class Impact:
                         return False
         return True
 
-    def calculate_findings_score(self, resource_values):
+    def get_findings_score(self, resource_values):
         self.logger.info("Calculating impact findings score for resource")
 
         # Initialize the findings score to zero
@@ -114,6 +120,7 @@ class Impact:
                     "value": checked_property[0],
                     "score": checked_property[1],
                 }
+                print(meta_score_details)
                 # Update the total weight and value based on this property
                 weight_total += property_weight
                 score_total += property_weight * checked_property[1]
@@ -139,13 +146,13 @@ class Impact:
 
         return meta_score
 
-    def get_impact(self, resource_values):
+    def generate_impact_scoring(self, resource_arn, resource_values):
         self.logger.info("Calculating impact score for resource")
         if not self.impact_config:
             return False
 
         # Calculate the findings score using the calculate_findings_score method
-        findings_score = self.calculate_findings_score(resource_values)
+        findings_score = self.get_findings_score(resource_values)
         # Calculate the meta score using the get_meta_score method
         meta_score = self.get_meta_score(resource_values)
 
@@ -301,16 +308,17 @@ class Impact:
                 "iam_roles", {}
             )
             for role_arn, role_config in associated_roles.items():
-                role_associated_policies = role_config.get("associations", {}).get(
-                    "iam_policies", {}
-                )
-                for policy_arn, policy_config in role_associated_policies.items():
-                    if policy_config.get("config") and policy_config["config"].get(
-                        "resource_policy"
-                    ):
-                        check_policy_and_update(
-                            policy_config["config"]["resource_policy"], policy_arn
-                        )
+                if role_config:
+                    role_associated_policies = role_config.get("associations", {}).get(
+                        "iam_policies", {}
+                    )
+                    for policy_arn, policy_config in role_associated_policies.items():
+                        if policy_config.get("config") and policy_config["config"].get(
+                            "resource_policy"
+                        ):
+                            check_policy_and_update(
+                                policy_config["config"]["resource_policy"], policy_arn
+                            )
 
         for check_type, check_data in list(access_checks.items()):
             if not check_data:
@@ -437,3 +445,51 @@ class Impact:
 
     def resource_environment(self, resource_arn, resource_values):
         self.logger.info("Calculating encryption for resource: %s", resource_arn)
+
+        def check_tags(tags_environment):
+            tags = resource_values.get("tags", {})
+            if tags:
+                for tag_key, tag_values in tags_environment.items():
+                    for tag_value in tag_values:
+                        if tag_key in tags and tags[tag_key] == tag_value:
+                            return True, {tag_key: tag_value}
+            return False, False
+
+        envs = {
+            "production": tags_production,
+            "staging": tags_staging,
+            "development": tags_development,
+        }
+        for env in envs:
+            check, tags_matched = check_tags(envs[env])
+            if check:
+                return {env: tags_matched}
+
+        return {"unknown": {}}
+
+    def generate_impact_checks(self, resource_arn, resource_values):
+        self.logger.info("Executing Impact Module")
+        impact_dict = {
+            "exposure": {},
+            "access": {},
+            "encryption": {},
+            "status": {},
+            "env": {},
+            "score": {},
+        }
+        impact_dict["exposure"].update(
+            self.resource_exposure(resource_arn, resource_values)
+        )
+        impact_dict["access"].update(
+            self.resource_access(resource_arn, resource_values)
+        )
+        impact_dict["encryption"].update(
+            self.resource_encryption(resource_arn, resource_values)
+        )
+        impact_dict["status"].update(
+            self.resource_status(resource_arn, resource_values)
+        )
+        impact_dict["env"].update(
+            self.resource_environment(resource_arn, resource_values)
+        )
+        return impact_dict

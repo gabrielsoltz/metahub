@@ -112,7 +112,7 @@ class Metacheck(ContextBase):
                 return self.subnet.get("MapPublicIpOnLaunch")
         return False
 
-    def is_default(self):
+    def default(self):
         if self.subnet:
             if self.subnet.get("DefaultForAz"):
                 return True
@@ -139,7 +139,7 @@ class Metacheck(ContextBase):
         checks = {
             "cidr": self.cidr(),
             "map_public_ip_on_launch_enabled": self.map_public_ip_on_launch_enabled(),
-            "is_default": self.is_default(),
+            "default": self.default(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

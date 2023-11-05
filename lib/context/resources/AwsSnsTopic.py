@@ -1,5 +1,6 @@
 """ResourceType: AwsSnsTopic"""
 
+import json
 
 from botocore.exceptions import ClientError
 
@@ -59,7 +60,7 @@ class Metacheck(ContextBase):
         if self.topic_atributes:
             try:
                 if self.topic_atributes["Policy"]:
-                    return self.topic_atributes["Policy"]
+                    return json.loads(self.topic_atributes["Policy"])
             except KeyError:
                 return False
         return False

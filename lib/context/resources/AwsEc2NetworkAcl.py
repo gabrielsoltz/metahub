@@ -69,7 +69,7 @@ class Metacheck(ContextBase):
 
     # Context Config
 
-    def is_default(self):
+    def default(self):
         if self.network_acl:
             return self.network_acl[0]["IsDefault"]
         return False
@@ -153,7 +153,7 @@ class Metacheck(ContextBase):
 
     def checks(self):
         checks = {
-            "is_default": self.is_default(),
+            "default": self.default(),
             "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
             "attached": self.attached(),

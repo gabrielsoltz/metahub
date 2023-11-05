@@ -87,7 +87,7 @@ class Metacheck(ContextBase):
                 return self.vpc.get("CidrBlock")
         return False
 
-    def is_default(self):
+    def default(self):
         if self.vpc:
             if self.vpc["IsDefault"]:
                 return True
@@ -111,7 +111,7 @@ class Metacheck(ContextBase):
     def checks(self):
         checks = {
             "cidr": self.cidr(),
-            "is_default": self.is_default(),
+            "default": self.default(),
             "public": self.public(),
         }
         return checks

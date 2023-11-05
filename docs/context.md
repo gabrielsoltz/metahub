@@ -1,4 +1,4 @@
-# MetaChecks
+# Context Development
 
 The ResourceType defines the MetaChecks to be executed. When there is an AWS Security Hub finding for an S3 Bucket (ResourceType: AwsS3Bucket), all the MetaChecks available for that resource will execute and be added as extra information under the ARNs resource.
 
@@ -8,7 +8,7 @@ The ResourceType defines the MetaChecks to be executed. When there is an AWS Sec
 
 ## How it works
 
-MetaChecks works this way:
+Context works this way:
 
 1. Connect to the account where the resource lives assuming the provided role (`--mh-assume-role`)
 2. Describe the resource using describe functions

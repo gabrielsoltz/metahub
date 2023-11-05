@@ -137,7 +137,7 @@ class Metacheck(ContextBase):
                 return True
         return False
 
-    def is_customer_managed(self):
+    def customer_managed(self):
         if not self.resource_arn.startswith("arn:aws:iam::aws:policy/"):
             return True
         return False
@@ -160,7 +160,7 @@ class Metacheck(ContextBase):
         checks = {
             "name": self.name(),
             "description": self.description(),
-            "is_customer_managed": self.is_customer_managed(),
+            "customer_managed": self.customer_managed(),
             "attached": self.attached(),
             "public": self.public(),
             "resource_policy": self.resource_policy,

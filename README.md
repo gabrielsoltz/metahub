@@ -132,11 +132,19 @@ Evaluate the status of the affected resource. For example, if the resource is ru
 
 ### Environment
 
-We evaluate the environment of the affected resource. For example, if the resource is tagged with the tag `Environment=production` or `Environment=development`. You can customize the environment tags in the configuration file.
+Evaluate the environment of the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your tagging strategy in the configuration file (See [Customizing Configuration]
+(#customizing-configuration)).
+
+| **Possible Statuses** | **Description** |
+| --------------------- | --------------- |
+| 🔴 production         |                 |
+| 🟢 staging            |                 |
+| 🟢 development        |                 |
+| 🔵 unknown            |                 |
 
 ### Findings Metric Calculation
 
-As part of the Impact Scoring calculation, we also evaluate the number of findings affecting the affected resource and their severities. We use the following formula to calculate the metric:
+As part of the Impact Scoring calculation, we also evaluate the ammount of security findings affecting the affected resource and their severities. We use the following formula to calculate the metric:
 
 ```sh
 (SUM of all (Finding Severity / Highest Severity) with a maximum of 1)
@@ -176,7 +184,7 @@ Some use cases for MetaHub include:
 - **[CloudTrail](#CloudTrail)**: Queries CloudTrail in the affected account to identify who created the resource and when, as well as any other related critical events
 - **[Account](#Account)**: Fetches extra information from the account where the affected resource is running, such as the account name, security contacts, and other information.
 
-**MetaHub** supports filters on top of these context\* outputs to automate the detection of other resources with the same issues. You can filter security findings affecting resources tagged in a certain way (e.g., `Environment=production`) and combine this with filters based on Config or Associations, like, for example, if the resource is public, if it is encrypted, only if they are part of a VPC, if they are using a specific IAM role, and more. For more information, refer to **[Config filters](#metachecks-filtering)** and **[Tags filters](#metatags-filtering)** for more information.
+**MetaHub** supports filters on top of these context\* outputs to automate the detection of other resources with the same issues. You can filter security findings affecting resources tagged in a certain way (e.g., `Environment=production`) and combine this with filters based on Config or Associations, like, for example, if the resource is public, if it is encrypted, only if they are part of a VPC, if they are using a specific IAM role, and more. For more information, refer to **[Config filters](#config-filters)** and **[Tags filters](#tags-filters)** for more information.
 
 But that's not all. If you are using **MetaHub** with Security Hub, you can even combine the previous filters with the Security Hub native filters (**[AWS Security Hub filtering](security-hub-filtering)**). You can filter the same way you would with the AWS CLI utility using the option `--sh-filters`, but in addition, you can save and re-use your filters as YAML files using the option `--sh-template`.
 
@@ -263,7 +271,7 @@ Terraform code is provided for deploying the Lambda function and all its depende
 
 - Trigger the MetaHub Lambda function each time there is a new security finding to enrich that finding back in AWS Security Hub.
 - Trigger the MetaHub Lambda function each time there is a new security finding for suppression based on Context.
-- Trigger the MetaHub Lambda function to identify the affected owner of a security finding based on MetaTags or MetaTrails and assign it using your internal systems.
+- Trigger the MetaHub Lambda function to identify the affected owner of a security finding based on Context and assign it using your internal systems.
 - Trigger the MetaHub Lambda function to create a ticket with enriched context.
 
 ## Deploying Lambda
@@ -602,7 +610,7 @@ Similar to CSV but with more formatting options.
 
 You can customize which Context columns to unroll using the options `--output-tags-columns` and `--output-config-columns` as a list of columns. If the columns you specified as columns don't exist for the affected resource, they will be empty. There is a configuration file under `lib/config/confugration.py` where you can define the default columns for each output mode.
 
-For example, you can generate an HTML output with MetaTags and add "Owner" and "Environment" as columns to your report using the:
+For example, you can generate an HTML output with Tags and add "Owner" and "Environment" as columns to your report using the:
 
 ```sh
 ./metahub --output-modes HTML --output -tags-columns Owner Environment
@@ -634,7 +642,7 @@ Each time there is an association, MetaHub will connect to that resource and exe
 
 ## Tags
 
-**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated with your resources by using the option `--meta-tags.`
+**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated with your resources.
 
 Note that not all AWS resource type supports this API. You can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
 
@@ -668,22 +676,10 @@ Under `account` you get information about the account where the affected resourc
 
 You can filter the findings and resources that you get from Security Hub in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create alerts.
 
-- [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates)
 - [Security Hub Filtering](#security-hub-filtering)
-- [MetaChecks Filtering](#metachecks-filtering)
-- [MetaTags Filtering](#metatags-filtering)
-
-## Security Hub Filtering using YAML templates
-
-**MetaHub** lets you create complex filters using YAML files (templates) that you can re-use when needed. YAML templates let you write filters using any comparison supported by AWS Security Hub like "EQUALS' | 'PREFIX' | 'NOT_EQUALS' | 'PREFIX_NOT_EQUALS". You can call your YAML file using the option `--sh-template <<FILE>>`.
-
-You can find examples under the folder [templates](templates)
-
-- Filter using YAML template default.yml:
-
-```sh
-./metaHub --sh-template templates/default.yml
-```
+- [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates)
+- [Config Filters](#config-filters)
+- [Tags Filters](#tags-filters)
 
 ## Security Hub Filtering
 
@@ -757,55 +753,55 @@ Examples:
 ./metahub --sh-filters ComplianceStatus=FAILED
 ```
 
-## Config Filtering
+## Security Hub Filtering using YAML templates
 
-**MetaHub** supports **MetaChecks filters** in the form of `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-checks`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **all** filters.
+**MetaHub** lets you create complex filters using YAML files (templates) that you can re-use when needed. YAML templates let you write filters using any comparison supported by AWS Security Hub like "EQUALS' | 'PREFIX' | 'NOT_EQUALS' | 'PREFIX_NOT_EQUALS". You can call your YAML file using the option `--sh-template <<FILE>>`.
 
-MetaChecks filters only support `True` or `False` values:
+You can find examples under the folder [templates](templates)
 
-- A MetaChecks filter set to **True** means `True` or with data.
-- A MetaChecks filter set to **False** means `False` or without data.
+- Filter using YAML template default.yml:
 
-You must enable MetaChecks to filter by them with the option `--meta-checks`.
+```sh
+./metaHub --sh-template templates/default.yml
+```
 
-MetaChecks filters run after AWS Security Hub filters:
+## Config Filters
+
+**MetaHub** supports **Config filters** (and associations) using `KEY=VALUE` where the value can only be `True` or `False` using the option `--mh-filters-config`. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **all** filters.
+
+Config filters only support `True` or `False` values:
+
+- A Config filter set to **True** means `True` or with data.
+- A Config filter set to **False** means `False` or without data.
+
+Config filters run after AWS Security Hub filters:
 
 1. MetaHub fetches AWS Security Findings based on the filters you specified using `--sh-filters` (or the default ones).
-2. MetaHub executes MetaChecks for the AWS-affected resources based on the previous list of findings
-3. MetaHub only shows you the resources that match your `--mh-filters-checks`, so it's a subset of the resources from point 1.
+2. MetaHub executes Context for the AWS-affected resources based on the previous list of findings
+3. MetaHub only shows you the resources that match your `--mh-filters-config`, so it's a subset of the resources from point 1.
 
 Examples:
 
-- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are associated to Network Interfaces (`its_associated_with_network_interfaces=True`):
+- Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are associated to Network Interfaces (`network_interfaces=True`):
 
 ```sh
-./metahub --meta-checks --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-checks its_associated_with_network_interfaces=True
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-config network_interfaces=True
 ```
 
-- Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public (`is_public=True`):
+- Get all S3 Buckets (`ResourceType=AwsS3Bucket`) only if they are public (`public=True`):
 
 ```sh
-./metahub --meta-checks --sh-filters ResourceType=AwsS3Bucket --mh-filters-checks is_public=False
+./metahub --sh-filters ResourceType=AwsS3Bucket --mh-filters-config public=False
 ```
 
-- Get all Security Groups that are unused (`Title=" EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED`) and are not referenced by other security groups (`its_referenced_by_another_sg=False`) (ready to be removed):
+## Tags Filters
 
-```sh
-./metahub --sh-filters Title="EC2.22 Unused EC2 security groups should be removed" RecordState=ACTIVE ComplianceStatus=FAILED --meta-checks --mh-filters-checks its_referenced_by_another_sg=False
-```
+**MetaHub** supports **Tags filters** in the form of `KEY=VALUE` where KEY is the Tag name and value is the Tag Value. You can use as many filters as you want and separate them using spaces. Specifying multiple filters will give you all resources that match **at least one** filter.
 
-You can list all available MetaChecks using `--list-meta-checks`
-
-## Tags Filtering
-
-**MetaHub** supports **MetaTags filters** in the form of `KEY=VALUE` where KEY is the Tag name and value is the Tag Value. You can use as many filters as you want and separate them using spaces. Specifying multiple filters will give you all resources that match **at least one** filter.
-
-You need to enable MetaTags to filter by them with the option `--meta-tags`.
-
-MetaTags filters run after AWS Security Hub filters:
+Tags filters run after AWS Security Hub filters:
 
 1. MetaHub fetches AWS Security Findings based on the filters you specified using `--sh-filters` (or the default ones).
-2. MetaHub executes MetaTags for the AWS-affected resources based on the previous list of findings
+2. MetaHub executes Tags for the AWS-affected resources based on the previous list of findings
 3. MetaHub only shows you the resources that match your `--mh-filters-tags`, so it's a subset of the resources from point 1.
 
 Examples:
@@ -813,7 +809,7 @@ Examples:
 - Get all Security Groups (`ResourceType=AwsEc2SecurityGroup`) with AWS Security Hub findings that are ACTIVE and NEW (`RecordState=ACTIVE WorkflowStatus=NEW`) only if they are tagged with a tag `Environment` and value `Production`:
 
 ```sh
-./metahub --meta-tags --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
 ```
 
 # Updating Workflow Status
@@ -840,14 +836,14 @@ The `--update-findings` will ask you for confirmation before updating your findi
 
 # Enriching Findings
 
-You can use **MetaHub** to enrich back your AWS Security Hub Findings with `MetaTags`, `MetaChecks`, `MetaTrails`, and `MetaAccount` outputs using the option `--enrich-findings`. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
+You can use **MetaHub** to enrich back your AWS Security Hub Findings with Context outputs using the option `--enrich-findings`. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
 
 By enriching your findings directly in AWS Security Hub, you can take advantage of features like Insights and Filters by using the extra information not available in Security Hub before.
 
-For example, you want to enrich all AWS Security Hub findings with `WorkflowStatus=NEW`, `RecordState=ACTIVE`, and `ResourceType=AwsS3Bucket` that are MetaCheck `is_public=True` with MetaChecks and MetaTags:
+For example, you want to enrich all AWS Security Hub findings with `WorkflowStatus=NEW`, `RecordState=ACTIVE`, and `ResourceType=AwsS3Bucket` that are `public=True` with Context outputs:
 
 ```sh
-./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket --meta-tags --meta-checks --mh-filters-checks is_public=True --enrich-findings
+./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsS3Bucket ----mh-filters-checks public=True --enrich-findings
 ```
 
 <p align="center">
@@ -976,4 +972,4 @@ You can now work in MetaHub with all these four findings together as if they wer
 
 # Contributing
 
-You can follow this guide if you want to contribute to the Context module [guide](metachecks.md).
+You can follow this guide if you want to contribute to the Context module [guide](docs/context.md).

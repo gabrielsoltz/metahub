@@ -11,7 +11,7 @@ class ContextBase:
 
     def output_checks(self):
         """
-        return mh_values_checks: MetaChecks values dictionary.
+        return mh_values_checks: values dictionary.
         return mh_matched_checks: True if mh-filters-checks matchs one of metachecks the values
         """
 

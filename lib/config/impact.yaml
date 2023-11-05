@@ -11,19 +11,29 @@ status:
   values:
     - attached:
         score: 1
-    - unattached:
+    - not-attached:
         score: 0
     - running:
         score: 1
     - not-running:
         score: 0
+    - unknown:
+        score: 0
 
 exposure:
   weight: 1
   values:
-    - public:
+    - effectively-public:
         score: 1
-    - private:
+    - restricted-public:
+        score: 0.4
+    - unknown-public:
+        score: 0
+    - unrestricted-private:
+        score: 0.5
+    - restricted:
+        score: 0
+    - unknown:
         score: 0
 
 access:
@@ -31,7 +41,19 @@ access:
   values:
     - unrestricted:
         score: 1
+    - untrusted-principal:
+        score: 0.8
+    - unrestricted-principal:
+        score: 0.5
+    - cross-account-principal:
+        score: 0.5
+    - unrestricted-actions:
+        score: 0.5
+    - dangerous-actions:
+        score: 0.5
     - restricted:
+        score: 0
+    - unknown:
         score: 0
 
 encryption:
@@ -52,4 +74,6 @@ environment:
     - staging:
         score: 0.3
     - development:
+        score: 0
+    - unknown:
         score: 0
