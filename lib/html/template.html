@@ -30,10 +30,16 @@
                 {% endfor %}
               {% endif %}
               {% for impact_column in impact_columns %}
-                {% if impact_column in ['exposure', 'access', 'encryption', 'status'] %}
-                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first }}",
+                {% if 'exposure' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% elif 'access' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% elif 'encryption' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
+                {% elif 'status' == impact_column %}
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column] | dictsort | first | first  }}",
                 {% else %}
-                  "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e }}",
+                  "{{ impact_column }}": "{{ resource_value.impact[impact_column]|e  }}",
                 {% endif %}
               {% endfor %}
           },
@@ -247,7 +253,7 @@
           var value = cell.getValue();
           var color;
           var emoji;
-          if (value === "non-attached" || value === "non-running") {
+          if (value === "non-attached" || value === "not-running") {
             color = "red";
             emoji = "🔴";
           } else if (value === "attached" || value === "running") {

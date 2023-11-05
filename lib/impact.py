@@ -243,6 +243,7 @@ class Impact:
                 exposure = "effectively-public"
             elif resource_values.get("ResourceType") != "AwsEc2SecurityGroup":
                 if resource_values.get("associations", {}):
+                    associations = resource_values.get("associations", {})
                     if not associations.get("security_groups"):
                         exposure = "unrestricted-public"
                 exposure = "restricted-public"
@@ -461,7 +462,8 @@ class Impact:
                     return {"attached": config.get("attached")}
                 else:
                     return {"non-attached": config.get("attached")}
-            return {"unknown": {}}
+
+        return {"unknown": {}}
 
     def resource_environment(self, resource_arn, resource_values):
         self.logger.info("Calculating encryption for resource: %s", resource_arn)

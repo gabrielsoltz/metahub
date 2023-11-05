@@ -39,7 +39,7 @@ days_to_consider_unrotated = 90
 config_columns = ["public"]
 tag_columns = ["Name", "Owner"]
 account_columns = ["AccountAlias"]
-impact_columns = ["score", "exposure", "access", "encryption"]
+impact_columns = ["score", "exposure", "access", "encryption", "status"]
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = False
