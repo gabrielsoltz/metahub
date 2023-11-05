@@ -591,12 +591,13 @@ HTML Reports are interactive in many ways:
 - You can also download that data to xlsx, CSV, HTML, and JSON.
 
 <p align="center">
-  <img src="docs/imgs/html-export.png" alt="html-example"/>
+  <img src="docs/imgs/html-export-small.png" alt="html-example"/>
 </p>
 
 ## CSV
 
-You can create rich HTML reports of your findings, adding your context as part of them.
+You can create rich HT
+ML reports of your findings, adding your context as part of them.
 
 <p align="center">
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>

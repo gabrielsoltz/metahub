@@ -64,32 +64,32 @@ def get_parser():
     group_security_hub.add_argument(
         "--sh-assume-role",
         default=None,
-        help="Specify the AWS IAM role to be assumed where SH is running. Use with --sh-account",
+        help="Specify the AWS IAM role to be assumed where Security Hub is running. Use with --sh-account",
         required=False,
     )
     group_security_hub.add_argument(
         "--sh-account",
         default=None,
-        help="Specify the AWS Account ID where SH is running. Use with --sh-assume-role",
+        help="Specify the AWS Account ID where Security Hub is running. Use with --sh-assume-role",
         required=False,
     )
     group_security_hub.add_argument(
         "--sh-region",
         choices=get_available_regions(get_logger("ERROR"), "securityhub"),
         default=[],
-        help="Specify the AWS Region where SH is running",
+        help="Specify the AWS Region where Security Hub is running",
         required=False,
     )
     group_security_hub.add_argument(
         "--sh-profile",
         default=None,
-        help="AWS Profile to use for Security Hub",
+        help="Specify the AWS authentication profile Profile to use for Security Hub",
         required=False,
     )
     group_security_hub.add_argument(
         "--sh-filters",
         default=None,
-        help='Use this option to filter the results from SH using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW',
+        help='Use this option to filter the results from Security Hub using key=value pairs, for example SeverityLabel=CRITICAL. Do not do not put spaces before or after the = sign. If a value contains spaces, you should define it with double quotes. By default ProductName="Security Hub" RecordState=ACTIVE WorkflowStatus=NEW',
         required=False,
         nargs="*",
         action=KeyValueWithList,
@@ -97,7 +97,7 @@ def get_parser():
     group_security_hub.add_argument(
         "--sh-template",
         default=None,
-        help="Use this option to filter the results from SH using a YAML file. You need to specify the file: --sh-template templates/default.yml",
+        help="Use this option to filter the results from Security Hub using a YAML file. You need to specify the file: --sh-template templates/default.yml",
         required=False,
     )
     group_security_hub.add_argument(
@@ -105,14 +105,14 @@ def get_parser():
         choices=["securityhub", "file-asff"],
         default=["securityhub"],
         nargs="+",
-        help="Specify input source for findings, by default securityhub but you can also use an ASFF file (file-asff) or boths inputs together and combine them",
+        help="Specify the source input for ingesting findings, by default is securityhub but you can also use one or more ASFF files (--inputs file-asff) or boths inputs together (--inputs securityhub file-asff)and combine them",
         required=False,
     )
     group_security_hub.add_argument(
         "--input-asff",
         default=None,
         nargs="+",
-        help="Specify ASFF file path for use with --input-asff file-asff-1, file-asff-2",
+        help="Specify the ASFF file path when the previous option is set in file-asff (--input-asff /path/to/file-asff-1 /path/to/file-asff-2)",
         required=False,
     )
 
@@ -128,7 +128,7 @@ def get_parser():
     )
     group_actions.add_argument(
         "--enrich-findings",
-        help="Use this option to update the results findings UserDefinedFields with the output of Meta Checks and/or Meta Tags.",
+        help="Use this option to enrich your security findings directly in Security Hub with the contextual information using the field: UserDefinedFields.",
         required=False,
         action=argparse.BooleanOptionalAction,
     )
@@ -140,12 +140,12 @@ def get_parser():
         action=argparse.BooleanOptionalAction,
     )
 
-    # Group: Meta Options
-    group_meta_checks = parser.add_argument_group("Meta Options")
+    # Group: Context Options
+    group_meta_checks = parser.add_argument_group("Context Options")
     group_meta_checks.add_argument(
         "--mh-filters-config",
         default=None,
-        help="Use this option to filter the resources based on Context Config results using key=value pairs, for example is_public=True. Only True or False. You can combine one or more filters using spaces",
+        help="Use this option to filter the resources based on context results using key=True/False pairs, for example public=True. Only True or False are supported as values. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
@@ -153,7 +153,7 @@ def get_parser():
     group_meta_checks.add_argument(
         "--mh-filters-tags",
         default=None,
-        help="Use this option to filter the resources based on Context Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
+        help="Use this option to filter the resources based on Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
         required=False,
         nargs="*",
         action=KeyValue,
@@ -166,16 +166,16 @@ def get_parser():
     )
     group_meta_checks.add_argument(
         "--context",
-        help="",
+        default=[
+            "config",
+            "tags",
+        ],
+        help="This option defines which actions MetaHub will execute to get the context of the affected resources. By default, MetaHub will execute config and tags actions. CloudTrail and Account are disabled by default as could be expensive to execute and requires non-standard iam actions policies. Check that before enabling them",
         choices=[
             "config",
             "tags",
             "account",
             "cloudtrail",
-        ],
-        default=[
-            "config",
-            "tags",
         ],
         nargs="*",
         required=False,
@@ -188,7 +188,7 @@ def get_parser():
         choices=["short", "full", "inventory", "statistics"],
         default=[],
         nargs="+",
-        help="Specify the output you want, by default short. Combine one or more using spaces",
+        help="Specify if you want to see the results in your terminal and how: --list-findings short inventory",
         required=False,
     )
     group_output.add_argument(
@@ -213,26 +213,26 @@ def get_parser():
             "xlsx",
         ],
         nargs="*",
-        help="Specify the output mode, by default json. Combine one or more using spaces",
+        help="Specify the Outputs you want to generate. By deafault all of them are enabled. If you only want HTML and XLSX: --output-modes html xlsx",
         required=False,
     )
     group_output.add_argument(
         "--output-tag-columns",
-        help="Specify which Tags to unroll as Columns for outputs (csv, html and xlsx)",
+        help="Customize the Tags to use as columns in the outputs: csv, html and xlsx. Also in the configuration file.",
         default=[],
         nargs="+",
         required=False,
     )
     group_output.add_argument(
         "--output-config-columns",
-        help="Specify which Configs to unroll as Columns for outputs (csv, html and xlsx)",
+        help="Customize the Configs properties to use as columns in the outputs: csv, html and xlsx. Also in the configuration file.",
         default=[],
         nargs="+",
         required=False,
     )
     group_output.add_argument(
         "--output-account-columns",
-        help="Specify which Account to unroll as Columns for outputs (csv, html and xlsx)",
+        help="Customize the Account properties to use as columns in the outputs: csv, html and xlsx. Also in the configuration file.",
         default=[],
         nargs="+",
         required=False,
