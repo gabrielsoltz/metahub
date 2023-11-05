@@ -128,7 +128,7 @@ class Metacheck(ContextBase):
             )
         return associates_public_ip
 
-    def is_attached(self):
+    def attached(self):
         if self.autoscaling_groups:
             return True
         return False
@@ -157,7 +157,7 @@ class Metacheck(ContextBase):
             "metadata_options": self.metadata_options(),
             "associates_public_ip": self.associates_public_ip(),
             "public": self.public(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "resource_policy": self.resource_policy(),
             "snapshots": self.snapshots,
         }

@@ -61,7 +61,7 @@ class Metacheck(ContextBase):
                     return True
         return False
 
-    def is_attached(self):
+    def attached(self):
         if self.volume:
             for ebs in self.volume:
                 if ebs["Attachments"]:
@@ -84,7 +84,7 @@ class Metacheck(ContextBase):
     def checks(self):
         checks = {
             "encrypted": self.encrypted(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

@@ -131,7 +131,7 @@ class Metacheck(ContextBase):
                 return False
         return False
 
-    def is_attached(self):
+    def attached(self):
         if self.policy:
             if self.policy["AttachmentCount"] == 0:
                 return False
@@ -162,7 +162,7 @@ class Metacheck(ContextBase):
             "name": self.name(),
             "description": self.description(),
             "is_customer_managed": self.is_customer_managed(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "public": self.public(),
             "resource_policy": self.resource_policy,
         }

@@ -203,7 +203,7 @@ class Metacheck(ContextBase):
                 return True
         return False
 
-    def is_attached(self):
+    def attached(self):
         if self.security_group:
             if self.network_interfaces:
                 return True
@@ -237,7 +237,7 @@ class Metacheck(ContextBase):
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
             "public": self.public(),
             "is_default": self.is_default(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "resource_policy": self.resource_policy(),
         }
         return checks

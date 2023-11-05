@@ -171,6 +171,12 @@ def generate_findings(
                 resource_arn
             ]["impact"]["encryption"] = encryption
 
+            # Get Status
+            status = imp.resource_status(resource_arn, resource_values)
+            mh_findings[resource_arn]["impact"]["status"] = mh_findings_short[
+                resource_arn
+            ]["impact"]["status"] = status
+
     generate_impact()
 
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics

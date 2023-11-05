@@ -146,7 +146,7 @@ class Metacheck(ContextBase):
             name = self.launch_template.get("LaunchTemplateName")
         return name
 
-    def is_attached(self):
+    def attached(self):
         if self.security_groups:
             return True
         return False
@@ -176,7 +176,7 @@ class Metacheck(ContextBase):
             "associates_public_ip": self.associates_public_ip(),
             "name": self.name(),
             "public": self.public(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "resource_policy": self.resource_policy(),
         }
         return checks

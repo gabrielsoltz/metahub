@@ -130,7 +130,7 @@ class Metacheck(ContextBase):
             return failed_rules
         return False
 
-    def is_attached(self):
+    def attached(self):
         if self.network_acl:
             if self.subnets:
                 return True
@@ -156,7 +156,7 @@ class Metacheck(ContextBase):
             "is_default": self.is_default(),
             "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
             "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
-            "is_attached": self.is_attached(),
+            "attached": self.attached(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }

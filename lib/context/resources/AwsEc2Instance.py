@@ -223,13 +223,11 @@ class Metacheck(ContextBase):
             metadata_options = self.instance.get("MetadataOptions")
         return metadata_options
 
-    def is_running(self):
-        State = False
+    def status(self):
+        State = None
         if self.instance:
             State = self.instance["State"]["Name"]
-            if State == "running":
-                return True
-        return False
+        return State
 
     def resource_policy(self):
         return None
@@ -262,7 +260,7 @@ class Metacheck(ContextBase):
             "public_dns": self.public_dns(),
             "metadata_options": self.metadata_options(),
             "iam_profile": self.iam_profile(),
-            "is_running": self.is_running(),
+            "status": self.status(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
         }
