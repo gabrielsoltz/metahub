@@ -22,7 +22,7 @@ from lib.helpers import (
     test_python_version,
 )
 from lib.impact import Impact
-from lib.outputs import generate_output_csv, generate_output_html, generate_output_xlsx
+from lib.outputs import generate_outputs
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
 
@@ -33,21 +33,17 @@ TIMESTRF = strftime("%Y%m%d-%H%M%S")
 def generate_findings(
     logger,
     sh_filters,
-    metachecks,
-    mh_filters_checks,
-    metatags,
-    mh_filters_tags,
-    sh_account,
-    sh_role,
-    mh_role,
     sh_region,
+    sh_account,
+    sh_profile,
+    sh_role,
+    context,
+    mh_role,
+    mh_filters_config,
+    mh_filters_tags,
     inputs,
     asff_findings,
-    metatrails,
     banners,
-    drill_down,
-    metaaccount,
-    sh_profile,
 ):
     mh_findings = {}
     mh_findings_not_matched_findings = {}
@@ -71,6 +67,8 @@ def generate_findings(
         # Get the resource_arn from the finding
         resource_arn, finding_parsed = parse_finding(finding)
         # Get the lock for this resource
+        # To Do: If more than one finding for the same account, account_context could execute more than once for the same account
+        # Split the findings by account and execute the account_context only once per account
         lock = resource_locks.get(resource_arn)
 
         # If the lock does not exist, create it
@@ -90,13 +88,9 @@ def generate_findings(
                 mh_findings_short,
                 AwsAccountData,
                 mh_role,
-                metachecks,
-                mh_filters_checks,
-                drill_down,
-                metatags,
+                mh_filters_config,
                 mh_filters_tags,
-                metatrails,
-                metaaccount,
+                context,
             )
 
     with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
@@ -144,16 +138,18 @@ def generate_findings(
 
     mh_statistics = generate_statistics(mh_findings)
 
-    def generate_impact():
-        for resource_arn in mh_findings_short:
-            # Impact
-            impact = Impact(logger).get_impact(mh_findings[resource_arn])
-            mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
-                "impact"
-            ] = impact
-
-    generate_impact()
-
+    # Add Impact
+    imp = Impact(logger)
+    for resource_arn, resource_values in mh_findings.items():
+        impact_checks = imp.generate_impact_checks(resource_arn, resource_values)
+        mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
+            "impact"
+        ] = impact_checks
+    for resource_arn, resource_values in mh_findings.items():
+        impact_scoring = imp.generate_impact_scoring(resource_arn, resource_values)
+        mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[resource_arn][
+            "impact"
+        ]["score"] = impact_scoring
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 
@@ -297,29 +293,21 @@ def validate_arguments(args, logger):
         sh_filters = args.sh_filters
         sh_filters = set_sh_filters(sh_filters)
 
-    # Validate MetaChecks filters
-    if args.mh_filters_checks and not args.meta_checks:
-        logger.error(
-            "--mh-filters-checks provided but --meta-checks are disabled, ignoring..."
-        )
-    mh_filters_checks = args.mh_filters_checks or {}
-    for mh_filter_check_key, mh_filter_check_value in mh_filters_checks.items():
-        if mh_filters_checks[mh_filter_check_key].lower() == "true":
-            mh_filters_checks[mh_filter_check_key] = bool(True)
-        elif mh_filters_checks[mh_filter_check_key].lower() == "false":
-            mh_filters_checks[mh_filter_check_key] = bool(False)
+    # Validate Config filters
+    mh_filters_config = args.mh_filters_config or {}
+    for mh_filter_config_key, mh_filter_config_value in mh_filters_config.items():
+        if mh_filters_config[mh_filter_config_key].lower() == "true":
+            mh_filters_config[mh_filter_config_key] = bool(True)
+        elif mh_filters_config[mh_filter_config_key].lower() == "false":
+            mh_filters_config[mh_filter_config_key] = bool(False)
         else:
             logger.error(
-                "Only True or False is supported for MetaChecks filters: "
-                + str(mh_filters_checks)
+                "Only True or False it is supported for Context Config filters: "
+                + str(mh_filters_config)
             )
             exit(1)
 
-    # Validate MetaTags filters
-    if args.mh_filters_tags and not args.meta_tags:
-        logger.error(
-            "--mh-filters-tags provided but --meta-tags are disabled, ignoring..."
-        )
+    # Validate Tags filters
     mh_filters_tags = args.mh_filters_tags or {}
 
     # Parameter Validation: --sh-account and --sh-assume-role
@@ -391,81 +379,13 @@ def validate_arguments(args, logger):
     return (
         asff_findings,
         sh_filters,
-        mh_filters_checks,
+        mh_filters_config,
         mh_filters_tags,
         sh_account,
         sh_account_alias_str,
         sh_region,
         update_findings_filters,
     )
-
-
-def generate_outputs(
-    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
-):
-    # Columns for CSV and HTML
-    metachecks_columns = args.output_meta_checks_columns or list(
-        mh_statistics["metachecks"].keys()
-    )
-    metatags_columns = args.output_meta_tags_columns or list(
-        mh_statistics["metatags"].keys()
-    )
-    metaaccount_columns = mh_statistics["metaaccount"]
-    # Hardcoded for now
-    impact_columns = ["Impact"]
-
-    if mh_findings:
-        for ouput_mode in args.output_modes:
-            # Output JSON files
-            if ouput_mode.startswith("json"):
-                json_mode = ouput_mode.split("-")[1]
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
-                with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    # try:
-                    json.dump(
-                        {
-                            "short": mh_findings_short,
-                            "inventory": mh_inventory,
-                            "statistics": mh_statistics,
-                            "full": mh_findings,
-                        }[json_mode],
-                        f,
-                        indent=2,
-                    )
-                    # except TypeError:
-                    #     print ("Error generating JSON output: " + str(json_mode))
-                print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=banners)
-
-            # Output HTML files
-            if ouput_mode == "html":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
-                with open(WRITE_FILE, "w", encoding="utf-8") as f:
-                    html = generate_output_html(
-                        mh_findings,
-                        mh_statistics,
-                        metatags_columns,
-                        metachecks_columns,
-                        metaaccount_columns,
-                        impact_columns,
-                    )
-                    f.write(html)
-                print_table("HTML:  ", WRITE_FILE, banners=banners)
-
-            # Output CSV files
-            if ouput_mode == "csv":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
-                generate_output_csv(
-                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
-                )
-                print_table("CSV:   ", WRITE_FILE, banners=banners)
-
-            # Output XLSX files
-            if ouput_mode == "xlsx":
-                WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
-                generate_output_xlsx(
-                    mh_findings, metatags_columns, metachecks_columns, WRITE_FILE
-                )
-                print_table("XLSX:   ", WRITE_FILE, banners=banners)
 
 
 def main(args):
@@ -477,17 +397,10 @@ def main(args):
         exit(1)
     logger = get_logger(args.log_level)
 
-    if args.list_meta_checks:
-        from lib.metachecks.metachecks import list_metachecks
-
-        print_title_line("List MetaChecks", banners=banners)
-        list_metachecks(logger)
-        return
-
     (
         asff_findings,
         sh_filters,
-        mh_filters_checks,
+        mh_filters_config,
         mh_filters_tags,
         sh_account,
         sh_account_alias_str,
@@ -508,14 +421,10 @@ def main(args):
     print_table("Security Hub filters: ", str(sh_filters), banners=banners)
     print_table("Security Hub yaml: ", str(args.sh_template), banners=banners)
     print_table("Input File: ", str(args.input_asff), banners=banners)
-    print_table("MetaHub Role: ", str(args.mh_assume_role), banners=banners)
-    print_table("MetaChecks: ", str(args.meta_checks), banners=banners)
-    print_table("MetaChecks Filters: ", str(mh_filters_checks), banners=banners)
-    print_table("Drilled Down Mode: ", str(args.drill_down), banners=banners)
-    print_table("MetaTags: ", str(args.meta_tags), banners=banners)
-    print_table("MetaTags Filters: ", str(mh_filters_tags), banners=banners)
-    print_table("MetaTrails: ", str(args.meta_trails), banners=banners)
-    print_table("MetaAccount: ", str(args.meta_account), banners=banners)
+    print_table("Context Role: ", str(args.mh_assume_role), banners=banners)
+    print_table("Context Options: ", str(args.context), banners=banners)
+    print_table("Config Filters: ", str(mh_filters_config), banners=banners)
+    print_table("Tags Filters: ", str(mh_filters_tags), banners=banners)
     print_table("Update Findings: ", str(args.update_findings), banners=banners)
     print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
     print_table(
@@ -535,21 +444,17 @@ def main(args):
     ) = generate_findings(
         logger,
         sh_filters,
-        metachecks=args.meta_checks,
-        mh_filters_checks=mh_filters_checks,
-        metatags=args.meta_tags,
-        mh_filters_tags=mh_filters_tags,
-        sh_account=sh_account,
-        sh_role=args.sh_assume_role,
-        mh_role=args.mh_assume_role,
         sh_region=sh_region,
+        sh_account=sh_account,
+        sh_profile=args.sh_profile,
+        sh_role=args.sh_assume_role,
+        context=args.context,
+        mh_role=args.mh_assume_role,
+        mh_filters_config=mh_filters_config,
+        mh_filters_tags=mh_filters_tags,
         inputs=args.inputs,
         asff_findings=asff_findings,
-        metatrails=args.meta_trails,
         banners=banners,
-        drill_down=args.drill_down,
-        metaaccount=args.meta_account,
-        sh_profile=args.sh_profile,
     )
 
     if mh_findings:

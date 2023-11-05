@@ -1,11 +1,39 @@
 import csv
+import json
+from time import strftime
 
 import jinja2
 import xlsxwriter
 
+from lib.helpers import print_table
 
-def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
-    with open(csv_file, "w", encoding="utf-8", newline="") as output_file:
+OUTPUT_DIR = "outputs/"
+TIMESTRF = strftime("%Y%m%d-%H%M%S")
+
+
+def generate_output_json(
+    mh_findings_short, mh_findings, mh_inventory, mh_statistics, json_mode, args
+):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
+    with open(WRITE_FILE, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "short": mh_findings_short,
+                "full": mh_findings,
+                "inventory": mh_inventory,
+                "statistics": mh_statistics,
+            }[json_mode],
+            f,
+            indent=2,
+        )
+    print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=args.banners)
+
+
+def generate_output_csv(
+    output, config_columns, tag_columns, account_columns, impact_columns, args
+):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
+    with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
         colums = [
             "Resource ID",
             "Severity",
@@ -18,27 +46,39 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
             "RecordState",
             "ComplianceStatus",
         ]
-        colums = colums + metatags_columns + metachecks_columns
+        colums = (
+            colums + config_columns + tag_columns + account_columns + impact_columns
+        )
         dict_writer = csv.DictWriter(output_file, fieldnames=colums)
         dict_writer.writeheader()
         # Iterate over the resources
         for resource, values in output.items():
             for finding in values["findings"]:
                 for f, v in finding.items():
-                    metatags_column_values = []
-                    for column in metatags_columns:
+                    tag_column_values = []
+                    for column in tag_columns:
                         try:
-                            metatags_column_values.append(values["metatags"][column])
+                            tag_column_values.append(values["tags"][column])
                         except (KeyError, TypeError):
-                            metatags_column_values.append("")
-                    metachecks_column_values = []
-                    for column in metachecks_columns:
+                            tag_column_values.append("")
+                    config_column_values = []
+                    for column in config_columns:
                         try:
-                            metachecks_column_values.append(
-                                values["metachecks"][column]
-                            )
+                            config_column_values.append(values["config"][column])
                         except (KeyError, TypeError):
-                            metachecks_column_values.append("")
+                            config_column_values.append("")
+                    impact_column_values = []
+                    for column in impact_columns:
+                        try:
+                            impact_column_values.append(values["impact"][column])
+                        except (KeyError, TypeError):
+                            impact_column_values.append("")
+                    account_column_values = []
+                    for column in account_columns:
+                        try:
+                            account_column_values.append(values["account"][column])
+                        except (KeyError, TypeError):
+                            account_column_values.append("")
                     row = (
                         [
                             resource,
@@ -58,15 +98,21 @@ def generate_output_csv(output, metatags_columns, metachecks_columns, csv_file):
                             if v.get("Compliance")
                             else None,
                         ]
-                        + metatags_column_values
-                        + metachecks_column_values
+                        # + impact_column_values
+                        + account_column_values
+                        + tag_column_values
+                        + config_column_values
                     )
                     dict_writer.writerow(dict(zip(colums, row)))
+    print_table("CSV:   ", WRITE_FILE, banners=args.banners)
 
 
-def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file):
+def generate_output_xlsx(
+    output, config_columns, tag_columns, account_columns, impact_columns, args
+):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
     # Create a workbook and add a worksheet
-    workbook = xlsxwriter.Workbook(xlsx_file)
+    workbook = xlsxwriter.Workbook(WRITE_FILE)
     worksheet = workbook.add_worksheet("findings")
     # Columns
     worksheet.set_default_row(25)
@@ -90,7 +136,6 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
     colums = [
         "Resource ID",
         "Severity",
-        "Impact",
         "Title",
         "AWS Account ID",
         "Region",
@@ -100,7 +145,10 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
         "ComplianceStatus",
     ]
     worksheet.write_row(
-        0, 0, colums + metatags_columns + metachecks_columns, title_format
+        0,
+        0,
+        colums + config_columns + tag_columns + account_columns + impact_columns,
+        title_format,
     )
     # Iterate over the resources
     current_line = 1
@@ -117,23 +165,32 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
                     worksheet.write(current_line, 1, severity, medium_format)
                 else:
                     worksheet.write(current_line, 1, severity, low_format)
-                metatags_column_values = []
-                for column in metatags_columns:
+                tag_column_values = []
+                for column in tag_columns:
                     try:
-                        metatags_column_values.append(values["metatags"][column])
+                        tag_column_values.append(values["tags"][column])
                     except (KeyError, TypeError):
-                        metatags_column_values.append("")
-                metachecks_column_values = []
-                for column in metachecks_columns:
+                        tag_column_values.append("")
+                config_column_values = []
+                for column in config_columns:
                     try:
-                        metachecks_column_values.append(values["metachecks"][column])
+                        config_column_values.append(values["config"][column])
                     except (KeyError, TypeError):
-                        metachecks_column_values.append("")
+                        config_column_values.append("")
+                impact_column_values = []
+                for column in impact_columns:
+                    try:
+                        impact_column_values.append(values["impact"][column])
+                    except (KeyError, TypeError):
+                        impact_column_values.append("")
+                account_column_values = []
+                for column in account_columns:
+                    try:
+                        account_column_values.append(values["account"][column])
+                    except (KeyError, TypeError):
+                        account_column_values.append("")
                 row = (
                     [
-                        values.get("impact", None).get("Impact", None)
-                        if values.get("impact")
-                        else None,
                         f,
                         values.get("AwsAccountId", None),
                         values.get("Region", None),
@@ -146,44 +203,121 @@ def generate_output_xlsx(output, metatags_columns, metachecks_columns, xlsx_file
                         if v.get("Compliance")
                         else None,
                     ]
-                    + metatags_column_values
-                    + metachecks_column_values
+                    # + impact_column_values
+                    + account_column_values
+                    + tag_column_values
+                    + config_column_values
                 )
                 worksheet.write_row(current_line, 2, row)
                 current_line += 1
     workbook.close()
+    print_table("XLSX:   ", WRITE_FILE, banners=args.banners)
 
 
 def generate_output_html(
     mh_findings,
     mh_statistics,
-    metatags_columns,
-    metachecks_columns,
-    metaaccount_columns,
+    config_columns,
+    tag_columns,
+    account_columns,
     impact_columns,
+    args,
 ):
+    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
     TEMPLATE_FILE = "lib/html/template.html"
     template = templateEnv.get_template(TEMPLATE_FILE)
-    # Convert MetaChecks to Boolean
+    # Convert Config to Boolean
     for resource_arn in mh_findings:
         if (
-            "metachecks" in mh_findings[resource_arn]
-            and mh_findings[resource_arn]["metachecks"]
+            "config" in mh_findings[resource_arn]
+            and mh_findings[resource_arn]["config"]
         ):
-            for metacheck in mh_findings[resource_arn]["metachecks"]:
-                if bool(mh_findings[resource_arn]["metachecks"][metacheck]):
-                    mh_findings[resource_arn]["metachecks"][metacheck] = True
+            for config in mh_findings[resource_arn]["config"]:
+                if bool(mh_findings[resource_arn]["config"][config]):
+                    mh_findings[resource_arn]["config"][config] = True
                 else:
-                    mh_findings[resource_arn]["metachecks"][metacheck] = False
-    html = template.render(
-        data=mh_findings,
-        statistics=mh_statistics,
-        title="MetaHub",
-        metachecks_columns=metachecks_columns,
-        metatags_columns=metatags_columns,
-        metaaccount_columns=metaaccount_columns,
-        impact_columns=impact_columns,
+                    mh_findings[resource_arn]["config"][config] = False
+
+    with open(WRITE_FILE, "w", encoding="utf-8") as f:
+        html = template.render(
+            data=mh_findings,
+            statistics=mh_statistics,
+            title="MetaHub",
+            config_columns=config_columns,
+            tag_columns=tag_columns,
+            account_columns=account_columns,
+            impact_columns=impact_columns,
+            parameters=args,
+        )
+        f.write(html)
+
+    print_table("HTML:  ", WRITE_FILE, banners=args.banners)
+
+
+def generate_outputs(
+    args, mh_findings_short, mh_inventory, mh_statistics, mh_findings, banners
+):
+    from lib.config.configuration import (
+        account_columns,
+        config_columns,
+        impact_columns,
+        tag_columns,
     )
-    return html
+
+    # Columns for CSV and HTML
+    output_config_columns = (
+        args.output_config_columns
+        or config_columns
+        or list(mh_statistics["config"].keys())
+    )
+    output_tag_columns = (
+        args.output_tag_columns or tag_columns or list(mh_statistics["tags"].keys())
+    )
+    output_account_columns = (
+        args.output_account_columns or account_columns or mh_statistics["account"]
+    )
+    # Hardcoded for now
+    output_impact_columns = impact_columns or mh_statistics["impact"]
+
+    if mh_findings:
+        for ouput_mode in args.output_modes:
+            if ouput_mode.startswith("json"):
+                json_mode = ouput_mode.split("-")[1]
+                generate_output_json(
+                    mh_findings_short,
+                    mh_findings,
+                    mh_inventory,
+                    mh_statistics,
+                    json_mode,
+                    args,
+                )
+            if ouput_mode == "html":
+                generate_output_html(
+                    mh_findings,
+                    mh_statistics,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )
+            if ouput_mode == "csv":
+                generate_output_csv(
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )
+            if ouput_mode == "xlsx":
+                generate_output_xlsx(
+                    mh_findings,
+                    output_config_columns,
+                    output_tag_columns,
+                    output_account_columns,
+                    output_impact_columns,
+                    args,
+                )

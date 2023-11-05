@@ -174,7 +174,7 @@ resource "aws_iam_role_policy_attachment" "lambda_attach_securityhub" {
   policy_arn = aws_iam_policy.lambda_policy_securityhub.arn
 }
 
-# IAM MetaChecks, MetaTags and MetaTrails
+# IAM Context
 
 data "aws_iam_policy_document" "lambda_policy_document_metachecks" {
   statement {

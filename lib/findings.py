@@ -1,7 +1,4 @@
-from lib.metaaccount.metaaccount import run_metaaccount
-from lib.metachecks.metachecks import run_metachecks
-from lib.metatags.metatags import run_metatags
-from lib.metatrails.metatrails import run_metatrails
+from lib.context.context import Context
 from lib.securityhub import parse_finding
 
 
@@ -14,16 +11,11 @@ def evaluate_finding(
     mh_findings_short,
     AwsAccountData,
     mh_role,
-    metachecks,
-    mh_filters_checks,
-    drill_down,
-    metatags,
+    mh_filters_config,
     mh_filters_tags,
-    metatrails,
-    metaaccount,
+    context_options,
 ):
     mh_matched = False
-    mh_values, mh_tags, mh_trails, mh_account = None, None, None, None
     resource_arn, finding_parsed = parse_finding(finding)
 
     # Fix Region when not in root
@@ -38,49 +30,44 @@ def evaluate_finding(
         mh_matched = True
     elif resource_arn in mh_findings_not_matched_findings:
         mh_matched = False
-    elif metachecks or metatags or metatrails or metaaccount:
-        # Run MetaChecks
-        if metachecks:
-            mh_values, mh_checks_matched = run_metachecks(
-                logger,
-                finding,
-                mh_filters_checks,
-                mh_role,
-                drill_down,
-            )
+    elif context_options:
+        context = Context(logger, finding, mh_filters_config, mh_filters_tags, mh_role)
+        if "config" in context_options:
+            mh_config, mh_checks_matched = context.get_context_config()
         else:
+            mh_config = False
             mh_checks_matched = True
-        # Run MetaTags
-        if metatags:
-            mh_tags, mh_tags_matched = run_metatags(
-                logger, finding, mh_filters_tags, mh_role
-            )
+        if "tags" in context_options:
+            mh_tags, mh_tags_matched = context.get_context_tags()
         else:
+            mh_tags = False
             mh_tags_matched = True
-        # If both checks are True we show the resource
-        if mh_tags_matched and mh_checks_matched:
-            mh_matched = True
-        # Run MetaTrails
-        if metatrails:
-            mh_trails = run_metatrails(logger, finding, mh_filters_tags, mh_role)
-        # Run MetaAccount, if we already have the information in our dict we don't run it again
-        if metaaccount:
+        if "cloudtrail" in context_options:
+            mh_trails = context.get_context_cloudtrail()
+        else:
+            mh_trails = False
+        if "account" in context_options:
             if finding["AwsAccountId"] not in AwsAccountData:
-                mh_account = run_metaaccount(finding, mh_role, logger)
+                mh_account = context.get_context_account()
                 AwsAccountData[finding["AwsAccountId"]] = mh_account
             else:
                 mh_account = AwsAccountData[finding["AwsAccountId"]]
+        else:
+            mh_account = False
+        # If both Tags and Config matchs are True we show the resource
+        if mh_tags_matched and mh_checks_matched:
+            mh_matched = True
     else:
-        # If no metachecks and no metatags, we enforce to True the match so we show the resource:
+        # If no filters for Config and Tags, we enforce to True the match so we show the resource:
         mh_matched = True
 
-    # We keep a dict with no matched resources so we don't run MetaChecks again
+    # We keep a dict with no matched resources so we don't run Context again
     if not mh_matched:
         # We add the resource in our output only once:
         if resource_arn not in mh_findings_not_matched_findings:
             mh_findings_not_matched_findings[resource_arn] = {}
 
-    # We show the resouce only if matched MetaChecks and MetaTags (or are disabled)
+    # We show the resouce only if matched Config and Tags (or are disabled)
     if mh_matched:
         # Resource (we add the resource only once, we check if it's already in the list)
         if resource_arn not in mh_findings:
@@ -101,26 +88,22 @@ def evaluate_finding(
             mh_findings[resource_arn]["AwsAccountId"] = mh_findings_short[resource_arn][
                 "AwsAccountId"
             ] = finding["AwsAccountId"]
-            # MetaChecks
-            if metachecks:
-                mh_findings[resource_arn]["metachecks"] = mh_findings_short[
-                    resource_arn
-                ]["metachecks"] = mh_values
-            # MetaTags
-            if metatags:
-                mh_findings[resource_arn]["metatags"] = mh_findings_short[resource_arn][
-                    "metatags"
-                ] = mh_tags
-            # MetaTrails
-            if metatrails:
-                mh_findings[resource_arn]["metatrails"] = mh_findings_short[
-                    resource_arn
-                ]["metatrails"] = mh_trails
-            # MetaAccount
-            if metaaccount:
-                mh_findings[resource_arn]["metaaccount"] = mh_findings_short[
-                    resource_arn
-                ]["metaaccount"] = mh_account
+            # Add Context
+            if mh_config:
+                mh_findings[resource_arn].update(mh_config)
+                mh_findings_short[resource_arn].update(mh_config)
+            else:
+                mh_findings[resource_arn]["config"] = False
+                mh_findings_short[resource_arn]["config"] = False
+            mh_findings[resource_arn]["tags"] = mh_findings_short[resource_arn][
+                "tags"
+            ] = mh_tags
+            mh_findings[resource_arn]["account"] = mh_findings_short[resource_arn][
+                "account"
+            ] = mh_account
+            mh_findings[resource_arn]["cloudtrail"] = mh_findings_short[resource_arn][
+                "cloudtrail"
+            ] = mh_trails
 
         # Add Findings
         mh_findings_short[resource_arn]["findings"].append(
