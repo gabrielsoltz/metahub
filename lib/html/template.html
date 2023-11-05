@@ -158,7 +158,6 @@
           color = "green";
         }else{
           color = "blue";
-            return value;
         }
         return `<span style="color: ${color}; text-align: center; font-size: 1.2em; font-weight: bold;">
                   ${value}
@@ -722,8 +721,8 @@
 {% endblock %} {% block severities %}
 
 <div class="container">
-  {% set ordered_keys = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] %} {% for key in
-  ordered_keys %} {% if key in statistics["SeverityLabel"] %}
+  {% set ordered_keys = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"]
+  %} {% for key in ordered_keys %} {% if key in statistics["SeverityLabel"] %}
   <div class="box {{ key }}">
     {{ key }}<br />{{ statistics["SeverityLabel"][key] }}
   </div>
