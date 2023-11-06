@@ -32,7 +32,6 @@
 - [Examples](#Examples)
 - [Inputs](#Inputs)
 - [Output Modes](#output-modes)
-- [Context Module](#context-module)
 - [Filters](#filters)
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
@@ -66,6 +65,54 @@ In **MetaHub**, context refers to information about the affected resources like 
 
 MetaHub doesn't stop at the affected resource but analyzes any associated or attached resources. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. MetaHub will examine the IAM roles that the affected resource is using and the policies attached to those roles for any issues. It will analyze the EBS attached to the instance and determine if they are encrypted. It will also analyze the Auto Scaling Groups that the instance is associated with and how. MetaHub will also analyze the VPC, Subnets, and other resources associated with the instance.
 
+The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and other related resources that are connected. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. By default, `config` and `tags` are enabled. You can choose which modules to enable using the opeion `--context`. Each of these keys will be added under the affected resource in the output with their outpus.
+
+## Config
+
+Under the `config` key, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance, you will see keys like `key`, `public_ip`, or `instance_profile`.
+
+You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
+
+## Associations
+
+Under `associations` key, you will find all the associated resources of the affected resource. For example, if the affected resource is an EC2 Instance, you will find resources like: Security Groups, IAM Roles, Volumes, VPC, Subnets, Auto Scaling Groups, etc. Each time there MetaHub finds an association, it will connect the associated resource resource and execute there the same process, fetching the config, associations, etc of that resource.
+
+Associations are key to understanding the context and impact of your security findings as their exposure.
+
+You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
+
+## Tags
+
+**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated with your resources.
+
+Note that not all AWS resource type supports this API. You can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
+
+Tags are a crucial part of understanding your context. Tagging strategies often include:
+
+- Environment (like Production, Staging, Development, etc.)
+- Data classification (like Confidential, Restricted, etc.)
+- Owner (like a team, a squad, a business unit, etc.)
+- Compliance (like PCI, SOX, etc.)
+
+If you follow a proper tagging strategy, you can filter and generate interesting outputs. For example, you could list all findings related to a specific team and provide that data directly to that team.
+
+You can filter your findings based on Tags outputs using the option: `--mh-filters-tags TAG=VALUE`. See [Tags Filtering](#tags-filtering)
+
+## CloudTrail
+
+Under the key `cloudtrail`, you will find critical Cloudtrail events related to the affected resource, such as creating events.
+
+The events that we look for are defined by resource type, and you can add/modify the critical events for each resource type by editing the configuration file: `(resources.py)[lib/config/resources]`
+
+For example for an affeted Security Group, MetaHub will look for the following events:
+
+- `CreateSecurityGroup`: Security Group Creation event
+- `AuthorizeSecurityGroupIngress`: Security Group Rule Authorization event.
+
+## Account
+
+Under the key `account`, you will find information about the account where the affected resource is runnning, like if it's part of an AWS Organizations, information about their contacts, etc.
+
 # Ownership
 
 MetaHub also focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information.
@@ -76,11 +123,9 @@ An automated way to determine the owner of a resource is critical for security t
 
 The impact module in MetaHub focuses on generating a score for each finding based on the context of the affected resource and all the security findings affecting them. For the context, we define a series of evaluated criteria; you can add, remove, or modify these criteria based on your needs. The Impact criteria are combined with a metric generated based on all the Security Findings affecting the affected resource and their severities.
 
-## Impact Criteria
-
 The following are the impact criteria that MetaHub evaluates by default:
 
-### Exposure
+## Exposure
 
 **Exposure** evaluates the how the the affected resource is exposed to other networks. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP or if it is protected by a firewall or a security group.
 
@@ -93,7 +138,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 restricted           |                 |
 | 🔵 unknown              |                 |
 
-### Access
+## Access
 
 **Access** evaluates the resource policy layer. MetaHub checks every available policy including: IAM Managed policies, IAM Inline policies, Resource Policies, and any association to other resources like IAM Roles which are then also analyzed as part of the affected resource. An unrestricted policy is not only an itsue itself of that policy, it afected any other resource which is using it.
 
@@ -108,7 +153,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 restricted              |                 |
 | 🔵 unknown                 |                 |
 
-### Encryption
+## Encryption
 
 **Encryption** evaluate the different encryption layers based on each resource type. For example, for some resources it evaluates if `at_rest` and `in_transit` encryption configuration are both enabled.
 
@@ -118,7 +163,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 encrypted          |                 |
 | 🔵 unknown            |                 |
 
-### Status
+## Status
 
 **Status** evaluate the status of the affected resource in terms of attachment or functioning. For example, for an EC2 Instance we evaluate if the resource is running, stopped, or terminated, but for resources like EBS Volumes and Security Groups, we evaluate if those resources are attached to any other resource.
 
@@ -130,7 +175,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 running            |                 |
 | 🔵 unknown            |                 |
 
-### Environment
+## Environment
 
 **Environment** evaluates the environment defined for the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your own tagging strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
@@ -141,7 +186,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 development        |                 |
 | 🔵 unknown            |                 |
 
-### Findings Metric Calculation
+## Findings Soring
 
 As part of the impact score calculation, we also evaluate the total ammount of security findings and their severities affecting the resource. We use the following formula to calculate this metric:
 
@@ -158,7 +203,7 @@ SUM(HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4)) = 0.875
 # Architecture
 
 <p align="center">
-  <img src="docs/imgs/diagram-metahub.drawio.png" alt="Diagram" width="850"/>
+  <img src="docs/imgs/diagram-metahub.drawio-v200.png" alt="Diagram" width="850"/>
 </p>
 
 # Use Cases
@@ -615,62 +660,6 @@ For example, you can generate an HTML output with Tags and add "Owner" and "Envi
 ```sh
 ./metahub --output-modes html --output -tags-columns Owner Environment
 ```
-
-# Context Module
-
-The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and other related resources that are connected. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`.
-
-By default, `config`, `associations` and `tags` are enabled. To enable or disable any of them, you can use:
-
-```sh
-./metahub --context config tags cloudtrail account
-```
-
-## Config
-
-Under the `config` placeholder, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance.
-
-You can filter your findings based on Config output using the option `--mh-filters-config True/False`. See [Tags Filtering](#config-filtering)
-
-## Associations
-
-Under `associations` placeholder, you will find all the associated resources of the affected resource. For example, if the affected resource is an EC2 Instance, you will find all the associated Security Groups, IAM Roles, IAM Policies, etc.
-
-Associations are key to understanding the context of your security findings by understanding the associated resources and their configuration.
-
-Each time there is an association, MetaHub will connect to that resource and execute the Context module on it as well.
-
-## Tags
-
-**MetaHub** relies on [AWS Resource Groups Tagging API](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/overview.html) to query the tags associated with your resources.
-
-Note that not all AWS resource type supports this API. You can check [supported services](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/supported-services.html).
-
-Tags are a crucial part of understanding your context. Tagging strategies often include:
-
-- Environment (like Production, Staging, Development, etc.)
-- Data classification (like Confidential, Restricted, etc.)
-- Owner (like a team, a squad, a business unit, etc.)
-- Compliance (like PCI, SOX, etc.)
-
-If you follow a proper tagging strategy, you can filter and generate interesting outputs. For example, you could list all findings related to a specific team and provide that data directly to that team.
-
-You can filter your findings based on Tags output using the option `--mh-filters-tags Tag=Value`. See [Tags Filtering](#tags-filtering)
-
-## CloudTrail
-
-MetaTrails queries CloudTrail in the affected account to identify critical events related to the affected resource, such as creating events.
-
-For example for an affeted Security Group, you get 2 events:
-
-- `CreateSecurityGroup`: Security Group Creation
-- `AuthorizeSecurityGroupIngress`: Security Group Rule Creation
-
-You can add/modify the critical events for each resource type by editing the configuration file: `config/resources.py`
-
-## Account
-
-Under `account` you get information about the account where the affected resource is runnning.
 
 # Filters
 
