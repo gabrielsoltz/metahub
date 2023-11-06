@@ -369,7 +369,7 @@ class Impact:
 
         resource_type = resource_values.get("ResourceType")
         config = resource_values.get("config", {})
-        resource_encryption_config = "unknown"
+        resource_encryption_config = None
         # Configuration by resource type
         if config:
             if resource_type in (
@@ -378,38 +378,41 @@ class Impact:
                 "AwsEc2Volume",
                 "AwsEc2Volume",
             ):
+                resource_encryption_config = False
                 if config.get("encrypted"):
                     resource_encryption_config = True
-                else:
-                    resource_encryption_config = False
 
             if resource_type in (
                 "AwsElasticsearchDomain",
                 "AwsElastiCacheCacheCluster",
             ):
+                resource_encryption_config = False
                 if config.get("at_rest_encryption") and config.get(
                     "transit_encryption"
                 ):
                     resource_encryption_config = True
-                else:
-                    resource_encryption_config = False
 
             if resource_type in ("AwsS3Bucket"):
+                resource_encryption_config = False
                 if config.get("bucket_encryption"):
                     resource_encryption_config = True
-                else:
-                    resource_encryption_config = False
 
             if resource_type in ("AwsCloudFrontDistribution"):
+                resource_encryption_config = False
                 if (
                     config.get("viewer_protocol_policy") == "redirect-to-https"
                     or config.get("viewer_protocol_policy") == "https-only"
                 ) and config.get("certificate"):
                     resource_encryption_config = True
-                else:
-                    resource_encryption_config = False
 
-        if not config and not associations:
+            if resource_type in ("AwsSqsQueue"):
+                resource_encryption_config = False
+                if config.get("sse_enabled"):
+                    resource_encryption_config = True
+
+        if (not config and not associations) or (
+            resource_encryption_config is None and not unencrypted_resources
+        ):
             return {
                 "unknown": {
                     "config": resource_encryption_config,

@@ -1,7 +1,7 @@
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
-from lib.config.configuration import dangereous_iam_actions, trusted_accounts
+from lib.config.configuration import dangerous_iam_actions, trusted_accounts
 
 
 class PolicyHelper:
@@ -216,7 +216,7 @@ class PolicyHelper:
             if action:
                 actions = self.standardize_actions(action)
                 for a in actions:
-                    if a in dangereous_iam_actions:
+                    if a in dangerous_iam_actions:
                         return statement
         return False
 
