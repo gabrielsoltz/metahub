@@ -21,7 +21,7 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.impact import Impact
+from lib.impact.impact import Impact
 from lib.outputs import generate_outputs
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
