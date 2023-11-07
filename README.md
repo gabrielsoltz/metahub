@@ -41,7 +41,7 @@
 
 **MetaHub** is an open-source security tool for context-based security vulnerability management. It can automate the process of contextualizing and prioritizing security findings based on your environment and your needs, YOUR context. It focuses on understanding **context**, **ownership**, and definining an **impact** for every security finding. You can use it with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanners (like [Prowler](https://github.com/prowler-cloud/prowler)).
 
-**MetaHub** Describe your context by connecting to your affected resources in your affected accounts and fetching your AWS account configuration, the affected resources tags, your CloudTrail events, your affected resource configurations, but also all their associations: If you are contextualizing a security finding affecting an EC2 Instance, MetaHub will not only connect to that instance itself but also its IAM Roles; from there, it will connect to the IAM Policies associated with those roles. It will connect to the Security Groups and analyze all their rules, the VPC and the Subnets where the instance is running, the Volumes, the Auto Scaling Groups, and more. MetaHub will also connect to the affected account and fetch information like the AWS organization's policies, security contacts, etc.
+**MetaHub** describe your context by connecting to your affected resources in your affected accounts and fetching your AWS account configuration, the affected resources tags, your CloudTrail events, your affected resource configurations, but also all their associations: If you are contextualizing a security finding affecting an EC2 Instance, MetaHub will not only connect to that instance itself but also its IAM Roles; from there, it will connect to the IAM Policies associated with those roles. It will connect to the Security Groups and analyze all their rules, the VPC and the Subnets where the instance is running, the Volumes, the Auto Scaling Groups, and more. MetaHub will also connect to the affected account and fetch information like the AWS organization's policies, security contacts, etc.
 
 After fetching all the information from your context, **MetaHub** will evaluate certain important conditions for all your resources: `exposure`, `access`, `encryption`, `status`, `age`, and `environment`. Based on those calculations and in addition to the information from the security findings affecting the resource all together, MetaHub will generate a **Scoring** for each finding.
 
@@ -102,7 +102,7 @@ You can filter your findings based on Tags outputs using the option: `--mh-filte
 
 Under the key `cloudtrail`, you will find critical Cloudtrail events related to the affected resource, such as creating events.
 
-The events that we look for are defined by resource type, and you can add/modify the critical events for each resource type by editing the configuration file: `(resources.py)[lib/config/resources]`
+The events that we look for are defined by resource type, and you can add/modify the critical events for each resource type by editing the configuration file [resources.py](lib/config/resources.py).
 
 For example for an affeted Security Group, MetaHub will look for the following events:
 
