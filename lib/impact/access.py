@@ -28,6 +28,10 @@ class Access:
                     if check_data:
                         access_checks[check_type].update({policy_name: check_data})
 
+        # To Do:
+        # - Check S3 Public Blocks
+        # - Check S3 Bucket ACLs
+
         # To add as part of policy:
         # # Resource S3 Public Block
         # (

@@ -27,7 +27,7 @@ class Encryption:
                 if encrypted is False:
                     unencrypted_resources.append(id)
 
-        # Check Encryption at Configuration Level
+        # Check Encryption at Resouce Configuration Level
         resource_encryption_config = None
 
         if resource_type in (

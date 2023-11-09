@@ -53,7 +53,7 @@ class Exposure:
 
         # Public Config
         # This is a standard key we add at the resource level to check if the resoruce it's public at their config.
-        config_public = get_config_key(resource_values, "public")
+        resource_public_config = get_config_key(resource_values, "public")
 
         # Entrypoint
         # We check all possible entrypoint. This is a bit messy, probably some standarizationg would be good at the resource.
@@ -103,6 +103,7 @@ class Exposure:
             "entrypoint": entrypoint,
             "unrestricted_ingress_rules": unrestricted_ingress_rules,
             "unrestricted_egress_rules": unrestricted_egress_rules,
+            "resource_public_config": resource_public_config,
         }
 
         # If no config and no associations, return unknown
@@ -111,15 +112,15 @@ class Exposure:
         ):
             return {"unknown": exposure_checks}
 
-        if (config_public and unrestricted_ingress_rules) or (
-            config_public and not security_groups
+        if (resource_public_config and unrestricted_ingress_rules) or (
+            resource_public_config and not security_groups
         ):
             return {"effectively-public": exposure_checks}
 
-        if config_public and not unrestricted_ingress_rules:
+        if resource_public_config and not unrestricted_ingress_rules:
             return {"restricted-public": exposure_checks}
 
-        if not config_public and unrestricted_ingress_rules:
+        if not resource_public_config and unrestricted_ingress_rules:
             return {"unrestricted-private": exposure_checks}
 
         return {"restricted": exposure_checks}
