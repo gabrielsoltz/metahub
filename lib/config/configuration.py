@@ -1,9 +1,28 @@
-# Security Hub Configurations
+# MetaHub Configurations
 
-# Default filters for Security Hub findings, not implemented yet
-# sh_default_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
+# ---------------------------------- #
+# Security Hub Configurations        #
+# ---------------------------------- #
 
-# Impact Checks Configurations
+# Default filters for Security Hub
+sh_default_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
+
+
+# ---------------------------------- #
+# Impact Configurations              #
+# ---------------------------------- #
+
+# Impact Scoring Defintion File
+path_yaml_impact = "lib/config/impact.yaml"
+
+# Severity Values for impact scoring calculation
+findings_severity_value = {
+    "CRITICAL": 4,
+    "HIGH": 3,
+    "MEDIUM": 1,
+    "LOW": 0.5,
+    "INFORMATIONAL": 0,
+}
 
 # List of AWS accounts ids that are trusted and not considered as external.
 # This is used in check untrusted_principal for policies.
@@ -48,16 +67,10 @@ tags_development = {
     "environment": ["dev"],
 }
 
-# Severity Values for Impact Findings Scores Calculation
-findings_severity_value = {
-    "CRITICAL": 4,
-    "HIGH": 3,
-    "MEDIUM": 1,
-    "LOW": 0.5,
-    "INFORMATIONAL": 0,
-}
 
-# Output Configurations
+# ---------------------------------- #
+# Output Configurations              #
+# ---------------------------------- #
 
 # Columns
 # You can define the columns that will be displayed in the output HTML, CSV AND XLSX.
@@ -70,6 +83,3 @@ impact_columns = ["score", "exposure", "access", "encryption", "status", "enviro
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = True
-
-
-path_yaml_impact = "lib/config/impact.yaml"

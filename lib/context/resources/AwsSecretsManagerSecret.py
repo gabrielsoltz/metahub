@@ -62,8 +62,8 @@ class Metacheck(ContextBase):
     def get_resource_policy(self):
         if self.secret:
             response = self.client.get_resource_policy(SecretId=self.resource_arn)
-        if response.get("ResourcePolicy"):
-            return json.loads(response["ResourcePolicy"])
+            if response.get("ResourcePolicy"):
+                return json.loads(response["ResourcePolicy"])
         return False
 
     # Context Config
@@ -80,6 +80,14 @@ class Metacheck(ContextBase):
         if self.secret:
             try:
                 return self.secret["RotationEnabled"]
+            except KeyError:
+                return False
+        return False
+
+    def kms_key_id(self):
+        if self.secret:
+            try:
+                return self.secret["KmsKeyId"]
             except KeyError:
                 return False
         return False
@@ -107,6 +115,7 @@ class Metacheck(ContextBase):
         checks = {
             "resource_policy": self.resource_policy,
             "name": self.name(),
+            "kms_key_id": self.kms_key_id(),
             "rotation_enabled": self.rotation_enabled(),
             "is_unrotated": self.is_unrotated(),
             "public": self.public(),

@@ -92,8 +92,9 @@ class Metacheck(ContextBase):
         return False
 
     def public(self):
-        if self.endpoint():
-            return True
+        if self.rds_instances:
+            if self.rds_instances.get("PubliclyAccessible"):
+                return self.rds_instances.get("PubliclyAccessible")
         return False
 
     def storage_encrypted(self):

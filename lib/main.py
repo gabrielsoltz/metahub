@@ -9,6 +9,7 @@ from rich.columns import Columns
 from rich.console import Console
 
 from lib.AwsHelpers import get_account_alias, get_account_id, get_region
+from lib.config.configuration import sh_default_filters
 from lib.findings import evaluate_finding
 from lib.helpers import (
     confirm_choice,
@@ -272,11 +273,7 @@ def validate_arguments(args, logger):
 
     # Validate Security Hub Filters
     if not args.sh_filters and not args.sh_template:
-        default_sh_filters = {
-            "RecordState": ["ACTIVE"],
-            "WorkflowStatus": ["NEW"],
-        }
-        sh_filters = set_sh_filters(default_sh_filters)
+        sh_filters = set_sh_filters(sh_default_filters)
     elif args.sh_template:
         from pathlib import Path
 

@@ -87,8 +87,8 @@ class Metacheck(ContextBase):
 
     def endpoint(self):
         if self.rds_cluster:
-            if self.rds_cluster.get("Endpoint"):
-                return self.rds_cluster.get("Endpoint")
+            if self.rds_cluster.get("PubliclyAccessible"):
+                return self.rds_cluster.get("PubliclyAccessible")
         return False
 
     def storage_encrypted(self):

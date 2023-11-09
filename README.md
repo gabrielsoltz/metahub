@@ -133,7 +133,6 @@ The following are the impact criteria that MetaHub evaluates by default:
 | ----------------------- | --------------- |
 | 🔴 effectively-public   |                 |
 | 🟠 restricted-public    |                 |
-| 🟠 unknown-public       |                 |
 | 🟠 unrestricted-private |                 |
 | 🟢 restricted           |                 |
 | 🔵 unknown              |                 |
