@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
 from lib.context.resources.Base import ContextBase
-from lib.context.resources.ContextHelpers import SGHelper
 
 
 class Metacheck(ContextBase):
@@ -31,9 +30,6 @@ class Metacheck(ContextBase):
         self.network_interfaces = self._describe_network_interfaces_interfaces()
         self.instances = self._describe_network_interfaces_instances()
         self.security_group_rules = self.describe_security_group_rules()
-        self.checked_security_group_rules = SGHelper(
-            self.logger, self.security_group_rules
-        ).check_security_group_rules()
         # Associated MetaChecks
         self.vpcs = self._describe_security_group_vpc()
 
@@ -120,6 +116,7 @@ class Metacheck(ContextBase):
         return instances
 
     def describe_security_group_rules(self):
+        security_group_rules = []
         if self.security_group:
             response = self.client.describe_security_group_rules(
                 Filters=[
@@ -127,8 +124,8 @@ class Metacheck(ContextBase):
                 ],
             )
             if response["SecurityGroupRules"]:
-                return response["SecurityGroupRules"]
-        return False
+                security_group_rules = response["SecurityGroupRules"]
+        return security_group_rules
 
     def _describe_security_group_vpc(self):
         vcps = {}
@@ -181,22 +178,6 @@ class Metacheck(ContextBase):
             return references
         return False
 
-    def is_ingress_rules_unrestricted(self):
-        is_ingress_rules_unrestricted = self.checked_security_group_rules[
-            "is_ingress_rules_unrestricted"
-        ]
-        if is_ingress_rules_unrestricted:
-            return is_ingress_rules_unrestricted
-        return False
-
-    def is_egress_rules_unrestricted(self):
-        is_egress_rules_unrestricted = self.checked_security_group_rules[
-            "is_egress_rules_unrestricted"
-        ]
-        if is_egress_rules_unrestricted:
-            return is_egress_rules_unrestricted
-        return False
-
     def default(self):
         if self.security_group:
             if self.security_group["GroupName"] == "default":
@@ -233,8 +214,7 @@ class Metacheck(ContextBase):
             "public_ips": self.public_ips(),
             "managed_services": self.managed_services(),
             "its_referenced_by_a_security_group": self.its_referenced_by_a_security_group(),
-            "is_ingress_rules_unrestricted": self.is_ingress_rules_unrestricted(),
-            "is_egress_rules_unrestricted": self.is_egress_rules_unrestricted(),
+            "security_group_rules": self.security_group_rules,
             "public": self.public(),
             "default": self.default(),
             "attached": self.attached(),
