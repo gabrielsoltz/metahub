@@ -157,36 +157,6 @@ class Metacheck(ContextBase):
 
     # Context Config
 
-    def bucket_acl_cross_account(self):
-        acl_with_cross_account = []
-        if self.bucket_acl:
-            for grant in self.bucket_acl:
-                if grant["Grantee"]["Type"] == "CanonicalUser":
-                    if grant["Grantee"]["ID"] != self.cannonical_user_id:
-                        # perm = grant["Permission"]
-                        acl_with_cross_account.append(grant)
-        if acl_with_cross_account:
-            return acl_with_cross_account
-        return False
-
-    def bucket_acl_public(self):
-        public_acls = []
-        if self.bucket_acl:
-            for grant in self.bucket_acl:
-                if grant["Grantee"]["Type"] == "Group":
-                    # use only last part of URL as a key:
-                    #   http://acs.amazonaws.com/groups/global/AuthenticatedUsers
-                    #   http://acs.amazonaws.com/groups/global/AllUsers
-                    who = grant["Grantee"]["URI"].split("/")[-1]
-                    if who == "AllUsers" or who == "AuthenticatedUsers":
-                        # perm = grant["Permission"]
-                        # group all permissions (READ(_ACP), WRITE(_ACP), FULL_CONTROL) by AWS predefined groups
-                        # public_acls.setdefault(who, []).append(perm)
-                        public_acls.append(grant)
-        if public_acls:
-            return public_acls
-        return False
-
     def public_access_block_enabled(self):
         if self.bucket_public_access_block:
             for key, value in self.bucket_public_access_block.items():
@@ -235,8 +205,7 @@ class Metacheck(ContextBase):
             "resource_policy": self.resource_policy,
             "website_enabled": self.website_enabled(),
             "bucket_acl": self.bucket_acl,
-            "bucket_acl_cross_account": self.bucket_acl_cross_account(),
-            "bucket_acl_public": self.bucket_acl_public(),
+            "cannonical_user_id": self.cannonical_user_id,
             "public_access_block_enabled": self.public_access_block_enabled(),
             "account_public_access_block_enabled": self.account_public_access_block_enabled(),
             "public": self.public(),
