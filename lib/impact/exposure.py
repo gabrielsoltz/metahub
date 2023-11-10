@@ -1,3 +1,4 @@
+from lib.impact.access import Access
 from lib.impact.helpers import check_key, get_associated_resources, get_config_key
 
 
@@ -47,6 +48,8 @@ class Exposure:
     def get_exposure(self, resource_arn, resource_values):
         self.logger.info("Calculating exposure for resource: %s", resource_arn)
 
+        resource_type = resource_values.get("ResourceType")
+
         unrestricted_ingress_rules = []
         unrestricted_egress_rules = []
         entrypoint = None
@@ -54,6 +57,15 @@ class Exposure:
         # Public Config
         # This is a standard key we add at the resource level to check if the resoruce it's public at their config.
         resource_public_config = get_config_key(resource_values, "public")
+
+        # Resource Policy, for some resources, exposure is defined using a resource policy.
+        # We will neeed to evaluate this policy to check if the resource is public.
+        resource_policy = get_config_key(resource_values, "resource_policy")
+        unrestricted_policy_access = False
+        if resource_policy:
+            access = Access(self.logger).get_access(resource_arn, resource_values)
+            if "unrestricted" in access:
+                unrestricted_policy_access = True
 
         # Entrypoint
         # We check all possible entrypoint. This is a bit messy, probably some standarizationg would be good at the resource.
@@ -66,6 +78,7 @@ class Exposure:
             "endpoint",
             "private_ip",
             "private_dns",
+            "website_enabled",
         ]
         for ep in entrypoints:
             entrypoint = get_config_key(resource_values, ep)
@@ -91,7 +104,9 @@ class Exposure:
                         sg_details, "security_group_rules"
                     )
                     if security_groups_rules:
-                        checked_rules = self.check_security_group_rules(rules)
+                        checked_rules = self.check_security_group_rules(
+                            security_groups_rules
+                        )
                         unrestricted_ingress_rules.extend(
                             checked_rules["unrestricted_ingress_rules"]
                         )
@@ -112,15 +127,36 @@ class Exposure:
         ):
             return {"unknown": exposure_checks}
 
-        if (resource_public_config and unrestricted_ingress_rules) or (
-            resource_public_config and not security_groups
+        # Effectively Public If:
+        # 1. Public config and unrestricted SG ingress rules
+        # 2. Public config and no SG and no resource policy
+        # 3. Public config and unrestricted policy access
+        if (
+            (resource_public_config and unrestricted_ingress_rules)
+            or (resource_public_config and not security_groups and not resource_policy)
+            or (resource_public_config and unrestricted_policy_access)
         ):
+            # These are not effectively public, but they could create a public resource.
+            if resource_type in (
+                "AwsEc2Subnet",
+                "AwsEc2LaunchTemplate",
+                "AwsAutoScalingLaunchConfiguration",
+            ):
+                return {"launch-public": exposure_checks}
             return {"effectively-public": exposure_checks}
 
-        if resource_public_config and not unrestricted_ingress_rules:
+        # Restricted Public If:
+        # 1. Public config and no unrestricted SG ingress rules and no unrestricted policy access
+        if resource_public_config and (
+            not unrestricted_ingress_rules and not unrestricted_policy_access
+        ):
             return {"restricted-public": exposure_checks}
 
-        if not resource_public_config and unrestricted_ingress_rules:
+        # Restricted Private If:
+        # 1. No public config and unrestricted SG ingress rules or unrestricted policy access
+        if not resource_public_config and (
+            unrestricted_ingress_rules or unrestricted_policy_access
+        ):
             return {"unrestricted-private": exposure_checks}
 
         return {"restricted": exposure_checks}

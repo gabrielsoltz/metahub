@@ -41,6 +41,7 @@ class Encryption:
         if resource_type in (
             "AwsElasticsearchDomain",
             "AwsElastiCacheCacheCluster",
+            "AwsElastiCacheReplicationGroup",
         ):
             resource_encryption_config = False
             at_rest_encryption = get_config_key(resource_values, "at_rest_encryption")
