@@ -17,6 +17,7 @@ from lib.context.resources import (
     AwsEfsFileSystem,
     AwsEksCluster,
     AwsElastiCacheCacheCluster,
+    AwsElastiCacheReplicationGroup,
     AwsElasticsearchDomain,
     AwsElbLoadBalancer,
     AwsElbv2LoadBalancer,
