@@ -129,28 +129,30 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 **Exposure** evaluates the how the the affected resource is exposed to other networks. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP or if it is protected by a firewall or a security group.
 
-| **Possible Statuses**   | **Description** |
-| ----------------------- | --------------- |
-| 🔴 effectively-public   |                 |
-| 🟠 restricted-public    |                 |
-| 🟠 unrestricted-private |                 |
-| 🟢 restricted           |                 |
-| 🔵 unknown              |                 |
+| **Possible Statuses**   | **Description**                                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 🔴 effectively-public   | The resource is effectively public from the Internet.                                                          |
+| 🟠 restricted-public    | The resource is public, but there is a restriction like a Security Group.                                      |
+| 🟠 unrestricted-private | The resource is private but unrestricted, like an open security group.                                         |
+| 🟠 launch-public        | These are resources that can launch other resources as public. For example, an Auto Scaling group or a Subnet. |
+| 🟢 restricted           | The resource is restricted.                                                                                    |
+| 🔵 unknown              | The resource couldn't be checked                                                                               |
 
 ## Access
 
-**Access** evaluates the resource policy layer. MetaHub checks every available policy including: IAM Managed policies, IAM Inline policies, Resource Policies, and any association to other resources like IAM Roles which are then also analyzed as part of the affected resource. An unrestricted policy is not only an itsue itself of that policy, it afected any other resource which is using it.
+**Access** evaluates the resource policy layer. MetaHub checks every available policy including: IAM Managed policies, IAM Inline policies, Resource Policies, Bucket ACLS, and any association to other resources like IAM Roles which its policies are also analyzed . An unrestricted policy is not only an itsue itself of that policy, it afected any other resource which is using it.
 
-| **Possible Statuses**      | **Description** |
-| -------------------------- | --------------- |
-| 🔴 unrestricted            |                 |
-| 🔴 untrusted-principal     |                 |
-| 🟠 unrestricted-principal  |                 |
-| 🟠 cross-account-principal |                 |
-| 🟠 unrestricted-actions    |                 |
-| 🟠 dangerous-actions       |                 |
-| 🟢 restricted              |                 |
-| 🔵 unknown                 |                 |
+| **Possible Statuses**      | **Description**                                                                                                                              |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 unrestricted            | The principal is unrestricted, without any condition or restriction.                                                                         |
+| 🔴 untrusted-principal     | The principal is an AWS Account, not part of your trusted accounts.                                                                          |
+| 🟠 unrestricted-principal  | The principal is not restricted, defined with a wildcard. It could be conditions restricting it or other restrictions like s3 public blocks. |
+| 🟠 cross-account-principal | The principal is from another AWS account.                                                                                                   |
+| 🟠 unrestricted-actions    | The actions are defined using wildcards.                                                                                                     |
+| 🟠 dangerous-actions       | Some dangerous actions are defined as part of this policy.                                                                                   |
+| 🟠 unrestricted-service    | The policy allows an AWS service as principal without restriction.                                                                           |
+| 🟢 restricted              | The policy is restricted.                                                                                                                    |
+| 🔵 unknown                 | The policy couldn't be checked.                                                                                                              |
 
 ## Encryption
 
@@ -168,10 +170,10 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 | **Possible Statuses** | **Description** |
 | --------------------- | --------------- |
-| 🔴 not-attached       |                 |
-| 🔴 not-running        |                 |
-| 🟢 attached           |                 |
-| 🟢 running            |                 |
+| 🟠 attached           |                 |
+| 🟠 running            |                 |
+| 🟢 not-attached       |                 |
+| 🟢 not-running        |                 |
 | 🔵 unknown            |                 |
 
 ## Environment
@@ -180,7 +182,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 | **Possible Statuses** | **Description** |
 | --------------------- | --------------- |
-| 🔴 production         |                 |
+| 🟠 production         |                 |
 | 🟢 staging            |                 |
 | 🟢 development        |                 |
 | 🔵 unknown            |                 |

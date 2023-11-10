@@ -10,6 +10,7 @@ class Access:
         self.logger.info("Calculating access for resource: %s", resource_arn)
         self.resource_arn = resource_arn
         self.resource_account_id = resource_values.get("AwsAccountId")
+        self.cannonical_user_id = get_config_key(resource_values, "cannonical_user_id")
 
         access_checks = {
             "unrestricted": {},
@@ -18,6 +19,7 @@ class Access:
             "cross_account_principal": {},
             "wildcard_actions": {},
             "dangerous_actions": {},
+            "unrestricted_services": {},
         }
 
         # Helper function to check policies and update access_checks
@@ -28,91 +30,26 @@ class Access:
                     if check_data:
                         access_checks[check_type].update({policy_name: check_data})
 
-        # To Do:
-        # - Check S3 Public Blocks
-        # - Check S3 Bucket ACLs
+        # Helper function to check policies and update access_checks
+        def check_bucket_acl_and_update(policy_json, policy_name):
+            if policy_json:
+                policy_checks = self.check_bucket_acl(policy_json)
+                for check_type, check_data in policy_checks.items():
+                    if check_data:
+                        access_checks[check_type].update({policy_name: check_data})
 
-        # To add as part of policy:
-        # # Resource S3 Public Block
-        # (
-        #     s3_resource_block_public_acls,
-        #     s3_resource_block_public_policy,
-        #     s3_resource_ignore_public_acls,
-        #     s3_resource_restrict_public_buckets,
-        # ) = (
-        #     False,
-        #     False,
-        #     False,
-        #     False,
-        # )
-        # s3_resource_public_block = get_config_key(
-        #     resource_values, "public_access_block_enabled"
-        # )
-        # if s3_resource_public_block:
-        #     s3_resource_block_public_acls = s3_resource_public_block.get(
-        #         "BlockPublicAcls"
-        #     )
-        #     s3_resource_block_public_policy = s3_resource_public_block.get(
-        #         "BlockPublicPolicy"
-        #     )
-        #     s3_resource_ignore_public_acls = s3_resource_public_block.get(
-        #         "IgnorePublicAcls"
-        #     )
-        #     s3_resource_restrict_public_buckets = s3_resource_public_block.get(
-        #         "RestrictPublicBuckets"
-        #     )
-        # # Account S3 Public Block
-        # (
-        #     s3_account_block_public_acls,
-        #     s3_account_block_public_policy,
-        #     s3_account_ignore_public_acls,
-        #     s3_account_restrict_public_buckets,
-        # ) = (
-        #     False,
-        #     False,
-        #     False,
-        #     False,
-        # )
-        # s3_account_public_block = get_config_key(
-        #     resource_values, "account_public_access_block_enabled"
-        # )
-        # if s3_account_public_block:
-        #     s3_account_block_public_acls = s3_account_public_block.get(
-        #         "BlockPublicAcls"
-        #     )
-        #     s3_account_block_public_policy = s3_account_public_block.get(
-        #         "BlockPublicPolicy"
-        #     )
-        #     s3_account_ignore_public_acls = s3_account_public_block.get(
-        #         "IgnorePublicAcls"
-        #     )
-        #     s3_account_restrict_public_buckets = s3_account_public_block.get(
-        #         "RestrictPublicBuckets"
-        #     )
-        # # Let's create the final variables, based on the previous ones
-        # (
-        #     s3_block_public_acls,
-        #     s3_block_public_policy,
-        #     s3_ignore_public_acls,
-        #     s3_restrict_public_buckets,
-        # ) = (
-        #     False,
-        #     False,
-        #     False,
-        #     False,
-        # )
-        # if s3_resource_public_block or s3_account_public_block:
-        #     if s3_resource_block_public_acls or s3_account_block_public_acls:
-        #         pass
-        #     if s3_resource_block_public_policy or s3_account_block_public_policy:
-        #         pass
-        #     if s3_resource_ignore_public_acls or s3_account_ignore_public_acls:
-        #         pass
-        #     if (
-        #         s3_resource_restrict_public_buckets
-        #         or s3_account_restrict_public_buckets
-        #     ):
-        #         pass
+        # Check S3 Public Blocks
+        (
+            self.s3_block_public_acls,
+            self.s3_block_public_policy,
+            self.s3_ignore_public_acls,
+            self.s3_restrict_public_buckets,
+        ) = self.check_s3_public_block(resource_values)
+
+        # Bucket ACL
+        bucket_acl = get_config_key(resource_values, "bucket_acl")
+        if bucket_acl:
+            check_bucket_acl_and_update(bucket_acl, "bucket_acl")
 
         # Resource Policy
         resource_policy = get_config_key(resource_values, "resource_policy")
@@ -194,10 +131,14 @@ class Access:
             return {"cross-account-principal": access_checks}
         if "wildcard_principal" in access_checks:
             return {"unrestricted-principal": access_checks}
+        if "unrestricted_services" in access_checks:
+            return {"unrestricted-services": access_checks}
 
         return {"restricted": access_checks}
 
     def check_policy(self, policy):
+        principal_amazon_accounts = ["cloudfront"]
+
         self.logger.info("Checking policy for resource: %s", self.resource_arn)
         failed_statements = {
             "wildcard_principal": [],
@@ -206,6 +147,7 @@ class Access:
             "wildcard_actions": [],
             "unrestricted": [],
             "dangerous_actions": [],
+            "unrestricted_services": [],
         }
         statements = []
         try:
@@ -216,18 +158,100 @@ class Access:
             )
             return failed_statements
         for statement in statements:
-            if self.wildcard_principal(statement):
-                failed_statements["wildcard_principal"].append(statement)
-            if self.cross_account_principal(statement):
-                failed_statements["cross_account_principal"].append(statement)
-            if self.untrusted_principal(statement):
-                failed_statements["untrusted_principal"].append(statement)
-            if self.wildcard_actions(statement):
-                failed_statements["wildcard_actions"].append(statement)
-            if self.unrestricted(statement):
-                failed_statements["unrestricted"].append(statement)
-            if self.dangerous_actions(statement):
-                failed_statements["dangerous_actions"].append(statement)
+            (
+                effect,
+                principal,
+                not_principal,
+                condition,
+                action,
+                not_action,
+                resource,
+            ) = self.parse_statement(statement)
+            if effect == "Allow":
+                # Wildcard or Unrestricted Principal
+                all_principals = self.standardize_principals(principal)
+                for p in all_principals:
+                    if "*" in p:
+                        if condition and not self.is_unrestricted_conditions(condition):
+                            failed_statements["wildcard_principal"].append(statement)
+                        else:
+                            if self.s3_restrict_public_buckets:
+                                failed_statements["wildcard_principal"].append(
+                                    statement
+                                )
+                            else:
+                                failed_statements["unrestricted"].append(statement)
+                if (
+                    not_principal is not None
+                ):  # If Allow and Not Principal, means all other principals
+                    if condition and not self.is_unrestricted_conditions(condition):
+                        failed_statements["wildcard_principal"].append(statement)
+                    else:
+                        if self.s3_restrict_public_buckets:
+                            failed_statements["wildcard_principal"].append(statement)
+                        else:
+                            failed_statements["unrestricted"].append(statement)
+                # Cross Account or Untrusted Principal
+                aws_principals = self.standardize_principals(principal, "AWS")
+                for p in aws_principals:
+                    if "*" not in p:
+                        if p.startswith("arn:"):
+                            account_id = p.split(":")[4]
+                        else:
+                            account_id = p
+                        if (
+                            account_id != self.resource_account_id
+                            and account_id not in principal_amazon_accounts
+                        ):
+                            if trusted_accounts and account_id not in trusted_accounts:
+                                failed_statements["untrusted_principal"].append(
+                                    statement
+                                )
+                            else:
+                                failed_statements["cross_account_principal"].append(
+                                    statement
+                                )
+                # Unrestricted Service
+                service_principals = self.standardize_principals(principal, "Service")
+                for p in service_principals:
+                    if not condition or (
+                        condition and self.is_unrestricted_conditions(condition)
+                    ):
+                        failed_statements["unrestricted_services"].append(statement)
+                # Wildcard or Dangerous Actions
+                actions = self.standardize_actions(action)
+                for a in actions:
+                    if a in dangerous_iam_actions:
+                        failed_statements["dangerous_actions"].append(statement)
+                    if "*" in a:
+                        failed_statements["wildcard_actions"].append(statement)
+
+        return failed_statements
+
+    def check_bucket_acl(self, bucket_acl):
+        self.logger.info("Checking bucket acl for resource: %s", self.resource_arn)
+        failed_statements = {
+            "cross_account_principal": [],
+            "unrestricted": [],
+        }
+        if bucket_acl:
+            for grant in bucket_acl:
+                if grant["Grantee"]["Type"] == "CanonicalUser":
+                    if self.cannonical_user_id:
+                        if grant["Grantee"]["ID"] != self.cannonical_user_id:
+                            # perm = grant["Permission"]
+                            failed_statements["cross_account_principal"].append(grant)
+                if grant["Grantee"]["Type"] == "Group":
+                    # use only last part of URL as a key:
+                    #   http://acs.amazonaws.com/groups/global/AuthenticatedUsers
+                    #   http://acs.amazonaws.com/groups/global/AllUsers
+                    who = grant["Grantee"]["URI"].split("/")[-1]
+                    if who == "AllUsers" or who == "AuthenticatedUsers":
+                        if self.s3_ignore_public_acls:
+                            failed_statements["wildcard_principal"].append(grant)
+                        else:
+                            failed_statements["unrestricted"].append(grant)
+
         return failed_statements
 
     def parse_statement(self, statement):
@@ -246,23 +270,30 @@ class Access:
             return None, None, None, None, None, None, None
         return effect, principal, not_principal, condition, action, not_action, resource
 
-    def santandarize_principals(self, principal):
-        if "AWS" in principal:
-            principals = principal["AWS"]
-        elif "Service" in principal:
-            principals = principal["Service"]
-        elif "Federated" in principal:
-            principals = principal["Federated"]
+    def standardize_principals(self, principal, prequiredtype=None):
+        principals = []
+        if principal == "*":
+            principals.append("*")
         else:
-            principals = principal
-        if type(principals) is not list:
-            principals = [principals]
+            if not prequiredtype:
+                for ptype in principal:
+                    if type(principal[ptype]) is list:
+                        principals.extend(principal[ptype])
+                    else:
+                        principals.append(principal[ptype])
+            if prequiredtype and prequiredtype in principal:
+                if type(principal[prequiredtype]) is list:
+                    principals.extend(principal[prequiredtype])
+                else:
+                    principals.append(principal[prequiredtype])
         return principals
 
     def standardize_actions(self, action):
-        actions = action
-        if type(action) is not list:
-            actions = [action]
+        actions = []
+        if action:
+            actions = action
+            if type(action) is not list:
+                actions = [action]
         return actions
 
     def standardize_statements(self, statement):
@@ -271,168 +302,95 @@ class Access:
             statements = [statement]
         return statements
 
-    def wildcard_principal(self, statement):
-        """
-        Check if resource policy (S3, SQS) is allowed for principal wildcard
-        """
-        (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if principal == "*" or principal.get("AWS") == "*":
-                return statement
+    def is_unrestricted_conditions(self, condition):
+        if condition:
+            if "IpAddress" in condition:
+                if "*" in condition["IpAddress"]:
+                    return True
+                if "/0" in condition["IpAddress"]:
+                    return True
         return False
 
-    def cross_account_principal(self, statement):
-        """
-        Check if policy is allowed for principal cross account
-        """
-        amazon_accounts = ["cloudfront"]
+    def check_s3_public_block(self, resource_values):
+        # Resource S3 Public Block
         (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if principal and principal != "*" and principal.get("AWS") != "*":
-                principals = self.santandarize_principals(principal)
-                for p in principals:
-                    # We are only scanninng ARN principals
-                    if not p.startswith("arn:"):
-                        continue
-                    try:
-                        account_id = p.split(":")[4]
-                        if (
-                            account_id != self.resource_account_id
-                            and account_id not in amazon_accounts
-                        ):
-                            return statement
-                    except (IndexError, TypeError) as err:
-                        self.logger.warning(
-                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. - %s",
-                            p,
-                            self.resource_arn,
-                            err,
-                        )
-        return False
-
-    def untrusted_principal(self, statement):
-        """ """
-        if not trusted_accounts:
-            self.logger.info(
-                "No trusted accounts defined in configuration, skipping check for resource %s",
-                self.resource_arn,
+            s3_resource_block_public_acls,
+            s3_resource_block_public_policy,
+            s3_resource_ignore_public_acls,
+            s3_resource_restrict_public_buckets,
+        ) = (
+            False,
+            False,
+            False,
+            False,
+        )
+        s3_resource_public_block = get_config_key(
+            resource_values, "public_access_block_enabled"
+        )
+        if s3_resource_public_block:
+            s3_resource_block_public_acls = s3_resource_public_block.get(
+                "BlockPublicAcls"
             )
-            return False
-        amazon_accounts = ["cloudfront"]
+            s3_resource_block_public_policy = s3_resource_public_block.get(
+                "BlockPublicPolicy"
+            )
+            s3_resource_ignore_public_acls = s3_resource_public_block.get(
+                "IgnorePublicAcls"
+            )
+            s3_resource_restrict_public_buckets = s3_resource_public_block.get(
+                "RestrictPublicBuckets"
+            )
+        # Account S3 Public Block
         (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if principal and principal != "*" and principal.get("AWS") != "*":
-                principals = self.santandarize_principals(principal)
-                for p in principals:
-                    # We are only scanninng ARN principals
-                    if not p.startswith("arn:"):
-                        continue
-                    try:
-                        account_id = p.split(":")[4]
-                        if (
-                            account_id not in trusted_accounts
-                            and account_id not in amazon_accounts
-                            and account_id != self.resource_account_id
-                        ):
-                            return statement
-                    except IndexError:
-                        self.logger.warning(
-                            "Parsing principal %s for resource %s doesn't look like ARN, ignoring.. ",
-                            p,
-                            self.resource_arn,
-                        )
-        return False
-
-    def wildcard_actions(self, statement):
-        """ """
+            s3_account_block_public_acls,
+            s3_account_block_public_policy,
+            s3_account_ignore_public_acls,
+            s3_account_restrict_public_buckets,
+        ) = (
+            False,
+            False,
+            False,
+            False,
+        )
+        s3_account_public_block = get_config_key(
+            resource_values, "account_public_access_block_enabled"
+        )
+        if s3_account_public_block:
+            s3_account_block_public_acls = s3_account_public_block.get(
+                "BlockPublicAcls"
+            )
+            s3_account_block_public_policy = s3_account_public_block.get(
+                "BlockPublicPolicy"
+            )
+            s3_account_ignore_public_acls = s3_account_public_block.get(
+                "IgnorePublicAcls"
+            )
+            s3_account_restrict_public_buckets = s3_account_public_block.get(
+                "RestrictPublicBuckets"
+            )
+        # Let's create the final variables, based on the previous ones
         (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if action:
-                actions = self.standardize_actions(action)
-                for a in actions:
-                    if "*" in a:
-                        return statement
-            # Not Action (all other actions are allowed)
-            if not_action:
-                return statement
-        return False
-
-    def dangerous_actions(self, statement):
-        """ """
-        (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        if effect == "Allow":
-            if action:
-                actions = self.standardize_actions(action)
-                for a in actions:
-                    if a in dangerous_iam_actions:
-                        return statement
-        return False
-
-    def unrestricted(self, statement):
-        """
-        There is no principal defined. This means that the resource is unrestricted if the policy is attached to a resource.
-        """
-        (
-            effect,
-            principal,
-            not_principal,
-            condition,
-            action,
-            not_action,
-            resource,
-        ) = self.parse_statement(statement)
-        suffix = "/0"
-        if effect == "Allow":
-            if principal == "*" or principal.get("AWS") == "*":
-                if condition is not None:
-                    # IpAddress Condition with /0
-                    if suffix in str(condition.get("IpAddress")):
-                        return statement
-                    # To Do: Add other public conditions
-                else:
-                    # No Condition
-                    return statement
-            # Not Principal (all other principals)
-            if not_principal is not None:
-                return statement
-        return False
+            s3_block_public_acls,
+            s3_block_public_policy,
+            s3_ignore_public_acls,
+            s3_restrict_public_buckets,
+        ) = (
+            False,
+            False,
+            False,
+            False,
+        )
+        if s3_resource_block_public_acls or s3_account_block_public_acls:
+            s3_block_public_acls = True
+        if s3_resource_block_public_policy or s3_account_block_public_policy:
+            s3_block_public_policy = True
+        if s3_resource_ignore_public_acls or s3_account_ignore_public_acls:
+            s3_ignore_public_acls = True
+        if s3_resource_restrict_public_buckets or s3_account_restrict_public_buckets:
+            s3_restrict_public_buckets = True
+        return (
+            s3_block_public_acls,
+            s3_block_public_policy,
+            s3_ignore_public_acls,
+            s3_restrict_public_buckets,
+        )

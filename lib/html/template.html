@@ -172,7 +172,7 @@
               if (value === "effectively-public") {
                 color = "red";
                 emoji = "🔴";
-              } else if (value === "restricted-public" || value === "unrestricted-private") {
+              } else if (value === "restricted-public" || value === "unrestricted-private" || value === "launch-public") {
                 color = "orange";
                 emoji = "🟠";
               } else if (value === "restricted") {
@@ -198,7 +198,7 @@
                 if (value === "unrestricted" || value === "untrusted-principal") {
                   color = "red";
                   emoji = "🔴";
-                } else if (value === "unrestricted-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || value == "dangerous-actions" ) {
+                } else if (value === "unrestricted-principal" || value === "cross-account-principal" || value === "unrestricted-actions" || value == "dangerous-actions" || value == "unrestricted-service") {
                   color = "orange";
                   emoji = "🟠";
                 } else if (value === "restricted") {
@@ -245,11 +245,11 @@
           var color;
           var emoji;
           if (value === "not-attached" || value === "not-running") {
-            color = "red";
-            emoji = "🔴";
-          } else if (value === "attached" || value === "running") {
             color = "green";
             emoji = "🟢";
+          } else if (value === "attached" || value === "running") {
+            color = "orange";
+            emoji = "🟠";
           } else if (value === "unknown") {
             color = "blue";
             emoji = "🔵";
@@ -268,8 +268,8 @@
             var color;
             var emoji;
             if (value === "production") {
-              color = "red";
-              emoji = "🔴";
+              color = "orange";
+              emoji = "🟠";
             } else if (value === "staging" || value === "development") {
               color = "green";
               emoji = "🟢";
