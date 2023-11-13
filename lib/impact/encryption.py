@@ -79,6 +79,10 @@ class Encryption:
         ):
             return {"unknown": encryption_checks}
 
+        # Resources without unencrypted resources and no encryption config are unknown.
+        if not unencrypted_resources and resource_encryption_config is None:
+            return {"unknown": encryption_checks}
+
         if unencrypted_resources or resource_encryption_config is False:
             return {"unencrypted": encryption_checks}
 
