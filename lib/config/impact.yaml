@@ -7,7 +7,7 @@
 #       Score: Score for this value
 
 status:
-  weight: 10
+  weight: 50
   values:
     - attached:
         score: 1
@@ -21,43 +21,45 @@ status:
         score: 0
 
 exposure:
-  weight: 1
+  weight: 25
   values:
     - effectively-public:
         score: 1
     - restricted-public:
         score: 0.4
-    - unknown-public:
-        score: 0
     - unrestricted-private:
-        score: 0.5
+        score: 0.3
+    - launch-public:
+        score: 0.1
     - restricted:
         score: 0
     - unknown:
         score: 0
 
 access:
-  weight: 1
+  weight: 25
   values:
     - unrestricted:
         score: 1
     - untrusted-principal:
-        score: 0.8
+        score: 0.7
     - unrestricted-principal:
-        score: 0.5
+        score: 0.4
     - cross-account-principal:
-        score: 0.5
-    - unrestricted-actions:
-        score: 0.5
+        score: 0.3
     - dangerous-actions:
-        score: 0.5
+        score: 0.3
+    - unrestricted-actions:
+        score: 0.3
+    - unrestricted-service:
+        score: 0.1
     - restricted:
         score: 0
     - unknown:
         score: 0
 
 encryption:
-  weight: 0.1
+  weight: 10
   values:
     - unencrypted:
         score: 1
@@ -67,7 +69,7 @@ encryption:
         score: 0
 
 environment:
-  weight: 1
+  weight: 15
   values:
     - production:
         score: 1
