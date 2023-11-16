@@ -25,6 +25,9 @@ class Metacheck(ContextBase):
         self.subnet = self.describe_subnets()
         if not self.subnet:
             return False
+        self.all_network_interfaces = self.describe_network_interfaces()
+        self.network_interfaces = self._describe_network_interfaces_interfaces()
+        self.instances = self._describe_network_interfaces_instances()
         # Associated MetaChecks
         self.route_tables = self.describe_route_tables()
 
@@ -98,6 +101,52 @@ class Metacheck(ContextBase):
 
         return route_tables
 
+    def describe_network_interfaces(self):
+        response = self.client.describe_network_interfaces(
+            Filters=[
+                {
+                    "Name": "subnet-id",
+                    "Values": [
+                        self.resource_id,
+                    ],
+                },
+            ],
+        )
+        return response["NetworkInterfaces"]
+
+    def _describe_network_interfaces_interfaces(self):
+        network_interfaces = {}
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                arn = generate_arn(
+                    network_interface["NetworkInterfaceId"],
+                    "ec2",
+                    "network_interface",
+                    self.region,
+                    self.account,
+                    self.partition,
+                )
+                network_interfaces[arn] = {}
+        return network_interfaces
+
+    def _describe_network_interfaces_instances(self):
+        instances = {}
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("Attachment") and network_interface.get(
+                    "Attachment"
+                ).get("InstanceId"):
+                    arn = generate_arn(
+                        network_interface.get("Attachment").get("InstanceId"),
+                        "ec2",
+                        "instance",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    instances[arn] = {}
+        return instances
+
     # Context Config
 
     def cidr(self):
@@ -129,9 +178,35 @@ class Metacheck(ContextBase):
             return True
         return False
 
+    def attached(self):
+        if self.subnet:
+            if self.network_interfaces:
+                return True
+        return False
+
+    def managed_services(self):
+        managed_services = []
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("RequesterManaged"):
+                    managed_services.append(network_interface.get("Description"))
+        return managed_services
+
+    def public_ips(self):
+        public_ips = []
+        if self.all_network_interfaces:
+            for network_interface in self.all_network_interfaces:
+                if network_interface.get("Association"):
+                    public_ips.append(
+                        network_interface.get("Association").get("PublicIp")
+                    )
+        return public_ips
+
     def associations(self):
         associations = {
             "route_tables": self.route_tables,
+            "network_interfaces": self.network_interfaces,
+            "instances": self.instances,
         }
         return associations
 
@@ -142,5 +217,8 @@ class Metacheck(ContextBase):
             "default": self.default(),
             "public": self.public(),
             "resource_policy": self.resource_policy(),
+            "public_ips": self.public_ips(),
+            "managed_services": self.managed_services(),
+            "attached": self.attached(),
         }
         return checks

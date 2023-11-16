@@ -118,6 +118,16 @@ class Access:
         ):
             return {"unknown": access_checks}
 
+        # Resources without policies are unknown.
+        if (
+            bucket_acl is None
+            and resource_policy is None
+            and inline_policies is None
+            and iam_policies is None
+            and iam_roles is None
+        ):
+            return {"unknown": access_checks}
+
         # We return the most critical access check
         if "unrestricted" in access_checks:
             return {"unrestricted": access_checks}

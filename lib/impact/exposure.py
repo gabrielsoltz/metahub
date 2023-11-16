@@ -127,6 +127,14 @@ class Exposure:
         ):
             return {"unknown": exposure_checks}
 
+        # Resources without public config, security groups or resource policy are unknown.
+        if (
+            resource_public_config is None
+            and not unrestricted_ingress_rules
+            and not unrestricted_policy_access
+        ):
+            return {"unknown": exposure_checks}
+
         # Effectively Public If:
         # 1. Public config and unrestricted SG ingress rules
         # 2. Public config and no SG and no resource policy
@@ -154,7 +162,7 @@ class Exposure:
 
         # Restricted Private If:
         # 1. No public config and unrestricted SG ingress rules or unrestricted policy access
-        if not resource_public_config and (
+        if resource_public_config is False and (
             unrestricted_ingress_rules or unrestricted_policy_access
         ):
             return {"unrestricted-private": exposure_checks}
