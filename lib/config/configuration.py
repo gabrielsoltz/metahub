@@ -53,18 +53,18 @@ days_to_consider_unrotated = 90
 # tag_ENVIRONMENT = {"TAG-KEY": ["TAG-VALUE1", "TAG-VALUE1", "TAG-VALUE3"]}
 tags_production = {
     "Environment": ["Production", "production", "prd"],
-    "Env": ["production"],
-    "environment": ["prd"],
+    "Env": ["Production", "production", "prd"],
+    "environment": ["Production", "production", "prd"],
 }
 tags_staging = {
     "Environment": ["Staging", "staging", "stg"],
-    "Env": ["stg"],
-    "environment": ["stg"],
+    "Env": ["Staging", "staging", "stg"],
+    "environment": ["Staging", "staging", "stg"],
 }
 tags_development = {
     "Environment": ["Development", "development", "dev"],
-    "Env": ["dev"],
-    "environment": ["dev"],
+    "Env": ["Development", "development", "dev"],
+    "environment": ["Development", "development", "dev"],
 }
 
 
