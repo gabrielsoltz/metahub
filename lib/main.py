@@ -1,18 +1,13 @@
 import json
-from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from sys import argv, exit
-from threading import Lock
-from time import strftime
 
-from alive_progress import alive_bar
 from rich.columns import Columns
 from rich.console import Console
 
 from lib.AwsHelpers import get_account_alias, get_account_id, get_region
 from lib.config.configuration import sh_default_filters
-from lib.findings import evaluate_finding
+from lib.findings import enrich_findings, generate_findings, update_findings
 from lib.helpers import (
-    confirm_choice,
     generate_rich,
     get_logger,
     get_parser,
@@ -22,202 +17,7 @@ from lib.helpers import (
     print_title_line,
     test_python_version,
 )
-from lib.impact.impact import Impact
 from lib.outputs import generate_outputs
-from lib.securityhub import SecurityHub, parse_finding
-from lib.statistics import generate_statistics
-
-OUTPUT_DIR = "outputs/"
-TIMESTRF = strftime("%Y%m%d-%H%M%S")
-
-
-def generate_findings(
-    logger,
-    sh_filters,
-    sh_region,
-    sh_account,
-    sh_profile,
-    sh_role,
-    context,
-    mh_role,
-    mh_filters_config,
-    mh_filters_tags,
-    inputs,
-    asff_findings,
-    banners,
-):
-    mh_findings = {}
-    mh_findings_not_matched_findings = {}
-    mh_findings_short = {}
-    mh_inventory = []
-    AwsAccountData = {}
-
-    findings = []
-    if "file-asff" in inputs and asff_findings:
-        findings.extend(asff_findings)
-        print_table("Input ASFF findings found: ", len(asff_findings), banners=banners)
-    if "securityhub" in inputs:
-        sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-        sh_findings = sh.get_findings(sh_filters)
-        findings.extend(sh_findings)
-        print_table("Security Hub findings found: ", len(sh_findings), banners=banners)
-
-    resource_locks = {}
-
-    def process_finding(finding):
-        # Get the resource_arn from the finding
-        resource_arn, finding_parsed = parse_finding(finding)
-        # Get the lock for this resource
-        # To Do: If more than one finding for the same account, account_context could execute more than once for the same account
-        # Split the findings by account and execute the account_context only once per account
-        lock = resource_locks.get(resource_arn)
-
-        # If the lock does not exist, create it
-        if lock is None:
-            lock = Lock()
-            resource_locks[resource_arn] = lock
-
-        # Acquire the lock for this resource
-        with lock:
-            # Now process the finding
-            return evaluate_finding(
-                logger,
-                finding,
-                mh_findings,
-                mh_findings_not_matched_findings,
-                mh_inventory,
-                mh_findings_short,
-                AwsAccountData,
-                mh_role,
-                mh_filters_config,
-                mh_filters_tags,
-                context,
-            )
-
-    with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
-        try:
-            executor = (
-                ThreadPoolExecutor()
-            )  # create executor outside of context manager
-            # Create future tasks
-            futures = {
-                executor.submit(process_finding, finding) for finding in findings
-            }
-
-            try:
-                # Process futures as they complete
-                for future in as_completed(futures):
-                    (
-                        mh_findings,
-                        mh_findings_not_matched_findings,
-                        mh_findings_short,
-                        mh_inventory,
-                        AwsAccountData,
-                    ) = future.result()
-                    bar()
-
-            except KeyboardInterrupt:
-                print(
-                    "Keyboard interrupt detected, shutting down all tasks, please wait..."
-                )
-                for future in futures:
-                    future.cancel()  # cancel each future
-
-                # Wait for all futures to be cancelled
-                for future in as_completed(futures):
-                    try:
-                        future.result()  # this will raise a CancelledError if the future was cancelled
-                    except CancelledError:
-                        pass
-
-        except KeyboardInterrupt:
-            print("Keyboard interrupt detected during shutdown. Exiting...")
-        finally:
-            executor.shutdown(
-                wait=False
-            )  # shutdown executor without waiting for all threads to finish
-
-    mh_statistics = generate_statistics(mh_findings)
-
-    # Add Impact
-    imp = Impact(logger)
-    for resource_arn, resource_values in mh_findings.items():
-        impact_checks = imp.generate_impact_checks(resource_arn, resource_values)
-        mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
-            "impact"
-        ] = impact_checks
-    for resource_arn, resource_values in mh_findings.items():
-        impact_scoring = imp.generate_impact_scoring(resource_arn, resource_values)
-        mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[resource_arn][
-            "impact"
-        ]["score"] = impact_scoring
-    return mh_findings, mh_findings_short, mh_inventory, mh_statistics
-
-
-def update_findings(
-    logger,
-    mh_findings,
-    update,
-    sh_account,
-    sh_role,
-    sh_region,
-    update_filters,
-    sh_profile,
-    actions_confirmation,
-):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice(
-        "Are you sure you want to update all findings?", actions_confirmation
-    ):
-        update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
-        update_multiple_ProcessedFinding = []
-        update_multiple_UnprocessedFindings = []
-        for update in update_multiple:
-            for ProcessedFinding in update["ProcessedFindings"]:
-                logger.info("Updated Finding : " + ProcessedFinding["Id"])
-                update_multiple_ProcessedFinding.append(ProcessedFinding)
-            for UnprocessedFinding in update["UnprocessedFindings"]:
-                logger.error(
-                    "Error Updating Finding: "
-                    + UnprocessedFinding["FindingIdentifier"]["Id"]
-                    + " Error: "
-                    + UnprocessedFinding["ErrorMessage"]
-                )
-                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
-        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
-    return [], []
-
-
-def enrich_findings(
-    logger,
-    mh_findings,
-    sh_account,
-    sh_role,
-    sh_region,
-    sh_profile,
-    actions_confirmation,
-):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice(
-        "Are you sure you want to enrich all findings?", actions_confirmation
-    ):
-        update_multiple = sh.update_findings_meta(mh_findings)
-        update_multiple_ProcessedFinding = []
-        update_multiple_UnprocessedFindings = []
-        for update in update_multiple:
-            for ProcessedFinding in update["ProcessedFindings"]:
-                logger.info("Updated Finding : " + ProcessedFinding["Id"])
-                update_multiple_ProcessedFinding.append(ProcessedFinding)
-            for UnprocessedFinding in update["UnprocessedFindings"]:
-                logger.error(
-                    "Error Updating Finding: "
-                    + UnprocessedFinding["FindingIdentifier"]["Id"]
-                    + " Error: "
-                    + UnprocessedFinding["ErrorMessage"]
-                )
-                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
-        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
-    return [], []
 
 
 def count_mh_findings(mh_findings):
@@ -432,7 +232,7 @@ def main(args):
     print_table("Log Level: ", str(args.log_level), banners=banners)
 
     # Generate Findings
-    print_title_line("Generating Findings", banners=banners)
+    print_title_line("Reading Findings", banners=banners)
     (
         mh_findings,
         mh_findings_short,
