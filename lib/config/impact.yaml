@@ -17,8 +17,8 @@ status:
         score: 1
     - not-running:
         score: 0
-    - unknown:
-        score: 0
+    # - unknown:
+    #     score: 0
 
 exposure:
   weight: 25
@@ -33,8 +33,8 @@ exposure:
         score: 0.1
     - restricted:
         score: 0
-    - unknown:
-        score: 0
+    # - unknown:
+    #     score: 0
 
 access:
   weight: 25
@@ -55,8 +55,8 @@ access:
         score: 0.1
     - restricted:
         score: 0
-    - unknown:
-        score: 0
+    # - unknown:
+    #     score: 0
 
 encryption:
   weight: 10
@@ -65,8 +65,8 @@ encryption:
         score: 1
     - encrypted:
         score: 0
-    - unknown:
-        score: 0
+    # - unknown:
+    #     score: 0
 
 environment:
   weight: 15
@@ -77,5 +77,5 @@ environment:
         score: 0.3
     - development:
         score: 0
-    - unknown:
-        score: 0
+    # - unknown:
+    #     score: 0

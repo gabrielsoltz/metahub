@@ -11,12 +11,21 @@ from lib.config.resources import MetaHubResourcesConfig
 
 
 class Context:
-    def __init__(self, logger, finding, mh_filters_config, mh_filters_tags, mh_role):
+    def __init__(
+        self,
+        logger,
+        finding,
+        mh_filters_config,
+        mh_filters_tags,
+        mh_role,
+        cached_associated_resources,
+    ):
         self.logger = logger
         self.parse_finding(finding)
         self.get_session(mh_role)
         self.mh_filters_config = mh_filters_config
         self.mh_filters_tags = mh_filters_tags
+        self.cached_associated_resources = cached_associated_resources
         # Move to Config:
         self.drilled_down = True
 
@@ -95,7 +104,7 @@ class Context:
         # Execute Drilled
         if self.drilled_down:
             try:
-                hnld.execute_drilled_metachecks()
+                hnld.execute_drilled_metachecks(self.cached_associated_resources)
             except (AttributeError, Exception) as err:
                 if "should return None" in str(err):
                     self.logger.info(

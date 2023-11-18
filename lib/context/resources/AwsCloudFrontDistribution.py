@@ -38,7 +38,7 @@ class Metacheck(ContextBase):
         self.resource_id = (
             finding["Resources"][0]["Id"].split("/")[-1]
             if not drilled
-            else drilled.split("/")[-11]
+            else drilled.split("/")[-1]
         )
         self.resource_arn = finding["Resources"][0]["Id"] if not drilled else drilled
 

@@ -53,18 +53,18 @@ days_to_consider_unrotated = 90
 # tag_ENVIRONMENT = {"TAG-KEY": ["TAG-VALUE1", "TAG-VALUE1", "TAG-VALUE3"]}
 tags_production = {
     "Environment": ["Production", "production", "prd"],
-    "Env": ["production"],
-    "environment": ["prd"],
+    "Env": ["Production", "production", "prd"],
+    "environment": ["Production", "production", "prd"],
 }
 tags_staging = {
     "Environment": ["Staging", "staging", "stg"],
-    "Env": ["stg"],
-    "environment": ["stg"],
+    "Env": ["Staging", "staging", "stg"],
+    "environment": ["Staging", "staging", "stg"],
 }
 tags_development = {
     "Environment": ["Development", "development", "dev"],
-    "Env": ["dev"],
-    "environment": ["dev"],
+    "Env": ["Development", "development", "dev"],
+    "environment": ["Development", "development", "dev"],
 }
 
 
@@ -83,3 +83,16 @@ impact_columns = ["score", "exposure", "access", "encryption", "status", "enviro
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = True
+
+# Output directory
+outputs_dir = "outputs/"
+
+# Output file name date format
+outputs_time_str = "%Y%m%d-%H%M%S"
+
+# ---------------------------------- #
+# Other Configurations               #
+# ---------------------------------- #
+
+# Assume role duration in seconds
+assume_role_duration = 3600

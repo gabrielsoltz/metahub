@@ -56,148 +56,254 @@ class ContextBase:
 
         return mh_values_checks, mh_matched_checks
 
-    def execute_drilled_metachecks(self):
+    def execute_drilled_metachecks(self, cached_associated_resources):
         # Optimize drilled context by keeping a cache of drilled resources
-        self.drilled_cache = {}
+        self.drilled_cache = cached_associated_resources
 
-        def execute(resources, MetaCheck):
-            for resource in resources:
-                if resource not in self.drilled_cache:
-                    self.logger.info(
-                        "Running Drilled Context for resource {} from resource: {}".format(
-                            resource, self.resource_arn
-                        )
+        def execute(r, MetaCheck):
+            if r not in self.drilled_cache:
+                self.logger.info(
+                    "Running Drilled Context for resource {} from resource: {}".format(
+                        r, self.resource_arn
                     )
-                    try:
-                        resource_drilled = MetaCheck(
-                            self.logger,
-                            self.finding,
-                            False,
-                            self.sess,
-                            drilled=resource,
-                        )
-                        resource_drilled_output = (
-                            resource_drilled.output_checks_drilled()
-                        )
-                        resources[resource] = resource_drilled_output
-                        self.drilled_cache[resource] = resource_drilled_output
-
-                        # Double Drill (IAM Roles >> IAM Policies)
-                        if (
-                            hasattr(self, "iam_roles")
-                            and self.iam_roles
-                            and hasattr(resource_drilled, "iam_policies")
-                            and resource_drilled.iam_policies
-                            and self.resource_type != "AwsIamPolicy"
-                        ):
-                            from lib.context.resources.AwsIamPolicy import (
-                                Metacheck as IamPolicyMetacheck,
-                            )
-
-                            execute(resource_drilled.iam_policies, IamPolicyMetacheck)
-
-                        # Double Drill (Subnets >> Route Table)
-                        if (
-                            hasattr(self, "subnets")
-                            and self.subnets
-                            and hasattr(resource_drilled, "route_tables")
-                            and resource_drilled.route_tables
-                        ):
-                            from lib.context.resources.AwsEc2RouteTable import (
-                                Metacheck as RouteTableMetacheck,
-                            )
-
-                            execute(resource_drilled.route_tables, RouteTableMetacheck)
-
-                    except (AttributeError, Exception) as err:
-                        if "should return None" in str(err):
-                            self.logger.info(
-                                "Not Found Drilled resource %s from resource: %s",
-                                resource,
-                                self.resource_arn,
-                            )
-                        else:
-                            self.logger.error(
-                                "Error Running Drilled MetaChecks for resource %s from resource: %s - %s",
-                                resource,
-                                self.resource_arn,
-                                err,
-                            )
-                        resources[resource] = False
-                        self.drilled_cache[resource] = False
-                else:
-                    self.logger.info(
-                        "Ignoring (already checked) Drilled MetaChecks for resource {} from resource: {}".format(
-                            resource, self.resource_arn
-                        )
+                )
+                try:
+                    resource_drilled = MetaCheck(
+                        self.logger,
+                        self.finding,
+                        False,
+                        self.sess,
+                        drilled=r,
                     )
-                    resources[resource] = self.drilled_cache[resource]
+                    resource_drilled_output = resource_drilled.output_checks_drilled()
+                    self.drilled_cache[r] = resource_drilled_output
 
-        # Security Groups
-        if hasattr(self, "security_groups") and self.security_groups:
-            from lib.context.resources.AwsEc2SecurityGroup import (
-                Metacheck as SecurityGroupMetacheck,
-            )
+                except (AttributeError, Exception) as err:
+                    if "should return None" in str(err):
+                        self.logger.info(
+                            "Not Found Drilled resource %s from resource: %s",
+                            r,
+                            self.resource_arn,
+                        )
+                    else:
+                        self.logger.error(
+                            "Error Running Drilled MetaChecks for resource %s from resource: %s - %s",
+                            r,
+                            self.resource_arn,
+                            err,
+                        )
+                    resource_drilled = False
+                    resource_drilled_output = False
+                    self.drilled_cache[r] = False
+            else:
+                self.logger.info(
+                    "Ignoring (already checked) Drilled MetaChecks for resource {} from resource: {}".format(
+                        r, self.resource_arn
+                    )
+                )
+                resource_drilled = False
+                resource_drilled_output = self.drilled_cache[r]
 
-            execute(self.security_groups, SecurityGroupMetacheck)
+            return resource_drilled_output, resource_drilled
 
-        # IAM Roles
-        if hasattr(self, "iam_roles") and self.iam_roles:
-            from lib.context.resources.AwsIamRole import (
-                Metacheck as AwsIamRoleMetaCheck,
-            )
+        def check_associated_resources(resource, level):
+            # print ("Level: {}, Resource: {}".format(level, resource.resource_arn))
 
-            execute(self.iam_roles, AwsIamRoleMetaCheck)
+            # Security Groups
+            if (
+                hasattr(resource, "iam_users")
+                and resource.iam_users
+                and self.resource_type != "AwsIamUser"
+            ):
+                from lib.context.resources.AwsIamUser import (
+                    Metacheck as AwsIamUserMetacheck,
+                )
 
-        # IAM Policies
-        if hasattr(self, "iam_policies") and self.iam_policies:
-            from lib.context.resources.AwsIamPolicy import (
-                Metacheck as IamPolicyMetacheck,
-            )
+                for r, v in list(resource.iam_users.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, AwsIamUserMetacheck
+                    )
+                    resource.iam_users[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.iam_policies, IamPolicyMetacheck)
+            # Security Groups
+            if (
+                hasattr(resource, "security_groups")
+                and resource.security_groups
+                and self.resource_type != "AwsEc2SecurityGroup"
+            ):
+                from lib.context.resources.AwsEc2SecurityGroup import (
+                    Metacheck as SecurityGroupMetacheck,
+                )
 
-        # AutoScaling Groups
-        if hasattr(self, "autoscaling_groups") and self.autoscaling_groups:
-            from lib.context.resources.AwsAutoScalingAutoScalingGroup import (
-                Metacheck as AwsAutoScalingAutoScalingGroupMetacheck,
-            )
+                for r, v in list(resource.security_groups.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, SecurityGroupMetacheck
+                    )
+                    resource.security_groups[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.autoscaling_groups, AwsAutoScalingAutoScalingGroupMetacheck)
+            # IAM Roles
+            if (
+                hasattr(resource, "iam_roles")
+                and resource.iam_roles
+                and self.resource_type != "AwsIamRole"
+            ):
+                from lib.context.resources.AwsIamRole import (
+                    Metacheck as AwsIamRoleMetaCheck,
+                )
 
-        # Volumes
-        if hasattr(self, "volumes") and self.volumes:
-            from lib.context.resources.AwsEc2Volume import Metacheck as VolumeMetacheck
+                for r, v in list(resource.iam_roles.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, AwsIamRoleMetaCheck
+                    )
+                    resource.iam_roles[r] = resource_drilled_output
+                    if level < 2 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.volumes, VolumeMetacheck)
+            # IAM Policies
+            if (
+                hasattr(resource, "iam_policies")
+                and resource.iam_policies
+                and self.resource_type != "AwsIamPolicy"
+            ):
+                from lib.context.resources.AwsIamPolicy import (
+                    Metacheck as IamPolicyMetacheck,
+                )
 
-        # VPC
-        if hasattr(self, "vpcs") and self.vpcs:
-            from lib.context.resources.AwsEc2Vpc import Metacheck as VpcMetacheck
+                for r, v in list(resource.iam_policies.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, IamPolicyMetacheck
+                    )
+                    resource.iam_policies[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.vpcs, VpcMetacheck)
+            # AutoScaling Groups
+            if (
+                hasattr(resource, "autoscaling_groups")
+                and resource.autoscaling_groups
+                and self.resource_type != "AwsAutoScalingAutoScalingGroup"
+            ):
+                from lib.context.resources.AwsAutoScalingAutoScalingGroup import (
+                    Metacheck as AwsAutoScalingAutoScalingGroupMetacheck,
+                )
 
-        # Subnets
-        if hasattr(self, "subnets") and self.subnets:
-            from lib.context.resources.AwsEc2Subnet import Metacheck as SubnetMetacheck
+                for r, v in list(resource.autoscaling_groups.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, AwsAutoScalingAutoScalingGroupMetacheck
+                    )
+                    resource.autoscaling_groups[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.subnets, SubnetMetacheck)
+            # Volumes
+            if (
+                hasattr(resource, "volumes")
+                and resource.volumes
+                and self.resource_type != "AwsEc2Volume"
+            ):
+                from lib.context.resources.AwsEc2Volume import (
+                    Metacheck as VolumeMetacheck,
+                )
 
-        # Route Tables
-        if hasattr(self, "route_tables") and self.route_tables:
-            from lib.context.resources.AwsEc2RouteTable import (
-                Metacheck as RouteTableMetacheck,
-            )
+                for r, v in list(resource.volumes.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, VolumeMetacheck
+                    )
+                    resource.volumes[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.route_tables, RouteTableMetacheck)
+            # VPC
+            if (
+                hasattr(resource, "vpcs")
+                and resource.vpcs
+                and self.resource_type != "AwsEc2Vpc"
+            ):
+                from lib.context.resources.AwsEc2Vpc import Metacheck as VpcMetacheck
 
-        # Api Gateway V2 Api
-        if hasattr(self, "api_gwv2_apis") and self.api_gwv2_apis:
-            from lib.context.resources.AwsApiGatewayV2Api import (
-                Metacheck as ApiGatewayV2ApiMetacheck,
-            )
+                for r, v in list(resource.vpcs.items()):
+                    resource_drilled_output, resource_drilled = execute(r, VpcMetacheck)
+                    resource.vpcs[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
 
-            execute(self.api_gwv2_apis, ApiGatewayV2ApiMetacheck)
+            # Subnets
+            if (
+                hasattr(resource, "subnets")
+                and resource.subnets
+                and self.resource_type != "AwsEc2Subnet"
+            ):
+                from lib.context.resources.AwsEc2Subnet import (
+                    Metacheck as SubnetMetacheck,
+                )
+
+                for r, v in list(resource.subnets.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, SubnetMetacheck
+                    )
+                    resource.subnets[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
+
+            # Route Tables
+            if (
+                hasattr(resource, "route_tables")
+                and resource.route_tables
+                and self.resource_type != "AwsEc2RouteTable"
+            ):
+                from lib.context.resources.AwsEc2RouteTable import (
+                    Metacheck as RouteTableMetacheck,
+                )
+
+                for r, v in list(resource.route_tables.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, RouteTableMetacheck
+                    )
+                    resource.route_tables[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
+
+            # Api Gateway V2 Api
+            if (
+                hasattr(resource, "api_gwv2_apis")
+                and resource.api_gwv2_apis
+                and self.resource_type != "AwsApiGatewayV2Api"
+            ):
+                from lib.context.resources.AwsApiGatewayV2Api import (
+                    Metacheck as ApiGatewayV2ApiMetacheck,
+                )
+
+                for r, v in list(resource.api_gwv2_apis.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, ApiGatewayV2ApiMetacheck
+                    )
+                    resource.api_gwv2_apis[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
+
+            # Instances
+            if (
+                hasattr(resource, "instances")
+                and resource.instances
+                and self.resource_type != "AwsEc2Instance"
+            ):
+                from lib.context.resources.AwsEc2Instance import (
+                    Metacheck as AwsEc2InstanceMetacheck,
+                )
+
+                for r, v in list(resource.instances.items()):
+                    resource_drilled_output, resource_drilled = execute(
+                        r, AwsEc2InstanceMetacheck
+                    )
+                    resource.instances[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
+                        check_associated_resources(resource_drilled, level + 1)
+
+        check_associated_resources(self, 0)
 
     def output_checks_drilled(self):
         mh_values_checks = {}
