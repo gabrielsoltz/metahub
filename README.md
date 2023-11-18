@@ -129,63 +129,63 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 **Exposure** evaluates the how the the affected resource is exposed to other networks. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP or if it is protected by a firewall or a security group.
 
-| **Possible Statuses**   | **Description**                                                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| 🔴 effectively-public   | The resource is effectively public from the Internet.                                                          |
-| 🟠 restricted-public    | The resource is public, but there is a restriction like a Security Group.                                      |
-| 🟠 unrestricted-private | The resource is private but unrestricted, like an open security group.                                         |
-| 🟠 launch-public        | These are resources that can launch other resources as public. For example, an Auto Scaling group or a Subnet. |
-| 🟢 restricted           | The resource is restricted.                                                                                    |
-| 🔵 unknown              | The resource couldn't be checked                                                                               |
+| **Possible Statuses**   | **Value** | **Description**                                                                                                |
+| ----------------------- | :-------: | -------------------------------------------------------------------------------------------------------------- |
+| 🔴 effectively-public   |   100%    | The resource is effectively public from the Internet.                                                          |
+| 🟠 restricted-public    |    40%    | The resource is public, but there is a restriction like a Security Group.                                      |
+| 🟠 unrestricted-private |    30%    | The resource is private but unrestricted, like an open security group.                                         |
+| 🟠 launch-public        |    10%    | These are resources that can launch other resources as public. For example, an Auto Scaling group or a Subnet. |
+| 🟢 restricted           |    0%     | The resource is restricted.                                                                                    |
+| 🔵 unknown              |     -     | The resource couldn't be checked                                                                               |
 
 ## Access
 
 **Access** evaluates the resource policy layer. MetaHub checks every available policy including: IAM Managed policies, IAM Inline policies, Resource Policies, Bucket ACLS, and any association to other resources like IAM Roles which its policies are also analyzed . An unrestricted policy is not only an itsue itself of that policy, it afected any other resource which is using it.
 
-| **Possible Statuses**      | **Description**                                                                                                                              |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🔴 unrestricted            | The principal is unrestricted, without any condition or restriction.                                                                         |
-| 🔴 untrusted-principal     | The principal is an AWS Account, not part of your trusted accounts.                                                                          |
-| 🟠 unrestricted-principal  | The principal is not restricted, defined with a wildcard. It could be conditions restricting it or other restrictions like s3 public blocks. |
-| 🟠 cross-account-principal | The principal is from another AWS account.                                                                                                   |
-| 🟠 unrestricted-actions    | The actions are defined using wildcards.                                                                                                     |
-| 🟠 dangerous-actions       | Some dangerous actions are defined as part of this policy.                                                                                   |
-| 🟠 unrestricted-service    | The policy allows an AWS service as principal without restriction.                                                                           |
-| 🟢 restricted              | The policy is restricted.                                                                                                                    |
-| 🔵 unknown                 | The policy couldn't be checked.                                                                                                              |
+| **Possible Statuses**      | **Value** | **Description**                                                                                                                              |
+| -------------------------- | :-------: | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 unrestricted            |   100%    | The principal is unrestricted, without any condition or restriction.                                                                         |
+| 🔴 untrusted-principal     |    70%    | The principal is an AWS Account, not part of your trusted accounts.                                                                          |
+| 🟠 unrestricted-principal  |    40%    | The principal is not restricted, defined with a wildcard. It could be conditions restricting it or other restrictions like s3 public blocks. |
+| 🟠 cross-account-principal |    30%    | The principal is from another AWS account.                                                                                                   |
+| 🟠 unrestricted-actions    |    30%    | The actions are defined using wildcards.                                                                                                     |
+| 🟠 dangerous-actions       |    30%    | Some dangerous actions are defined as part of this policy.                                                                                   |
+| 🟠 unrestricted-service    |    10%    | The policy allows an AWS service as principal without restriction.                                                                           |
+| 🟢 restricted              |    0%     | The policy is restricted.                                                                                                                    |
+| 🔵 unknown                 |     -     | The policy couldn't be checked.                                                                                                              |
 
 ## Encryption
 
 **Encryption** evaluate the different encryption layers based on each resource type. For example, for some resources it evaluates if `at_rest` and `in_transit` encryption configuration are both enabled.
 
-| **Possible Statuses** | **Description** |
-| --------------------- | --------------- |
-| 🔴 unencrypted        |                 |
-| 🟢 encrypted          |                 |
-| 🔵 unknown            |                 |
+| **Possible Statuses** | **Value** | **Description**                                                     |
+| --------------------- | :-------: | ------------------------------------------------------------------- |
+| 🔴 unencrypted        |   100%    | The resource is not fully encrypted.                                |
+| 🟢 encrypted          |    0%     | The resource is fully encrypted including any of it's associations. |
+| 🔵 unknown            |     -     | The resource encryption couldn't be checked.                        |
 
 ## Status
 
 **Status** evaluate the status of the affected resource in terms of attachment or functioning. For example, for an EC2 Instance we evaluate if the resource is running, stopped, or terminated, but for resources like EBS Volumes and Security Groups, we evaluate if those resources are attached to any other resource.
 
-| **Possible Statuses** | **Description** |
-| --------------------- | --------------- |
-| 🟠 attached           |                 |
-| 🟠 running            |                 |
-| 🟢 not-attached       |                 |
-| 🟢 not-running        |                 |
-| 🔵 unknown            |                 |
+| **Possible Statuses** | **Value** | **Description**                                           |
+| --------------------- | :-------: | --------------------------------------------------------- |
+| 🟠 attached           |   100%    | The resource supports attachment and is attached.         |
+| 🟠 running            |   100%    | The resource supports running and is running.             |
+| 🟢 not-attached       |    0%     | The resource supports attachment, and it is not attached. |
+| 🟢 not-running        |    0%     | The resource supports running and it is not running.      |
+| 🔵 unknown            |     -     | The resource couldn't be checked for status.              |
 
 ## Environment
 
 **Environment** evaluates the environment defined for the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your own tagging strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
-| **Possible Statuses** | **Description** |
-| --------------------- | --------------- |
-| 🟠 production         |                 |
-| 🟢 staging            |                 |
-| 🟢 development        |                 |
-| 🔵 unknown            |                 |
+| **Possible Statuses** | **Value** | **Description**                                  |
+| --------------------- | :-------: | ------------------------------------------------ |
+| 🟠 production         |   100%    | It is a production resource.                     |
+| 🟢 staging            |    30%    | It is a staging resource.                        |
+| 🟢 development        |    0%     | It is a development resource.                    |
+| 🔵 unknown            |     -     | The resource couldn't be checked for enviroment. |
 
 ## Findings Soring
 
@@ -202,6 +202,8 @@ SUM(HIGH (3) / CRITICAL (4) + LOW (0.5) / CRITICAL (4)) = 0.875
 ```
 
 # Architecture
+
+**MetaHub** reads your security findings from AWS Security Hub or any ASFF-compatible security scanner. It then queries the affected resources directly in the affected account to provide additional context. Based on that context, it calculates it's impact. Finally, it generates different outputs based on your needs.
 
 <p align="center">
   <img src="docs/imgs/diagram-metahub.drawio-v200.png" alt="Diagram" width="850"/>
@@ -243,7 +245,15 @@ When investigating findings, you may need to update security findings altogether
 
 # Customizing Configuration
 
-**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in [lib/config/](lib/config). You can edit them using your favorite text editor.
+**MetaHub** uses configuration files that let you customize some checks behaviors, default filters, and more. The configuration files are located in [lib/config/](lib/config).
+
+Things you can customize:
+
+- [lib/config/configuration.py](lib/config/configuration.py): This file contains the default configuration for MetaHub. You can change the default filters, the default output modes, and more.
+
+- [lib/config/reources.py](lib/config/resources.py): This file contains definitions for every resource type, like which CloudTrail events to look for.
+
+- [lib/config/impact.py](lib/config/impact.py): This file contains the definitions for the impact criteria and their values.
 
 # Run with Python
 
