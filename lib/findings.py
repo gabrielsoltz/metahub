@@ -242,10 +242,9 @@ def evaluate_finding(
             cached_associated_resources,
         )
         if "config" in context_options:
-            mh_config, mh_checks_matched = context.get_context_config()
-            # Get and Cache the associations for this resource
-            if mh_config:
-                cached_associated_resources.update(get_associations(mh_config))
+            mh_config, mh_checks_matched, all_association = context.get_context_config()
+            # Cache the associations for this resource
+            cached_associated_resources.update(all_association)
         else:
             mh_config = False
             mh_checks_matched = True
@@ -331,24 +330,3 @@ def evaluate_finding(
         mh_inventory,
         AwsAccountData,
     )
-
-
-# From each resource, get the associations, so we can cache them and avoid to get them again
-def get_associations(resource):
-    associations_all = {}
-
-    def get_associations_recursively(dictionary, parent_key=""):
-        for key, value in dictionary.items():
-            if isinstance(value, dict):
-                if key == "associations":
-                    for atype, associations in value.items():
-                        if isinstance(associations, dict):
-                            for association, association_values in associations.items():
-                                if association_values:
-                                    associations_all[association] = association_values
-                get_associations_recursively(
-                    value, f"{parent_key}.{key}" if parent_key else key
-                )
-
-    get_associations_recursively(resource)
-    return associations_all
