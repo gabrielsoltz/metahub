@@ -263,11 +263,11 @@ Requirements can be installed in your system manually (using pip3) or using a Py
 
 ## Run it using Python Virtual Environment
 
-1. Clone the repository: `git clone git@github.com:gabrielsoltz/meta hub.git`
+1. Clone the repository: `git clone git@github.com:gabrielsoltz/metahub.git`
 2. Change to repostiory dir: `cd metahub`
-3. Create a virtual environment for this project: `python3 -m venv venv/meta hub`
-4. Activate the virtual environment you just created: `source venv/meta hub/bin/activate`
-5. Install meta hub requirements: `pip3 install -r requirements.txt`
+3. Create a virtual environment for this project: `python3 -m venv venv/metahub`
+4. Activate the virtual environment you just created: `source venv/metahub/bin/activate`
+5. Install Metahub requirements: `pip3 install -r requirements.txt`
 6. Run: `./metahub -h`
 7. Deactivate your virtual environment after you finish with: `deactivate`
 
@@ -287,7 +287,7 @@ The available tagging for MetaHub containers are the following:
 
 For running from the public registry, you can run the following command:
 
-```
+```sh
 docker run -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h
 ```
 
@@ -297,7 +297,7 @@ If you are already logged into the AWS host machine, you can seamlessly use the 
 
 For instance, you can run the following command:
 
-```
+```sh
 docker run -e AWS_DEFAULT_REGION -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_SESSION_TOKEN -ti public.ecr.aws/n2p8q5p4/metahub:latest ./metahub -h
 ```
 
@@ -307,7 +307,7 @@ On the other hand, if you are not logged in on the host machine, you will need t
 
 Or you can also build it locally:
 
-```
+```sh
 git clone git@github.com:gabrielsoltz/metahub.git
 cd metahub
 docker build -t metahub .
@@ -335,7 +335,7 @@ The terraform code for deploying the Lambda function is provided under the `terr
 
 Just run the following commands:
 
-```
+```sh
 cd terraform
 terraform init
 terraform apply
@@ -418,7 +418,7 @@ export AWS_SESSION_TOKEN= "XXXXXXXXX"
 
 This is the minimum IAM policy you need to read and write from AWS Security Hub. If you don't want to update your findings with MetaHub, you can remove the `securityhub:BatchUpdateFindings` action.
 
-```
+```sh
 {
     "Version": "2012-10-17",
     "Statement": [
