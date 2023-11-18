@@ -61,11 +61,11 @@ The following is the JSON output for a an EC2 instance; see how MetaHub organize
 
 # Context
 
-In **MetaHub**, context refers to information about the affected resources like their configuration, logs, tags, organizations, and more.
+In **MetaHub**, context refers to information about the affected resources like their configuration, associations, logs, tags, account, and more.
 
 MetaHub doesn't stop at the affected resource but analyzes any associated or attached resources. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. MetaHub will examine the IAM roles that the affected resource is using and the policies attached to those roles for any issues. It will analyze the EBS attached to the instance and determine if they are encrypted. It will also analyze the Auto Scaling Groups that the instance is associated with and how. MetaHub will also analyze the VPC, Subnets, and other resources associated with the instance.
 
-The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and other related resources that are connected. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. By default, `config` and `tags` are enabled. You can choose which modules to enable using the opeion `--context`. Each of these keys will be added under the affected resource in the output with their outpus.
+The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and every associated resources. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. You can choose what you want to query using the option `--context`, by default only `config` and `tags` are enabled. Each of these keys will be added under the affected resource in the output with their outpus.
 
 ## Config
 
@@ -79,7 +79,7 @@ Under `associations` key, you will find all the associated resources of the affe
 
 Associations are key to understanding the context and impact of your security findings as their exposure.
 
-You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
+You can filter your findings based on Associations outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
 
 ## Tags
 
@@ -430,7 +430,7 @@ This is the minimum IAM policy you need to read and write from AWS Security Hub.
 
 # Configuring Context
 
-- If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for Context queries because the affected resources are not in the same AWS Account that the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources.
+If you are running MetaHub for a multiple AWS Account setup (AWS Security Hub is aggregating findings from multiple AWS Accounts), you must provide the role to assume for Context queries because the affected resources are not in the same AWS Account that the AWS Security Hub findings. The `--mh-assume-role` will be used to connect with the affected resources directly in the affected account. This role needs to have enough policies for being able to describe resources.
 
 ## IAM Policy for Context
 
@@ -459,16 +459,16 @@ If you want to read from an input ASFF file, you need to use the options:
 You also can combine AWS Security Hub findings with input ASFF files specifying both inputs:
 
 ```sh
-./metahub.py --inputs file-asff security hub --input-asff path/to/the/file.json.asff
+./metahub.py --inputs file-asff securityhub --input-asff path/to/the/file.json.asff
 ```
 
 When using a file as input, you can't use the option `--sh-filters` for filter findings, as this option relies on AWS API for filtering. You can't use the options `--update-findings` or `--enrich-findings` as those findings are not in the AWS Security Hub. If you are reading from both sources at the same time, only the findings from AWS Security Hub will be updated.
 
 # Output Modes
 
-**MetaHub** can store the outputs in different formats. By default, all output modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html`, `CSV`, and `xlsx`.
+**MetaHub** can generate different programmatic and visual outputs. By default, all output modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html`, `csv`, and `xlsx`.
 
-The Outputs will be saved in the folder `metahub/outputs` with the execution date.
+The outputs will be saved in the `outputs/` folder with the execution date.
 
 If you want only to generate a specific output mode, you can use the option `--output-modes` with the desired output mode.
 
@@ -496,16 +496,22 @@ If you want to generate `json-short` and `json-full` outputs, you can use:
 Show all findings titles together under each affected resource and the `AwsAccountId`, `Region`, and `ResourceType`:
 
 ```
-  "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/obfuscated": {
-    "findings": [
-      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
-      "SageMaker.3 Users should not have root access to SageMaker notebook instances",
-      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
-    ],
-    "AwsAccountId": "obfuscated",
-    "Region": "us-east-1",
-    "ResourceType": "AwsSageMakerNotebookInstance"
-  },
+"arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/obfuscated": {
+  "findings": [
+    "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
+    "SageMaker.3 Users should not have root access to SageMaker notebook instances",
+    "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
+  ],
+  "AwsAccountId": "obfuscated",
+  "Region": "us-east-1",
+  "ResourceType": "AwsSageMakerNotebookInstance",
+  "config: {},
+  "associations: {},
+  "tags: {},
+  "cloudtrail: {},
+  "account: {}
+  "impact: {}
+},
 ```
 
 ### JSON-Full
@@ -513,55 +519,61 @@ Show all findings titles together under each affected resource and the `AwsAccou
 Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding, you will also get: `SeverityLabel,` `Workflow,` `RecordState,` `Compliance,` `Id`, and `ProductArn`:
 
 ```
-  "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/obfuscated": {
-    "findings": [
-      {
-        "SageMaker.3 Users should not have root access to SageMaker notebook instances": {
-          "SeverityLabel": "HIGH",
-          "Workflow": {
-            "Status": "NEW"
-          },
-          "RecordState": "ACTIVE",
-          "Compliance": {
-            "Status": "FAILED"
-          },
-          "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.3/finding/12345-0193-4a97-9ad7-bc7c1730eec6",
-          "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-        }
-      },
-      {
-        "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": {
-          "SeverityLabel": "HIGH",
-          "Workflow": {
-            "Status": "NEW"
-          },
-          "RecordState": "ACTIVE",
-          "Compliance": {
-            "Status": "FAILED"
-          },
-          "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.2/finding/12345-e8e1-4915-9881-965104b0aabf",
-          "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-        }
-      },
-      {
-        "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": {
-          "SeverityLabel": "HIGH",
-          "Workflow": {
-            "Status": "NEW"
-          },
-          "RecordState": "ACTIVE",
-          "Compliance": {
-            "Status": "FAILED"
-          },
-          "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.1/finding/12345-3a21-4016-a8e5-f5173b44e90a",
-          "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-        }
+"arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/obfuscated": {
+  "findings": [
+    {
+      "SageMaker.3 Users should not have root access to SageMaker notebook instances": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.3/finding/12345-0193-4a97-9ad7-bc7c1730eec6",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
       }
-    ],
-    "AwsAccountId": "obfuscated",
-    "Region": "eu-west-1",
-    "ResourceType": "AwsSageMakerNotebookInstance"
-  },
+    },
+    {
+      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.2/finding/12345-e8e1-4915-9881-965104b0aabf",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    },
+    {
+      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": {
+        "SeverityLabel": "HIGH",
+        "Workflow": {
+          "Status": "NEW"
+        },
+        "RecordState": "ACTIVE",
+        "Compliance": {
+          "Status": "FAILED"
+        },
+        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.1/finding/12345-3a21-4016-a8e5-f5173b44e90a",
+        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+      }
+    }
+  ],
+  "AwsAccountId": "obfuscated",
+  "Region": "eu-west-1",
+  "ResourceType": "AwsSageMakerNotebookInstance",
+  "config: {},
+  "associations: {},
+  "tags: {},
+  "cloudtrail: {},
+  "account: {}
+  "impact: {}
+},
 ```
 
 ### JSON-Inventory
@@ -637,8 +649,7 @@ HTML Reports are interactive in many ways:
 
 ## CSV
 
-You can create rich HT
-ML reports of your findings, adding your context as part of them.
+You can create CSV reports of your findings, adding your context as part of them.
 
 <p align="center">
   <img src="docs/imgs/csv-export.png" alt="csv-example"/>
@@ -664,7 +675,7 @@ For example, you can generate an HTML output with Tags and add "Owner" and "Envi
 
 # Filters
 
-You can filter the findings and resources that you get from Security Hub in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create alerts.
+You can filter the security findings and resources that you get from your source in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create alerts.
 
 - [Security Hub Filtering](#security-hub-filtering)
 - [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates)
