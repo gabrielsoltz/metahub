@@ -83,3 +83,16 @@ impact_columns = ["score", "exposure", "access", "encryption", "status", "enviro
 
 # Decide if you want to output as part of the findings the whole json resource policy
 output_resource_policy = True
+
+# Output directory
+outputs_dir = "outputs/"
+
+# Output file name date format
+outputs_time_str = "%Y%m%d-%H%M%S"
+
+# ---------------------------------- #
+# Other Configurations               #
+# ---------------------------------- #
+
+# Assume role duration in seconds
+assume_role_duration = 3600

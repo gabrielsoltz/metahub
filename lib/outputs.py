@@ -5,16 +5,16 @@ from time import strftime
 import jinja2
 import xlsxwriter
 
+from lib.config.configuration import outputs_dir, outputs_time_str
 from lib.helpers import print_table
 
-OUTPUT_DIR = "outputs/"
-TIMESTRF = strftime("%Y%m%d-%H%M%S")
+TIMESTRF = strftime(outputs_time_str)
 
 
 def generate_output_json(
     mh_findings_short, mh_findings, mh_inventory, mh_statistics, json_mode, args
 ):
-    WRITE_FILE = f"{OUTPUT_DIR}metahub-{json_mode}-{TIMESTRF}.json"
+    WRITE_FILE = f"{outputs_dir}metahub-{json_mode}-{TIMESTRF}.json"
     with open(WRITE_FILE, "w", encoding="utf-8") as f:
         json.dump(
             {
@@ -32,7 +32,7 @@ def generate_output_json(
 def generate_output_csv(
     output, config_columns, tag_columns, account_columns, impact_columns, args
 ):
-    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.csv"
+    WRITE_FILE = f"{outputs_dir}metahub-{TIMESTRF}.csv"
     with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
         colums = [
             "Resource ID",
@@ -110,7 +110,7 @@ def generate_output_csv(
 def generate_output_xlsx(
     output, config_columns, tag_columns, account_columns, impact_columns, args
 ):
-    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.xlsx"
+    WRITE_FILE = f"{outputs_dir}metahub-{TIMESTRF}.xlsx"
     # Create a workbook and add a worksheet
     workbook = xlsxwriter.Workbook(WRITE_FILE)
     worksheet = workbook.add_worksheet("findings")
@@ -223,7 +223,7 @@ def generate_output_html(
     impact_columns,
     args,
 ):
-    WRITE_FILE = f"{OUTPUT_DIR}metahub-{TIMESTRF}.html"
+    WRITE_FILE = f"{outputs_dir}metahub-{TIMESTRF}.html"
     templateLoader = jinja2.FileSystemLoader(searchpath="./")
     templateEnv = jinja2.Environment(loader=templateLoader, autoescape=True)
     TEMPLATE_FILE = "lib/html/template.html"

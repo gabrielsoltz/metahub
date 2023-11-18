@@ -7,8 +7,10 @@ from botocore.exceptions import (
     ProfileNotFound,
 )
 
+from lib.config.configuration import assume_role_duration
 
-def assume_role(logger, aws_account_number, role_name, duration=3600):
+
+def assume_role(logger, aws_account_number, role_name, duration=assume_role_duration):
     """
     Assumes the provided role in each account and returns the session
     :param aws_account_number: AWS Account Number
