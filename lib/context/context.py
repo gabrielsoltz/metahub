@@ -85,6 +85,7 @@ class Context:
         # If there are no filters, we forced to return True as we expected a Match always
         resource_matched = False if self.mh_filters_config else True
         resource_config = False
+        all_associations = {}
 
         # If the resources lives in another account, we need the --mh-assume-role
         if self.resource_account_id != self.current_account_id and not self.sess:
@@ -94,17 +95,19 @@ class Context:
                 self.resource_account_id,
                 self.current_account_id,
             )
-            return resource_config, resource_matched
+            return resource_config, resource_matched, all_associations
 
         # Get Handler
         hnld = self.get_handler()
         if not hnld:
-            return resource_config, resource_matched
+            return resource_config, resource_matched, all_associations
 
         # Execute Drilled
         if self.drilled_down:
             try:
-                hnld.execute_drilled_metachecks(self.cached_associated_resources)
+                all_associations = hnld.execute_drilled_metachecks(
+                    self.cached_associated_resources
+                )
             except (AttributeError, Exception) as err:
                 if "should return None" in str(err):
                     self.logger.info(
@@ -138,7 +141,7 @@ class Context:
                 err,
             )
 
-        return resource_config, resource_matched
+        return resource_config, resource_matched, all_associations
 
     def get_context_tags(self):
         self.logger.info(

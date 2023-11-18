@@ -124,6 +124,7 @@ class ContextBase:
                         r, AwsIamUserMetacheck
                     )
                     resource.iam_users[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -142,6 +143,7 @@ class ContextBase:
                         r, SecurityGroupMetacheck
                     )
                     resource.security_groups[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -160,7 +162,8 @@ class ContextBase:
                         r, AwsIamRoleMetaCheck
                     )
                     resource.iam_roles[r] = resource_drilled_output
-                    if level < 2 and resource_drilled:
+                    self.all_associations[r] = resource_drilled_output
+                    if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
             # IAM Policies
@@ -178,6 +181,7 @@ class ContextBase:
                         r, IamPolicyMetacheck
                     )
                     resource.iam_policies[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -196,6 +200,7 @@ class ContextBase:
                         r, AwsAutoScalingAutoScalingGroupMetacheck
                     )
                     resource.autoscaling_groups[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -214,6 +219,7 @@ class ContextBase:
                         r, VolumeMetacheck
                     )
                     resource.volumes[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -228,6 +234,7 @@ class ContextBase:
                 for r, v in list(resource.vpcs.items()):
                     resource_drilled_output, resource_drilled = execute(r, VpcMetacheck)
                     resource.vpcs[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -246,6 +253,7 @@ class ContextBase:
                         r, SubnetMetacheck
                     )
                     resource.subnets[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -264,6 +272,7 @@ class ContextBase:
                         r, RouteTableMetacheck
                     )
                     resource.route_tables[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -282,6 +291,7 @@ class ContextBase:
                         r, ApiGatewayV2ApiMetacheck
                     )
                     resource.api_gwv2_apis[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
@@ -300,10 +310,14 @@ class ContextBase:
                         r, AwsEc2InstanceMetacheck
                     )
                     resource.instances[r] = resource_drilled_output
+                    self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
 
+        self.all_associations = {}
         check_associated_resources(self, 0)
+
+        return self.all_associations
 
     def output_checks_drilled(self):
         mh_values_checks = {}
