@@ -267,12 +267,20 @@ class Context:
                 "OU": organizations_ou,
             }
         except ClientError as err:
-            self.logger.error(
-                "Failed to describe_account: %s, for resource: %s - %s",
-                self.resource_account_id,
-                self.resource_arn,
-                err,
-            )
+            if err.response["Error"]["Code"] == "AWSOrganizationsNotInUseException":
+                self.logger.info(
+                    "Failed to describe_account: %s, for resource: %s - %s",
+                    self.resource_account_id,
+                    self.resource_arn,
+                    err,
+                )
+            else:
+                self.logger.warning(
+                    "Failed to describe_account: %s, for resource: %s - %s",
+                    self.resource_account_id,
+                    self.resource_arn,
+                    err,
+                )
 
         return organizations
 
