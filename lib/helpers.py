@@ -60,7 +60,7 @@ def get_parser():
     )
 
     # Group: Security Hub
-    group_security_hub = parser.add_argument_group("Security Hub Options")
+    group_security_hub = parser.add_argument_group("Security Findings Options")
     group_security_hub.add_argument(
         "--sh-assume-role",
         default=None,
