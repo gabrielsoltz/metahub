@@ -5,6 +5,7 @@ from alive_progress import alive_bar
 from botocore.exceptions import BotoCoreError, ClientError, EndpointConnectionError
 
 from lib.AwsHelpers import assume_role, get_boto3_client
+from lib.config.configuration import sh_enrich_with
 
 
 class SecurityHub:
@@ -124,71 +125,56 @@ class SecurityHub:
 
     def update_findings_meta(self, mh_findings):
         response_multiple = []
-        # Convert Config to booleans
+        # Convert Config to Boolean
         for resource_arn in mh_findings:
+            keys_to_convert = ["config", "associations"]
+            for key in keys_to_convert:
+                if key in mh_findings[resource_arn] and mh_findings[resource_arn][key]:
+                    for config in mh_findings[resource_arn][key]:
+                        if bool(mh_findings[resource_arn][key][config]):
+                            mh_findings[resource_arn][key][config] = True
+                        else:
+                            mh_findings[resource_arn][key][config] = False
+            # Keep only impact keys
             if (
-                "config" in mh_findings[resource_arn]
-                and mh_findings[resource_arn]["config"]
+                "impact" in mh_findings[resource_arn]
+                and mh_findings[resource_arn]["impact"]
             ):
-                for config in mh_findings[resource_arn]["config"]:
-                    if bool(mh_findings[resource_arn]["config"][config]):
-                        mh_findings[resource_arn]["config"][config] = True
-                    else:
-                        mh_findings[resource_arn]["config"][config] = False
+                for impact_key, impact_value in mh_findings[resource_arn][
+                    "impact"
+                ].items():
+                    if impact_value:
+                        for impact in impact_value.keys():
+                            mh_findings[resource_arn]["impact"][impact_key] = impact
+
         for mh_finding in mh_findings:
-            try:
-                findings_tags = mh_findings[mh_finding]["tags"]
-                if not findings_tags:
-                    findings_tags = {}
-            except KeyError:
-                findings_tags = {}
-            for key in list(findings_tags):
-                findings_tags[key] = str(findings_tags[key])
-            try:
-                findings_config = mh_findings[mh_finding]["config"]
-                if not findings_config:
-                    findings_config = {}
-            except KeyError:
-                findings_config = {}
-            for key in list(findings_config):
-                findings_config[key] = str(findings_config[key])
-            try:
-                finding_metaaccount = mh_findings[mh_finding]["account"]
-                if not finding_metaaccount:
-                    finding_metaaccount = {}
-            except KeyError:
-                finding_metaaccount = {}
-            for key in list(finding_metaaccount):
-                finding_metaaccount[key] = str(finding_metaaccount[key])
-            try:
-                finding_metatrails = mh_findings[mh_finding]["cloudtrail"]
-                if not finding_metatrails:
-                    finding_metatrails = {}
-            except KeyError:
-                finding_metatrails = {}
-            for key in list(finding_metatrails):
-                finding_metatrails[key] = str(finding_metatrails[key])
-            # Combining Context outputs
-            combined = {
-                **findings_tags,
-                **findings_config,
-                **finding_metaaccount,
-                **finding_metatrails,
-            }
+            values_to_enrich = {}
+            for c in sh_enrich_with:
+                try:
+                    values = mh_findings[mh_finding][c]
+                    if not values:
+                        values = {}
+                except KeyError:
+                    values = {}
+                for key in list(values):
+                    values[key] = str(values[key])
+                values_to_enrich.update(values)
 
             for finding in mh_findings[mh_finding]["findings"]:
                 for f, v in finding.items():
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
                 # To Do: Improve, only one update for resource.
-                if combined:
+                if values_to_enrich:
+                    criticality = int(float(values_to_enrich["score"]))
                     self.logger.info(
                         "Enriching finding %s with Context: %s",
                         FindingIdentifier["Id"],
-                        combined,
+                        values_to_enrich,
                     )
                     response = self.sh_client.batch_update_findings(
                         FindingIdentifiers=[FindingIdentifier],
-                        UserDefinedFields=combined,
+                        UserDefinedFields=values_to_enrich,
+                        Criticality=criticality,
                         Note={"Text": "Enriching Findings", "UpdatedBy": "MetaHub"},
                     )
                     response_multiple.append(response)

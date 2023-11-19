@@ -165,6 +165,13 @@ class ContextBase:
                     self.all_associations[r] = resource_drilled_output
                     if level < 1 and resource_drilled:
                         check_associated_resources(resource_drilled, level + 1)
+                    # This is an expensive operation, we only do it for some resources:
+                    if (
+                        level < 2
+                        and resource_drilled
+                        and self.resource_type == "AwsEc2SecurityGroup"
+                    ):
+                        check_associated_resources(resource_drilled, level + 1)
 
             # IAM Policies
             if (

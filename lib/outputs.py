@@ -230,15 +230,14 @@ def generate_output_html(
     template = templateEnv.get_template(TEMPLATE_FILE)
     # Convert Config to Boolean
     for resource_arn in mh_findings:
-        if (
-            "config" in mh_findings[resource_arn]
-            and mh_findings[resource_arn]["config"]
-        ):
-            for config in mh_findings[resource_arn]["config"]:
-                if bool(mh_findings[resource_arn]["config"][config]):
-                    mh_findings[resource_arn]["config"][config] = True
-                else:
-                    mh_findings[resource_arn]["config"][config] = False
+        keys_to_convert = ["config", "associations"]
+        for key in keys_to_convert:
+            if key in mh_findings[resource_arn] and mh_findings[resource_arn][key]:
+                for config in mh_findings[resource_arn][key]:
+                    if bool(mh_findings[resource_arn][key][config]):
+                        mh_findings[resource_arn][key][config] = True
+                    else:
+                        mh_findings[resource_arn][key][config] = False
 
     with open(WRITE_FILE, "w", encoding="utf-8") as f:
         html = template.render(

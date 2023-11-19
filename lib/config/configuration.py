@@ -7,6 +7,17 @@
 # Default filters for Security Hub
 sh_default_filters = {"RecordState": ["ACTIVE"], "WorkflowStatus": ["NEW"]}
 
+# Enrichment fields for Security Hub when using the option --enrich-findings
+# Choose from: tags, config, account, cloudtrail, associations, impact
+sh_enrich_with = [
+    "tags",
+    "config",
+    "account",
+    "cloudtrail",
+    "associations",
+    "impact",
+]
+
 
 # ---------------------------------- #
 # Impact Configurations              #
