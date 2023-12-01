@@ -1,5 +1,12 @@
 # MetaHub
 
+<figure>
+  <img
+  src="docs/imgs/metahub.png"
+  alt="MetaHub">
+  <figcaption>MetaHub Logo</figcaption>
+</figure>
+
 <p align="center">
   <img src="docs/imgs/metahub.png" alt="MetaHub" width="200"/>
 </p>
