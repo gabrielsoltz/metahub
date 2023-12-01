@@ -1,5 +1,6 @@
 from lib.impact.helpers import check_key, get_config_key
 
+
 class Status:
     def __init__(self, logger):
         self.logger = logger

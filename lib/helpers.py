@@ -324,7 +324,7 @@ def print_banner(banners=True):
     print(
         r"  "
         + color["DARKCYAN"]
-        + "the command line utility for AWS Security Hub"
+        + "Impact-Contextual Vulnerability Management"
         + color["END"]
     )
 
