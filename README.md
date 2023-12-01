@@ -1,4 +1,4 @@
-<p align="right">
+<p align="left">
   <img src="docs/imgs/metahub.png" alt="MetaHub" height="300"/>
 </p>
 
