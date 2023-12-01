@@ -1,5 +1,5 @@
-<p align="left">
-  <img src="docs/imgs/metahub.png" alt="MetaHub" height="250" width="500"/>
+<p align="center">
+  <img src="docs/imgs/metahub.png" alt="MetaHub"/>
 </p>
 
 <p align="center">
