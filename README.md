@@ -185,6 +185,10 @@ The following are the impact criteria that MetaHub evaluates by default:
 | 🟢 development        |    0%     | It is a development resource.                    |
 | 🔵 unknown            |     -     | The resource couldn't be checked for enviroment. |
 
+## Application
+
+**Application** evaluates the application that the affected resource is part of. MetaHub relies on the AWS [myApplications](https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/aws-myApplications.html) feature, which relies on the Tag `awsApplication`, but you can extend this functionality based on your context for example by defining other tags you use for defining applications or services (like `Service` or any other), or by relying on account id or alias. You can define your application definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
+
 ## Findings Soring
 
 As part of the impact score calculation, we also evaluate the total ammount of security findings and their severities affecting the resource. We use the following formula to calculate this metric:

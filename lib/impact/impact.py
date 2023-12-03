@@ -4,6 +4,7 @@ import yaml
 
 from lib.config.configuration import findings_severity_value, path_yaml_impact
 from lib.impact.access import Access
+from lib.impact.application import Application
 from lib.impact.encryption import Encryption
 from lib.impact.environment import Environment
 from lib.impact.exposure import Exposure
@@ -181,6 +182,7 @@ class Impact:
             "encryption": {},
             "status": {},
             "environment": {},
+            "application": {},
             "score": {},
         }
         impact_dict["exposure"].update(
@@ -197,5 +199,8 @@ class Impact:
         )
         impact_dict["environment"].update(
             Environment(self.logger).get_environment(resource_arn, resource_values)
+        )
+        impact_dict["application"].update(
+            Application(self.logger).get_application(resource_arn, resource_values)
         )
         return impact_dict
