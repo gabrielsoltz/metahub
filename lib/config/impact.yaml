@@ -79,3 +79,11 @@ environment:
         score: 0
     # - unknown:
     #     score: 0
+
+application:
+  weight: 15
+  values:
+    - app-example:
+        score: 1
+    # - unknown:
+    #     score: 0
