@@ -60,24 +60,48 @@ dangerous_iam_actions = [
 # Days to consider a resource (key) unrotated
 days_to_consider_unrotated = 90
 
-# Environment Tags Definition
-# tag_ENVIRONMENT = {"TAG-KEY": ["TAG-VALUE1", "TAG-VALUE1", "TAG-VALUE3"]}
-tags_production = {
-    "Environment": ["Production", "production", "prd"],
-    "Env": ["Production", "production", "prd"],
-    "environment": ["Production", "production", "prd"],
-}
-tags_staging = {
-    "Environment": ["Staging", "staging", "stg"],
-    "Env": ["Staging", "staging", "stg"],
-    "environment": ["Staging", "staging", "stg"],
-}
-tags_development = {
-    "Environment": ["Development", "development", "dev"],
-    "Env": ["Development", "development", "dev"],
-    "environment": ["Development", "development", "dev"],
-}
+# Environment Definition
+# You can define the environment by tags, account id or account alias.
+# You can define how many environments you want, then assign each environment a value in the file: lib/config/impact.yaml
 
+environments = {
+    "production": {
+        "tags": {
+            "Environment": ["Production", "production", "prd"],
+            "environment": ["Production", "production", "prd"],
+            "Env": ["Production", "production", "prd"],
+            "env": ["Production", "production", "prd"],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["production", "prod"],
+        },
+    },
+    "staging": {
+        "tags": {
+            "Environment": ["Staging", "staging", "stg"],
+            "environment": ["Staging", "staging", "stg"],
+            "Env": ["Staging", "staging", "stg"],
+            "env": ["Staging", "staging", "stg"],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["staging", "stg"],
+        },
+    },
+    "development": {
+        "tags": {
+            "Environment": ["Development", "development", "dev"],
+            "environment": ["Development", "development", "dev"],
+            "Env": ["Development", "development", "dev"],
+            "env": ["Development", "development", "dev"],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["development", "dev"],
+        },
+    },
+}
 
 # ---------------------------------- #
 # Output Configurations              #

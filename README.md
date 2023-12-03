@@ -176,7 +176,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 
 ## Environment
 
-**Environment** evaluates the environment defined for the affected resource. Supported environments are `production`, `staging`, `development`. MetaHub evaluates the environment based on the tags of the affected resource. You can define your own tagging strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
+**Environment** evaluates the environment where the affected resource is running. By default, MetaHub defines 3 environments: `production`, `staging`, and `development`, but you can add, remove, or modify these environments based on your needs. MetaHub evaluates the environment based on the tags of the affected resource, the account id or the account alias. You can define your own environemnts definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
 | **Possible Statuses** | **Value** | **Description**                                  |
 | --------------------- | :-------: | ------------------------------------------------ |
@@ -247,11 +247,11 @@ When investigating findings, you may need to update security findings altogether
 
 Things you can customize:
 
-- [lib/config/configuration.py](lib/config/configuration.py): This file contains the default configuration for MetaHub. You can change the default filters, the default output modes, and more.
+- [lib/config/configuration.py](lib/config/configuration.py): This file contains the default configuration for MetaHub. You can change the default filters, the default output modes, the environment definitions, and more.
+
+- [lib/config/impact.py](lib/config/impact.py): This file contains the values and it's weights for the impact formula criteria. You can modify the values and the weights based on your needs.
 
 - [lib/config/reources.py](lib/config/resources.py): This file contains definitions for every resource type, like which CloudTrail events to look for.
-
-- [lib/config/impact.py](lib/config/impact.py): This file contains the definitions for the impact criteria and their values.
 
 # Run with Python
 
