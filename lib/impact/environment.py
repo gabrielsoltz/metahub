@@ -38,9 +38,9 @@ class Environment:
             return False, False
 
         for env in environments:
-            # tags_matched, tags_details = check_tags(environments[env].get("tags", {}))
-            # if tags_matched:
-            #     return {env: {"tags": tags_details}}
+            tags_matched, tags_details = check_tags(environments[env].get("tags", {}))
+            if tags_matched:
+                return {env: {"tags": tags_details}}
             account_matched, account_details = check_account(
                 environments[env].get("account", {})
             )
