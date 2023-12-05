@@ -155,8 +155,12 @@ class Impact:
         meta_score = self.get_meta_score(resource_values)
 
         # Check if the meta score is not "n/a" (i.e., there's context)
-        if meta_score != "n/a":
+        if meta_score != "n/a" and meta_score != 0:
             # Calculate the overall impact score as the product of findings_score and meta_score
+            impact_score = findings_score * meta_score * 100
+        # If meta_score it's 0, let's convert to 0.1 to avoid getting 0 as the impact score
+        elif meta_score == 0:
+            meta_score = 0.1
             impact_score = findings_score * meta_score * 100
         else:
             # If there's no context, calculate the impact score as findings_score * 100

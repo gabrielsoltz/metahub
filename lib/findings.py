@@ -186,9 +186,7 @@ def generate_findings(
                 wait=False
             )  # shutdown executor without waiting for all threads to finish
 
-    mh_statistics = generate_statistics(mh_findings)
-
-    # Add Impact
+    # Generate Impact
     imp = Impact(logger)
     for resource_arn, resource_values in mh_findings.items():
         impact_checks = imp.generate_impact_checks(resource_arn, resource_values)
@@ -200,6 +198,10 @@ def generate_findings(
         mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[resource_arn][
             "impact"
         ]["score"] = impact_scoring
+
+    # Generate Statistics
+    mh_statistics = generate_statistics(mh_findings)
+
     return mh_findings, mh_findings_short, mh_inventory, mh_statistics
 
 

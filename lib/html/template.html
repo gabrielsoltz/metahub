@@ -285,6 +285,24 @@
                     </span>`;
           }
         },
+        {% elif 'application' == impact_column %}
+          {title:"application", field:"application", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}, hozAlign:"center", formatter: function (cell, formatterParams) {
+            var value = cell.getValue();
+            var color;
+            var emoji;
+            if (value === "unknown") {
+              color = "blue";
+              emoji = "🔵";
+            } else {
+              color = "orange";
+              emoji = "🟠";
+            }
+            return `<span style="display: flex; align-items: center; color: ${color}; font-weight: bold;">
+                      <span style="margin-right: 5px; font-size: 1.2em;">${emoji}</span>
+                      ${value}
+                    </span>`;
+          }
+        },
         {% elif 'score' == impact_column %}
           {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
@@ -720,12 +738,40 @@
 </table>
 {% endblock %} {% block severities %}
 
-<div class="container">
-  {% set ordered_keys = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"]
-  %} {% for key in ordered_keys %} {% if key in statistics["SeverityLabel"] %}
-  <div class="box {{ key }}">
-    {{ key }}<br />{{ statistics["SeverityLabel"][key] }}
-  </div>
-  {% endif %} {% endfor %}
-</div>
+<table class="statistics">
+  <tr>
+    <th>Severities</th>
+    <th>Impact</th>
+  </tr>
+  <tr>
+    <td>
+      <div class="container">
+        {% set ordered_keys = ["CRITICAL", "HIGH", "MEDIUM", "LOW",
+        "INFORMATIONAL"] %} {% for key in ordered_keys %} {% if key in
+        statistics["SeverityLabel"] %}
+        <div class="box {{ key }}">
+          {{ key }}<br />{{ statistics["SeverityLabel"][key] }}
+        </div>
+        {% endif %} {% endfor %}
+      </div>
+    </td>
+    <td>
+      <div class="container">
+        {% set ordered_keys = ["red", "orange", "green", "blue"] %} {% for key
+        in ordered_keys %} {% if key in statistics["impact"]["score_groupped"]
+        %}
+        <div class="box {{ key }}">
+          {% if key == "red" %} {{ "> 70" }}<br />{{
+          statistics["impact"]["score_groupped"][key] }} {% elif key == "orange"
+          %} {{ ">10" }}<br />{{ statistics["impact"]["score_groupped"][key] }}
+          {% elif key == "green" %} {{ "<10" }}<br />{{
+          statistics["impact"]["score_groupped"][key] }} {% else %} {{ "0" }}<br />{{
+          statistics["impact"]["score_groupped"][key] }} {% endif %}
+        </div>
+        {% endif %} {% endfor %}
+      </div>
+    </td>
+  </tr>
+</table>
+
 {% endblock %}

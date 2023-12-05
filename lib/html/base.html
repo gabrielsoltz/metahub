@@ -44,7 +44,6 @@
         top: -7px;
         left: 25px;
       }
-
       /* Sticky navbar - toggles between relative and fixed, depending on the scroll position. It is positioned relative until a given offset position is met in the viewport - then it "sticks" in place (like position:fixed). The sticky value is not supported in IE or Edge 15 and earlier versions. However, for these versions the navbar will inherit default position */
       .navbar {
         overflow: hidden;
@@ -172,6 +171,8 @@
         display: flex;
         justify-content: space-between;
         margin: 5px 0;
+        margin-right: 10px;
+        border: 1px solid black;
       }
       .CRITICAL {
         background-color: red;
@@ -191,6 +192,33 @@
       .INFORMATIONAL {
         background-color: blue;
         color: white;
+      }
+      .red {
+        background-color: red;
+        color: white;
+      }
+      .orange {
+        background-color: orange;
+        color: white;
+      }
+      .green {
+        background-color: green;
+        color: white;
+      }
+      .blue {
+        background-color: blue;
+        color: white;
+      }
+      .statistics {
+        width: auto; /* Allows the table width to adjust based on content */
+        max-width: 100%; /* Limits the table width to 100% of its container */
+        border: none; /* Removes the border completely */
+        border-spacing: 0;
+        empty-cells: hide;
+      }
+      .statistics td,
+      .statistics th {
+        border: none;
       }
     </style>
   </head>

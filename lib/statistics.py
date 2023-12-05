@@ -122,6 +122,12 @@ def generate_statistics(mh_findings):
 
     def statistics_impact(mh_findings_short):
         impact_statistics = {}
+        score_groupped = {
+            "red": 0,
+            "orange": 0,
+            "green": 0,
+            "blue": 0,
+        }
         for resource_arn in mh_findings_short:
             if "impact" in mh_findings_short[resource_arn]:
                 if mh_findings_short[resource_arn]["impact"]:
@@ -129,12 +135,25 @@ def generate_statistics(mh_findings):
                         for check, value in mh_findings_short[resource_arn][
                             "impact"
                         ].items():
+                            value_key = [str(key) for key in value.keys()]
+                            value = value_key[0]
+                            if check == "score":
+                                value = float(value)
+                                if value >= 70:
+                                    score_groupped["red"] += 1
+                                elif value < 70 and value > 10:
+                                    score_groupped["orange"] += 1
+                                elif value < 10:
+                                    score_groupped["green"] += 1
+                                else:
+                                    score_groupped["blue"] += 1
                             if check not in impact_statistics:
                                 impact_statistics[check] = {}
                             if value not in impact_statistics[check]:
                                 impact_statistics[check][value] = 1
                             else:
                                 impact_statistics[check][value] += 1
+        impact_statistics["score_groupped"] = score_groupped
         return impact_statistics
 
     mh_statistics = statistics_findings(mh_findings)
@@ -145,7 +164,7 @@ def generate_statistics(mh_findings):
 
     # Sort Statistics
     for key_to_sort in mh_statistics:
-        if key_to_sort not in ("tags", "config", "account"):
+        if key_to_sort not in ("tags", "config", "account", "impact"):
             mh_statistics[key_to_sort] = dict(
                 sorted(
                     mh_statistics[key_to_sort].items(),
