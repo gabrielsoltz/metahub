@@ -1,5 +1,6 @@
 """ResourceType: AwsEc2Volume"""
 
+from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
@@ -24,7 +25,8 @@ class Metacheck(ContextBase):
         self.volume = self.describe_volumes()
         if not self.volume:
             return False
-        # Associated MetaChecks
+        # Associations
+        self.instances = self._describe_volumes_instances()
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -52,6 +54,23 @@ class Metacheck(ContextBase):
                 )
             return False
 
+    def _describe_volumes_instances(self):
+        instances = {}
+        if self.volume:
+            for ebs in self.volume:
+                if ebs.get("Attachments"):
+                    for attachment in ebs.get("Attachments"):
+                        arn = generate_arn(
+                            attachment.get("InstanceId"),
+                            "ec2",
+                            "instance",
+                            self.region,
+                            self.account,
+                            self.partition,
+                        )
+                        instances[arn] = {}
+        return instances
+
     # Context Config
 
     def encrypted(self):
@@ -78,7 +97,9 @@ class Metacheck(ContextBase):
         return None
 
     def associations(self):
-        associations = {}
+        associations = {
+            "instances": self.instances,
+        }
         return associations
 
     def checks(self):
