@@ -2,6 +2,7 @@ from lib.context.resources import (
     AwsApiGatewayV2Api,
     AwsApiGatewayV2Route,
     AwsApiGatewayV2Stage,
+    AwsAthenaWorkGroup,
     AwsAutoScalingAutoScalingGroup,
     AwsAutoScalingLaunchConfiguration,
     AwsCloudFrontDistribution,

@@ -10,6 +10,7 @@ class Status:
 
         status = get_config_key(resource_values, "status")
         attached = get_config_key(resource_values, "attached")
+        resource_type = resource_values.get("ResourceType")
 
         status_checks = {
             "status": status,
@@ -31,7 +32,11 @@ class Status:
         if status is not None:
             if status == "running":
                 return {"running": status_checks}
-            if status != "running":
-                return {"not-running": status_checks}
+            if status == "ENABLED":
+                return {"enabled": status_checks}
+            if status != "running" and status != "ENABLED":
+                if resource_type == "AwsEc2Instance":
+                    return {"not-running": status_checks}
+                return {"not-enabled": status_checks}
 
         return {"unknown": status_checks}
