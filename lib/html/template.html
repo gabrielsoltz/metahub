@@ -304,7 +304,22 @@
           }
         },
         {% elif 'score' == impact_column %}
-          {title: "score", field: "score", formatter:"progress", formatterParams:{color:["blue", "orange", "orange", "orange", "rgb(255,0,0)", "rgb(255,0,0)"]}, headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
+          {title: "score", field: "score",
+          formatter: function(cell, formatterParams, onRendered) {
+                var score = cell.getValue();
+
+                // Define your conditions for different colors
+                if (score >= 70) {
+                    return '<span style="color: red;">' + score + '</span>';
+                } else if (score > 10) {
+                    return '<span style="color: orange;">' + score + '</span>';
+                } else if (score < 10) {
+                    return '<span style="color: green;">' + score + '</span>';
+                } else {
+                    return '<span style="color: blue;">' + score + '</span>';
+                }
+            },
+          headerMenu:headerMenu, hozAlign:"center", headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% else %}
           { title: "{{impact_column}}", field: "{{impact_column}}", headerMenu:headerMenu, headerFilter:"list", headerFilterParams:{valuesLookup:true, clearable:true}},
         {% endif %}
