@@ -170,7 +170,7 @@ The following are the impact criteria that MetaHub evaluates by default:
 | --------------------- | :-------: | --------------------------------------------------------- |
 | 🟠 attached           |   100%    | The resource supports attachment and is attached.         |
 | 🟠 running            |   100%    | The resource supports running and is running.             |
-| 🟠 enabled            |   100%    | The resource supports enabled and is running.             |
+| 🟠 enabled            |   100%    | The resource supports enabled and is enabled.             |
 | 🟢 not-attached       |    0%     | The resource supports attachment, and it is not attached. |
 | 🟢 not-running        |    0%     | The resource supports running and it is not running.      |
 | 🟢 not-enabled        |    0%     | The resource supports enabled and it is not enabled.      |
@@ -190,6 +190,10 @@ The following are the impact criteria that MetaHub evaluates by default:
 ## Application
 
 **Application** evaluates the application that the affected resource is part of. MetaHub relies on the AWS [myApplications](https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/aws-myApplications.html) feature, which relies on the Tag `awsApplication`, but you can extend this functionality based on your context for example by defining other tags you use for defining applications or services (like `Service` or any other), or by relying on account id or alias. You can define your application definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
+
+| **Possible Statuses** | **Value** | **Description**                                   |
+| --------------------- | :-------: | ------------------------------------------------- |
+| 🔵 unknown            |     -     | The resource couldn't be checked for application. |
 
 ## Findings Soring
 
@@ -492,10 +496,10 @@ For example, if you only want to generate the output `json-short`, you can use:
 ./metahub.py --output-modes json-short
 ```
 
-If you want to generate `json-short` and `json-full` outputs, you can use:
+If you want to generate `json-short`, `json-full` and `html` outputs, you can use:
 
 ```sh
---output-modes json-short` or `--output-modes json-short json-full
+./metahub.py --output-modes json-short json-full html
 ```
 
 - [JSON](#json)
