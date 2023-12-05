@@ -662,7 +662,7 @@ HTML Reports are interactive in many ways:
 - You can also download that data to xlsx, CSV, HTML, and JSON.
 
 <p align="center">
-  <img src="docs/imgs/html-export-small.png" alt="html-example"/>
+  <img src="docs/imgs/html-export-filters.png" alt="html-example"/>
 </p>
 
 ## CSV
