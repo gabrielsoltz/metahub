@@ -679,12 +679,12 @@ Similar to CSV but with more formatting options.
 
 ## Customize HTML, CSV or XLSX outputs
 
-You can customize which Context columns to unroll using the options `--output-tags-columns` and `--output-config-columns` as a list of columns. If the columns you specified as columns don't exist for the affected resource, they will be empty. There is a configuration file under `lib/config/confugration.py` where you can define the default columns for each output mode.
+You can customize which Context keys to unroll as columns for your HTML, CSV, and XLSX outputs using the options `--output-tag-columns` and `--output-config-columns` (as a list of columns). If the keys you specified don't exist for the affected resource, they will be empty. You can also configure these columns by default in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
 For example, you can generate an HTML output with Tags and add "Owner" and "Environment" as columns to your report using the:
 
 ```sh
-./metahub --output-modes html --output -tags-columns Owner Environment
+./metahub --output-modes html --output-tag-columns Owner Environment
 ```
 
 # Filters
