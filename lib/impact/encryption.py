@@ -35,6 +35,7 @@ class Encryption:
             "AwsRdsDbInstance",
             "AwsEc2Volume",
             "AwsEc2Volume",
+            "AwsAthenaWorkGroup",
         ):
             resource_encryption_config = get_config_key(resource_values, "encrypted")
 

@@ -170,8 +170,10 @@ The following are the impact criteria that MetaHub evaluates by default:
 | --------------------- | :-------: | --------------------------------------------------------- |
 | 🟠 attached           |   100%    | The resource supports attachment and is attached.         |
 | 🟠 running            |   100%    | The resource supports running and is running.             |
+| 🟠 enabled            |   100%    | The resource supports enabled and is running.             |
 | 🟢 not-attached       |    0%     | The resource supports attachment, and it is not attached. |
 | 🟢 not-running        |    0%     | The resource supports running and it is not running.      |
+| 🟢 not-enabled        |    0%     | The resource supports enabled and it is not enabled.      |
 | 🔵 unknown            |     -     | The resource couldn't be checked for status.              |
 
 ## Environment

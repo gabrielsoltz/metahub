@@ -17,6 +17,10 @@ status:
         score: 1
     - not-running:
         score: 0
+    - enabled:
+        score: 1
+    - not-enabled:
+        score: 0
     # - unknown:
     #     score: 0
 
