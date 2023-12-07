@@ -63,17 +63,17 @@ In **MetaHub**, context refers to information about the affected resources like 
 
 MetaHub doesn't stop at the affected resource but analyzes any associated or attached resources. For instance, if there is a security finding on an EC2 instance, MetaHub will not only analyze the instance but also the security groups attached to it, including their rules. MetaHub will examine the IAM roles that the affected resource is using and the policies attached to those roles for any issues. It will analyze the EBS attached to the instance and determine if they are encrypted. It will also analyze the Auto Scaling Groups that the instance is associated with and how. MetaHub will also analyze the VPC, Subnets, and other resources associated with the instance.
 
-The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and every associated resources. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. You can choose what you want to query using the option `--context`, by default only `config` and `tags` are enabled. Each of these keys will be added under the affected resource in the output with their outpus.
+The **Context** module has the capability to retrieve information from the affected resources, affected accounts, and every associated resources. The context module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. By default `config` and `tags` are enabled, but you can change this behavior using the option `--context` (for enabling all the context modules you can use `--context config tags cloudtrail account`). The output of each enabled key will be added under the affected resource.
 
 ## Config
 
-Under the `config` key, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance, you will see keys like `key`, `public_ip`, or `instance_profile`.
+Under the `config` key, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance, you will see keys like `private_ip`, `public_ip`, or `instance_profile`.
 
 You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
 
 ## Associations
 
-Under `associations` key, you will find all the associated resources of the affected resource. For example, if the affected resource is an EC2 Instance, you will find resources like: Security Groups, IAM Roles, Volumes, VPC, Subnets, Auto Scaling Groups, etc. Each time there MetaHub finds an association, it will connect the associated resource resource and execute there the same process, fetching the config, associations, etc of that resource.
+Under the `associations` key, you will find all the associated resources of the affected resource. For example, if the affected resource is an EC2 Instance, you will find resources like: Security Groups, IAM Roles, Volumes, VPC, Subnets, Auto Scaling Groups, etc. Each time MetaHub finds an association, it will connect to the associated resource again and fetch its own context.
 
 Associations are key to understanding the context and impact of your security findings as their exposure.
 
@@ -100,9 +100,9 @@ You can filter your findings based on Tags outputs using the option: `--mh-filte
 
 Under the key `cloudtrail`, you will find critical Cloudtrail events related to the affected resource, such as creating events.
 
-The events that we look for are defined by resource type, and you can add/modify the critical events for each resource type by editing the configuration file [resources.py](lib/config/resources.py).
+The Cloudtrail events that we look for are defined by resource type, and you can add, remove or change them by editing the configuration file [resources.py](lib/config/resources.py).
 
-For example for an affeted Security Group, MetaHub will look for the following events:
+For example for an affected resource of type Security Group, MetaHub will look for the following events:
 
 - `CreateSecurityGroup`: Security Group Creation event
 - `AuthorizeSecurityGroupIngress`: Security Group Rule Authorization event.
