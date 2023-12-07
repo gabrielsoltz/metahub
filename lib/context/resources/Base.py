@@ -106,10 +106,20 @@ class ContextBase:
 
             return resource_drilled_output, resource_drilled
 
-        def check_associated_resources(resource, level):
-            # print ("Level: {}, Resource: {}".format(level, resource.resource_arn))
+        def check_associated_resources(resource, level, drilled_source_resource_arn):
+            max_level = 1
 
-            # Security Groups
+            # Debug Recursive:
+            print(
+                "Level: {}, {} > {} > {}".format(
+                    level,
+                    self.resource_arn,
+                    drilled_source_resource_arn,
+                    resource.resource_arn,
+                )
+            )
+
+            # IAM Users
             if (
                 hasattr(resource, "iam_users")
                 and resource.iam_users
@@ -120,13 +130,16 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.iam_users.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, AwsIamUserMetacheck
-                    )
-                    resource.iam_users[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, AwsIamUserMetacheck
+                        )
+                        resource.iam_users[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Security Groups
             if (
@@ -139,13 +152,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.security_groups.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, SecurityGroupMetacheck
-                    )
-                    resource.security_groups[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, SecurityGroupMetacheck
+                        )
+                        resource.security_groups[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # IAM Roles
             if (
@@ -158,20 +175,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.iam_roles.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, AwsIamRoleMetaCheck
-                    )
-                    resource.iam_roles[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
-                    # This is an expensive operation, we only do it for some resources:
-                    if (
-                        level < 2
-                        and resource_drilled
-                        and self.resource_type == "AwsEc2SecurityGroup"
-                    ):
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, AwsIamRoleMetaCheck
+                        )
+                        resource.iam_roles[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < 2 and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # IAM Policies
             if (
@@ -184,13 +198,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.iam_policies.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, IamPolicyMetacheck
-                    )
-                    resource.iam_policies[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, IamPolicyMetacheck
+                        )
+                        resource.iam_policies[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # AutoScaling Groups
             if (
@@ -203,13 +221,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.autoscaling_groups.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, AwsAutoScalingAutoScalingGroupMetacheck
-                    )
-                    resource.autoscaling_groups[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, AwsAutoScalingAutoScalingGroupMetacheck
+                        )
+                        resource.autoscaling_groups[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Volumes
             if (
@@ -222,13 +244,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.volumes.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, VolumeMetacheck
-                    )
-                    resource.volumes[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, VolumeMetacheck
+                        )
+                        resource.volumes[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # VPC
             if (
@@ -239,11 +265,17 @@ class ContextBase:
                 from lib.context.resources.AwsEc2Vpc import Metacheck as VpcMetacheck
 
                 for r, v in list(resource.vpcs.items()):
-                    resource_drilled_output, resource_drilled = execute(r, VpcMetacheck)
-                    resource.vpcs[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, VpcMetacheck
+                        )
+                        resource.vpcs[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Subnets
             if (
@@ -256,13 +288,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.subnets.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, SubnetMetacheck
-                    )
-                    resource.subnets[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, SubnetMetacheck
+                        )
+                        resource.subnets[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Route Tables
             if (
@@ -275,13 +311,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.route_tables.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, RouteTableMetacheck
-                    )
-                    resource.route_tables[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, RouteTableMetacheck
+                        )
+                        resource.route_tables[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Api Gateway V2 Api
             if (
@@ -294,13 +334,17 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.api_gwv2_apis.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, ApiGatewayV2ApiMetacheck
-                    )
-                    resource.api_gwv2_apis[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, ApiGatewayV2ApiMetacheck
+                        )
+                        resource.api_gwv2_apis[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
             # Instances
             if (
@@ -313,16 +357,20 @@ class ContextBase:
                 )
 
                 for r, v in list(resource.instances.items()):
-                    resource_drilled_output, resource_drilled = execute(
-                        r, AwsEc2InstanceMetacheck
-                    )
-                    resource.instances[r] = resource_drilled_output
-                    self.all_associations[r] = resource_drilled_output
-                    if level < 1 and resource_drilled:
-                        check_associated_resources(resource_drilled, level + 1)
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, AwsEc2InstanceMetacheck
+                        )
+                        resource.instances[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
 
         self.all_associations = {}
-        check_associated_resources(self, 0)
+        check_associated_resources(self, 0, self.resource_arn)
 
         return self.all_associations
 
