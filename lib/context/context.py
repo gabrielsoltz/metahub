@@ -169,11 +169,19 @@ class Context:
         client = get_boto3_client(
             self.logger, "resourcegroupstaggingapi", self.resource_region, self.sess
         )
+
+        # Some tools sometimes return incorrect ARNs for some resources, here is an attemp to fix them
+        def fix_arn(arn, resource_type):
+            # Route53 Hosted Zone with Account Id
+            if resource_type == "AwsRoute53HostedZone":
+                if arn.split(":")[4] != "":
+                    fixed_arn = arn.replace(arn.split(":")[4], "")
+                    return fixed_arn
+            return arn
+
         try:
             response = client.get_resources(
-                ResourceARNList=[
-                    self.resource_arn,
-                ]
+                ResourceARNList=[fix_arn(self.resource_arn, self.resource_type)]
             )
             try:
                 tags = response["ResourceTagMappingList"][0]["Tags"]
