@@ -52,7 +52,10 @@ class Metacheck(ContextBase):
             response = self.client.get_policy(PolicyArn=self.resource_arn)
             return response.get("Policy")
         except ClientError as err:
-            if not err.response["Error"]["Code"] == "NoSuchEntityException":
+            if (
+                not err.response["Error"]["Code"] == "NoSuchEntityException"
+                and not err.response["Error"]["Code"] == "NoSuchEntity"
+            ):
                 self.logger.error(
                     "Failed to get_policy {}, {}".format(self.resource_id, err)
                 )

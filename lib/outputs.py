@@ -16,16 +16,19 @@ def generate_output_json(
 ):
     WRITE_FILE = f"{outputs_dir}metahub-{json_mode}-{TIMESTRF}.json"
     with open(WRITE_FILE, "w", encoding="utf-8") as f:
-        json.dump(
-            {
-                "short": mh_findings_short,
-                "full": mh_findings,
-                "inventory": mh_inventory,
-                "statistics": mh_statistics,
-            }[json_mode],
-            f,
-            indent=2,
-        )
+        try:
+            json.dump(
+                {
+                    "short": mh_findings_short,
+                    "full": mh_findings,
+                    "inventory": mh_inventory,
+                    "statistics": mh_statistics,
+                }[json_mode],
+                f,
+                indent=2,
+            )
+        except ValueError as e:
+            print("Error generating JSON Output (" + json_mode + "):", e)
     print_table("JSON (" + json_mode + "): ", WRITE_FILE, banners=args.banners)
 
 
@@ -277,7 +280,6 @@ def generate_outputs(
     output_account_columns = (
         args.output_account_columns or account_columns or mh_statistics["account"]
     )
-    # Hardcoded for now
     output_impact_columns = impact_columns or mh_statistics["impact"]
 
     if mh_findings:
