@@ -110,14 +110,14 @@ class ContextBase:
             max_level = 1
 
             # Debug Recursive:
-            print(
-                "Level: {}, {} > {} > {}".format(
-                    level,
-                    self.resource_arn,
-                    drilled_source_resource_arn,
-                    resource.resource_arn,
-                )
-            )
+            # print(
+            #     "Level: {}, {} > {} > {}".format(
+            #         level,
+            #         self.resource_arn,
+            #         drilled_source_resource_arn,
+            #         resource.resource_arn,
+            #     )
+            # )
 
             # IAM Users
             if (
