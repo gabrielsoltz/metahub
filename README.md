@@ -390,9 +390,7 @@ The Security Hub custom action is deployed as part of the Terraform code. See [D
   <summary>If you want to deploy it manually, you can follow the steps below:</summary>
 
 1. In Security Hub, choose Settings and then choose Custom Actions.
-
 2. Choose Create custom action.
-
 3. Provide a Name, Description, and Custom action ID for the action.
 4. Choose Create custom action. (Make a note of the Custom action ARN. You need to use the ARN when you create a rule to associate with this action in EventBridge.)
 5. In EventBridge, choose Rules and then choose Create rule.
