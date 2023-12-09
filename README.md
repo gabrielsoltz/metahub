@@ -388,6 +388,7 @@ The Security Hub custom action is deployed as part of the Terraform code. See [D
 
 <details>
   <summary>If you want to deploy it manually, you can follow the steps below:</summary>
+
 1. In Security Hub, choose Settings and then choose Custom Actions.
 2. Choose Create custom action.
 3. Provide a Name, Description, and Custom action ID for the action.
