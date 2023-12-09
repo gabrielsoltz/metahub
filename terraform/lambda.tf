@@ -38,6 +38,7 @@ resource "aws_lambda_function" "lambda_zip" {
   timeout          = 600
   layers           = [aws_lambda_layer_version.lambda_layer.id]
   source_code_hash = data.local_file.code_hash.content
+  memory_size      = 256
 
   tags = {
     Service = local.prefix

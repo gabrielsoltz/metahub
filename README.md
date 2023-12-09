@@ -341,11 +341,7 @@ docker run -ti metahub ./metahub -h
 
 **MetaHub** is Lambda/Serverless ready! You can run MetaHub directly on an AWS Lambda function without any additional infrastructure required.
 
-Running MetaHub in a Lambda function allows you to automate its execution based on your defined triggers.
-
-Terraform code is provided for deploying the Lambda function and all its dependencies.
-
-## Lambda use-cases
+Running MetaHub in a Lambda function allows you to automate its execution based on your defined triggers. For example, you can:
 
 - Trigger the MetaHub Lambda function each time there is a new security finding to enrich that finding back in AWS Security Hub.
 - Trigger the MetaHub Lambda function each time there is a new security finding for suppression based on Context.
@@ -364,7 +360,9 @@ terraform init
 terraform apply
 ```
 
-The code will create a zip file for the lambda code and a zip file for the Python dependencies. It will also create a Lambda function and all the required resources.
+The code will create a zip file for the Lambda code and a zip file for the Python dependencies that we will use as Lambda layer. It will also create the Lambda function and all the required resources.
+
+The Terraform code will also create a Security Hub custom action and an EventBridge rule to trigger the Lambda function when the custom action is executed. See below.
 
 ## Customize Lambda behaviour
 
@@ -376,19 +374,20 @@ Terraform will create the minimum required permissions for the Lambda function t
 
 # Run with Security Hub Custom Action
 
-**MetaHub** can be run as a Security Hub Custom Action. This allows you to run MetaHub directly from the Security Hub console for a selected finding or for a selected set of findings.
+**MetaHub** can be run as a [Security Hub Custom Action](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cwe-custom-actions.html). This allows you to run MetaHub directly from the Security Hub console for a selected finding or for a selected set of findings.
 
 <p align="center">
   <img src="docs/imgs/custom_action.png" alt="custom_action" width="850"/>
 </p>
 
-The custom action will then trigger a Lambda function that will run MetaHub for the selected findings. By default, the Lambda function will run MetaHub with the option `--enrich-findings`, which means that it will update your finding back with MetaHub outputs. If you want to change this, see [Customize Lambda behavior](#customize-lambda-behaviour)
+The custom action will then trigger a Lambda function that will run MetaHub for the selected findings.
 
-You need first to create the Lambda function and then create the custom action in Security Hub.
+When you trigger the Lambda using the Security Hub Custom Action, the lambda will read the selected findings for it's context, and it will execute once for each finding. By default, no action will be taken on the findings, but you can change this behavior. See [Customize Lambda behavior](#customize-lambda-behaviour).
 
-For creating the lambda function, follow the instructions in the [Run with Lambda](#run-with-lambda) section.
+The Security Hub custom action is deployed as part of the Terraform code. See [Deploying Lambda](#deploying-lambda) for more information.
 
-For creating the AWS Security Hub custom action:
+<details>
+  <summary>If you want to deploy it manually, you can follow the steps below:</summary>
 
 1. In Security Hub, choose Settings and then choose Custom Actions.
 2. Choose Create custom action.
@@ -407,6 +406,7 @@ For creating the AWS Security Hub custom action:
 15. Choose Next.
 16. Under Select targets, choose the Lambda function
 17. Select the Lambda function you created for MetaHub.
+</details>
 
 # AWS Authentication
 
