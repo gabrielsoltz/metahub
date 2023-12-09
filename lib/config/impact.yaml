@@ -87,7 +87,19 @@ environment:
 application:
   weight: 15
   values:
-    - app-example:
+    - app1:
         score: 1
+    - app2:
+        score: 0.5
+    # - unknown:
+    #     score: 0
+
+owner:
+  weight: 15
+  values:
+    - owner1:
+        score: 1
+    - owner2:
+        score: 0.5
     # - unknown:
     #     score: 0

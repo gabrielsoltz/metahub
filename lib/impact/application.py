@@ -1,4 +1,5 @@
 from lib.config.configuration import applications
+from lib.impact.helpers import check_account, check_tags
 
 
 class Application:
@@ -8,21 +9,16 @@ class Application:
     def get_application(self, resource_arn, resource_values):
         self.logger.info("Calculating application for resource: %s", resource_arn)
 
-        def check_tags(environment_definition):
-            resource_tags = resource_values.get("tags", {})
-            if resource_tags:
-                for tag_key, tag_values in environment_definition.items():
-                    for tag_value in tag_values:
-                        if (
-                            tag_key in resource_tags
-                            and resource_tags[tag_key] == tag_value
-                        ):
-                            return True, {tag_key: tag_value}
-            return False, False
-
         for app in applications:
-            tags_matched, tags_details = check_tags(applications[app].get("tags", {}))
+            tags_matched, tags_details = check_tags(
+                resource_values, applications[app].get("tags", {})
+            )
             if tags_matched:
                 return {app: {"tags": tags_details}}
+            account_matched, account_details = check_account(
+                resource_values, applications[app].get("account", {})
+            )
+            if account_matched:
+                return {app: {"account": account_details}}
 
         return {"unknown": {}}

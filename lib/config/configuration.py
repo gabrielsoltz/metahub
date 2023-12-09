@@ -117,11 +117,55 @@ environments = {
 # You can define how many appliactions you want, then assign each application a value in the file: lib/config/impact.yaml
 
 applications = {
-    "app-example": {
+    "app1": {
         "tags": {
             "awsApplication": [
-                "arn:aws:resource-groups:eu-west-1:123456789012:group/app-example/1c8vpbjkzeeffsz2cqgxpae7b2"
+                "arn:aws:resource-groups:eu-west-1:123456789012:group/app1/0c8vpbjkzeeffsz2cqgxpae7b2"
             ],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["app1"],
+        },
+    },
+    "app2": {
+        "tags": {
+            "awsApplication": [
+                "arn:aws:resource-groups:eu-west-1:123456789012:group/app2/0c8vpbjkzeeffsz2cqgxpae7b2"
+            ],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["app2"],
+        },
+    },
+}
+
+# ---------------------------------- #
+# Impact: Owner Configurations       #
+# ---------------------------------- #
+# You can define the owner by tags, account id or account alias.
+# You can define how owner you want, then assign each owner a value in the file: lib/config/impact.yaml
+
+owners = {
+    "owner1": {
+        "tags": {
+            "Owner": ["owner1"],
+            "owner": ["owner1"],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["owner1"],
+        },
+    },
+    "owner2": {
+        "tags": {
+            "Owner": ["owner2"],
+            "owner": ["owner2"],
+        },
+        "account": {
+            "account_ids": ["123456789012"],
+            "account_aliases": ["owner2"],
         },
     },
 }
