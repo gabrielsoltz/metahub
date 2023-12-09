@@ -2,12 +2,13 @@ from pathlib import Path
 
 import yaml
 
-from lib.config.configuration import findings_severity_value, path_yaml_impact
+from lib.config.configuration import path_yaml_impact
 from lib.impact.access import Access
 from lib.impact.application import Application
 from lib.impact.encryption import Encryption
 from lib.impact.environment import Environment
 from lib.impact.exposure import Exposure
+from lib.impact.findings import Findings
 from lib.impact.owner import Owner
 from lib.impact.status import Status
 
@@ -54,33 +55,6 @@ class Impact:
                         return False
         return True
 
-    def get_findings_score(self, resource_values):
-        self.logger.info("Calculating impact findings score for resource")
-
-        # Initialize the findings score to zero
-        findings_score = 0
-
-        # Iterate through each finding in the resource
-        for f in resource_values["findings"]:
-            for k, v in f.items():
-                # Check if the finding is active
-                if v.get("RecordState") == "ACTIVE":
-                    # Get the severity value for the finding
-                    single_finding_severity = findings_severity_value.get(
-                        v.get("SeverityLabel")
-                    )
-                    # Get the single finding score
-                    single_finding_score = single_finding_severity / max(
-                        findings_severity_value.values()
-                    )
-                    # Sum the single finding score to the findings score
-                    findings_score += single_finding_score
-
-        # Ensure the findings score does not exceed 1
-        if findings_score > 1:
-            findings_score = 1
-        return findings_score
-
     def check_property_values_with_resource(
         self, property_name, property_values, resource_values
     ):
@@ -93,8 +67,8 @@ class Impact:
                         return value_key, value_data["score"]
         return False
 
-    def get_meta_score(self, resource_values):
-        self.logger.info("Calculating impact meta score for resource")
+    def calculate_properties_score(self, resource_values):
+        self.logger.info("Calculating impact properties score for resource")
 
         # Initialize variables to track the meta score details and context
         meta_score_details = {}
@@ -151,9 +125,13 @@ class Impact:
             return False
 
         # Calculate the findings score using the calculate_findings_score method
-        findings_score = self.get_findings_score(resource_values)
-        # Calculate the meta score using the get_meta_score method
-        meta_score = self.get_meta_score(resource_values)
+        findings_score = Findings(self.logger).get_findings_score(
+            resource_arn, resource_values
+        )
+        findings_score = [str(key) for key in findings_score.keys()]
+        findings_score = float(findings_score[0])
+        # Calculate the impact properties score
+        meta_score = self.calculate_properties_score(resource_values)
 
         # Check if the meta score is not "n/a" (i.e., there's context)
         if meta_score != "n/a" and meta_score != 0:
@@ -175,9 +153,7 @@ class Impact:
             impact_score = int(impact_score)  # Return the integer part
 
         # Return the dictionary containing impact scores
-        return {
-            impact_score: {"findings_score": findings_score, "meta_score": meta_score}
-        }
+        return {impact_score: {}}
 
     def generate_impact_checks(self, resource_arn, resource_values):
         self.logger.info("Executing Impact Module")
@@ -189,6 +165,7 @@ class Impact:
             "environment": {},
             "application": {},
             "owner": {},
+            "findings": {},
             "score": {},
         }
         impact_dict["exposure"].update(
@@ -211,5 +188,8 @@ class Impact:
         )
         impact_dict["owner"].update(
             Owner(self.logger).get_owner(resource_arn, resource_values)
+        )
+        impact_dict["findings"].update(
+            Findings(self.logger).get_findings_score(resource_arn, resource_values)
         )
         return impact_dict
