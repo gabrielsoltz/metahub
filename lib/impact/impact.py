@@ -8,6 +8,7 @@ from lib.impact.application import Application
 from lib.impact.encryption import Encryption
 from lib.impact.environment import Environment
 from lib.impact.exposure import Exposure
+from lib.impact.owner import Owner
 from lib.impact.status import Status
 
 
@@ -187,6 +188,7 @@ class Impact:
             "status": {},
             "environment": {},
             "application": {},
+            "owner": {},
             "score": {},
         }
         impact_dict["exposure"].update(
@@ -206,5 +208,8 @@ class Impact:
         )
         impact_dict["application"].update(
             Application(self.logger).get_application(resource_arn, resource_values)
+        )
+        impact_dict["owner"].update(
+            Owner(self.logger).get_owner(resource_arn, resource_values)
         )
         return impact_dict
