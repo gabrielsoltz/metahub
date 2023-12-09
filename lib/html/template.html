@@ -244,10 +244,10 @@
           var value = cell.getValue();
           var color;
           var emoji;
-          if (value === "not-attached" || value === "not-running") {
+          if (value === "not-attached" || value === "not-running" || value === "not-enabled") {
             color = "green";
             emoji = "🟢";
-          } else if (value === "attached" || value === "running") {
+          } else if (value === "attached" || value === "running" || value === "enabled") {
             color = "orange";
             emoji = "🟠";
           } else if (value === "unknown") {

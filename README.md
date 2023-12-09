@@ -73,7 +73,7 @@ The **Context** module has the capability to retrieve information from the affec
 
 Under the `config` key, you can find anyting related to the configuration of the affected resource. For example, if the affected resource is an EC2 Instance, you will see keys like `private_ip`, `public_ip`, or `instance_profile`.
 
-You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
+You can filter your findings based on Config outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filters](#config-filters).
 
 ## Associations
 
@@ -81,7 +81,7 @@ Under the `associations` key, you will find all the associated resources of the 
 
 Associations are key to understanding the context and impact of your security findings as their exposure.
 
-You can filter your findings based on Associations outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filtering](#config-filtering).
+You can filter your findings based on Associations outputs using the option: `--mh-filters-config <key> {True/False}`. See [Config Filters](#config-filters).
 
 ## Tags
 
@@ -204,9 +204,7 @@ The formula for getting the impact score include the following criteria:
 
 ## Owner
 
-**Owner** focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information.
-
-An automated way to determine the owner of a resource is critical for security teams. It allows them to focus on the most critical issues and escalate them to the right people in automated workflows. But automating workflows this way, it is only viable if you have a reliable way to define the impact of a finding, which is why MetaHub also focuses on impact.
+**Owner** focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information. An automated way to determine the owner of a resource is critical for security teams. It allows them to focus on the most critical issues and assign them as fast as possible to the right people in automated workflows. You can define your owner definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
 
 | **Possible Statuses** | **Value** | **Description**                             |
 | --------------------- | :-------: | ------------------------------------------- |
