@@ -128,7 +128,7 @@ The formula for getting the impact score include the following criteria:
 - [Environment](#environment)
 - [Application](#application)
 - [Owner](#owner)
-- [Findings](#findings-scoring)
+- [Findings](#findings)
 
 ## Exposure
 
