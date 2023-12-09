@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     # ]
     ACTIONS = []
 
-    # This are the minimum options required to run the Lambda, don't change this
+    # These are the minimum options required to run the Lambda, don't change this
     LAMBDA_OPTIONS = [
         "--output-modes",
         "lambda",
