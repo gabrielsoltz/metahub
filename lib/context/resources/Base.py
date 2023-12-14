@@ -369,6 +369,27 @@ class ContextBase:
                                 resource_drilled, level + 1, resource.resource_arn
                             )
 
+            # S3 Buckets
+            if (
+                hasattr(self, "s3s")
+                and self.s3s
+                and self.resource_type != "AwsS3Bucket"
+            ):
+                from lib.context.resources.AwsS3Bucket import Metacheck as S3Metacheck
+
+                for r, v in list(self.s3s.items()):
+                    # Check if not a circular reference
+                    if r != self.resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, S3Metacheck
+                        )
+                        self.s3s[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, 1, self.resource_arn
+                            )
+
         self.all_associations = {}
         check_associated_resources(self, 0, self.resource_arn)
 
