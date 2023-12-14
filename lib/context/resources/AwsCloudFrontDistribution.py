@@ -1,5 +1,6 @@
 """ResourceType: AwsCloudFrontDistribution"""
 
+from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
@@ -26,8 +27,10 @@ class Metacheck(ContextBase):
         self.distribution = self.describe_distribution()
         if not self.distribution:
             return False
+        self.distribution_origins = self._describe_distribution_origins()
         # Associated MetaChecks
         self.waf_web_acls = self._describe_distribution_waf_web_acls()
+        self.s3s = self._describe_distribution_origins_s3()
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -62,6 +65,45 @@ class Metacheck(ContextBase):
             return {self.distribution.get("DistributionConfig").get("WebACLId"): {}}
         return False
 
+    def _describe_distribution_origins(self):
+        if self.distribution.get("DistributionConfig").get("Origins"):
+            return (
+                self.distribution.get("DistributionConfig").get("Origins").get("Items")
+            )
+        return False
+
+    # Associations
+
+    def _describe_distribution_origins_s3(self):
+        s3s = {}
+        if self.distribution_origins:
+            for origin in self.distribution_origins:
+                # S3 using website endpoint
+                if "s3-website" in origin.get("DomainName") and origin.get(
+                    "DomainName"
+                ).endswith(".amazonaws.com"):
+                    arn = generate_arn(
+                        origin.get("DomainName").split(".s3")[0],
+                        "s3",
+                        "bucket",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    s3s[arn] = {}
+                # S3 not using website endpoint
+                elif origin.get("S3OriginConfig"):
+                    arn = generate_arn(
+                        origin.get("DomainName").split(".s3")[0],
+                        "s3",
+                        "bucket",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    s3s[arn] = {}
+        return s3s
+
     # Context Config
 
     def name(self):
@@ -76,14 +118,10 @@ class Metacheck(ContextBase):
             )
         return False
 
-    def origin(self):
-        origins = {}
-        if self.distribution.get("DistributionConfig").get("Origins"):
-            for origin in (
-                self.distribution.get("DistributionConfig").get("Origins").get("Items")
-            ):
-                origins[origin.get("Id")] = origin.get("DomainName")
-        return origins
+    def origins(self):
+        if self.distribution_origins:
+            return self.distribution_origins
+        return False
 
     def default_root_object(self):
         if self.distribution.get("DistributionConfig").get("DefaultRootObject"):
@@ -127,6 +165,7 @@ class Metacheck(ContextBase):
     def associations(self):
         associations = {
             "waf_web_acls": self.waf_web_acls,
+            "s3s": self.s3s,
         }
         return associations
 
@@ -134,7 +173,7 @@ class Metacheck(ContextBase):
         checks = {
             "name": self.name(),
             "aliases": self.aliases(),
-            "origin": self.origin(),
+            "origins": self.origins(),
             "default_root_object": self.default_root_object(),
             "certificate": self.certificate(),
             "field_level_encryption": self.field_level_encryption(),
