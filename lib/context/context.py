@@ -250,47 +250,142 @@ class Context:
             self.resource_arn,
         )
         # Organizations
-        organizations = False
         organizations_client = get_boto3_client(
             self.logger, "organizations", self.resource_region, self.sess
         )
+        # Describe Organization
         try:
-            response = organizations_client.describe_account(
-                AccountId=self.resource_account_id
+            response_describe_organization = (
+                organizations_client.describe_organization().get("Organization")
             )
-            organizations_name = response["Account"]["Name"]
-            response = organizations_client.list_parents(
-                ChildId=self.resource_account_id
+            organization_arn = response_describe_organization.get("Arn")
+            organization_id = response_describe_organization.get("Id")
+            organization_master_id = response_describe_organization.get(
+                "MasterAccountId"
             )
-            ou_id = response["Parents"][0]["Id"]
-            if ou_id and response["Parents"][0]["Type"] == "ORGANIZATIONAL_UNIT":
-                response = organizations_client.describe_organizational_unit(
-                    OrganizationalUnitId=ou_id
+            organization_master_email = response_describe_organization.get(
+                "MasterAccountEmail"
+            )
+            organization_feature_set = response_describe_organization.get("FeatureSet")
+            # Describe Delegations
+            # This only works if we are the master account or a delegated administrator, but we try anyways to get the info
+            organization_delegated_administrators = {}
+            try:
+                response_list_delegated_administrators = (
+                    organizations_client.list_delegated_administrators().get(
+                        "DelegatedAdministrators"
+                    )
                 )
-                organizations_ou = response["OrganizationalUnit"]["Name"]
-            elif ou_id:
-                organizations_ou = "ROOT"
+                if response_list_delegated_administrators:
+                    for (
+                        delegated_administrator
+                    ) in response_list_delegated_administrators:
+                        organization_delegated_administrators[
+                            delegated_administrator.get("Id")
+                        ] = {}
+            except ClientError as err:
+                if not err.response["Error"]["Code"] == "AccessDeniedException":
+                    self.logger.warning(
+                        "Failed to list_delegated_administrators: %s, for resource: %s - %s",
+                        self.resource_account_id,
+                        self.resource_arn,
+                        err,
+                    )
+            # Organizations Details
             organizations = {
-                "Name": organizations_name,
-                "OU": organizations_ou,
+                "Arn": organization_arn,
+                "Id": organization_id,
+                "MasterAccountId": organization_master_id,
+                "MasterAccountEmail": organization_master_email,
+                "FeatureSet": organization_feature_set,
+                "DelegatedAdministrators": organization_delegated_administrators,
             }
         except ClientError as err:
-            if err.response["Error"]["Code"] == "AWSOrganizationsNotInUseException":
-                self.logger.info(
-                    "Failed to describe_account: %s, for resource: %s - %s",
-                    self.resource_account_id,
-                    self.resource_arn,
-                    err,
-                )
-            else:
+            organizations = False
+            if not err.response["Error"]["Code"] == "AWSOrganizationsNotInUseException":
                 self.logger.warning(
-                    "Failed to describe_account: %s, for resource: %s - %s",
+                    "Failed to describe_organization: %s, for resource: %s - %s",
                     self.resource_account_id,
                     self.resource_arn,
                     err,
                 )
-
         return organizations
+
+    def get_account_organizations_details(self):
+        # The following operations can be called only from the organization’s management account or by a member account that is a delegated administrator.
+        # We can't check which are the delegated administrators from the member account, so we will only execute this if we are the master account.
+        organizations_details = {}
+        self.logger.info(
+            "get_account_organizations_details for account: %s (%s)",
+            self.resource_account_id,
+            self.resource_arn,
+        )
+        # Organizations
+        organizations_client = get_boto3_client(
+            self.logger, "organizations", self.resource_region, self.sess
+        )
+        # Get parent ID and OU
+        try:
+            response_list_parents = organizations_client.list_parents(
+                ChildId=self.resource_account_id
+            )
+            parent_id = response_list_parents["Parents"][0]["Id"]
+            parent_type = response_list_parents["Parents"][0]["Type"]
+            if parent_id and parent_type == "ORGANIZATIONAL_UNIT":
+                response_describe_organizational_unit = (
+                    organizations_client.describe_organizational_unit(
+                        OrganizationalUnitId=parent_id
+                    )
+                )
+                organizations_ou = response_describe_organizational_unit[
+                    "OrganizationalUnit"
+                ]["Name"]
+            elif parent_id:
+                organizations_ou = "ROOT"
+            organizations_details["ParentId"] = parent_id
+            organizations_details["ParentType"] = parent_type
+            organizations_details["OU"] = organizations_ou
+        except ClientError as err:
+            if not err.response["Error"]["Code"] == "AccessDeniedException":
+                self.logger.warning(
+                    "Failed to list_parents: %s, for resource: %s - %s",
+                    self.resource_account_id,
+                    self.resource_arn,
+                    err,
+                )
+        # Policies
+        available_organizations_policies = [
+            "SERVICE_CONTROL_POLICY",
+            "TAG_POLICY",
+            "BACKUP_POLICY",
+            "AISERVICES_OPT_OUT_POLICY",
+        ]
+        organizations_details["Policies"] = {}
+        for policy_type in available_organizations_policies:
+            response_list_policies = organizations_client.list_policies(
+                Filter=policy_type
+            )
+            if response_list_policies.get("Policies"):
+                for policy in response_list_policies.get("Policies"):
+                    policy_id = policy.get("Id")
+                    policy_name = policy.get("Name")
+                    policy_arn = policy.get("Arn")
+                    policy_type = policy.get("Type")
+                    policy_description = policy.get("Description")
+                    policy_awsmanaged = policy.get("AwsManaged")
+                    targes = organizations_client.list_targets_for_policy(
+                        PolicyId=policy_id
+                    )["Targets"]
+                    organizations_details["Policies"][policy_id] = {
+                        "Name": policy_name,
+                        "Arn": policy_arn,
+                        "Type": policy_type,
+                        "Description": policy_description,
+                        "AwsManaged": policy_awsmanaged,
+                        "Targets": targes,
+                    }
+
+        return organizations_details
 
     def get_account_alternate_contact(self, alternate_contact_type="SECURITY"):
         # https://docs.aws.amazon.com/accounts/latest/reference/using-orgs-trusted-access.html

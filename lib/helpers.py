@@ -169,6 +169,7 @@ def get_parser():
         default=[
             "config",
             "tags",
+            "account",
         ],
         help="This option defines which actions MetaHub will execute to get the context of the affected resources. By default, MetaHub will execute config and tags actions. CloudTrail and Account are disabled by default as could be expensive to execute and requires non-standard iam actions policies. Check that before enabling them",
         choices=[
