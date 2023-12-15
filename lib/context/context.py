@@ -313,7 +313,6 @@ class Context:
 
     def get_account_organizations_details(self):
         # The following operations can be called only from the organization’s management account or by a member account that is a delegated administrator.
-        # We can't check which are the delegated administrators from the member account, so we will only execute this if we are the master account.
         organizations_details = {}
         self.logger.info(
             "get_account_organizations_details for account: %s (%s)",
