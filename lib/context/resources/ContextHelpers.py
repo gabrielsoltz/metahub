@@ -4,16 +4,14 @@ from lib.AwsHelpers import get_boto3_client
 
 
 class IamHelper:
-    def __init__(self, logger, finding, role, sess, instance_profile=False):
+    def __init__(self, logger, finding, sess):
         self.logger = logger
+        self.finding = finding
         self.region = finding["Region"]
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
-        self.finding = finding
-        self.sess = sess
         self.resource_arn = finding["Resources"][0]["Id"]
-        self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
-        self.iam_client = get_boto3_client(self.logger, "iam", self.region, self.sess)
+        self.iam_client = get_boto3_client(self.logger, "iam", self.region, sess)
 
     def get_role_from_instance_profile(self, instance_profile):
         if "/" in instance_profile:

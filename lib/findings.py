@@ -265,6 +265,35 @@ def evaluate_finding(
                 AwsAccountData[finding["AwsAccountId"]] = mh_account
             else:
                 mh_account = AwsAccountData[finding["AwsAccountId"]]
+            # For fetching Organizations details, we need to be in the master account or a delegated administrator
+            if (
+                finding["AwsAccountId"] in AwsAccountData
+                and AwsAccountData[finding["AwsAccountId"]].get("Organizations")
+                and not AwsAccountData[finding["AwsAccountId"]]
+                .get("Organizations")
+                .get("Details")
+            ):
+                # It is the master account or a delegated administrator
+                if finding["AwsAccountId"] == AwsAccountData[
+                    finding["AwsAccountId"]
+                ].get("Organizations").get("MasterAccountId") or finding[
+                    "AwsAccountId"
+                ] in AwsAccountData[
+                    finding["AwsAccountId"]
+                ].get(
+                    "Organizations"
+                ).get(
+                    "DelegatedAdministrators"
+                ):
+                    organizations_details = context.get_account_organizations_details()
+                    AwsAccountData[finding["AwsAccountId"]]["Organizations"][
+                        "Details"
+                    ] = organizations_details
+                else:
+                    AwsAccountData[finding["AwsAccountId"]]["Organizations"][
+                        "Details"
+                    ] = "n/a"
+                mh_account = AwsAccountData[finding["AwsAccountId"]]
         else:
             mh_account = False
         # If both Tags and Config matchs are True we show the resource
