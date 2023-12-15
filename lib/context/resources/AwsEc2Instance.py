@@ -70,12 +70,7 @@ class Metacheck(ContextBase):
                 ],
             )
         except ClientError as err:
-            if err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":
-                self.logger.info(
-                    "Failed to describe_instance: {}, {}".format(self.resource_id, err)
-                )
-                return False
-            else:
+            if not err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":
                 self.logger.error(
                     "Failed to describe_instance: {}, {}".format(self.resource_id, err)
                 )
@@ -91,7 +86,7 @@ class Metacheck(ContextBase):
             if profile:
                 profile_arn = profile.get("Arn")
                 arn = IamHelper(
-                    self.logger, self.finding, False, self.sess, profile_arn
+                    self.logger, self.finding, self.sess
                 ).get_role_from_instance_profile(profile_arn)
                 if arn:
                     iam_roles[arn] = {}

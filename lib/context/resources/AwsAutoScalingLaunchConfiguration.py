@@ -83,7 +83,7 @@ class Metacheck(ContextBase):
         if self.launch_configuration:
             instance_profile = self.launch_configuration.get("IamInstanceProfile")
             arn = IamHelper(
-                self.logger, self.finding, False, self.sess, instance_profile
+                self.logger, self.finding, self.sess
             ).get_role_from_instance_profile(instance_profile)
             iam_roles[arn] = {}
 

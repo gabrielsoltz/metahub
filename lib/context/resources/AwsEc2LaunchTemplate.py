@@ -92,7 +92,7 @@ class Metacheck(ContextBase):
                 elif "Name" in instance_profile:
                     instance_profile = instance_profile.get("Name")
                 arn = IamHelper(
-                    self.logger, self.finding, False, self.sess, instance_profile
+                    self.logger, self.finding, self.sess
                 ).get_role_from_instance_profile(instance_profile)
                 iam_roles[arn] = {}
 
