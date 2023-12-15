@@ -69,14 +69,13 @@ class Metacheck(ContextBase):
                     }
                 ],
             )
+            if response["Reservations"]:
+                return response["Reservations"][0]["Instances"][0]
         except ClientError as err:
             if not err.response["Error"]["Code"] == "InvalidInstanceID.NotFound":
                 self.logger.error(
                     "Failed to describe_instance: {}, {}".format(self.resource_id, err)
                 )
-                return False
-        if response["Reservations"]:
-            return response["Reservations"][0]["Instances"][0]
         return False
 
     def _describe_instance_iam_roles(self):
