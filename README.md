@@ -146,11 +146,11 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown              |     -     | The resource couldn't be checked                                                                               |
 
 <details>
-  <summary>Expanding the Exposure key you get the following details</summary>
+  <summary>In adittion to the status, you get the following details:</summary>
 Example for an effectively-public resource:
 
 ```json
-"exposure": {
+"exposure": {                             --> The exposure key
   "effectively-public": {                 --> 🔴 effectively-public
     "entrypoint": "66.66.66.66",          --> The entrypoint to the resource from the Internet (Ip, Domain, etc.)
     "unrestricted_ingress_rules": [       --> The unrestricted ingress rules, if any
@@ -553,12 +553,12 @@ Show all findings titles together under each affected resource and the `AwsAccou
   "AwsAccountId": "obfuscated",
   "Region": "us-east-1",
   "ResourceType": "AwsSageMakerNotebookInstance",
-  "config: {},
-  "associations: {},
-  "tags: {},
-  "cloudtrail: {},
-  "account: {}
-  "impact: {}
+  "config": {},
+  "associations": {},
+  "tags": {},
+  "cloudtrail": {},
+  "account": {},
+  "impact": {}
 },
 ```
 
@@ -615,12 +615,12 @@ Show all findings with all data. Findings are organized by ResourceId (ARN). For
   "AwsAccountId": "obfuscated",
   "Region": "eu-west-1",
   "ResourceType": "AwsSageMakerNotebookInstance",
-  "config: {},
-  "associations: {},
-  "tags: {},
-  "cloudtrail: {},
-  "account: {}
-  "impact: {}
+  "config": {},
+  "associations": {},
+  "tags": {},
+  "cloudtrail": {},
+  "account": {},
+  "impact": {}
 },
 ```
 
