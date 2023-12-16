@@ -150,7 +150,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown              |     -     | The resource couldn't be checked                                                                               |
 
 <details>
-  <summary>Example for an effectively-public resource:</summary>
+  <summary>Example for an effectively-public resource</summary>
 
 ```json
 "exposure": {                             --> The exposure key
@@ -206,7 +206,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown                 |     -     | The policy couldn't be checked.                                                                                                              |
 
 <details>
-  <summary>Example for an unrestricted-actions resource:</summary>
+  <summary>Example for an unrestricted-actions resource</summary>
 
 ```json
 "access": {                                --> The access key
@@ -240,7 +240,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown            |     -     | The resource encryption couldn't be checked.                        |
 
 <details>
-  <summary>Example for an unencrypted resource:</summary>
+  <summary>Example for an unencrypted resource</summary>
 
 ```json
 "encryption": {                                --> The encryption key
@@ -270,7 +270,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown            |     -     | The resource couldn't be checked for status.              |
 
 <details>
-  <summary>Example for a running resource:</summary>
+  <summary>Example for a running resource</summary>
 
 ```json
 "status": {                             --> The status key
@@ -295,7 +295,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown            |     -     | The resource couldn't be checked for enviroment. |
 
 <details>
-  <summary>Example for a production resource matched by Tags:</summary>
+  <summary>Example for a production resource matched by Tags</summary>
 
 ```json
 "environment": {                          --> The environment key
@@ -318,7 +318,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown            |     -     | The resource couldn't be checked for application. |
 
 <details>
-  <summary>Example for a resource matched by myApplication Tag:</summary>
+  <summary>Example for a resource matched by myApplication Tag</summary>
 
 ```json
 "application": {                          --> The application key
@@ -341,11 +341,11 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown            |     -     | The resource couldn't be checked for owner. |
 
 <details>
-  <summary>Example for a resource matched by Account Id:</summary>
+  <summary>Example for a resource matched by Account Id</summary>
 
 ```json
-"application": {                          --> The application key
-  "payments-app": {                       --> The application value, payments-app
+"owner": {                          --> The application key
+  "payments-team": {                       --> The application value, payments-app
     "account": {                          --> The parameters used for evaluating the environment, in this case the account
         "account_ids": ["123456789012"],  --> The account ids found used for evaluating the environment
         "account_aliases": [],
