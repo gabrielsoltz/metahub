@@ -154,7 +154,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 
 ```json
 "exposure": {                             --> The exposure key
-  "effectively-public": {                 --> 🔴 effectively-public
+  "effectively-public": {                 --> The access value, effectively-public
     "entrypoint": "66.66.66.66",          --> The entrypoint to the resource from the Internet (Ip, Domain, etc.)
     "unrestricted_ingress_rules": [       --> The unrestricted ingress rules, if any
       {
@@ -210,7 +210,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 
 ```json
 "access": {                                --> The access key
-  "unrestricted-actions": {                --> The exposure value, effectively-public
+  "unrestricted-actions": {                --> The access value, unrestricted-actions
     "wildcard_actions": {                  --> The wildcard policies, if any
       "arn:aws:iam::627901510076:policy/eu-west-1-stg-backoffice-iam-policy-dynamodb-cache": [
         {
