@@ -154,7 +154,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 
 ```json
 "exposure": {                             --> The exposure key
-  "effectively-public": {                 --> The access value, effectively-public
+  "effectively-public": {                 --> The exposure value, effectively-public
     "entrypoint": "66.66.66.66",          --> The entrypoint to the resource from the Internet (Ip, Domain, etc.)
     "unrestricted_ingress_rules": [       --> The unrestricted ingress rules, if any
       {
