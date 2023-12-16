@@ -13,35 +13,23 @@
 # Table of Contents
 
 - [Description](#description)
-
 - [Quick Run](#quick-run)
-
 - [Context](#context)
 - [Impact](#impact)
 - [High Level Architecture](#high-level-architecture)
 - [Use Cases](#use-cases)
-
 - [Configuration](#customizing-configuration)
-
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
 - [Run with Security Hub Custom Action](#run-with-security-hub-custom-action)
-
 - [AWS Authentication](#aws-authentication)
-
 - [Configuring Security Hub](#configuring-security-hub)
 - [Configuring Context](#configuring-context)
-
 - [Inputs](#Inputs)
-
-- [Filters](#filters)
-
-- [Updating Workflow Status](#updating-workflow-status)
-- [Enriching Findings](#enriching-findings)
-
 - [Output Modes](#output-modes)
-- [Findings Aggregation](#findings-aggregation)
+- [Filters](#filters)
+- [Security Hub Actions](#security-hub-actions)
 
 # Description
 
@@ -67,7 +55,7 @@ The following is the JSON output for a an EC2 instance; see how MetaHub organize
   <img src="docs/imgs/metahub-terminal.gif" alt="Diagram" width="850"/>
 </p>
 
-**MetaHub** provides a range of ways to list, manage and output your security findings for investigation, suppression, updating, and integration with other tools or alerting systems. To avoid _Shadowing_ and _Duplication_, **MetaHub** organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation). It supports different **[Output Modes](#output-modes)**, some of them **json** based like **json-inventory**, **json-statistics**, **json-short**, **json-full**, but also powerfull **html**, **xlsx** and **csv**. These outputs are customizable; you can choose which columns to show. For example, you may need a report about your affected resources, adding the tag Owner, Service, and Environment and nothing else. Check the configuration file and define the columns you need.
+**MetaHub** provides a range of ways to list, manage and output your security findings for investigation, suppression, updating, and integration with other tools or alerting systems. To avoid _Shadowing_ and _Duplication_, **MetaHub** organizes related findings together when they pertain to the same resource. For more information, refer to [Outputs](#Outputs). It supports different **[Output Modes](#output-modes)**, some of them **json** based like **json-inventory**, **json-statistics**, **json-short**, **json-full**, but also powerfull **html**, **xlsx** and **csv**. These outputs are customizable; you can choose which columns to show. For example, you may need a report about your affected resources, adding the tag Owner, Service, and Environment and nothing else. Check the configuration file and define the columns you need.
 
 If you are using **AWS Security Hub**, **MetaHub** integrate smoothly and extends it's fucntionalities. It can be used as a **[Security Hub Custom Action](#run-with-security-hub-custom-action)**, it supports (**[AWS Security Hub filtering](security-hub-filtering)**), you can manage the **[workflow status of your findings](#updating-workflow-status)**, and you can even **[enrich your findings directly in AWS Security Hub](#enriching-findings)**.
 
@@ -402,7 +390,7 @@ The Security Hub custom action is deployed as part of the Terraform code. See [D
 
 # AWS Authentication
 
-- Ensure you have AWS credentials set up on your local machine (or from where you will run MetaHub).
+Ensure you have AWS credentials set up on your local machine (or from where you will run MetaHub).
 
 For example, you can use `aws configure` option.
 
@@ -487,13 +475,9 @@ You also can combine AWS Security Hub findings with input ASFF files specifying 
 
 When using a file as input, you can't use the option `--sh-filters` for filter findings, as this option relies on AWS API for filtering. You can't use the options `--update-findings` or `--enrich-findings` as those findings are not in the AWS Security Hub. If you are reading from both sources at the same time, only the findings from AWS Security Hub will be updated.
 
-# Output Modes
+# Outputs
 
-**MetaHub** can generate different programmatic and visual outputs. By default, all output modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html`, `csv`, and `xlsx`.
-
-The outputs will be saved in the `outputs/` folder with the execution date.
-
-If you want only to generate a specific output mode, you can use the option `--output-modes` with the desired output mode.
+**MetaHub** can generate different programmatic and visual outputs. By default, all output modes are enabled: `json-short`, `json-full`, `json-statistics`, `json-inventory`, `html`, `csv`, and `xlsx`. If you want only to generate a specific output mode, you can use the option `--output-modes` with the desired output mode. The outputs will be saved in the `outputs/` folder with the execution date.
 
 For example, if you only want to generate the output `json-short`, you can use:
 
@@ -507,6 +491,8 @@ If you want to generate `json-short`, `json-full` and `html` outputs, you can us
 ./metahub.py --output-modes json-short json-full html
 ```
 
+**MetaHub** organizes the security findings affecting the same resource all together under the `findings` key for in an attempt to avoid Shadowing (when two checks refer to the same issue, but one in a more generic way than the other one) and Duplication (when you use more than one scanner and get the same problem from more than one.). You can see this behaviour clear in the outputs `json-short`, `json-full` and `html`.
+
 - [JSON](#json)
 - [HTML](#html)
 - [CSV](#csv)
@@ -518,7 +504,7 @@ If you want to generate `json-short`, `json-full` and `html` outputs, you can us
 
 Show all findings titles together under each affected resource and the `AwsAccountId`, `Region`, and `ResourceType`:
 
-```
+```json
 "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/obfuscated": {
   "findings": [
     "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
@@ -541,7 +527,7 @@ Show all findings titles together under each affected resource and the `AwsAccou
 
 Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding, you will also get: `SeverityLabel,` `Workflow,` `RecordState,` `Compliance,` `Id`, and `ProductArn`:
 
-```
+```json
 "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/obfuscated": {
   "findings": [
     {
@@ -603,7 +589,7 @@ Show all findings with all data. Findings are organized by ResourceId (ARN). For
 
 Show a list of all resources with their ARN.
 
-```
+```json
 [
   "arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/obfuscated",
   "arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/obfuscated"
@@ -614,12 +600,12 @@ Show a list of all resources with their ARN.
 
 Show statistics for each field/value. In the output, you will see each field/value and the number of occurrences; for example, the following output shows statistics for six findings.
 
-```
+```json
 {
   "Title": {
     "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": 2,
     "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": 2,
-    "SageMaker.3 Users should not have root access to SageMaker notebook instances": 2,
+    "SageMaker.3 Users should not have root access to SageMaker notebook instances": 2
   },
   "SeverityLabel": {
     "HIGH": 6
@@ -836,7 +822,9 @@ Examples:
 ./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
 ```
 
-# Updating Workflow Status
+# Security Hub Actions
+
+## Updating Workflow Status
 
 You can use **MetaHub** to update your AWS Security Hub Findings workflow status (`NOTIFIED,` `NEW,` `RESOLVED,` `SUPPRESSED`) with a single command. You will use the `--update-findings` option to update all the findings from your MetaHub query. This means you can update one, ten, or thousands of findings using only one command. AWS Security Hub API is limited to 100 findings per update. Metahub will split your results into 100 items chucks to avoid this limitation and update your findings beside the amount.
 
@@ -858,7 +846,7 @@ Running the following update command will update those six findings' workflow st
 
 The `--update-findings` will ask you for confirmation before updating your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
 
-# Enriching Findings
+## Enriching Findings
 
 You can use **MetaHub** to enrich back your AWS Security Hub Findings with Context outputs using the option `--enrich-findings`. Enriching your findings means updating them directly in AWS Security Hub. **MetaHub** uses the `UserDefinedFields` field for this.
 
@@ -875,124 +863,6 @@ For example, you want to enrich all AWS Security Hub findings with `WorkflowStat
 </p>
 
 The `--enrich-findings` will ask you for confirmation before enriching your findings. You can skip this confirmation by using the option `--no-actions-confirmation`.
-
-# Findings Aggregation
-
-Working with Security Findings sometimes introduces the problem of Shadowing and Duplication.
-
-Shadowing is when two checks refer to the same issue, but one in a more generic way than the other one.
-
-Duplication is when you use more than one scanner and get the same problem from more than one.
-
-Think of a Security Group with port 3389/TCP open to 0.0.0.0/0. Let's use Security Hub findings as an example.
-
-If you are using one of the default Security Standards like `AWS-Foundational-Security-Best-Practices,` you will get two findings for the same issue:
-
-- `EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports`
-- `EC2.19 Security groups should not allow unrestricted access to ports with high risk`
-
-If you are also using the standard CIS AWS Foundations Benchmark, you will also get an extra finding:
-
-- `4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389`
-
-Now, imagine that SG is not in use. In that case, Security Hub will show an additional fourth finding for your resource!
-
-- `EC2.22 Unused EC2 security groups should be removed`
-
-So now you have in your dashboard four findings for one resource!
-
-Suppose you are working with multi-account setups and many resources. In that case, this could result in many findings that refer to the same thing without adding any extra value to your analysis.
-
-**MetaHub** aggregates security findings under the affected resource.
-
-This is how MetaHub shows the previous example with output-mode json-short:
-
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-    "EC2.19 Security groups should not allow unrestricted access to ports with high risk",
-    "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports",
-    "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389",
-    "EC2.22 Unused EC2 security groups should be removed"
-  ],
-  "AwsAccountId": "01234567890",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup"
-}
-```
-
-This is how MetaHub shows the previous example with output-mode json-full:
-
-```sh
-"arn:aws:ec2:eu-west-1:01234567890:security-group/sg-01234567890": {
-  "findings": [
-    {
-      "EC2.19 Security groups should not allow unrestricted access to ports with high risk": {
-        "SeverityLabel": "CRITICAL",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "EC2.18 Security groups should only allow unrestricted incoming traffic for authorized ports": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "EC2.22 Unused EC2 security groups should be removed": {
-        "SeverityLabel": "MEDIUM",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:01234567890:subscription/aws-foundational-security-best-practices/v/1.0.0/EC2.22/finding/01234567890-1234-1234-1234-01234567890",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    }
-  ],
-  "AwsAccountId": "01234567890",
-  "AwsAccountAlias": "obfuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsEc2SecurityGroup"
-}
-```
-
-Your findings are combined under the ARN of the resource affected, ending in only one result or one non-compliant resource.
-
-You can now work in MetaHub with all these four findings together as if they were only one. For example, you can update these four Workflow Status findings using only one command: See [Updating Workflow Status](#updating-workflow-status)
 
 # Contributing
 
