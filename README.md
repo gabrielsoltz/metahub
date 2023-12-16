@@ -344,8 +344,8 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
   <summary>Example for a resource matched by Account Id</summary>
 
 ```json
-"owner": {                          --> The application key
-  "payments-team": {                       --> The application value, payments-app
+"owner": {                                --> The owner key
+  "payments-team": {                      --> The owner value, payments-app
     "account": {                          --> The parameters used for evaluating the environment, in this case the account
         "account_ids": ["123456789012"],  --> The account ids found used for evaluating the environment
         "account_aliases": [],
