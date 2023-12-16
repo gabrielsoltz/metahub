@@ -121,6 +121,10 @@ Under the key `account`, you will find information about the account where the a
 
 # Impact
 
+<p align="center">
+  <img src="docs/imgs/impact.png" alt="Affected Resource" width="850"/>
+</p>
+
 The impact module in MetaHub focuses on understanding the 7 key properties about the affecting resurce: **exposure**, **access**, **encryption**, **status**, **environment**, **application**, and **owner** and combining their values with the values of all the security findings affecting the same resource and their severities to generate an **Impact Score**. The impact score is a number between 0 and 100, where 100 is the highest impact.
 
 - [Exposure](#exposure)
@@ -146,8 +150,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 | 🔵 unknown              |     -     | The resource couldn't be checked                                                                               |
 
 <details>
-  <summary>In adittion to the status, you get the following details:</summary>
-Example for an effectively-public resource:
+  <summary>Example for an effectively-public resource:</summary>
 
 ```json
 "exposure": {                             --> The exposure key
@@ -202,6 +205,30 @@ Example for an effectively-public resource:
 | 🟢 restricted              |    0%     | The policy is restricted.                                                                                                                    |
 | 🔵 unknown                 |     -     | The policy couldn't be checked.                                                                                                              |
 
+<details>
+  <summary>Example for an unrestricted-actions resource:</summary>
+
+```json
+"access": {                                --> The access key
+  "unrestricted-actions": {                --> The exposure value, effectively-public
+    "wildcard_actions": {                  --> The wildcard policies, if any
+      "arn:aws:iam::627901510076:policy/eu-west-1-stg-backoffice-iam-policy-dynamodb-cache": [
+        {
+          "Action": [
+            "dynamodb:*"                   --> The wildcard action
+          ],
+          "Effect": "Allow",
+          "Resource": [
+            "arn:aws:dynamodb:eu-west-1:01234567901:table/table",
+          ]
+        }
+      ],
+  }
+}
+```
+
+</details>
+
 ## Encryption
 
 **Encryption** evaluate the different encryption layers based on each resource type. For example, for some resources it evaluates if `at_rest` and `in_transit` encryption configuration are both enabled.
@@ -211,6 +238,22 @@ Example for an effectively-public resource:
 | 🔴 unencrypted        |   100%    | The resource is not fully encrypted.                                |
 | 🟢 encrypted          |    0%     | The resource is fully encrypted including any of it's associations. |
 | 🔵 unknown            |     -     | The resource encryption couldn't be checked.                        |
+
+<details>
+  <summary>Example for an unencrypted resource:</summary>
+
+```json
+"encryption": {                                --> The encryption key
+  "unencrypted": {                             --> The encryption value, unencrypted
+    "unencrypted_resources": [                 --> the unencrypted resources associated with the affected resource, if any
+      "arn:aws:ec2:eu-west-1:012345678901:volume/vol-0ac713ec808a8d8bd"
+    ],
+    "resource_encryption_config": null         --> The encryption configuration of the resource, if it has any
+  }
+}
+```
+
+</details>
 
 ## Status
 
@@ -226,6 +269,20 @@ Example for an effectively-public resource:
 | 🟢 not-enabled        |    0%     | The resource supports enabled and it is not enabled.      |
 | 🔵 unknown            |     -     | The resource couldn't be checked for status.              |
 
+<details>
+  <summary>Example for a running resource:</summary>
+
+```json
+"status": {                             --> The status key
+  "running": {                          --> The status value, running
+    "status": "running",                --> The status configuration of the resource, if it has any
+    "attached": null                    --> The attachment configuration of the resource, if it has any
+  }
+}
+```
+
+</details>
+
 ## Environment
 
 **Environment** evaluates the environment where the affected resource is running. By default, MetaHub defines 3 environments: `production`, `staging`, and `development`, but you can add, remove, or modify these environments based on your needs. MetaHub evaluates the environment based on the tags of the affected resource, the account id or the account alias. You can define your own environemnts definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
@@ -237,6 +294,21 @@ Example for an effectively-public resource:
 | 🟢 development        |    0%     | It is a development resource.                    |
 | 🔵 unknown            |     -     | The resource couldn't be checked for enviroment. |
 
+<details>
+  <summary>Example for a production resource matched by Tags:</summary>
+
+```json
+"environment": {                          --> The environment key
+  "production": {                         --> The environment value, production
+    "tags": {                             --> The parameters used for evaluating the environment, in this case tags
+      "Env": "prod"                       --> The tag and key found used for evaluating the environment
+    }
+  }
+}
+```
+
+</details>
+
 ## Application
 
 **Application** evaluates the application that the affected resource is part of. MetaHub relies on the AWS [myApplications](https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/aws-myApplications.html) feature, which relies on the Tag `awsApplication`, but you can extend this functionality based on your context for example by defining other tags you use for defining applications or services (like `Service` or any other), or by relying on account id or alias. You can define your application definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
@@ -245,6 +317,21 @@ Example for an effectively-public resource:
 | --------------------- | :-------: | ------------------------------------------------- |
 | 🔵 unknown            |     -     | The resource couldn't be checked for application. |
 
+<details>
+  <summary>Example for a resource matched by myApplication Tag:</summary>
+
+```json
+"application": {                          --> The application key
+  "payments-app": {                       --> The application value, payments-app
+    "tags": {                             --> The parameters used for evaluating the environment, in this case the tag awsApplication
+      "awsApplication": "arn:aws:resource-groups:eu-west-1:123456789012:group/app1/0c8vpbjkzeeffsz2cqgxpae7b2"   --> The tag and key found used for evaluating the environment
+    }
+  }
+}
+```
+
+</details>
+
 ## Owner
 
 **Owner** focuses on ownership detection. It can determine the owner of the affected resource in various ways. This information can be used to automatically assign a security finding to the correct owner, escalate it, or make decisions based on this information. An automated way to determine the owner of a resource is critical for security teams. It allows them to focus on the most critical issues and assign them as fast as possible to the right people in automated workflows. You can define your owner definitions and strategy in the configuration file (See [Customizing Configuration](#customizing-configuration)).
@@ -252,6 +339,22 @@ Example for an effectively-public resource:
 | **Possible Statuses** | **Value** | **Description**                             |
 | --------------------- | :-------: | ------------------------------------------- |
 | 🔵 unknown            |     -     | The resource couldn't be checked for owner. |
+
+<details>
+  <summary>Example for a resource matched by Account Id:</summary>
+
+```json
+"application": {                          --> The application key
+  "payments-app": {                       --> The application value, payments-app
+    "account": {                          --> The parameters used for evaluating the environment, in this case the account
+        "account_ids": ["123456789012"],  --> The account ids found used for evaluating the environment
+        "account_aliases": [],
+    },
+  }
+}
+```
+
+</details>
 
 ## Findings
 
