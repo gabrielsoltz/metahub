@@ -4,76 +4,10 @@ from threading import Lock
 from alive_progress import alive_bar
 
 from lib.context.context import Context
-from lib.helpers import confirm_choice, print_table
+from lib.helpers import print_table
 from lib.impact.impact import Impact
 from lib.securityhub import SecurityHub, parse_finding
 from lib.statistics import generate_statistics
-
-
-def update_findings(
-    logger,
-    mh_findings,
-    update,
-    sh_account,
-    sh_role,
-    sh_region,
-    update_filters,
-    sh_profile,
-    actions_confirmation,
-):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice(
-        "Are you sure you want to update all findings?", actions_confirmation
-    ):
-        update_multiple = sh.update_findings_workflow(mh_findings, update_filters)
-        update_multiple_ProcessedFinding = []
-        update_multiple_UnprocessedFindings = []
-        for update in update_multiple:
-            for ProcessedFinding in update["ProcessedFindings"]:
-                logger.info("Updated Finding : " + ProcessedFinding["Id"])
-                update_multiple_ProcessedFinding.append(ProcessedFinding)
-            for UnprocessedFinding in update["UnprocessedFindings"]:
-                logger.error(
-                    "Error Updating Finding: "
-                    + UnprocessedFinding["FindingIdentifier"]["Id"]
-                    + " Error: "
-                    + UnprocessedFinding["ErrorMessage"]
-                )
-                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
-        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
-    return [], []
-
-
-def enrich_findings(
-    logger,
-    mh_findings,
-    sh_account,
-    sh_role,
-    sh_region,
-    sh_profile,
-    actions_confirmation,
-):
-    sh = SecurityHub(logger, sh_region, sh_account, sh_role, sh_profile)
-    if confirm_choice(
-        "Are you sure you want to enrich all findings?", actions_confirmation
-    ):
-        update_multiple = sh.update_findings_meta(mh_findings)
-        update_multiple_ProcessedFinding = []
-        update_multiple_UnprocessedFindings = []
-        for update in update_multiple:
-            for ProcessedFinding in update["ProcessedFindings"]:
-                logger.info("Updated Finding : " + ProcessedFinding["Id"])
-                update_multiple_ProcessedFinding.append(ProcessedFinding)
-            for UnprocessedFinding in update["UnprocessedFindings"]:
-                logger.error(
-                    "Error Updating Finding: "
-                    + UnprocessedFinding["FindingIdentifier"]["Id"]
-                    + " Error: "
-                    + UnprocessedFinding["ErrorMessage"]
-                )
-                update_multiple_UnprocessedFindings.append(UnprocessedFinding)
-        return update_multiple_ProcessedFinding, update_multiple_UnprocessedFindings
-    return [], []
 
 
 def generate_findings(
@@ -188,16 +122,13 @@ def generate_findings(
 
     # Generate Impact
     imp = Impact(logger)
-    for resource_arn, resource_values in mh_findings.items():
-        impact_checks = imp.generate_impact_checks(resource_arn, resource_values)
+    for resource_arn in mh_findings:
+        impact_checks = imp.generate_impact_checks(
+            resource_arn, mh_findings[resource_arn]
+        )
         mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
             "impact"
         ] = impact_checks
-    for resource_arn, resource_values in mh_findings.items():
-        impact_scoring = imp.generate_impact_scoring(resource_arn, resource_values)
-        mh_findings[resource_arn]["impact"]["score"] = mh_findings_short[resource_arn][
-            "impact"
-        ]["score"] = impact_scoring
 
     # Generate Statistics
     mh_statistics = generate_statistics(mh_findings)
@@ -361,3 +292,10 @@ def evaluate_finding(
         mh_inventory,
         AwsAccountData,
     )
+
+
+def count_mh_findings(mh_findings):
+    count = 0
+    for resource in mh_findings:
+        count += len(mh_findings[resource]["findings"])
+    return count

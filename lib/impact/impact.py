@@ -56,18 +56,17 @@ class Impact:
         return True
 
     def check_property_values_with_resource(
-        self, property_name, property_values, resource_values
+        self, property_name, property_values, impact_dict
     ):
         # Check property with resource and return the matching value and score
-        impact = resource_values.get("impact", {})
-        if property_name in impact:
+        if property_name in impact_dict:
             for value in property_values:
                 for value_key, value_data in value.items():
-                    if value_key in impact[property_name]:
+                    if value_key in impact_dict[property_name]:
                         return value_key, value_data["score"]
         return False
 
-    def calculate_properties_score(self, resource_values):
+    def calculate_properties_score(self, impact_dict):
         self.logger.info("Calculating impact properties score for resource")
 
         # Initialize variables to track the meta score details and context
@@ -84,7 +83,7 @@ class Impact:
             property_weight = self.impact_config[property]["weight"]
             # Check the property against the finding
             checked_property = self.check_property_values_with_resource(
-                property_name, property_values, resource_values
+                property_name, property_values, impact_dict
             )
             # If the property check is not False (i.e., it has a value),
             # record the weight, value, and calculated score for this property
@@ -119,19 +118,15 @@ class Impact:
 
         return meta_score
 
-    def generate_impact_scoring(self, resource_arn, resource_values):
+    def generate_impact_scoring(self, resource_arn, impact_dict):
         self.logger.info("Calculating impact score for resource")
         if not self.impact_config:
             return False
 
-        # Calculate the findings score using the calculate_findings_score method
-        findings_score = Findings(self.logger).get_findings_score(
-            resource_arn, resource_values
-        )
-        findings_score = [str(key) for key in findings_score.keys()]
-        findings_score = float(findings_score[0])
+        # Get the findings score from the impact dictionary
+        findings_score = float([str(key) for key in impact_dict["findings"].keys()][0])
         # Calculate the impact properties score
-        meta_score = self.calculate_properties_score(resource_values)
+        meta_score = self.calculate_properties_score(impact_dict)
 
         # Check if the meta score is not "n/a" (i.e., there's context)
         if meta_score != "n/a" and meta_score != 0:
@@ -191,5 +186,8 @@ class Impact:
         )
         impact_dict["findings"].update(
             Findings(self.logger).get_findings_score(resource_arn, resource_values)
+        )
+        impact_dict["score"].update(
+            self.generate_impact_scoring(resource_arn, impact_dict)
         )
         return impact_dict

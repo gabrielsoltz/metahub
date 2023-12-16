@@ -13,33 +13,45 @@
 # Table of Contents
 
 - [Description](#description)
+
+- [Quick Run](#quick-run)
+
 - [Context](#context)
 - [Impact](#impact)
-- [Architecture](#architecture)
+- [High Level Architecture](#high-level-architecture)
 - [Use Cases](#use-cases)
-- [Features](#features)
+
 - [Configuration](#customizing-configuration)
+
 - [Run with Python](#run-with-python)
 - [Run with Docker](#run-with-docker)
 - [Run with Lambda](#run-with-lambda)
 - [Run with Security Hub Custom Action](#run-with-security-hub-custom-action)
+
 - [AWS Authentication](#aws-authentication)
+
 - [Configuring Security Hub](#configuring-security-hub)
 - [Configuring Context](#configuring-context)
+
 - [Inputs](#Inputs)
-- [Output Modes](#output-modes)
+
 - [Filters](#filters)
+
 - [Updating Workflow Status](#updating-workflow-status)
 - [Enriching Findings](#enriching-findings)
+
+- [Output Modes](#output-modes)
 - [Findings Aggregation](#findings-aggregation)
 
 # Description
 
-**MetaHub** is an open-source security tool for **impact-contextual vulnerability management**. It can automate the process of **contextualizing** security findings based on your environment and your needs: YOUR **context**, identifying **ownership**, and calculate an **impact scoring** based on it that you can use for defining prioritization and automation. You can use it with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanners (like [Prowler](https://github.com/prowler-cloud/prowler)).
+**MetaHub** is an open-source security tool for **impact-contextual vulnerability management**. It can automate the process of **contextualizing** security findings based on your environment and your needs, YOUR **context**, identifying **ownership**, and calculate an **impact scoring** based on it that you can use for defining prioritization and automation. You can use it with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) security scanners (like [Prowler](https://github.com/prowler-cloud/prowler)).
 
-**MetaHub** describe your context by connecting to your affected resources in your affected accounts. It can describe information about your AWS account and organization, the affected resources tags, the affected CloudTrail events, your affected resource configurations, and all their associations: if you are contextualizing a security finding affecting an EC2 Instance, MetaHub will not only connect to that instance itself but also its IAM Roles; from there, it will connect to the IAM Policies associated with those roles. It will connect to the Security Groups and analyze all their rules, the VPC and the Subnets where the instance is running, the Volumes, the Auto Scaling Groups, and more.
+**MetaHub** describe your context by connecting to your affected resources in your affected accounts. It can describe information about your AWS account and organization, the affected resources tags, the affected CloudTrail events, your affected resource configurations, and all their associations: if you are contextualizing a security finding affecting an EC2 Instance, MetaHub will not only connect to that instance itself but also its IAM Roles; from there, it will connect to the IAM Policies associated with those roles. It will connect to the Security Groups and analyze all their rules, the VPC and the Subnets where the instance is running, the Volumes, the Auto Scaling Groups, and more. See [Context](#context) for more information.
 
-After fetching all the information from your context, **MetaHub** will evaluate certain important conditions for all your resources: `exposure`, `access`, `encryption`, `status`, `environment`, `application` and `owner`. Based on those calculations and in addition to the information from the security findings affecting the resource all together, MetaHub will generate a **Scoring** for each finding.
+**MetaHub** supports filters on top of these context\* outputs to automate the detection of other resources with the same issues. You can filter security findings affecting resources tagged in a certain way (e.g., `Environment=production`) and combine this with filters based on Config or Associations, like, for example, if the resource is public, if it is encrypted, only if they are part of a VPC, if they are using a specific IAM role, and more. For more information, refer to **[Config filters](#config-filters)** and **[Tags filters](#tags-filters)** for more information.
+
+After fetching all the information from your context, **MetaHub** will evaluate certain important conditions for all your resources: `exposure`, `access`, `encryption`, `status`, `environment`, `application` and `owner`. Based on those calculations and in addition to the information from the security findings affecting the resource all together, MetaHub will generate a **Scoring** for each finding. See [Impact](#impact) for more information.
 
 Check the following dashboard generated by MetaHub. You have the affected resources, grouping all the security findings affecting them together and the original severity of the finding. After that, you have the **Impact Score** and all the criteria MetaHub evaluated to generate that score. All this information is filterable, sortable, groupable, downloadable, and customizable.
 
@@ -54,6 +66,12 @@ The following is the JSON output for a an EC2 instance; see how MetaHub organize
 <p align="center">
   <img src="docs/imgs/metahub-terminal.gif" alt="Diagram" width="850"/>
 </p>
+
+**MetaHub** provides a range of ways to list, manage and output your security findings for investigation, suppression, updating, and integration with other tools or alerting systems. To avoid _Shadowing_ and _Duplication_, **MetaHub** organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation). It supports different **[Output Modes](#output-modes)**, some of them **json** based like **json-inventory**, **json-statistics**, **json-short**, **json-full**, but also powerfull **html**, **xlsx** and **csv**. These outputs are customizable; you can choose which columns to show. For example, you may need a report about your affected resources, adding the tag Owner, Service, and Environment and nothing else. Check the configuration file and define the columns you need.
+
+If you are using **AWS Security Hub**, **MetaHub** integrate smoothly and extends it's fucntionalities. It can be used as a **[Security Hub Custom Action](#run-with-security-hub-custom-action)**, it supports (**[AWS Security Hub filtering](security-hub-filtering)**), you can manage the **[workflow status of your findings](#updating-workflow-status)**, and you can even **[enrich your findings directly in AWS Security Hub](#enriching-findings)**.
+
+**MetaHub** it's designed to to use with AWS and it supports **multi-account setups**. You can run the tool from any environment by assuming roles in your AWS Security Hub `master` account and your `child/service` accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub multi-account implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. Refer to [Configuring Security Hub](#configuring-security-hub) for more information.
 
 # Context
 
@@ -117,9 +135,7 @@ Under the key `account`, you will find information about the account where the a
 
 # Impact
 
-The impact module in MetaHub focuses on generating a score for each finding based on the context of the affected resource and all the security findings affecting them and their severities together. The impact score is a number between 0 and 100, where 100 is the highest impact.
-
-The formula for getting the impact score include the following criteria:
+The impact module in MetaHub focuses on understanding the 7 key properties about the affecting resurce: **exposure**, **access**, **encryption**, **status**, **environment**, **application**, and **owner** and combining their values with the values of all the security findings affecting the same resource and their severities to generate an **Impact Score**. The impact score is a number between 0 and 100, where 100 is the highest impact.
 
 - [Exposure](#exposure)
 - [Access](#access)
@@ -241,30 +257,6 @@ Some use cases for MetaHub include:
 - Integrate MetaHub directly as Security Hub custom action to use it directly from the AWS Console
 - Created enriched HTML reports for your findings that you can filter, sort, group, and download
 - Create Security Hub Insights based on MetaHub context
-
-# Features
-
-**MetaHub** provides a range of ways to list and manage security findings for investigation, suppression, updating, and integration with other tools or alerting systems. To avoid _Shadowing_ and _Duplication_, MetaHub organizes related findings together when they pertain to the same resource. For more information, refer to [Findings Aggregation](#findings-aggregation)
-
-**MetaHub** queries the affected resources directly in the affected account to provide additional **context** using the following options:
-
-- **[Config](#Config)**: Fetches the most important configuration values from the affected resource.
-- **[Associations](#Associations)**: Fetches all the associations of the affected resource, such as IAM roles, security groups, and more.
-- **[Tags](#Tags)**: Queries tagging from affected resources
-- **[CloudTrail](#CloudTrail)**: Queries CloudTrail in the affected account to identify who created the resource and when, as well as any other related critical events
-- **[Account](#Account)**: Fetches extra information from the account where the affected resource is running, such as the account name, security contacts, and other information.
-
-**MetaHub** supports filters on top of these context\* outputs to automate the detection of other resources with the same issues. You can filter security findings affecting resources tagged in a certain way (e.g., `Environment=production`) and combine this with filters based on Config or Associations, like, for example, if the resource is public, if it is encrypted, only if they are part of a VPC, if they are using a specific IAM role, and more. For more information, refer to **[Config filters](#config-filters)** and **[Tags filters](#tags-filters)** for more information.
-
-But that's not all. If you are using **MetaHub** with Security Hub, you can even combine the previous filters with the Security Hub native filters (**[AWS Security Hub filtering](security-hub-filtering)**). You can filter the same way you would with the AWS CLI utility using the option `--sh-filters`, but in addition, you can save and re-use your filters as YAML files using the option `--sh-template`.
-
-If you prefer, With **MetaHub**, you can back **[enrich your findings directly in AWS Security Hub](#enriching-findings)** using the option `--enrich-findings`. This action will update your AWS Security Hub findings using the field `UserDefinedFields`. You can then create filters or [Insights](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-insights.html) directly in AWS Security Hub and take advantage of the contextualization added by MetaHub.
-
-When investigating findings, you may need to update security findings altogether. **MetaHub** also allows you to execute **[bulk updates](#updating-workflow-status)** to AWS Security Hub findings, such as changing Workflow Status using the option `--update-findings`. As an example, you identified that you have hundreds of security findings about public resources. Still, based on the MetaHub context, you know those resources are not effectively public as they are protected by routing and firewalls. You can update all the findings for the output of your MetaHub query with one command. When updating findings using MetaHub, you also update the field `Note` of your finding with a custom text for future reference.
-
-**MetaHub** supports different **[Output Modes](#output-modes)**, some of them **json based** like **json-inventory**, **json-statistics**, **json-short**, **json-full**, but also powerfull **html**, **xlsx** and **csv**. These outputs are customizable; you can choose which columns to show. For example, you may need a report about your affected resources, adding the tag Owner, Service, and Environment and nothing else. Check the configuration file and define the columns you need.
-
-**MetaHub** supports **multi-account setups**. You can run the tool from any environment by assuming roles in your AWS Security Hub `master` account and your `child/service` accounts where your resources live. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub multi-account implementation while also fetching and enriching those findings with data from the accounts where your affected resources live based on your needs. Refer to [Configuring Security Hub](#configuring-security-hub) for more information.
 
 # Customizing Configuration
 
