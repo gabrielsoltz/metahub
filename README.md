@@ -484,7 +484,7 @@ Under the key `account`, you will find information about the account where the a
 The impact module in MetaHub focuses on understanding the 7 key properties about the affected resurce: **exposure**, **access**, **encryption**, **status**, **environment**, **application**, and **owner** and combining their values with the values of all the security findings affecting the same resource and their severities to generate a **score**. The impact score is a number between 0 and 100, where 100 is the highest impact.
 
 <p align="center">
-  <img src="docs/imgs/impact.png" alt="Affected Resource"/>
+  <img src="docs/imgs/impact.png" alt="Affected Resource" height=300 />
 </p>
 
 - [Exposure](#exposure)
