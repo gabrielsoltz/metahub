@@ -510,7 +510,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties of th
       {
         "SecurityGroupRuleId": "sgr-0553206714e321b87",
         "GroupId": "sg-0a15a46e47f07d139",
-        "GroupOwnerId": "01234567901",
+        "GroupOwnerId": "123456789012",
         "IsEgress": false,
         "IpProtocol": "tcp",
         "FromPort": 22,
@@ -523,7 +523,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties of th
       {
         "SecurityGroupRuleId": "sgr-007b509667896ebe3",
         "GroupId": "sg-0a15a46e47f07d139",
-        "GroupOwnerId": "01234567901",
+        "GroupOwnerId": "123456789012",
         "IsEgress": true,
         "IpProtocol": "-1",
         "FromPort": -1,
@@ -562,14 +562,14 @@ The impact module in MetaHub focuses on understanding the 7 key properties of th
 "access": {                                --> The access key
   "unrestricted-actions": {                --> The access value, unrestricted-actions
     "wildcard_actions": {                  --> The wildcard policies, if any
-      "arn:aws:iam::01234567901:policy/eu-west-1-stg-iam-policy-dynamodb-cache": [
+      "arn:aws:iam::123456789012:policy/eu-west-1-stg-iam-policy-dynamodb-cache": [
         {
           "Action": [
             "dynamodb:*"                   --> The wildcard action
           ],
           "Effect": "Allow",
           "Resource": [
-            "arn:aws:dynamodb:eu-west-1:01234567901:table/table",
+            "arn:aws:dynamodb:eu-west-1:123456789012:table/table",
           ]
         }
       ],
@@ -1011,7 +1011,7 @@ Shows the affected resource using it's ARN as the key and the findings affecting
         "Compliance":{                                                             --> The finding compliance
           "Status": "FAILED",
         },
-        "Id": "arn:aws:securityhub:eu-west-1:01234567901:security-control/EC2.8/finding/a1d4f19f-453e-4c3c-b486-8443c73e84f1",
+        "Id": "arn:aws:securityhub:eu-west-1:123456789012:security-control/EC2.8/finding/a1d4f19f-453e-4c3c-b486-8443c73e84f1",
         "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
       }
     },
