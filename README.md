@@ -160,7 +160,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
       {
         "SecurityGroupRuleId": "sgr-0553206714e321b87",
         "GroupId": "sg-0a15a46e47f07d139",
-        "GroupOwnerId": "627901510076",
+        "GroupOwnerId": "01234567901",
         "IsEgress": false,
         "IpProtocol": "tcp",
         "FromPort": 22,
@@ -173,7 +173,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
       {
         "SecurityGroupRuleId": "sgr-007b509667896ebe3",
         "GroupId": "sg-0a15a46e47f07d139",
-        "GroupOwnerId": "627901510076",
+        "GroupOwnerId": "01234567901",
         "IsEgress": true,
         "IpProtocol": "-1",
         "FromPort": -1,
@@ -212,7 +212,7 @@ The impact module in MetaHub focuses on understanding the 7 key properties about
 "access": {                                --> The access key
   "unrestricted-actions": {                --> The access value, unrestricted-actions
     "wildcard_actions": {                  --> The wildcard policies, if any
-      "arn:aws:iam::627901510076:policy/eu-west-1-stg-backoffice-iam-policy-dynamodb-cache": [
+      "arn:aws:iam::01234567901:policy/eu-west-1-stg-iam-policy-dynamodb-cache": [
         {
           "Action": [
             "dynamodb:*"                   --> The wildcard action
@@ -642,89 +642,179 @@ If you want to generate `json-short`, `json-full` and `html` outputs, you can us
 
 ## JSON
 
-### JSON-Short
-
-Show all findings titles together under each affected resource and the `AwsAccountId`, `Region`, and `ResourceType`:
-
-```json
-"arn:aws:sagemaker:us-east-1:ofuscated:notebook-instance/obfuscated": {
-  "findings": [
-    "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC",
-    "SageMaker.3 Users should not have root access to SageMaker notebook instances",
-    "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access"
-  ],
-  "AwsAccountId": "obfuscated",
-  "Region": "us-east-1",
-  "ResourceType": "AwsSageMakerNotebookInstance",
-  "config": {},
-  "associations": {},
-  "tags": {},
-  "cloudtrail": {},
-  "account": {},
-  "impact": {}
-},
-```
+For exploring a JSON output, you can use the tool [fx](https://github.com/antonmedv/fx).
 
 ### JSON-Full
 
-Show all findings with all data. Findings are organized by ResourceId (ARN). For each finding, you will also get: `SeverityLabel,` `Workflow,` `RecordState,` `Compliance,` `Id`, and `ProductArn`:
+Shows the affected resource using it's ARN as the key and the findings affecting it as a list under the key `findings`. In adittion to the findings, you will also get the following keys: `ResourceType`, `Region`, `AwsAccountId`, `associations`, `config`, `tags`, `account`, `cloudtrail`, and `impact`.
 
 ```json
-"arn:aws:sagemaker:eu-west-1:ofuscated:notebook-instance/obfuscated": {
-  "findings": [
+"arn:aws:ec2:eu-west-1:1234567890:instance/i-0a40b2be25dbac0ac": {           --> The affected resource ARN
+  "findings": [                                                              --> The findings affecting the resource
     {
-      "SageMaker.3 Users should not have root access to SageMaker notebook instances": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
+      "EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)": {   --> The finding title
+        "SeverityLabel": "HIGH",                                                   --> The finding severity label
+        "Workflow":{                                                               --> The finding workflow
+          "Status": "NEW",
         },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
+        "RecordState": "ACTIVE",                                                   --> The finding record state
+        "Compliance":{                                                             --> The finding compliance
+          "Status": "FAILED",
         },
-        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.3/finding/12345-0193-4a97-9ad7-bc7c1730eec6",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
+        "Id": "arn:aws:securityhub:eu-west-1:01234567901:security-control/EC2.8/finding/a1d4f19f-453e-4c3c-b486-8443c73e84f1",
+        "ProductArn": "arn:aws:securityhub:eu-west-1::product/aws/securityhub",
       }
     },
-    {
-      "SageMaker.2 SageMaker notebook instances should be launched in a custom VPC": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.2/finding/12345-e8e1-4915-9881-965104b0aabf",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    },
-    {
-      "SageMaker.1 Amazon SageMaker notebook instances should not have direct internet access": {
-        "SeverityLabel": "HIGH",
-        "Workflow": {
-          "Status": "NEW"
-        },
-        "RecordState": "ACTIVE",
-        "Compliance": {
-          "Status": "FAILED"
-        },
-        "Id": "arn:aws:security hub:eu-west-1:ofuscated:subscription/aws-foundational-security-best-practices/v/1.0.0/SageMaker.1/finding/12345-3a21-4016-a8e5-f5173b44e90a",
-        "ProductArn": "arn:aws:security hub:eu-west-1::product/aws/security hub"
-      }
-    }
+    {"EC2 instances should be managed by AWS Systems Manager": {...}},        --> Another finding title
+    {"EC2 instances should not have a public IPv4 address": {...}}          --> Another finding title
   ],
-  "AwsAccountId": "obfuscated",
-  "Region": "eu-west-1",
-  "ResourceType": "AwsSageMakerNotebookInstance",
-  "config": {},
-  "associations": {},
-  "tags": {},
-  "cloudtrail": {},
-  "account": {},
-  "impact": {}
-},
+  "ResourceType": "AwsEc2Instance",                                         --> The affected resource type
+  "Region": "eu-west-1",                                                    --> The affected resource region
+  "AwsAccountId": "1234567890",                                             --> The affected resource account id
+  "associations": {                                                         --> The associations of the affected resource
+    "security_groups": {},                                                  --> The security groups associated with the affected resource
+    "iam_roles": {},                                                        --> The IAM roles associated with the affected resource
+    "volumes": {},                                                          --> The volumes associated with the affected resource
+    "autoscaling_groups": {},                                               --> The autoscaling groups associated with the affected resource
+    "vpcs": {},                                                             --> The VPCs associated with the affected resource
+    "subnets": {},                                                          --> The subnets associated with the affected resource
+  },
+  "config": {                                                              --> The configuration of the affected resource (based on it's type)
+    "public_ip": "200.200.200.200",                                       --> The public IP of the affected resource, if any
+    "private_ip": "10.10.10.10",                                        --> The private IP of the affected resource, if any
+    "key": "ssh-key",                                                  --> The key used for the affected resource, if any
+    "metadata_options": {                                             --> The metadata options of the affected resource, if any
+      "State": "applied",
+      "HttpTokens": "required",
+      "HttpPutResponseHopLimit": 1,
+      "HttpEndpoint": "enabled",
+      "HttpProtocolIpv6": "disabled",
+      "InstanceMetadataTags": "disabled"
+    },
+  },
+  "tags": {                                                            --> The tags of the affected resource
+    "Name": "test",                                                  --> The tag key and value
+    "Env": "prod",
+    "awsApplication": "arn:aws:resource-groups:eu-west-1:1234567890:group/app1/0c8vpbjkzeeffsz2cqgxpae7b2"
+  },
+  "account": {                                                            --> The account of the affected resource
+    "Alias": "prod",                                                --> The account alias
+    "AlternateContact": {},                                        --> The alternate contact of the account, if any
+    "Organizations": {                                            --> The organization of the account, if any
+      "Id": "o-1234567890",
+      "Arn": "arn:aws:organizations::1234567890:organization/o-1234567890/o-1234567890",
+      "MasterAccountId": "1234567890",
+      "MasterAccountArn": "arn:aws:organizations::1234567890:account/o-1234567890/1234567890",
+      "MasterAccountEmail": "",
+      "Details": {
+        "ParentId": "p-k1234567890",
+        "ParentType": "ROOT",
+        "OU": "ROOT",
+        "Policies": {                                           --> The policies of the account, if any
+          "p-FullAWSAccess": {...}                              --> The policy name and policy
+        }
+      }
+    },
+  },
+  "cloudtrail": {                                                     --> The CloudTrail events affecting the affected resource
+    "RunInstances": {                                                --> The CloudTrail event name
+      "Username": "test",                                            --> The username of the event, if any
+      "EventTime": "2021-01-01T00:00:00Z",
+      "EventId": "12345678-1234-1234-1234-123456789012",
+    }
+  },
+  "impact": {                                                        --> The impact of the affected resource
+    "exposure": {...},                                             --> The exposure impact
+    "access": {...},                                              --> The access impact
+    "encryption": {...},                                         --> The encryption impact
+    "status": {...},                                            --> The status impact
+    "environment": {...},                                      --> The environment impact
+    "application": {...},                                     --> The application impact
+    "owner": {...},                                          --> The owner impact
+    "findings": {...},                                      --> The findings impact
+    "score": {...}                                         --> The total impact score
+  }
+}
+```
+
+### JSON-Short
+
+Shows the affected resource using it's ARN as the key and the findings affecting it as a list under the key `findings`. In adittion to the findings, you will also get the following keys: `ResourceType`, `Region`, `AwsAccountId`, `associations`, `config`, `tags`, `account`, `cloudtrail`, and `impact`.
+
+```json
+"arn:aws:ec2:eu-west-1:1234567890:instance/i-0a40b2be25dbac0ac": {           --> The affected resource ARN
+  "findings": [                                                              --> The findings affecting the resource
+    "EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)", --> The finding title
+    "EC2 instances should be managed by AWS Systems Manager",                --> The finding title
+    "EC2 instances should not have a public IPv4 address"                    --> The finding title
+  ],
+  "ResourceType": "AwsEc2Instance",                                         --> The affected resource type
+  "Region": "eu-west-1",                                                    --> The affected resource region
+  "AwsAccountId": "1234567890",                                             --> The affected resource account id
+  "associations": {                                                         --> The associations of the affected resource
+    "security_groups": {},                                                  --> The security groups associated with the affected resource
+    "iam_roles": {},                                                        --> The IAM roles associated with the affected resource
+    "volumes": {},                                                          --> The volumes associated with the affected resource
+    "autoscaling_groups": {},                                               --> The autoscaling groups associated with the affected resource
+    "vpcs": {},                                                             --> The VPCs associated with the affected resource
+    "subnets": {},                                                          --> The subnets associated with the affected resource
+  },
+  "config": {                                                              --> The configuration of the affected resource (based on it's type)
+    "public_ip": "200.200.200.200",                                       --> The public IP of the affected resource, if any
+    "private_ip": "10.10.10.10",                                        --> The private IP of the affected resource, if any
+    "key": "ssh-key",                                                  --> The key used for the affected resource, if any
+    "metadata_options": {                                             --> The metadata options of the affected resource, if any
+      "State": "applied",
+      "HttpTokens": "required",
+      "HttpPutResponseHopLimit": 1,
+      "HttpEndpoint": "enabled",
+      "HttpProtocolIpv6": "disabled",
+      "InstanceMetadataTags": "disabled"
+    },
+  },
+  "tags": {                                                            --> The tags of the affected resource
+    "Name": "test",                                                  --> The tag key and value
+    "Env": "prod",
+    "awsApplication": "arn:aws:resource-groups:eu-west-1:1234567890:group/app1/0c8vpbjkzeeffsz2cqgxpae7b2"
+  },
+  "account": {                                                            --> The account of the affected resource
+    "Alias": "prod",                                                --> The account alias
+    "AlternateContact": {},                                        --> The alternate contact of the account, if any
+    "Organizations": {                                            --> The organization of the account, if any
+      "Id": "o-1234567890",
+      "Arn": "arn:aws:organizations::1234567890:organization/o-1234567890/o-1234567890",
+      "MasterAccountId": "1234567890",
+      "MasterAccountArn": "arn:aws:organizations::1234567890:account/o-1234567890/1234567890",
+      "MasterAccountEmail": "",
+      "Details": {
+        "ParentId": "p-k1234567890",
+        "ParentType": "ROOT",
+        "OU": "ROOT",
+        "Policies": {                                           --> The policies of the account, if any
+          "p-FullAWSAccess": {...}                              --> The policy name and policy
+        }
+      }
+    },
+  },
+  "cloudtrail": {                                                     --> The CloudTrail events affecting the affected resource
+    "RunInstances": {                                                --> The CloudTrail event name
+      "Username": "test",                                            --> The username of the event, if any
+      "EventTime": "2021-01-01T00:00:00Z",
+      "EventId": "12345678-1234-1234-1234-123456789012",
+    }
+  },
+  "impact": {                                                        --> The impact of the affected resource
+    "exposure": {...},                                             --> The exposure impact
+    "access": {...},                                              --> The access impact
+    "encryption": {...},                                         --> The encryption impact
+    "status": {...},                                            --> The status impact
+    "environment": {...},                                      --> The environment impact
+    "application": {...},                                     --> The application impact
+    "owner": {...},                                          --> The owner impact
+    "findings": {...},                                      --> The findings impact
+    "score": {...}                                         --> The total impact score
+  }
+}
 ```
 
 ### JSON-Inventory
