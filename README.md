@@ -59,15 +59,9 @@ If you use **AWS Security Hub**, MetaHub integrates smoothly and extends its fun
 
 In **MetaHub**, **context** refers to information about the affected resources like their **configuration**, **associations**, **logs**, **tags** and **account**.
 
-MetaHub doesn't stop at the affected resource but analyzes any associated or attached resources. For instance, if there is a security finding on a Security Group, **MetaHub** will analyze the Security Group and everything else associated with it, like the EC2 instances using it. For each associated resource, **MetaHub** will fetch its context. If the Security Group is attached to an EC2 Instance, **MetaHub** will analyze the instance and all its associations, like the IAM Roles and policies. From a single security finding on a Security Group, **MetaHub** will fetch the context of the Security Group, the EC2 Instance, the IAM Roles, and the IAM Policies. This is critical for understanding the impact of your security findings.
+MetaHub doesn't stop at the affected resource but also analyzes any associated or attached resources. For instance, if a security finding exists on a Security Group, **MetaHub** will analyze the Security Group and everything else associated with it, like the EC2 instances using it. For each associated resource, **MetaHub** will fetch its context. If the Security Group is attached to an EC2 Instance, **MetaHub** will analyze the instance and all its associations, like the IAM Roles and policies. From a single security finding on a Security Group, **MetaHub** will fetch the context of the Security Group, the EC2 Instance, the IAM Roles, and the IAM Policies. This is critical for understanding the impact of your security findings.
 
-The **Context** module has five main parts: `config` (which includes `associations` as well), `tags`, `cloudtrail`, and `account`. By default `config`, `tags` and `account` are enabled, but you can change this behavior using the option `--context` (e.g. use `--context config tags cloudtrail account` for enabling all context.):
-
-- [Config](#config)
-- [Associations](#associations)
-- [Tags](#tags)
-- [CloudTrail](#cloudtrail)
-- [Account](#account)
+The **context** module has five main parts: [**config**](#config) (which includes [**associations**](#associations)), [**tags**](#tags), [**cloudtrail**](#cloudtrail), and [**account**](#account). By default only **config**, **tags** and **account** are enabled, but you can change this behavior using the option `--context` (e.g. use `--context config tags cloudtrail account` for enabling all context keys, or `--context config` for enabling only the config and associations key.):
 
 ## Config
 
@@ -370,6 +364,8 @@ You can filter your findings based on associations outputs using the option: `--
   },
 }
 ```
+
+</details>
 
 ## Tags
 
