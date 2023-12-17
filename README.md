@@ -27,9 +27,10 @@
 - [Configuring Security Hub](#configuring-security-hub)
 - [Configuring Context](#configuring-context)
 - [Inputs](#Inputs)
-- [Output Modes](#output-modes)
+- [Output](#outputs)
 - [Filters](#filters)
 - [Security Hub Actions](#security-hub-actions)
+- [Contributing](#contributing)
 
 # Description
 
