@@ -1,10 +1,16 @@
 import argparse
+import json
 import logging
 import sys
 
-from rich.panel import Panel
-
-from lib.AwsHelpers import get_available_regions
+from lib.AwsHelpers import (
+    get_account_alias,
+    get_account_id,
+    get_available_regions,
+    get_region,
+)
+from lib.config.configuration import sh_default_filters
+from lib.securityhub import set_sh_filters
 
 
 class KeyValueWithList(argparse.Action):
@@ -385,68 +391,147 @@ def test_python_version():
     return True
 
 
-def rich_box(resource_type, values):
-    title = resource_type
-    value = values
-    # return f"[b]{title}[/b]\n[yellow]{value}"
-    return f"[b]{title.center(20)}[/b]\n[bold][yellow]{str(value).center(20)}"
-
-
-def rich_box_severity(severity, values):
-    color = {
-        "CRITICAL": "red",
-        "HIGH": "red",
-        "MEDIUM": "yellow",
-        "LOW": "green",
-        "INFORMATIONAL": "white",
-    }
-    title = "[" + color[severity] + "] " + severity + "[/]"
-    value = values
-    return f"[b]{title.center(5)}[/b]\n[bold]{str(value).center(5)}"
-
-
-def generate_rich(mh_statistics):
-    severity_renderables = []
-    for severity in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"):
-        severity_renderables.append(
-            Panel(
-                rich_box_severity(
-                    severity, mh_statistics["SeverityLabel"].get(severity, 0)
-                ),
-                expand=False,
-                padding=(1, 10),
+def validate_arguments(args, logger):
+    # Validate no filters when using file-asff only
+    if "file-asff" in args.inputs and "securityhub" not in args.inputs:
+        if args.sh_template or args.sh_filters:
+            logger.error(
+                "--sh-filters not supported for file-asff... If you want to fetch from securityhub and file-asff at the same time use --inputs file-asff securityhub"
             )
+            exit(1)
+
+    # Validate file-asff
+    if "file-asff" in args.inputs:
+        if not args.input_asff:
+            logger.error(
+                "file-asff input specified but not --input-asff, specify the input file with --input-asff"
+            )
+            exit(1)
+        asff_findings = []
+        for file in args.input_asff:
+            try:
+                with open(file) as f:
+                    asff_findings.extend(json.load(f))
+            except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
+                logger.error("--input-asff file %s %s!", args.input_asff, str(err))
+                exit(1)
+    elif args.input_asff and "file-asff" not in args.inputs:
+        logger.error(
+            "--input-asff specified but not file-asff input. Use --inputs file-asff to use --input-asff"
         )
-    resource_type_renderables = [
-        Panel(rich_box(resource_type, values), expand=True)
-        for resource_type, values in mh_statistics["ResourceType"].items()
-    ]
-    workflows_renderables = [
-        Panel(rich_box(workflow, values), expand=True)
-        for workflow, values in mh_statistics["Workflow"].items()
-    ]
-    region_renderables = [
-        Panel(rich_box(Region, values), expand=True)
-        for Region, values in mh_statistics["Region"].items()
-    ]
-    accountid_renderables = [
-        Panel(rich_box(AwsAccountId, values), expand=True)
-        for AwsAccountId, values in mh_statistics["AwsAccountId"].items()
-    ]
-    recordstate_renderables = [
-        Panel(rich_box(RecordState, values), expand=True)
-        for RecordState, values in mh_statistics["RecordState"].items()
-    ]
-    compliance_renderables = [
-        Panel(rich_box(Compliance, values), expand=True)
-        for Compliance, values in mh_statistics["Compliance"].items()
-    ]
+        exit(1)
+    else:
+        asff_findings = False
+
+    # Validate Security Hub Filters
+    if not args.sh_filters and not args.sh_template:
+        sh_filters = set_sh_filters(sh_default_filters)
+    elif args.sh_template:
+        from pathlib import Path
+
+        import yaml
+
+        try:
+            yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
+            dict_values = next(iter(yaml_to_dict.values()))
+            sh_filters = dict_values
+        except (yaml.scanner.ScannerError, FileNotFoundError) as err:
+            logger.error("SH Template %s reading error: %s", args.sh_template, str(err))
+            exit(1)
+    else:
+        sh_filters = args.sh_filters
+        sh_filters = set_sh_filters(sh_filters)
+
+    # Validate Config filters
+    mh_filters_config = args.mh_filters_config or {}
+    for mh_filter_config_key, mh_filter_config_value in mh_filters_config.items():
+        if mh_filters_config[mh_filter_config_key].lower() == "true":
+            mh_filters_config[mh_filter_config_key] = bool(True)
+        elif mh_filters_config[mh_filter_config_key].lower() == "false":
+            mh_filters_config[mh_filter_config_key] = bool(False)
+        else:
+            logger.error(
+                "Only True or False it is supported for Context Config filters: "
+                + str(mh_filters_config)
+            )
+            exit(1)
+
+    # Validate Tags filters
+    mh_filters_tags = args.mh_filters_tags or {}
+
+    # Parameter Validation: --sh-account and --sh-assume-role
+    if bool(args.sh_account) != bool(args.sh_assume_role):
+        logger.error(
+            "Parameter error: --sh-assume-role and sh-account must be provided together, but only 1 provided."
+        )
+        exit(1)
+
+    # AWS Security Hub
+    if "securityhub" in args.inputs:
+        sh_region = args.sh_region or get_region(logger)
+        sh_account = args.sh_account or get_account_id(
+            logger, sess=None, profile=args.sh_profile
+        )
+        sh_account_alias = get_account_alias(
+            logger, sh_account, role_name=args.sh_assume_role, profile=args.sh_profile
+        )
+    else:
+        sh_region = args.sh_region
+        sh_account = args.sh_account
+        sh_account_alias = ""
+    sh_account_alias_str = (
+        " (" + str(sh_account_alias) + ")" if str(sh_account_alias) else ""
+    )
+
+    # Validate Security Hub input
+    if "securityhub" in args.inputs and (not sh_region or not sh_account):
+        logger.error(
+            "Security Hub is defined as input for findings, but no region or account was found. Check your credentials and/or use --sh-region and --sh-account."
+        )
+        exit(1)
+
+    # Validate udpate findings
+    update_findings_filters = {}
+    if args.update_findings:
+        IsNnoteProvided = False
+        IsAllowedKeyProvided = False
+        for key, value in args.update_findings.items():
+            if key in ("Workflow", "Note"):
+                if key == "Workflow":
+                    WorkflowValues = ("NEW", "NOTIFIED", "RESOLVED", "SUPPRESSED")
+                    if value not in WorkflowValues:
+                        logger.error(
+                            "Incorrect update findings workflow value. Use: "
+                            + str(WorkflowValues)
+                        )
+                        exit(1)
+                    Workflow = {"Workflow": {"Status": value}}
+                    update_findings_filters.update(Workflow)
+                    IsAllowedKeyProvided = True
+                if key == "Note":
+                    Note = {"Note": {"Text": value, "UpdatedBy": "MetaHub"}}
+                    update_findings_filters.update(Note)
+                    IsNnoteProvided = True
+                continue
+            logger.error(
+                "Unsuported update findings key: "
+                + str(key)
+                + " - Supported keys: Workflow and Note. Use --update-findings Workflow=NEW Note='This is an example Note'"
+            )
+            exit(1)
+        if not IsAllowedKeyProvided or not IsNnoteProvided:
+            logger.error(
+                'Update findings missing key. Use --update-findings Workflow=NEW Note="This is an example Note"'
+            )
+            exit(1)
+
     return (
-        severity_renderables,
-        resource_type_renderables,
-        workflows_renderables,
-        region_renderables,
-        accountid_renderables,
-        recordstate_renderables,
-        compliance_renderables,
+        asff_findings,
+        sh_filters,
+        mh_filters_config,
+        mh_filters_tags,
+        sh_account,
+        sh_account_alias_str,
+        sh_region,
+        update_findings_filters,
     )

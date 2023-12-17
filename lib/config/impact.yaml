@@ -4,7 +4,7 @@
 #   Weight: Maximum score for this property
 #   Values: List of values for this property
 #     - Name: Name of the value
-#       Score: Score for this value
+#       Score: Score for this value, between 0 and 1. If no match, the property impact property is not scored.
 
 status:
   weight: 50
@@ -21,6 +21,8 @@ status:
         score: 1
     - not-enabled:
         score: 0
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     # - unknown:
     #     score: 0
 
@@ -37,6 +39,8 @@ exposure:
         score: 0.1
     - restricted:
         score: 0
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     # - unknown:
     #     score: 0
 
@@ -59,7 +63,8 @@ access:
         score: 0.1
     - restricted:
         score: 0
-    # - unknown:
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     #     score: 0
 
 encryption:
@@ -69,7 +74,8 @@ encryption:
         score: 1
     - encrypted:
         score: 0
-    # - unknown:
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     #     score: 0
 
 environment:
@@ -81,7 +87,8 @@ environment:
         score: 0.3
     - development:
         score: 0
-    # - unknown:
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     #     score: 0
 
 application:
@@ -91,7 +98,8 @@ application:
         score: 1
     - app2:
         score: 0.5
-    # - unknown:
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     #     score: 0
 
 owner:
@@ -101,5 +109,6 @@ owner:
         score: 1
     - owner2:
         score: 0.5
-    # - unknown:
+    # If you want to count unknown as a score of 0, enabling the impact property when no match.
+    # Uncomment the following lines
     #     score: 0

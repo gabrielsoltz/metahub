@@ -202,3 +202,15 @@ def parse_finding(finding):
         },
     }
     return finding["Resources"][0]["Id"], findings
+
+
+def set_sh_filters(sh_filters):
+    """Return filters for AWS Security Hub get_findings Call"""
+    filters = {}
+    for key, values in sh_filters.items():
+        if key != "self" and values is not None:
+            filters[key] = []
+            for value in values:
+                value_to_append = {"Comparison": "EQUALS", "Value": value}
+                filters[key].append(value_to_append)
+    return filters
