@@ -485,6 +485,9 @@ Under the key `account`, you will find information about the account where the a
 
 The impact module in MetaHub focuses on understanding the 7 key properties of the affected resource: [**exposure**](#exposure), [**access**](#access), [**encryption**](#encryption), [**status**](#status), [**environment**](#environment), [**application**](#application), and[**owner**](#owner) and combining their values with the values of all the security [findings](#findings) affecting the same resource and their severities to generate a **score**. The impact score is a number between 0 and 100, where 100 is the highest impact.
 
+<br>
+<br>
+
 ## Exposure
 
 **Exposure** evaluates the how the the affected resource is exposed to other networks. For example, if the affected resource is public, if it is part of a VPC, if it has a public IP or if it is protected by a firewall or a security group.
