@@ -55,6 +55,39 @@ If you use **AWS Security Hub**, MetaHub integrates smoothly and extends its fun
 
 **MetaHub** is designed to be used with AWS and supports **multi-account setups**. You can run the tool from any environment by assuming roles in your AWS Security Hub `master` and your `child/service` accounts. This allows you to fetch aggregated data from multiple accounts using your AWS Security Hub multi-account implementation while also fetching and enriching those findings with data from the accounts where your affected resources are running. Refer to [Configuring Security Hub](#configuring-security-hub) for more information.
 
+# Quick Run
+
+1. Read your security findings from AWS Security Hub with the default filters and executes the default context options:
+
+```bash
+./metahub
+```
+
+2. Read your security findings from Prowler as an input file and executes the default context options:
+
+```bash
+python3 prowler.py aws -M json-asff -q
+./metahub --inputs file-asff --input-asff /path/to/prowler-findings.json.asff
+```
+
+3. Read a specific (filtered by Id) security finding from AWS Security Hub and executes the default context options:
+
+```bash
+./metahub --sh-filters Id=arn:aws:securityhub:us-east-1:123456789012:security-control/CloudFront.1/finding/8bd4d049-dcbc-445b-a5d1-595d8274b4c1
+```
+
+4. Read all the security findings affecting one resource which are ACTIVE (filtered by ResourceId and RecordState) from AWS Security Hub and executes the default context options:
+
+```bash
+./metahub --sh-filters RecordState=ACTIVE ResourceId=arn:aws:ec2:eu-west-1:123456789012:subnet/subnet-0b7d243ff90ebc03e
+```
+
+5. Read all the security findings affecting an AWS Account which are ACTIVE (filtered by AwsAccountId and RecordState) for resources that are tagged with a tag `Environment` and the value `stg` and executes the context options `config` and `tags`:
+
+```bash
+./metahub --sh-filters RecordState=ACTIVE AwsAccountId=123456789012 --mh-filters-tags Environment=stg --context config tags
+```
+
 # Context
 
 In **MetaHub**, **context** refers to information about the affected resources like their **configuration**, **associations**, **logs**, **tags** and **account**.
