@@ -183,24 +183,37 @@ class Access:
                 for p in all_principals:
                     if "*" in p:
                         if condition and not self.is_unrestricted_conditions(condition):
-                            failed_statements["wildcard_principal"].append(statement)
-                        else:
-                            if self.s3_restrict_public_buckets:
+                            if statement not in failed_statements["wildcard_principal"]:
                                 failed_statements["wildcard_principal"].append(
                                     statement
                                 )
+                        else:
+                            if self.s3_restrict_public_buckets:
+                                if (
+                                    statement
+                                    not in failed_statements["wildcard_principal"]
+                                ):
+                                    failed_statements["wildcard_principal"].append(
+                                        statement
+                                    )
                             else:
-                                failed_statements["unrestricted"].append(statement)
+                                if statement not in failed_statements["unrestricted"]:
+                                    failed_statements["unrestricted"].append(statement)
                 if (
                     not_principal is not None
                 ):  # If Allow and Not Principal, means all other principals
                     if condition and not self.is_unrestricted_conditions(condition):
-                        failed_statements["wildcard_principal"].append(statement)
+                        if statement not in failed_statements["wildcard_principal"]:
+                            failed_statements["wildcard_principal"].append(statement)
                     else:
                         if self.s3_restrict_public_buckets:
-                            failed_statements["wildcard_principal"].append(statement)
+                            if statement not in failed_statements["wildcard_principal"]:
+                                failed_statements["wildcard_principal"].append(
+                                    statement
+                                )
                         else:
-                            failed_statements["unrestricted"].append(statement)
+                            if statement not in failed_statements["unrestricted"]:
+                                failed_statements["unrestricted"].append(statement)
                 # Cross Account or Untrusted Principal
                 aws_principals = self.standardize_principals(principal, "AWS")
                 for p in aws_principals:
@@ -214,27 +227,38 @@ class Access:
                             and account_id not in principal_amazon_accounts
                         ):
                             if trusted_accounts and account_id not in trusted_accounts:
-                                failed_statements["untrusted_principal"].append(
+                                if (
                                     statement
-                                )
+                                    not in failed_statements["untrusted_principal"]
+                                ):
+                                    failed_statements["untrusted_principal"].append(
+                                        statement
+                                    )
                             else:
-                                failed_statements["cross_account_principal"].append(
+                                if (
                                     statement
-                                )
+                                    not in failed_statements["cross_account_principal"]
+                                ):
+                                    failed_statements["cross_account_principal"].append(
+                                        statement
+                                    )
                 # Unrestricted Service
                 service_principals = self.standardize_principals(principal, "Service")
                 for p in service_principals:
                     if not condition or (
                         condition and self.is_unrestricted_conditions(condition)
                     ):
-                        failed_statements["unrestricted_services"].append(statement)
+                        if statement not in failed_statements["unrestricted_services"]:
+                            failed_statements["unrestricted_services"].append(statement)
                 # Wildcard or Dangerous Actions
                 actions = self.standardize_actions(action)
                 for a in actions:
                     if a in dangerous_iam_actions:
-                        failed_statements["dangerous_actions"].append(statement)
+                        if statement not in failed_statements["dangerous_actions"]:
+                            failed_statements["dangerous_actions"].append(statement)
                     if "*" in a:
-                        failed_statements["wildcard_actions"].append(statement)
+                        if statement not in failed_statements["wildcard_actions"]:
+                            failed_statements["wildcard_actions"].append(statement)
 
         return failed_statements
 
