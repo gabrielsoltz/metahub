@@ -1,5 +1,5 @@
 alive_progress
-aws-arn==0.0.10
+aws-arn==0.0.11
 boto3
 jinja2
 pyyaml
