@@ -313,7 +313,7 @@ def print_banner(banners=True):
     print(
         r" "
         + color["BOLD"]
-        + "__  /|_/ /_  _ \  __/  __ `/_  /_/ /_  / / /_  __ \\"
+        + "__  /|_/ /_  _ \\  __/  __ ``/_  /_/ /_  / / /_  __ \\"
         + color["END"]
     )
     print(
@@ -325,7 +325,7 @@ def print_banner(banners=True):
     print(
         r" "
         + color["BOLD"]
-        + "/_/  /_/  \___/\__/ \__,_/ /_/ /_/  \__,_/ /_.___/ "
+        + "/_/  /_/  \\___/\\__/ \\__,_/ /_/ /_/  \\__,_/ /_.___/ "
         + color["END"]
     )
     print(
