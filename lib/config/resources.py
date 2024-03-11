@@ -183,4 +183,8 @@ MetaHubResourcesConfig = {
         "metatrails_events": ["CreateKey"],
         "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
     },
+    "AwsEcrRepository": {
+        "metatrails_events": ["CreateRepository"],
+        "ResourceName": {"parsing_char": "/", "parsing_pos": -1},
+    },
 }
