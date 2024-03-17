@@ -411,7 +411,9 @@ def validate_arguments(args, logger):
         for file in args.input_asff:
             try:
                 with open(file) as f:
-                    asff_findings.extend(json.load(f))
+                    json_file = json.load(f)
+                    json_file = fix_asff_errors(json_file)
+                    asff_findings.extend(json_file)
             except (json.decoder.JSONDecodeError, FileNotFoundError) as err:
                 logger.error("--input-asff file %s %s!", args.input_asff, str(err))
                 exit(1)
@@ -535,3 +537,9 @@ def validate_arguments(args, logger):
         sh_region,
         update_findings_filters,
     )
+
+
+def fix_asff_errors(json_asff_file):
+    # Trivy ASFF findings have a different format
+    if "Findings" in json_asff_file:
+        return json_asff_file["Findings"]
