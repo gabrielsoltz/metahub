@@ -303,12 +303,20 @@ class Context:
         except ClientError as err:
             organizations = False
             if not err.response["Error"]["Code"] == "AWSOrganizationsNotInUseException":
-                self.logger.warning(
+                self.logger.error(
                     "Failed to describe_organization: %s, for resource: %s - %s",
                     self.resource_account_id,
                     self.resource_arn,
                     err,
                 )
+        except Exception as err:
+            organizations = False
+            self.logger.error(
+                "Failed to describe_organization: %s, for resource: %s - %s",
+                self.resource_account_id,
+                self.resource_arn,
+                err,
+            )
         return organizations
 
     def get_account_organizations_details(self):
@@ -410,7 +418,7 @@ class Context:
                 alternate_contact = account_client.get_alternate_contact(
                     AlternateContactType=alternate_contact_type
                 ).get("AlternateContact")
-            except (NoCredentialsError, ClientError, EndpointConnectionError) as err:
+            except (ClientError, EndpointConnectionError) as err:
                 if err.response["Error"]["Code"] == "ResourceNotFoundException":
                     self.logger.info(
                         "No alternate contact found for account %s (%s) - %s",
@@ -418,13 +426,13 @@ class Context:
                         self.resource_arn,
                         err,
                     )
-                else:
-                    self.logger.warning(
-                        "Failed to get_alternate_contact for account %s (%s) - %s",
-                        self.resource_account_id,
-                        self.resource_arn,
-                        err,
-                    )
+            except Exception as err:
+                self.logger.error(
+                    "Failed to get_alternate_contact for account %s (%s) - %s",
+                    self.resource_account_id,
+                    self.resource_arn,
+                    err,
+                )
         return alternate_contact
 
     def get_account_alias(self):
