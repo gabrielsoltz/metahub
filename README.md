@@ -102,7 +102,7 @@ Read your security findings from Trivy as an input file and executes the default
 
 ```bash
 export AWS_REGION=us-west-1
-export AWS_ACCOUNT_ID=317105492065
+export AWS_ACCOUNT_ID=012345678901
 trivy image --format template --template "@contrib/asff.tpl" -o trivy-findings.json.asff public.ecr.aws/n2p8q5p4/metahub:stable
 ./metahub --inputs file-asff --input-asff /path/to/trivy-findings.json.asff
 ```
