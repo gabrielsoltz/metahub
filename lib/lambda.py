@@ -7,18 +7,18 @@ def lambda_handler(event, context):
 
     # Add your custom options here (e.g. Only Critical: ["--sh-filters", "SeverityLabel=CRITICAL"])
     # Only used if triggering lambda manually, not from Security Hub Custom Actions
-    CUSTOM_OPTIONS = []
+    custom_options = []
 
     # Actions the lambda will execute, if you don't need actions, keep this list empty
     # Example, for enriching findings:
-    # ACTIONS = [
+    # actions = [
     #     "--enrich-findings",
     #     "--no-actions-confirmation",
     # ]
-    ACTIONS = []
+    actions = []
 
     # These are the minimum options required to run the Lambda, don't change this
-    LAMBDA_OPTIONS = [
+    lambda_options = [
         "--output-modes",
         "lambda",
         "--no-banners",
@@ -41,16 +41,16 @@ def lambda_handler(event, context):
             finding_id = finding.get("Id")
             resource_id = finding.get("Resources")[0].get("Id")
             logger.info("Security Hub Finding: %s", finding_id)
-            CUSTOM_OPTIONS = []
+            custom_options = []
             # Search by ResoureId
-            LAMBDA_OPTIONS.extend(
+            lambda_options.extend(
                 ["--sh-filters", f"ResourceId={resource_id}", "RecordState=ACTIVE"]
             )
             # Search by FindingId
-            # LAMBDA_OPTIONS.extend(["--sh-filters", f"Id={finding_id}"])
+            # lambda_options.extend(["--sh-filters", f"Id={finding_id}"])
 
-    OPTIONS = LAMBDA_OPTIONS + ACTIONS + CUSTOM_OPTIONS
+    options = lambda_options + actions + custom_options
 
-    logger.info("Executing with options: %s", OPTIONS)
-    exec = lib.main.main(OPTIONS)
-    return exec
+    logger.info("Executing with options: %s", options)
+    execution_result = lib.main.main(options)
+    return execution_result

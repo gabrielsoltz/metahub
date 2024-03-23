@@ -92,8 +92,8 @@ class SecurityHub:
         self.logger.info("Gathering SecurityHub results complete")
         return findings
 
-    def _spit_list(self, lst, n):
-        """split a list into multipe lists from n items"""
+    def _split_list(self, lst, n):
+        """Split a list into multiple lists with n items"""
         for i in range(0, len(lst), n):
             yield lst[i : i + n]
 
@@ -105,10 +105,10 @@ class SecurityHub:
                 for f, v in finding.items():
                     FindingIdentifier = {"Id": v["Id"], "ProductArn": v["ProductArn"]}
                     update["FindingIdentifiers"].append(FindingIdentifier)
-        self.logger.info("Splitting findings into 100 items batches...")
+        self.logger.info("Splitting findings into 100 item batches...")
         sub_list_count = 0
         for FindingIdentifiers_sub_list in list(
-            self._spit_list(update["FindingIdentifiers"], 100)
+            self._split_list(update["FindingIdentifiers"], 100)
         ):
             sub_list_count += 1
             self.logger.info(
@@ -181,7 +181,7 @@ class SecurityHub:
                     response_multiple.append(response)
                 else:
                     self.logger.info(
-                        "Ignoring finding %s as it has not Context",
+                        "Ignoring finding %s as it has no Context",
                         FindingIdentifier["Id"],
                     )
         return response_multiple

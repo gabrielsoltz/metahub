@@ -2,6 +2,9 @@ import argparse
 import json
 import logging
 import sys
+from pathlib import Path
+
+import yaml
 
 from lib.AwsHelpers import (
     get_account_alias,
@@ -61,7 +64,7 @@ def get_parser():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-    Metahub: the command line utility for AWS Security Hub.
+    Metahub: Contextual Vulnerability Management
     """,
     )
 
@@ -388,7 +391,9 @@ def test_python_version():
             sys.version,
         )
         return False
-    return True
+    else:
+        logger.info("Python Version is compatible: %s", sys.version)
+        return True
 
 
 def validate_arguments(args, logger):
@@ -429,10 +434,6 @@ def validate_arguments(args, logger):
     if not args.sh_filters and not args.sh_template:
         sh_filters = set_sh_filters(sh_default_filters)
     elif args.sh_template:
-        from pathlib import Path
-
-        import yaml
-
         try:
             yaml_to_dict = yaml.safe_load(Path(args.sh_template).read_text())
             dict_values = next(iter(yaml_to_dict.values()))
@@ -495,7 +496,7 @@ def validate_arguments(args, logger):
     # Validate udpate findings
     update_findings_filters = {}
     if args.update_findings:
-        IsNnoteProvided = False
+        IsNoteProvided = False
         IsAllowedKeyProvided = False
         for key, value in args.update_findings.items():
             if key in ("Workflow", "Note"):
@@ -513,15 +514,15 @@ def validate_arguments(args, logger):
                 if key == "Note":
                     Note = {"Note": {"Text": value, "UpdatedBy": "MetaHub"}}
                     update_findings_filters.update(Note)
-                    IsNnoteProvided = True
+                    IsNoteProvided = True
                 continue
             logger.error(
-                "Unsuported update findings key: "
+                "Unsupported update findings key: "
                 + str(key)
                 + " - Supported keys: Workflow and Note. Use --update-findings Workflow=NEW Note='This is an example Note'"
             )
             exit(1)
-        if not IsAllowedKeyProvided or not IsNnoteProvided:
+        if not IsAllowedKeyProvided or not IsNoteProvided:
             logger.error(
                 'Update findings missing key. Use --update-findings Workflow=NEW Note="This is an example Note"'
             )

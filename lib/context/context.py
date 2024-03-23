@@ -57,17 +57,19 @@ class Context:
 
     def get_handler(self):
         try:
-            hndl = getattr(lib.context.resources, self.resource_type).Metacheck(
+            resource_module = getattr(lib.context.resources, self.resource_type)
+            hndl = resource_module.Metacheck(
                 self.logger, self.finding, self.mh_filters_config, self.sess
             )
-        except (AttributeError, Exception) as err:
-            if "has no attribute '" + self.resource_type in str(err):
-                self.logger.info(
-                    "get_handler undefined resource type - %s (%s)",
-                    self.resource_arn,
-                    self.resource_type,
-                )
-            elif "should return None" in str(err):
+        except AttributeError:
+            self.logger.info(
+                "get_handler undefined resource type - %s (%s)",
+                self.resource_arn,
+                self.resource_type,
+            )
+            hndl = None
+        except Exception as err:
+            if "should return None" in str(err):
                 self.logger.info(
                     "get_handler resource not found - %s (%s)",
                     self.resource_arn,
@@ -180,7 +182,7 @@ class Context:
                 self.logger, "resourcegroupstaggingapi", self.resource_region, self.sess
             )
 
-            # Some tools sometimes return incorrect ARNs for some resources, here is an attemp to fix them
+            # Some tools sometimes return incorrect ARNs for some resources, here is an attempt to fix them
             def fix_arn(arn, resource_type):
                 # Route53 Hosted Zone with Account Id
                 if resource_type == "AwsRoute53HostedZone":
@@ -217,12 +219,12 @@ class Context:
 
             if self.mh_filters_tags:
                 # Lower Case for better matching:
-                mh_tags_values_lower = dict(
-                    (k.lower(), v.lower()) for k, v in resource_tags.items()
-                )
-                mh_filters_tags_lower = dict(
-                    (k.lower(), v.lower()) for k, v in self.mh_filters_tags.items()
-                )
+                mh_tags_values_lower = {
+                    k.lower(): v.lower() for k, v in resource_tags.items()
+                }
+                mh_filters_tags_lower = {
+                    k.lower(): v.lower() for k, v in self.mh_filters_tags.items()
+                }
                 compare = {
                     k: mh_tags_values_lower[k]
                     for k in mh_tags_values_lower
@@ -457,7 +459,10 @@ class Context:
 
         iam_client = get_boto3_client(self.logger, "iam", "us-east-1", self.sess)
         try:
-            aliases = iam_client.list_account_aliases()["AccountAliases"][0]
+            response = iam_client.list_account_aliases()
+            aliases = response.get("AccountAliases", [])
+            if aliases:
+                aliases = aliases[0]
         except (NoCredentialsError, ClientError, EndpointConnectionError) as err:
             self.logger.error(
                 "Failed to list_account_aliases: %s, for resource: %s - %s",
@@ -487,27 +492,25 @@ class Context:
 
         trails = {}
         try:
-            paginator = client.get_paginator("lookup_events")
+            parsing_char = (
+                MetaHubResourcesConfig.get(self.resource_type, {})
+                .get("ResourceName", {})
+                .get("parsing_char")
+            )
+            parsing_pos = (
+                MetaHubResourcesConfig.get(self.resource_type, {})
+                .get("ResourceName", {})
+                .get("parsing_pos")
+            )
+            if parsing_char is not None:
+                ResourceName = self.resource_arn.split(parsing_char)[parsing_pos]
+            else:
+                ResourceName = self.resource_arn
+            event_names = MetaHubResourcesConfig.get(self.resource_type, {}).get(
+                "metatrails_events", []
+            )
 
-            try:
-                parsing_char = MetaHubResourcesConfig[self.resource_type][
-                    "ResourceName"
-                ]["parsing_char"]
-                parsing_pos = MetaHubResourcesConfig[self.resource_type][
-                    "ResourceName"
-                ]["parsing_pos"]
-                if parsing_char is not None:
-                    ResourceName = self.resource_arn.split(parsing_char)[parsing_pos]
-                else:
-                    ResourceName = self.resource_arn
-                event_names = MetaHubResourcesConfig[self.resource_type][
-                    "metatrails_events"
-                ]
-            except KeyError:
-                # No Config Defined
-                return False
-
-            page_iterator = paginator.paginate(
+            page_iterator = client.get_paginator("lookup_events").paginate(
                 LookupAttributes=[
                     {"AttributeKey": "ResourceName", "AttributeValue": ResourceName}
                 ]

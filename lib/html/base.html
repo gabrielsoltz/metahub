@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
   <head>
     <title>{{ title }}</title>
@@ -10,13 +9,11 @@
         box-sizing: border-box;
       }
 
-      /* Style the body */
       body {
         font-family: Arial, Helvetica, sans-serif;
         margin: 0;
       }
 
-      /* Header/logo Title */
       .header {
         text-align: left;
         background: #ffffff;
@@ -32,30 +29,22 @@
         background: #ffffff;
       }
 
-      /* Increase the font size of the heading */
-      .header h1 {
+      .header h1,
+      .header h2 {
         position: relative;
         top: 5px;
         left: 25px;
       }
 
-      .header h2 {
-        position: relative;
-        top: -7px;
-        left: 25px;
-      }
-      /* Sticky navbar - toggles between relative and fixed, depending on the scroll position. It is positioned relative until a given offset position is met in the viewport - then it "sticks" in place (like position:fixed). The sticky value is not supported in IE or Edge 15 and earlier versions. However, for these versions the navbar will inherit default position */
       .navbar {
         overflow: hidden;
-        background: #ffffff;
-        background-color: #555;
+        background: #555;
         position: sticky;
         position: -webkit-sticky;
         top: 100;
         height: 35px;
       }
 
-      /* Style the navigation bar links */
       .navbar a {
         float: left;
         display: block;
@@ -65,53 +54,41 @@
         text-decoration: none;
       }
 
-      /* Right-aligned link */
       .navbar a.right {
         float: right;
       }
 
-      /* Change color on hover */
       .navbar a:hover {
         background-color: #555;
         color: black;
       }
 
-      /* Active/current link */
       .navbar a.active {
         background-color: #555;
         color: white;
       }
 
-      /* Column container */
       .row {
-        display: -ms-flexbox; /* IE10 */
         display: flex;
-        -ms-flex-wrap: wrap; /* IE10 */
         flex-wrap: wrap;
       }
 
       .column {
-        float: left;
+        flex: 1;
       }
 
-      /* Create two unequal columns that sits next to each other */
-      /* Sidebar/left column */
       .side {
-        -ms-flex: 30%; /* IE10 */
         flex: 30%;
         background-color: #f1f1f1;
         padding: 20px;
       }
 
-      /* Main column */
       .main {
-        -ms-flex: 70%; /* IE10 */
         flex: 70%;
         background-color: white;
         padding: 20px;
       }
 
-      /* Footer */
       .footer {
         padding: 5px;
         text-align: center;
@@ -119,14 +96,12 @@
         height: 30px;
       }
 
-      /* Responsive layout - when the screen is less than 700px wide, make the two columns stack on top of each other instead of next to each other */
       @media screen and (max-width: 700px) {
         .row {
           flex-direction: column;
         }
       }
 
-      /* Responsive layout - when the screen is less than 400px wide, make the navigation links stack on top of each other instead of next to each other */
       @media screen and (max-width: 400px) {
         .navbar a {
           float: none;
@@ -147,19 +122,23 @@
         border-collapse: collapse;
         width: 50%;
       }
+
       table,
       th,
       td {
         border: 1px solid black;
       }
+
       th,
       td {
         padding: 10px;
         text-align: left;
       }
+
       th {
         background-color: #f2f2f2;
       }
+
       .box {
         border: 1px solid #000;
         padding: 10px;
@@ -167,6 +146,7 @@
         text-align: center;
         background-color: #f2f2f2;
       }
+
       .container {
         display: flex;
         justify-content: space-between;
@@ -174,48 +154,59 @@
         margin-right: 10px;
         border: 1px solid black;
       }
+
       .CRITICAL {
         background-color: red;
         color: white;
       }
+
       .HIGH {
         background-color: orange;
         color: white;
       }
+
       .MEDIUM {
         background-color: yellow;
       }
+
       .LOW {
         background-color: green;
         color: white;
       }
+
       .INFORMATIONAL {
         background-color: blue;
         color: white;
       }
+
       .red {
         background-color: red;
         color: white;
       }
+
       .orange {
         background-color: orange;
         color: white;
       }
+
       .green {
         background-color: green;
         color: white;
       }
+
       .blue {
         background-color: blue;
         color: white;
       }
+
       .statistics {
-        width: auto; /* Allows the table width to adjust based on content */
-        max-width: 100%; /* Limits the table width to 100% of its container */
-        border: none; /* Removes the border completely */
+        width: auto;
+        max-width: 100%;
+        border: none;
         border-spacing: 0;
         empty-cells: hide;
       }
+
       .statistics td,
       .statistics th {
         border: none;
@@ -230,10 +221,6 @@
         alt="metahub-logo"
       />
     </div>
-    <script
-      src="https://code.jquery.com/jquery-3.7.1.min.js"
-      type="text/javascript"
-    ></script>
 
     <div class="navbar">
       <a href="javascript:show('#findings-groupped');" class="active"
@@ -243,9 +230,14 @@
       <a href="javascript:show('#pies');" class="active">Statistics</a>
       <a href="javascript:show('#execution');" class="active">Execution</a>
     </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      type="text/javascript"
+    ></script>
     <script type="text/javascript">
       function show(section) {
-        if (jQuery(section).css("display") == "none") {
+        if ($(section).css("display") == "none") {
           $(section).css("display", "");
           if (section == "#findings") {
             $("#findings-groupped").css("display", "none");
@@ -267,28 +259,24 @@
           {% block execution %}{% endblock %}
         </div>
 
-        <div id="severities" class="row" style="display: &quot;&quot;">
+        <div id="severities" class="row">
           {% block severities %}{% endblock %}
         </div>
         <br />
 
-        <div id="pies" class="row" style="display: &quot;&quot;">
-          {% block pies %}{% endblock %}
-        </div>
+        <div id="pies" class="row">{% block pies %}{% endblock %}</div>
         <br />
 
-        <div id="findings-groupped" class="row" style="display: &quot;&quot;">
-          {% block table_groupped %} {% endblock %}
+        <div id="findings-groupped" class="row">
+          {% block table_groupped %}{% endblock %}
         </div>
         <br />
 
         <div id="findings" class="row" style="display: none">
-          {% block table %} {% endblock %}
+          {% block table %}{% endblock %}
         </div>
 
-        <div id="export" class="row" style="display: &quot;&quot;">
-          {% block export %}{% endblock %}
-        </div>
+        <div id="export" class="row">{% block export %}{% endblock %}</div>
       </div>
     </div>
 
