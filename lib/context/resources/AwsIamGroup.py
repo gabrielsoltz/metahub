@@ -1,6 +1,5 @@
 """ResourceType: AwsIamGroup"""
 
-
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client

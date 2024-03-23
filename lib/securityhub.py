@@ -1,4 +1,5 @@
 """Integration AWS Security Hub"""
+
 from sys import exit
 
 from alive_progress import alive_bar
@@ -190,18 +191,34 @@ def parse_finding(finding):
     """Returns resource ARN and finding parsed for it"""
     findings = {
         finding["Title"]: {
-            "SeverityLabel": finding["Severity"]["Label"],
-            "Workflow": finding.get("Workflow"),
-            "RecordState": finding["RecordState"],
-            "Compliance": finding.get("Compliance"),
-            "Id": finding.get("Id"),
-            "ProductArn": finding.get("ProductArn"),
+            "SeverityLabel": finding.get("Severity").get("Label", "Unknown"),
+            "Workflow": finding.get("Workflow", {"Status": "Unknown"}),
+            "RecordState": finding.get("RecordState", "Unknown"),
+            "Compliance": finding.get("Compliance", {"Status": "Unknown"}),
+            "Id": finding.get("Id", "Unknown"),
+            "ProductArn": finding.get("ProductArn", "Unknown"),
             "StandardsControlArn": finding.get("ProductFields").get(
-                "StandardsControlArn"
+                "StandardsControlArn", "Unknown"
             ),
         },
     }
     return finding["Resources"][0]["Id"], findings
+
+
+def parse_region(resource_arn, finding):
+    try:
+        region = finding["Region"]
+    except KeyError:
+        try:
+            region = finding["Resources"][0]["Region"]
+        except KeyError:
+            try:
+                region = resource_arn.split(":")[3]
+            except IndexError:
+                region = "Unknown"
+    if region == "":
+        region = "Unknown"
+    return region
 
 
 def set_sh_filters(sh_filters):
