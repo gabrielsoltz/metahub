@@ -115,18 +115,21 @@ def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
 
 
 def get_boto3_client(logger, service, region, sess, profile=None):
-    if sess:
-        return sess.client(service_name=service, region_name=region)
-    if profile:
-        try:
-            return boto3.Session(profile_name=profile).client(
-                service_name=service, region_name=region
-            )
-        except ProfileNotFound as e:
-            logger.error(
-                "Error getting boto3 client using AWS profile (check --sh-profile): {}".format(
-                    e
+    try:
+        if sess:
+            return sess.client(service_name=service, region_name=region)
+        if profile:
+            try:
+                return boto3.Session(profile_name=profile).client(
+                    service_name=service, region_name=region
                 )
-            )
-            exit(1)
-    return boto3.client(service, region_name=region)
+            except ProfileNotFound as e:
+                logger.error(
+                    "Error getting boto3 client using AWS profile (check --sh-profile): {}".format(
+                        e
+                    )
+                )
+                exit(1)
+        return boto3.client(service, region_name=region)
+    except Exception as e:
+        logger.error("Error getting boto3 client: {}".format(e))

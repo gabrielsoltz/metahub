@@ -136,20 +136,26 @@ class Outputs:
                             [
                                 resource,
                                 v.get("SeverityLabel", None),
-                                values.get("impact", None).get("Impact", None)
-                                if values.get("impact")
-                                else None,
+                                (
+                                    values.get("impact", None).get("Impact", None)
+                                    if values.get("impact")
+                                    else None
+                                ),
                                 f,
                                 values.get("AwsAccountId", None),
                                 values.get("Region", None),
                                 values.get("ResourceType", None),
-                                v.get("Workflow", {}).get("Status", None)
-                                if v.get("Workflow")
-                                else None,
+                                (
+                                    v.get("Workflow", {}).get("Status", None)
+                                    if v.get("Workflow")
+                                    else None
+                                ),
                                 v.get("RecordState", None),
-                                v.get("Compliance", {}).get("Status", None)
-                                if v.get("Compliance")
-                                else None,
+                                (
+                                    v.get("Compliance", {}).get("Status", None)
+                                    if v.get("Compliance")
+                                    else None
+                                ),
                             ]
                             # + impact_column_values
                             + account_column_values
@@ -249,13 +255,17 @@ class Outputs:
                             values.get("AwsAccountId", None),
                             values.get("Region", None),
                             values.get("ResourceType", None),
-                            v.get("Workflow", {}).get("Status", None)
-                            if v.get("Workflow")
-                            else None,
+                            (
+                                v.get("Workflow", {}).get("Status", None)
+                                if v.get("Workflow")
+                                else None
+                            ),
                             v.get("RecordState", None),
-                            v.get("Compliance", {}).get("Status", None)
-                            if v.get("Compliance")
-                            else None,
+                            (
+                                v.get("Compliance", {}).get("Status", None)
+                                if v.get("Compliance")
+                                else None
+                            ),
                         ]
                         # + impact_column_values
                         + account_column_values

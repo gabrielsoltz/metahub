@@ -1,6 +1,5 @@
 """ResourceType: AwsIamUser"""
 
-
 from datetime import datetime, timezone
 
 from botocore.exceptions import ClientError
