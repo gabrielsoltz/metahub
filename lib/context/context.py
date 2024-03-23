@@ -6,8 +6,9 @@ from botocore.exceptions import (
 )
 
 import lib.context.resources
-from lib.AwsHelpers import assume_role, get_account_id, get_boto3_client
+from lib.AwsHelpers import assume_role, get_boto3_client
 from lib.config.resources import MetaHubResourcesConfig
+from lib.securityhub import parse_region
 
 
 class Context:
@@ -19,6 +20,7 @@ class Context:
         mh_filters_tags,
         mh_role,
         cached_associated_resources,
+        current_account_id,
     ):
         self.logger = logger
         self.parse_finding(finding)
@@ -26,19 +28,26 @@ class Context:
         self.mh_filters_config = mh_filters_config
         self.mh_filters_tags = mh_filters_tags
         self.cached_associated_resources = cached_associated_resources
-        # Move to Config:
         self.drilled_down = True
+        self.current_account_id = current_account_id
+
+    def convert_tags_to_key_value(self, tags):
+        """When reading the Tags from the finding, the format is a list of dictionaries, we need to convert it to a dictionary of key-value pairs"""
+        return [{"Key": key, "Value": value} for key, value in tags.items()]
 
     def parse_finding(self, finding):
         self.finding = finding
         self.resource_account_id = finding["AwsAccountId"]
-        self.resource_type = finding["Resources"][0]["Type"]
-        self.resource_arn = finding["Resources"][0]["Id"]
-        try:
-            self.resource_region = finding["Region"]
-        except KeyError:
-            self.resource_region = finding["Resources"][0]["Region"]
-        self.current_account_id = get_account_id(self.logger)
+        self.resources = finding.get("Resources")
+        if self.resources:
+            self.resource_type = self.resources[0]["Type"]
+            self.resource_arn = self.resources[0]["Id"]
+            self.resource_tags = self.resources[0].get("Tags", False)
+        else:
+            self.resource_type = "Unknown"
+            self.resource_arn = "Unknown"
+            self.resource_tags = False
+        self.resource_region = parse_region(self.resource_arn, self.finding)
 
     def get_session(self, mh_role):
         if mh_role:
@@ -164,40 +173,43 @@ class Context:
         ):
             return resource_tags, resource_matched
 
-        # Execute Tags
-        tags = False
-        client = get_boto3_client(
-            self.logger, "resourcegroupstaggingapi", self.resource_region, self.sess
-        )
-
-        # Some tools sometimes return incorrect ARNs for some resources, here is an attemp to fix them
-        def fix_arn(arn, resource_type):
-            # Route53 Hosted Zone with Account Id
-            if resource_type == "AwsRoute53HostedZone":
-                if arn.split(":")[4] != "":
-                    fixed_arn = arn.replace(arn.split(":")[4], "")
-                    return fixed_arn
-            return arn
-
-        try:
-            response = client.get_resources(
-                ResourceARNList=[fix_arn(self.resource_arn, self.resource_type)]
+        # Check if Tags are already available in the resource object
+        if not self.resource_tags:
+            tags = False
+            client = get_boto3_client(
+                self.logger, "resourcegroupstaggingapi", self.resource_region, self.sess
             )
+
+            # Some tools sometimes return incorrect ARNs for some resources, here is an attemp to fix them
+            def fix_arn(arn, resource_type):
+                # Route53 Hosted Zone with Account Id
+                if resource_type == "AwsRoute53HostedZone":
+                    if arn.split(":")[4] != "":
+                        fixed_arn = arn.replace(arn.split(":")[4], "")
+                        return fixed_arn
+                return arn
+
             try:
-                tags = response["ResourceTagMappingList"][0]["Tags"]
-            except IndexError:
-                self.logger.info(
-                    "No Tags found for resource: %s (%s)",
+                response = client.get_resources(
+                    ResourceARNList=[fix_arn(self.resource_arn, self.resource_type)]
+                )
+                try:
+                    tags = response["ResourceTagMappingList"][0]["Tags"]
+                except IndexError:
+                    self.logger.info(
+                        "No Tags found for resource: %s (%s)",
+                        self.resource_arn,
+                        self.resource_type,
+                    )
+            except (ClientError, ParamValidationError, Exception) as err:
+                self.logger.warning(
+                    "Error Fetching Tags for resource %s (%s) - %s",
                     self.resource_arn,
                     self.resource_type,
+                    err,
                 )
-        except (ClientError, ParamValidationError, Exception) as err:
-            self.logger.warning(
-                "Error Fetching Tags for resource %s (%s) - %s",
-                self.resource_arn,
-                self.resource_type,
-                err,
-            )
+        else:
+            tags = self.convert_tags_to_key_value(self.resource_tags)
 
         if tags:
             for tag in tags:
