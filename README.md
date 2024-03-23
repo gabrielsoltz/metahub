@@ -101,6 +101,8 @@ powerpipe benchmark run aws_compliance.benchmark.all_controls --export asff
 Read your security findings from Trivy as an input file and executes the default context options:
 
 ```bash
+export AWS_REGION=us-west-1
+export AWS_ACCOUNT_ID=317105492065
 trivy image --format template --template "@contrib/asff.tpl" -o trivy-findings.json.asff public.ecr.aws/n2p8q5p4/metahub:stable
 ./metahub --inputs file-asff --input-asff /path/to/trivy-findings.json.asff
 ```
@@ -1001,21 +1003,27 @@ The minimum policy needed for context includes the managed policy `arn:aws:iam::
 
 # Inputs
 
-MetaHub can read security findings directly from AWS Security Hub using its API. If you don't use Security Hub, you can use any ASFF-based scanner. Most cloud security scanners support the ASFF format. Check with them or leave an issue if you need help.
+MetaHub can read security findings directly from AWS Security Hub using its API. If you don't use Security Hub, you can use any ASFF-compatible scanner. Most cloud security scanners support the ASFF format like Prolwer, Steampipe, Trivy, and more.
 
-If you want to read from an input ASFF file, you need to use the options:
+If you want to read from an input ASFF file, you need to use the option (`--inputs file-asff`) and provide the path to the file. You can provide multiple files separated by a space.:
 
 ```sh
 ./metahub.py --inputs file-asff --input-asff path/to/the/file.json.asff path/to/the/file2.json.asff
 ```
 
-You also can combine AWS Security Hub findings with input ASFF files specifying both inputs:
+You also can combine AWS Security Hub findings with input ASFF files specifying both inputs (`--inputs file-asff securityhub`). MetaHub will process all findings together and end up with a single output.:
 
 ```sh
 ./metahub.py --inputs file-asff securityhub --input-asff path/to/the/file.json.asff
 ```
 
 When using a file as input, you can't use the option `--sh-filters` for filter findings, as this option relies on AWS API for filtering. You can't use the options `--update-findings` or `--enrich-findings` as those findings are not in the AWS Security Hub. If you are reading from both sources at the same time, only the findings from AWS Security Hub will be updated.
+
+MetaHub also implements some **fixing mechanisms** for the ASFF format, when they are not correctly formatted. This is a best-effort approach to make the ASFF as useful as possible, but it's not perfect and needs to be fixed in the source scanner.
+
+- If the key `Region` is missing from the Resources and from the Root Level, MetaHub will calculate the region based on the ARN of the affected resource.
+- If the ASFF file is not correctly setting the ASFF Resource Type, MetaHub will calculate it based on the ARN of the affected resource using the library [aws-arn](https://github.com/gabrielsoltz/aws-arn)
+- If any other field is missing like `SeverityLabel`, `Workflow`, `RecordState`, `Compliance`, `Id`, `ProductArn` or `StandardsControlArn`, MetaHub will set them to `Unknown`.
 
 # Outputs
 
