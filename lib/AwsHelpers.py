@@ -26,11 +26,7 @@ def assume_role(logger, aws_account_number, role_name, duration=assume_role_dura
         # Get the current partition
         partition = sts_client.get_caller_identity()["Arn"].split(":")[1]
         response = sts_client.assume_role(
-            RoleArn="arn:{}:iam::{}:role/{}".format(
-                partition,
-                aws_account_number,
-                role_name,
-            ),
+            RoleArn=f"arn:{partition}:iam::{aws_account_number}:role/{role_name}",
             RoleSessionName="MetaHub",
             DurationSeconds=duration,
         )
@@ -41,10 +37,10 @@ def assume_role(logger, aws_account_number, role_name, duration=assume_role_dura
     logger.info(
         "Getting session for assumed IAM Role: %s (%s)", role_name, aws_account_number
     )
-    Credentials = response["Credentials"]
-    access_key = Credentials["AccessKeyId"]
-    secret_key = Credentials["SecretAccessKey"]
-    session_token = Credentials["SessionToken"]
+    credentials = response["Credentials"]
+    access_key = credentials["AccessKeyId"]
+    secret_key = credentials["SecretAccessKey"]
+    session_token = credentials["SessionToken"]
     try:
         boto3_session = boto3.session.Session(
             aws_access_key_id=access_key,
@@ -95,7 +91,7 @@ def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
     local_account = get_account_id(logger, sess=None, profile=profile)
     if aws_account_number != local_account and not role_name:
         logger.warning(
-            "Can't get account alias for account {}, not --mh-assume-role provided".format(
+            "Can't get account alias for account {}, no --mh-assume-role provided".format(
                 aws_account_number
             )
         )
@@ -114,7 +110,7 @@ def get_account_alias(logger, aws_account_number, role_name=None, profile=None):
     return aliases
 
 
-def get_boto3_client(logger, service, region, sess, profile=None):
+def get_boto3_client(logger, service, region, sess=None, profile=None):
     try:
         if sess:
             return sess.client(service_name=service, region_name=region)
@@ -130,6 +126,6 @@ def get_boto3_client(logger, service, region, sess, profile=None):
                     )
                 )
                 exit(1)
-        return boto3.client(service, region_name=region)
+        return boto3.client(service_name=service, region_name=region)
     except Exception as e:
         logger.error("Error getting boto3 client: {}".format(e))
