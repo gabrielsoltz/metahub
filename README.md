@@ -64,13 +64,6 @@ Read your security findings from AWS Security Hub with the default filters and e
 ./metahub
 ```
 
-Read your security findings from Prowler as an input file and executes the default context options:
-
-```bash
-python3 prowler.py aws -M json-asff -q
-./metahub --inputs file-asff --input-asff /path/to/prowler-findings.json.asff
-```
-
 Read a specific (filtered by Id) security finding from AWS Security Hub and executes the default context options:
 
 ```bash
@@ -87,6 +80,29 @@ Read all the security findings affecting an AWS Account which are ACTIVE (filter
 
 ```bash
 ./metahub --sh-filters RecordState=ACTIVE AwsAccountId=123456789012 --mh-filters-tags Environment=stg --context config tags
+```
+
+# Quick Run (Reading findings from a input ASFF file)
+
+Read your security findings from Prowler as an input file and executes the default context options:
+
+```bash
+python3 prowler.py aws -M json-asff -q
+./metahub --inputs file-asff --input-asff /path/to/prowler-findings.json.asff
+```
+
+Read your security findings from Powerpipe as an input file and executes the default context options:
+
+```bash
+powerpipe benchmark run aws_compliance.benchmark.all_controls --export asff
+./metahub --inputs file-asff --input-asff /path/to/powerpipe-findings.json.asff
+```
+
+Read your security findings from Trivy as an input file and executes the default context options:
+
+```bash
+trivy image --format template --template "@contrib/asff.tpl" -o trivy-findings.json.asff public.ecr.aws/n2p8q5p4/metahub:stable
+./metahub --inputs file-asff --input-asff /path/to/trivy-findings.json.asff
 ```
 
 # Context
