@@ -3,10 +3,11 @@ from threading import Lock
 
 from alive_progress import alive_bar
 
+from lib.AwsHelpers import get_account_id
 from lib.context.context import Context
 from lib.helpers import print_table
 from lib.impact.impact import Impact
-from lib.securityhub import SecurityHub, parse_finding
+from lib.securityhub import SecurityHub, parse_finding, parse_region
 from lib.statistics import generate_statistics
 
 
@@ -33,6 +34,9 @@ def generate_findings(
 
     # We keep a dictionary to avoid to process the same resource more than once
     cached_associated_resources = {}
+
+    # Get current account
+    current_account_id = get_account_id(logger)
 
     findings = []
     if "file-asff" in inputs and asff_findings:
@@ -75,6 +79,7 @@ def generate_findings(
                 mh_filters_tags,
                 context,
                 cached_associated_resources,
+                current_account_id,
             )
 
     with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
@@ -149,16 +154,13 @@ def evaluate_finding(
     mh_filters_tags,
     context_options,
     cached_associated_resources,
+    current_account_id,
 ):
     mh_matched = False
     resource_arn, finding_parsed = parse_finding(finding)
-
-    # Fix Region when not in root
-    try:
-        region = finding["Region"]
-    except KeyError:
-        region = finding["Resources"][0]["Region"]
-        finding["Region"] = region
+    # Ensure Region is parsed correctly
+    resource_region = parse_region(resource_arn, finding)
+    finding["Region"] = resource_region
 
     # If the resource was already matched or not_matched, we don't run meta* but we show others findings
     if resource_arn in mh_findings:
@@ -173,6 +175,7 @@ def evaluate_finding(
             mh_filters_tags,
             mh_role,
             cached_associated_resources,
+            current_account_id,
         )
         if "config" in context_options:
             mh_config, mh_checks_matched, all_association = context.get_context_config()
