@@ -540,6 +540,7 @@ def validate_arguments(args, logger):
 
 
 def fix_asff_errors(json_asff_file):
-    # Trivy ASFF findings have a different format
+    """Fix ASFF errors in the JSON file"""
     if "Findings" in json_asff_file:
         return json_asff_file["Findings"]
+    return json_asff_file
