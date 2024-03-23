@@ -2,6 +2,7 @@ from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from threading import Lock
 
 from alive_progress import alive_bar
+from aws_arn import parse_arn
 
 from lib.AwsHelpers import get_account_id
 from lib.context.context import Context
@@ -32,7 +33,7 @@ def generate_findings(
     mh_inventory = []
     AwsAccountData = {}
 
-    # We keep a dictionary to avoid to process the same resource more than once
+    # We keep a dictionary to avoid processing the same resource more than once
     cached_associated_resources = {}
 
     # Get current account
@@ -54,8 +55,6 @@ def generate_findings(
         # Get the resource_arn from the finding
         resource_arn, finding_parsed = parse_finding(finding)
         # Get the lock for this resource
-        # To Do: If more than one finding for the same account, account_context could execute more than once for the same account
-        # Split the findings by account and execute the account_context only once per account
         lock = resource_locks.get(resource_arn)
 
         # If the lock does not exist, create it
@@ -82,15 +81,13 @@ def generate_findings(
                 current_account_id,
             )
 
-    with alive_bar(title="-> Analizing findings...", total=len(findings)) as bar:
+    with alive_bar(title="-> Analyzing findings...", total=len(findings)) as bar:
         try:
-            executor = (
-                ThreadPoolExecutor()
-            )  # create executor outside of context manager
+            executor = ThreadPoolExecutor()
             # Create future tasks
-            futures = {
+            futures = [
                 executor.submit(process_finding, finding) for finding in findings
-            }
+            ]
 
             try:
                 # Process futures as they complete
@@ -158,9 +155,29 @@ def evaluate_finding(
 ):
     mh_matched = False
     resource_arn, finding_parsed = parse_finding(finding)
-    # Ensure Region is parsed correctly
+
+    # Fixing ASFF: Ensure Region is correctly defined in ASFF
     resource_region = parse_region(resource_arn, finding)
     finding["Region"] = resource_region
+
+    # Fixing ASFF: Ensure ResourceType is correctly defined in ASFF
+    original_resourcetype = finding["Resources"][0]["Type"]
+    try:
+        checked_resourcetype = parse_arn(resource_arn).get("asff_resource")
+        if checked_resourcetype == "":
+            checked_resourcetype = original_resourcetype
+    except KeyError:
+        # Invalid resource sub resource type
+        checked_resourcetype = original_resourcetype
+    except ValueError:
+        # Invalid ARN format
+        logger.warning(f"Invalid ARN format for {resource_arn}")
+        checked_resourcetype = original_resourcetype
+    if checked_resourcetype != original_resourcetype:
+        logger.warning(
+            f"Resource Type is incorrect for {resource_arn}, original: {original_resourcetype}, checked: {checked_resourcetype}. Fixing..."
+        )
+        finding["Resources"][0]["Type"] = checked_resourcetype
 
     # If the resource was already matched or not_matched, we don't run meta* but we show others findings
     if resource_arn in mh_findings:
