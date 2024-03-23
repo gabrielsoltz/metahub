@@ -35,4 +35,5 @@ from lib.context.resources import (
     AwsSecretsManagerSecret,
     AwsSnsTopic,
     AwsSqsQueue,
+    Container,
 )
