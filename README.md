@@ -1324,12 +1324,13 @@ For example, you can generate an HTML output with Tags and add "Owner" and "Envi
 
 # Filters
 
-You can filter the security findings and resources that you get from your source in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create alerts.
+You can filter the security findings and resources that you get from your source in different ways and combine all of them to get exactly what you are looking for, then re-use those filters to create automations, alerts, reports, and more.
 
 - [Security Hub Filtering](#security-hub-filtering)
 - [Security Hub Filtering using YAML templates](#security-hub-filtering-using-yaml-templates)
 - [Config Filters](#config-filters)
 - [Tags Filters](#tags-filters)
+- [Impact Filters](#impact-filters)
 
 ## Security Hub Filtering
 
@@ -1460,6 +1461,24 @@ Examples:
 
 ```sh
 ./metahub --sh-filters RecordState=ACTIVE WorkflowStatus=NEW ResourceType=AwsEc2SecurityGroup --mh-filters-tags Environment=Production
+```
+
+## Impact Filters
+
+**MetaHub** supports **Impact filters**, you can filter by the [impact keys](#impact) calculated by MetaHub. You can use as many filters as you want and separate them using spaces. If you specify more than one filter, you will get all resources that match **all** filters.
+
+Examples:
+
+- Filter all Security Findings affecting resources with exposure calculated as effectively-public:
+
+```sh
+./metahub --mh-filters-impact exposure=effectively-public
+```
+
+- Filter all Security Findings affecting resources with status calculated as not-attached:
+
+```sh
+./metahub --mh-filters-impact status=not-attached
 ```
 
 # Security Hub Actions

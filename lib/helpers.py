@@ -150,8 +150,8 @@ def get_parser():
     )
 
     # Group: Context Options
-    group_meta_checks = parser.add_argument_group("Context Options")
-    group_meta_checks.add_argument(
+    group_context = parser.add_argument_group("Context Options")
+    group_context.add_argument(
         "--mh-filters-config",
         default=None,
         help="Use this option to filter the resources based on context results using key=True/False pairs, for example public=True. Only True or False are supported as values. You can combine one or more filters using spaces",
@@ -159,7 +159,7 @@ def get_parser():
         nargs="*",
         action=KeyValue,
     )
-    group_meta_checks.add_argument(
+    group_context.add_argument(
         "--mh-filters-tags",
         default=None,
         help="Use this option to filter the resources based on Tags results using key=value pairs, for example environment=production. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
@@ -167,13 +167,21 @@ def get_parser():
         nargs="*",
         action=KeyValue,
     )
-    group_meta_checks.add_argument(
+    group_context.add_argument(
+        "--mh-filters-impact",
+        default=None,
+        help="Use this option to filter the resources based on Impact results using key=value pairs, for example exposure=effecively-public. If a value contains spaces, you should define it with double quotes. You can combine one or more filters using spaces",
+        required=False,
+        nargs="*",
+        action=KeyValue,
+    )
+    group_context.add_argument(
         "--mh-assume-role",
         default=None,
         help="Specify the AWS IAM role role to be assumed where the affected resources are running",
         required=False,
     )
-    group_meta_checks.add_argument(
+    group_context.add_argument(
         "--context",
         default=[
             "config",
@@ -462,6 +470,23 @@ def validate_arguments(args, logger):
     # Validate Tags filters
     mh_filters_tags = args.mh_filters_tags or {}
 
+    # Validate Impact Filters
+    mh_filters_impact = args.mh_filters_impact or {}
+    for mh_filters_impact_key, mh_filters_impact_value in mh_filters_impact.items():
+        if mh_filters_impact_key not in (
+            "access",
+            "exposure",
+            "encryption",
+            "environment",
+            "application",
+            "owner",
+            "status",
+        ):
+            logger.error(
+                "Incorrect Impact filter key. Use one of: access, exposure, encryption, environment, application, owner, status"
+            )
+            exit(1)
+
     # Parameter Validation: --sh-account and --sh-assume-role
     if bool(args.sh_account) != bool(args.sh_assume_role):
         logger.error(
@@ -533,6 +558,7 @@ def validate_arguments(args, logger):
         sh_filters,
         mh_filters_config,
         mh_filters_tags,
+        mh_filters_impact,
         sh_account,
         sh_account_alias_str,
         sh_region,

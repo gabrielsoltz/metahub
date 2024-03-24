@@ -29,6 +29,7 @@ def main(args):
         sh_filters,
         mh_filters_config,
         mh_filters_tags,
+        mh_filters_impact,
         sh_account,
         sh_account_alias_str,
         sh_region,
@@ -52,6 +53,7 @@ def main(args):
         print_table("Context Options: ", str(args.context), banners=banners)
         print_table("Config Filters: ", str(mh_filters_config), banners=banners)
         print_table("Tags Filters: ", str(mh_filters_tags), banners=banners)
+        print_table("Impact Filters: ", str(mh_filters_impact), banners=banners)
         print_table("Update Findings: ", str(args.update_findings), banners=banners)
         print_table("Enrich Findings: ", str(args.enrich_findings), banners=banners)
         print_table(
@@ -83,6 +85,7 @@ def main(args):
         mh_role=args.mh_assume_role,
         mh_filters_config=mh_filters_config,
         mh_filters_tags=mh_filters_tags,
+        mh_filters_impact=mh_filters_impact,
         inputs=args.inputs,
         asff_findings=asff_findings,
         banners=banners,

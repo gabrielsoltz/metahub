@@ -23,6 +23,7 @@ def generate_findings(
     mh_role,
     mh_filters_config,
     mh_filters_tags,
+    mh_filters_impact,
     inputs,
     asff_findings,
     banners,
@@ -124,13 +125,23 @@ def generate_findings(
 
     # Generate Impact
     imp = Impact(logger)
-    for resource_arn in mh_findings:
+    for resource_arn in list(mh_findings):
         impact_checks = imp.generate_impact_checks(
             resource_arn, mh_findings[resource_arn]
         )
         mh_findings[resource_arn]["impact"] = mh_findings_short[resource_arn][
             "impact"
         ] = impact_checks
+        # Check if the resources matches the impact filters
+        if mh_filters_impact:
+            for impact_filter, impact_value in mh_filters_impact.items():
+                resource_value = list(impact_checks.get(impact_filter).keys())[0]
+                # If it doesn't match, we remove the resource from the findings
+                if resource_value != impact_value:
+                    del mh_findings[resource_arn]
+                    del mh_findings_short[resource_arn]
+                    mh_inventory.remove(resource_arn)
+                    break
 
     # Generate Statistics
     mh_statistics = generate_statistics(mh_findings)
