@@ -467,9 +467,25 @@ def validate_arguments(args, logger):
             )
             exit(1)
 
-    # Validate Tags and Impact filters
+    # Validate Tags filters
     mh_filters_tags = args.mh_filters_tags or {}
+
+    # Validate Impact Filters
     mh_filters_impact = args.mh_filters_impact or {}
+    for mh_filters_impact_key, mh_filters_impact_value in mh_filters_impact.items():
+        if mh_filters_impact_key not in (
+            "access",
+            "exposure",
+            "encryption",
+            "environment",
+            "application",
+            "owner",
+            "status",
+        ):
+            logger.error(
+                "Incorrect Impact filter key. Use one of: access, exposure, encryption, environment, application, owner, status"
+            )
+            exit(1)
 
     # Parameter Validation: --sh-account and --sh-assume-role
     if bool(args.sh_account) != bool(args.sh_assume_role):
