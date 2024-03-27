@@ -25,11 +25,13 @@ class Metacheck(ContextBase):
         )
         # Describe
         self.elasticcache_cluster = self.describe_cache_clusters()
+        self.elasticcache_cluster_subnet_group = self.describe_cache_subnet_groups()
         if not self.elasticcache_cluster:
             return False
         # Associated MetaChecks
         self.security_groups = self._describe_cache_clusters_security_groups()
         self.replication_group = self._describe_cache_clusters_replication_groups()
+        self.vpcs = self._describe_cache_clusters_vpc()
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -38,16 +40,28 @@ class Metacheck(ContextBase):
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
         self.resource_arn = finding["Resources"][0]["Id"]
         self.resource_type = finding["Resources"][0]["Type"]
-        if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
-            self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
-        elif finding["Resources"][0]["Id"].split(":")[5] == "cluster":
-            self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+        if not drilled:
+            if finding["Resources"][0]["Id"].split(":")[5] == "cachecluster":
+                self.resource_id = finding["Resources"][0]["Id"].split("/")[1]
+            elif finding["Resources"][0]["Id"].split(":")[5] == "cluster":
+                self.resource_id = finding["Resources"][0]["Id"].split(":")[-1]
+            else:
+                self.logger.error(
+                    "Error parsing elasticache cluster resource id: %s",
+                    self.resource_arn,
+                )
+                self.resource_id = finding["Resources"][0]["Id"]
         else:
-            self.logger.error(
-                "Error parsing elasticache cluster resource id: %s",
-                self.resource_arn,
-            )
-            self.resource_id = finding["Resources"][0]["Id"]
+            if drilled.split(":")[5] == "cachecluster":
+                self.resource_id = drilled.split("/")[1]
+            elif drilled.split(":")[5] == "cluster":
+                self.resource_id = drilled.split(":")[-1]
+            else:
+                self.logger.error(
+                    "Error parsing elasticache cluster resource id: %s",
+                    self.resource_arn,
+                )
+                self.resource_id = drilled
 
     # Describe functions
 
@@ -101,6 +115,38 @@ class Metacheck(ContextBase):
                 return {arn: {}}
         return False
 
+    def describe_cache_subnet_groups(self):
+        if self.elasticcache_cluster.get("CacheSubnetGroupName"):
+            try:
+                response = self.client.describe_cache_subnet_groups(
+                    CacheSubnetGroupName=self.elasticcache_cluster.get(
+                        "CacheSubnetGroupName"
+                    ),
+                )
+                if response["CacheSubnetGroups"]:
+                    return response["CacheSubnetGroups"][0]
+            except ClientError as err:
+                if not err.response["Error"]["Code"] == "CacheSubnetGroupNotFoundFault":
+                    self.logger.error(
+                        "Failed to describe_cache_subnet_groups: {}, {}".format(
+                            self.resource_id, err
+                        )
+                    )
+        return False
+
+    def _describe_cache_clusters_vpc(self):
+        if self.elasticcache_cluster_subnet_group:
+            arn = generate_arn(
+                self.elasticcache_cluster_subnet_group["VpcId"],
+                "ec2",
+                "vpc",
+                self.region,
+                self.account,
+                self.partition,
+            )
+            return {arn: {}}
+        return False
+
     # Context Config
 
     def endpoint(self):
@@ -133,7 +179,7 @@ class Metacheck(ContextBase):
         return None
 
     def public(self):
-        if self.endpoint():
+        if not self.vpcs and self.endpoint():
             return True
         return False
 
@@ -141,6 +187,7 @@ class Metacheck(ContextBase):
         associations = {
             "security_groups": self.security_groups,
             "replication_group": self.replication_group,
+            "vpcs": self.vpcs,
         }
         return associations
 
