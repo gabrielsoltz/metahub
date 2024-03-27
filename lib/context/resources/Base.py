@@ -390,6 +390,29 @@ class ContextBase:
                                 resource_drilled, 1, self.resource_arn
                             )
 
+            # ElasticCache CacheClusters
+            if (
+                hasattr(resource, "cache_clusters")
+                and resource.cache_clusters
+                and self.resource_type != "AwsElastiCacheCacheCluster"
+            ):
+                from lib.context.resources.AwsElastiCacheCacheCluster import (
+                    Metacheck as CacheClusterMetacheck,
+                )
+
+                for r, v in list(resource.cache_clusters.items()):
+                    # Check if not a circular reference
+                    if r != drilled_source_resource_arn:
+                        resource_drilled_output, resource_drilled = execute(
+                            r, CacheClusterMetacheck
+                        )
+                        resource.cache_clusters[r] = resource_drilled_output
+                        self.all_associations[r] = resource_drilled_output
+                        if level < max_level and resource_drilled:
+                            check_associated_resources(
+                                resource_drilled, level + 1, resource.resource_arn
+                            )
+
         self.all_associations = {}
         check_associated_resources(self, 0, self.resource_arn)
 
