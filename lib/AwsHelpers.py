@@ -32,7 +32,7 @@ def assume_role(logger, aws_account_number, role_name, duration=assume_role_dura
         )
     except (ClientError, NoCredentialsError) as e:
         logger.error("Error assuming IAM role: {}".format(e))
-        exit(1)
+        return False
     # Session
     logger.info(
         "Getting session for assumed IAM Role: %s (%s)", role_name, aws_account_number
@@ -49,7 +49,7 @@ def assume_role(logger, aws_account_number, role_name, duration=assume_role_dura
         )
     except ClientError as e:
         logger.error("Error getting session for assumed IAM role: {}".format(e))
-        exit(1)
+        return False
     return boto3_session
 
 
@@ -74,6 +74,7 @@ def get_region(logger):
 
 
 def get_available_regions(logger, aws_service):
+    available_regions = []
     try:
         my_session = boto3.session.Session()
         available_regions = my_session.get_available_regions(aws_service)
@@ -81,7 +82,6 @@ def get_available_regions(logger, aws_service):
         logger.error(
             "Error getting available regions for Service {}: {}".format(aws_service, e)
         )
-        exit(1)
     return available_regions
 
 
@@ -125,7 +125,7 @@ def get_boto3_client(logger, service, region, sess=None, profile=None):
                         e
                     )
                 )
-                exit(1)
+                return False
         return boto3.client(service_name=service, region_name=region)
     except Exception as e:
         logger.error("Error getting boto3 client: {}".format(e))
