@@ -1,5 +1,6 @@
 """ResourceType: AwsElastiCacheReplicationGroup"""
 
+from aws_arn import generate_arn
 from botocore.exceptions import ClientError
 
 from lib.AwsHelpers import get_boto3_client
@@ -27,6 +28,7 @@ class Metacheck(ContextBase):
         if not self.replication_group:
             return False
         # Associated MetaChecks
+        self.cache_clusters = self._describe_replication_group_cache_cluster()
 
     def parse_finding(self, finding, drilled):
         self.finding = finding
@@ -62,6 +64,24 @@ class Metacheck(ContextBase):
                 )
         return False
 
+    def _describe_replication_group_cache_cluster(self):
+        cache_clusters = {}
+        if self.replication_group:
+            if self.replication_group["NodeGroups"]:
+                for cache_cluster in self.replication_group["NodeGroups"][0][
+                    "NodeGroupMembers"
+                ]:
+                    arn = generate_arn(
+                        cache_cluster["CacheClusterId"],
+                        "elasticache",
+                        "cache_cluster",
+                        self.region,
+                        self.account,
+                        self.partition,
+                    )
+                    cache_clusters[arn] = {}
+        return cache_clusters
+
     # Context Config
 
     def endpoint(self):
@@ -92,12 +112,29 @@ class Metacheck(ContextBase):
         return None
 
     def public(self):
+        if self.cache_clusters:
+            for cache_cluster, value in self.cache_clusters.items():
+                return value["config"]["public"]
         if self.endpoint():
             return True
         return False
 
+    def get_upstream_security_groups(self):
+        if self.cache_clusters:
+            for cache_cluster, value in self.cache_clusters.items():
+                return value["associations"]["security_groups"]
+
+    def get_upstream_vpcs(self):
+        if self.cache_clusters:
+            for cache_cluster, value in self.cache_clusters.items():
+                return value["associations"]["vpcs"]
+
     def associations(self):
-        associations = {}
+        associations = {
+            "cache_clusters": self.cache_clusters,
+            "security_groups": self.get_upstream_security_groups(),
+            "vpcs": self.get_upstream_vpcs(),
+        }
         return associations
 
     def checks(self):
