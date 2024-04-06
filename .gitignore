@@ -136,6 +136,8 @@ outputs/*.html
 outputs/*.csv
 outputs/*.json
 outputs/*.xlsx
+outputs/*.db
+
 
 # Local .terraform directories
 **/.terraform/*

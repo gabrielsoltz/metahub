@@ -197,9 +197,6 @@ def parse_finding(finding):
             "Compliance": finding.get("Compliance", {"Status": "Unknown"}),
             "Id": finding.get("Id", "Unknown"),
             "ProductArn": finding.get("ProductArn", "Unknown"),
-            "StandardsControlArn": finding.get("ProductFields").get(
-                "StandardsControlArn", "Unknown"
-            ),
         },
     }
     return finding["Resources"][0]["Id"], findings

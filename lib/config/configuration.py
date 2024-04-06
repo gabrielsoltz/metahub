@@ -178,7 +178,7 @@ owners = {
 # You can define the columns that will be displayed in the output HTML, CSV AND XLSX.
 # You can also use `--output-config-columns` and `--output-tags-columns` to override these values.
 # If you want all fields as columns, comment the following lines.
-config_columns = []
+config_columns = ["public_ip"]
 tag_columns = ["Name", "Owner"]
 account_columns = ["Alias"]
 impact_columns = [

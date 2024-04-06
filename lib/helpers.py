@@ -6,12 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from lib.AwsHelpers import (
-    get_account_alias,
-    get_account_id,
-    get_available_regions,
-    get_region,
-)
+from lib.AwsHelpers import get_account_alias, get_account_id, get_region
 from lib.config.configuration import sh_default_filters
 from lib.securityhub import set_sh_filters
 
@@ -84,7 +79,37 @@ def get_parser():
     )
     group_security_hub.add_argument(
         "--sh-region",
-        choices=get_available_regions(get_logger("ERROR"), "securityhub"),
+        choices=[
+            "af-south-1",
+            "ap-east-1",
+            "ap-northeast-1",
+            "ap-northeast-2",
+            "ap-northeast-3",
+            "ap-south-1",
+            "ap-south-2",
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-southeast-3",
+            "ap-southeast-4",
+            "ca-central-1",
+            "ca-west-1",
+            "eu-central-1",
+            "eu-central-2",
+            "eu-north-1",
+            "eu-south-1",
+            "eu-south-2",
+            "eu-west-1",
+            "eu-west-2",
+            "eu-west-3",
+            "il-central-1",
+            "me-central-1",
+            "me-south-1",
+            "sa-east-1",
+            "us-east-1",
+            "us-east-2",
+            "us-west-1",
+            "us-west-2",
+        ],
         default=[],
         help="Specify the AWS Region where Security Hub is running",
         required=False,
@@ -220,6 +245,7 @@ def get_parser():
             "csv",
             "xlsx",
             "lambda",
+            "sqlite",
         ],
         default=[
             "json-short",
@@ -229,6 +255,7 @@ def get_parser():
             "html",
             "csv",
             "xlsx",
+            "sqlite",
         ],
         nargs="*",
         help="Specify the Outputs you want to generate. By deafault all of them are enabled. If you only want HTML and XLSX: --output-modes html xlsx",
