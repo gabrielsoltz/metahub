@@ -94,7 +94,8 @@ class Metacheck(ContextBase):
                 arn = IamHelper(
                     self.logger, self.finding, self.sess
                 ).get_role_from_instance_profile(instance_profile)
-                iam_roles[arn] = {}
+                if arn:
+                    iam_roles[arn] = {}
 
         return iam_roles
 

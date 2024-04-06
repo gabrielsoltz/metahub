@@ -32,6 +32,7 @@ class Metacheck(ContextBase):
         # Associated MetaChecks
         self.security_groups = self._describe_launch_configuration_security_groups()
         self.iam_roles = self._describe_launch_configuration_iam_roles()
+        self.iam_roles = {}
         self.autoscaling_groups = (
             self._describe_launch_configuration_autoscaling_group()
         )
@@ -85,7 +86,8 @@ class Metacheck(ContextBase):
             arn = IamHelper(
                 self.logger, self.finding, self.sess
             ).get_role_from_instance_profile(instance_profile)
-            iam_roles[arn] = {}
+            if arn:
+                iam_roles[arn] = {}
 
         return iam_roles
 

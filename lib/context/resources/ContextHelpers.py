@@ -28,4 +28,7 @@ class IamHelper:
             )
             return False
 
-        return response["InstanceProfile"]["Roles"][0]["Arn"]
+        if response["InstanceProfile"]["Roles"]:
+            return response["InstanceProfile"]["Roles"][0]["Arn"]
+
+        return False
