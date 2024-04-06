@@ -38,10 +38,8 @@
 
 > :information_source: Explore and extend the new [MetaHub Dashboards using Powerpipe](#use-it-with-powerpipe)!
 
-<p float="left">
-  <img src="docs/imgs/powerpipe_findings.png" width="500" />
-  <img src="docs/imgs/powerpipe_resources.png" width="500" />
-</p>
+<img src="docs/imgs/powerpipe_resources.png"/>
+<img src="docs/imgs/powerpipe_findings.png"/>
 
 **MetaHub** describes your [**context**](#context) by connecting to your affected resources in your affected accounts. It can describe information about your AWS account and organization, the affected resources tags, related CloudTrail events, your affected resource configurations **and all their associations**: if you are contextualizing a security finding affecting an EC2 Instance, **MetaHub** will not only connect to that instance itself but also its IAM Roles; from there, it will connect to the IAM Policies associated with those roles. It will connect to the Security Groups and analyze all their rules, the VPC and the Subnets where the instance is running, the Volumes, the Auto Scaling Groups, and more. You can apply [**filters**](#filters) to automate detecting other resources with the same properties and do in-depth investigations.
 
