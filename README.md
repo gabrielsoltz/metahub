@@ -36,9 +36,7 @@
 
 **MetaHub** is an open-source security tool for **impact-contextual vulnerability management**. It can automate the process of **contextualizing** security findings based on your environment and your needs, YOUR **context**, identifying **ownership**, and calculate an **impact scoring** based on it that you can use for defining prioritization (where should you start?) and automations like remediations, alerts or tickets. The tool is for AWS environments and you can use it with [AWS Security Hub](https://aws.amazon.com/security-hub) or any [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html) compatible scanners (like [Prowler](https://github.com/prowler-cloud/prowler)).
 
-[!TIP]
-
-> Explore and extend the new [MetaHub Dashboards using Powerpipe](#use-it-with-powerpipe)!
+> :information_source: Explore and extend the new [MetaHub Dashboards using Powerpipe](#use-it-with-powerpipe)!
 
 <p float="left">
   <img src="docs/imgs/powerpipe_findings.png" width="500" />
