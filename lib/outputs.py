@@ -1,5 +1,6 @@
 import csv
 import json
+import sqlite3
 from time import strftime
 
 import jinja2
@@ -34,6 +35,17 @@ class Outputs:
         self.__banners = args.banners
         self.__args = args
         # Output Columns
+        self.__default_columns = [
+            "Resource ID",
+            "Severity",
+            "Title",
+            "AWS Account ID",
+            "Region",
+            "Resource Type",
+            "WorkflowStatus",
+            "RecordState",
+            "ComplianceStatus",
+        ]
         self.__config_columns = (
             args.output_config_columns
             or config_columns
@@ -59,6 +71,8 @@ class Outputs:
                     self.generate_output_xlsx()
                 elif output_mode == "html":
                     self.generate_output_html()
+                elif output_mode == "sqlite":
+                    self.generate_output_sqlite()
 
     def generate_output_json(self, json_mode):
         WRITE_FILE = f"{outputs_dir}metahub-{json_mode}-{TIMESTRF}.json"
@@ -81,18 +95,7 @@ class Outputs:
     def generate_output_csv(self):
         WRITE_FILE = f"{outputs_dir}metahub-{TIMESTRF}.csv"
         with open(WRITE_FILE, "w", encoding="utf-8", newline="") as output_file:
-            columns = [
-                "Resource ID",
-                "Severity",
-                "Impact",
-                "Title",
-                "AWS Account ID",
-                "Region",
-                "Resource Type",
-                "WorkflowStatus",
-                "RecordState",
-                "ComplianceStatus",
-            ]
+            columns = self.__default_columns
             columns += (
                 self.__config_columns
                 + self.__tag_columns
@@ -105,39 +108,26 @@ class Outputs:
             for resource, values in self.__mh_findings.items():
                 for finding in values["findings"]:
                     for f, v in finding.items():
-                        tag_column_values = []
-                        for column in self.__tag_columns:
-                            try:
-                                tag_column_values.append(values["tags"][column])
-                            except (KeyError, TypeError):
-                                tag_column_values.append("")
-                        config_column_values = []
-                        for column in self.__config_columns:
-                            try:
-                                config_column_values.append(values["config"][column])
-                            except (KeyError, TypeError):
-                                config_column_values.append("")
-                        impact_column_values = []
-                        for column in self.__impact_columns:
-                            try:
-                                impact_column_values.append(values["impact"][column])
-                            except (KeyError, TypeError):
-                                impact_column_values.append("")
-                        account_column_values = []
-                        for column in self.__account_columns:
-                            try:
-                                account_column_values.append(values["account"][column])
-                            except (KeyError, TypeError):
-                                account_column_values.append("")
+                        tag_column_values = [
+                            values.get("tags", {}).get(column, "")
+                            for column in self.__tag_columns
+                        ]
+                        config_column_values = [
+                            values.get("config", {}).get(column, "")
+                            for column in self.__config_columns
+                        ]
+                        impact_column_values = [
+                            list(values.get("impact", {}).get(column, ""))[0]
+                            for column in self.__impact_columns
+                        ]
+                        account_column_values = [
+                            values.get("account", {}).get(column, "")
+                            for column in self.__account_columns
+                        ]
                         row = (
                             [
                                 resource,
                                 v.get("SeverityLabel", None),
-                                (
-                                    values.get("impact", None).get("Impact", None)
-                                    if values.get("impact")
-                                    else None
-                                ),
                                 f,
                                 values.get("AwsAccountId", None),
                                 values.get("Region", None),
@@ -154,9 +144,10 @@ class Outputs:
                                     else None
                                 ),
                             ]
-                            + account_column_values
-                            + tag_column_values
                             + config_column_values
+                            + tag_column_values
+                            + account_column_values
+                            + impact_column_values
                         )
                         dict_writer.writerow(dict(zip(columns, row)))
         print_table("CSV:   ", WRITE_FILE, banners=self.__banners)
@@ -185,27 +176,14 @@ class Outputs:
         high_format = workbook.add_format({"bg_color": "#ba2e0f", "border": 1})
         medium_format = workbook.add_format({"bg_color": "#cc6021", "border": 1})
         low_format = workbook.add_format({"bg_color": "#b49216", "border": 1})
-        columns = [
-            "Resource ID",
-            "Severity",
-            "Title",
-            "AWS Account ID",
-            "Region",
-            "Resource Type",
-            "WorkflowStatus",
-            "RecordState",
-            "ComplianceStatus",
-        ]
-        worksheet.write_row(
-            0,
-            0,
-            columns
-            + self.__config_columns
+        columns = self.__default_columns
+        columns += (
+            self.__config_columns
             + self.__tag_columns
             + self.__account_columns
-            + self.__impact_columns,
-            title_format,
+            + self.__impact_columns
         )
+        worksheet.write_row(0, 0, columns, title_format)
         # Iterate over the resources
         current_line = 1
         for resource, values in self.__mh_findings.items():
@@ -221,30 +199,22 @@ class Outputs:
                         worksheet.write(current_line, 1, severity, medium_format)
                     else:
                         worksheet.write(current_line, 1, severity, low_format)
-                    tag_column_values = []
-                    for column in self.__tag_columns:
-                        try:
-                            tag_column_values.append(values["tags"][column])
-                        except (KeyError, TypeError):
-                            tag_column_values.append("")
-                    config_column_values = []
-                    for column in self.__config_columns:
-                        try:
-                            config_column_values.append(values["config"][column])
-                        except (KeyError, TypeError):
-                            config_column_values.append("")
-                    impact_column_values = []
-                    for column in self.__impact_columns:
-                        try:
-                            impact_column_values.append(values["impact"][column])
-                        except (KeyError, TypeError):
-                            impact_column_values.append("")
-                    account_column_values = []
-                    for column in self.__account_columns:
-                        try:
-                            account_column_values.append(values["account"][column])
-                        except (KeyError, TypeError):
-                            account_column_values.append("")
+                    tag_column_values = [
+                        values.get("tags", {}).get(column, "")
+                        for column in self.__tag_columns
+                    ]
+                    config_column_values = [
+                        values.get("config", {}).get(column, "")
+                        for column in self.__config_columns
+                    ]
+                    impact_column_values = [
+                        list(values.get("impact", {}).get(column, ""))[0]
+                        for column in self.__impact_columns
+                    ]
+                    account_column_values = [
+                        values.get("account", {}).get(column, "")
+                        for column in self.__account_columns
+                    ]
                     row = (
                         [
                             f,
@@ -263,9 +233,10 @@ class Outputs:
                                 else None
                             ),
                         ]
-                        + account_column_values
-                        + tag_column_values
                         + config_column_values
+                        + tag_column_values
+                        + account_column_values
+                        + impact_column_values
                     )
                     worksheet.write_row(current_line, 2, row)
                     current_line += 1
@@ -359,6 +330,213 @@ class Outputs:
                         indent=2,
                     )
                 )
+
+    def generate_output_sqlite(self):
+        WRITE_FILE = f"{outputs_dir}metahub-{TIMESTRF}.db"
+        conn = sqlite3.connect(WRITE_FILE)
+        cursor = conn.cursor()
+
+        def create_table(cursor, table_definition):
+            cursor.execute(table_definition)
+
+        resources_table = """
+        CREATE TABLE IF NOT EXISTS resources (
+            resource_arn VARCHAR PRIMARY KEY,
+            resource_type VARCHAR,
+            resource_region VARCHAR,
+            resource_account_id VARCHAR,
+            resource_account_alias VARCHAR,
+            resource_tags TEXT,
+            resource_exposure VARCHAR,
+            resource_access VARCHAR,
+            resource_encryption VARCHAR,
+            resource_status VARCHAR,
+            resource_application VARCHAR,
+            resource_environment VARCHAR,
+            resource_owner VARCHAR,
+            resource_score INTEGER,
+            resource_findings_score INTEGER,
+            resource_findings_critical INTEGER,
+            resource_findings_high INTEGER,
+            resource_findings_medium INTEGER,
+            resource_findings_low INTEGER,
+            resource_findings_informational INTEGER,
+            FOREIGN KEY (resource_account_id) REFERENCES accounts(account_id)
+        )
+        """
+
+        findings_table = """
+        CREATE TABLE IF NOT EXISTS findings (
+            finding_id VARCHAR PRIMARY KEY,
+            finding_title VARCHAR,
+            finding_severity VARCHAR,
+            finding_workflowstatus VARCHAR,
+            finding_recordstate VARCHAR,
+            finding_compliancestatus VARCHAR,
+            finding_productarn VARCHAR,
+            finding_resource_arn VARCHAR
+        )
+        """
+
+        accounts_table = """
+        CREATE TABLE IF NOT EXISTS accounts (
+            account_id INTEGER PRIMARY KEY,
+            account_alias VARCHAR,
+            account_organizations_id VARCHAR,
+            account_organizations_arn VARCHAR,
+            account_master_account_id VARCHAR,
+            account_master_account_email VARCHAR,
+            account_alternate_contact_type VARCHAR,
+            account_alternate_contact_name VARCHAR,
+            account_alternate_contact_email VARCHAR,
+            account_alternate_contact_phone VARCHAR,
+            account_alternate_contact_title VARCHAR
+        )
+        """
+
+        create_table(cursor, resources_table)
+        create_table(cursor, findings_table)
+        create_table(cursor, accounts_table)
+
+        INSERT_RESOURCES = """INSERT INTO resources (resource_arn, resource_type, resource_region, resource_account_id, resource_account_alias, resource_tags, resource_exposure, resource_access, resource_encryption, resource_status, resource_application, resource_environment, resource_owner, resource_score, resource_findings_score, resource_findings_critical, resource_findings_high, resource_findings_medium, resource_findings_low, resource_findings_informational)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+
+        INSERT_FINDINGS = """INSERT INTO findings (finding_id, finding_title, finding_severity, finding_workflowstatus, finding_recordstate, finding_compliancestatus, finding_productarn, finding_resource_arn)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+
+        INSERT_ACCOUNTS = """INSERT INTO accounts (account_id, account_alias, account_organizations_id, account_organizations_arn, account_master_account_id, account_master_account_email, account_alternate_contact_type, account_alternate_contact_name, account_alternate_contact_email, account_alternate_contact_phone, account_alternate_contact_title)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+
+        CREATE_INDEX_FINDINGS_RESOURCE_ARN = """CREATE INDEX IF NOT EXISTS idx_findings_finding_resource_arn ON findings (finding_resource_arn)"""
+        CREATE_INDEX_FINDINGS_FINDING_ID = """CREATE INDEX IF NOT EXISTS idx_findings_finding_id ON findings (finding_id)"""
+
+        for resource_arn, data in self.__mh_findings.items():
+            resource_type = data["ResourceType"]
+            resource_region = data["Region"]
+            account_id = data["AwsAccountId"]
+            resource_tags = json.dumps(data["tags"])
+            # resource_config = json.dumps(data["config"])
+            # resource_cloudtrail = json.dumps(data["cloudtrail"])
+            resource_exposure = list(data["impact"]["exposure"].keys())[0]
+            resource_access = list(data["impact"]["access"].keys())[0]
+            resource_encryption = list(data["impact"]["encryption"].keys())[0]
+            resource_status = list(data["impact"]["status"].keys())[0]
+            resource_application = list(data["impact"]["application"].keys())[0]
+            resource_environment = list(data["impact"]["environment"].keys())[0]
+            resource_owner = list(data["impact"]["owner"].keys())[0]
+            resource_score = list(data["impact"]["score"].keys())[0]
+            for score, findings in data["impact"]["findings"].items():
+                resource_findings_score = score
+                resource_findings_critical = findings["findings"]["CRITICAL"]
+                resource_findings_high = findings["findings"]["HIGH"]
+                resource_findings_medium = findings["findings"]["MEDIUM"]
+                resource_findings_low = findings["findings"]["LOW"]
+                resource_findings_informational = findings["findings"]["INFORMATIONAL"]
+            account_alias = data.get("account", {})["Alias"]
+            account_organization_id = (
+                data.get("account", {}).get("Organizations", {}).get("Id")
+            )
+            account_organization_arn = (
+                data.get("account", {}).get("Organizations", {}).get("Arn")
+            )
+            account_master_account_id = (
+                data.get("account", {}).get("Organizations", {}).get("MasterAccountId")
+            )
+            account_master_account_email = (
+                data.get("account", {})
+                .get("Organizations", {})
+                .get("MasterAccountEmail")
+            )
+            account_alternate_contact_type = (
+                data.get("account", {})
+                .get("AlternateContact", {})
+                .get("AlternateContactType")
+            )
+            account_alternate_contact_name = (
+                data.get("account", {}).get("AlternateContact", {}).get("Name")
+            )
+            account_alternate_contact_email = (
+                data.get("account", {}).get("AlternateContact", {}).get("EmailAddress")
+            )
+            account_alternate_contact_phone = (
+                data.get("account", {}).get("AlternateContact", {}).get("PhoneNumber")
+            )
+            account_alternate_contact_title = (
+                data.get("account", {}).get("AlternateContact", {}).get("Title")
+            )
+            cursor.execute(
+                INSERT_RESOURCES,
+                (
+                    resource_arn,
+                    resource_type,
+                    resource_region,
+                    account_id,
+                    account_alias,
+                    resource_tags,
+                    resource_exposure,
+                    resource_access,
+                    resource_encryption,
+                    resource_status,
+                    resource_application,
+                    resource_environment,
+                    resource_owner,
+                    resource_score,
+                    resource_findings_score,
+                    resource_findings_critical,
+                    resource_findings_high,
+                    resource_findings_medium,
+                    resource_findings_low,
+                    resource_findings_informational,
+                ),
+            )
+            for finding in data["findings"]:
+                for finding_title, values in finding.items():
+                    finding_id = values["Id"]
+                    finding_severity = values["SeverityLabel"]
+                    finding_workflowstatus = values["Workflow"]["Status"]
+                    finding_recordstate = values["RecordState"]
+                    finding_compliancestatus = values["Compliance"]["Status"]
+                    finding_productarn = values["ProductArn"]
+                    cursor.execute(
+                        INSERT_FINDINGS,
+                        (
+                            finding_id,
+                            finding_title,
+                            finding_severity,
+                            finding_workflowstatus,
+                            finding_recordstate,
+                            finding_compliancestatus,
+                            finding_productarn,
+                            resource_arn,
+                        ),
+                    )
+            try:
+                cursor.execute(
+                    INSERT_ACCOUNTS,
+                    (
+                        account_id,
+                        account_alias,
+                        account_organization_id,
+                        account_organization_arn,
+                        account_master_account_id,
+                        account_master_account_email,
+                        account_alternate_contact_type,
+                        account_alternate_contact_name,
+                        account_alternate_contact_email,
+                        account_alternate_contact_phone,
+                        account_alternate_contact_title,
+                    ),
+                )
+            except sqlite3.IntegrityError:
+                # If there's an integrity error (likely due to violating UNIQUE constraint), just continue to the next entry
+                continue
+
+        cursor.execute(CREATE_INDEX_FINDINGS_RESOURCE_ARN)
+        cursor.execute(CREATE_INDEX_FINDINGS_FINDING_ID)
+
+        conn.commit()
+        conn.close()
+        print_table("SQLite: ", WRITE_FILE, banners=self.__banners)
 
 
 def rich_box(resource_type, values):
