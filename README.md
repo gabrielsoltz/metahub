@@ -1324,7 +1324,7 @@ For example, you can generate an HTML output with Tags and add "Owner" and "Envi
 
 ## SQLite
 
-**MetaHub** can save the findings and context in a SQLite database. This database can be used for further analysis, reporting, and integration with other tools, like Powerpipe. The database will be saved in the `outputs/` folder with the execution date.
+**MetaHub** can save the findings and context in a SQLite database. This database can be used for further analysis, reporting, and integration with other tools, like [Powerpipe](https://powerpipe.io/). The database will be saved in the `outputs/` folder with the execution date and extension `.db`.
 
 ### Use it with Powerpipe
 
