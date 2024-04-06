@@ -508,19 +508,23 @@ class Outputs:
                     finding_recordstate = values["RecordState"]
                     finding_compliancestatus = values["Compliance"]["Status"]
                     finding_productarn = values["ProductArn"]
-                    cursor.execute(
-                        INSERT_FINDINGS,
-                        (
-                            finding_id,
-                            finding_title,
-                            finding_severity,
-                            finding_workflowstatus,
-                            finding_recordstate,
-                            finding_compliancestatus,
-                            finding_productarn,
-                            resource_arn,
-                        ),
-                    )
+                    try:
+                        cursor.execute(
+                            INSERT_FINDINGS,
+                            (
+                                finding_id,
+                                finding_title,
+                                finding_severity,
+                                finding_workflowstatus,
+                                finding_recordstate,
+                                finding_compliancestatus,
+                                finding_productarn,
+                                resource_arn,
+                            ),
+                        )
+                    except sqlite3.IntegrityError:
+                        # If there's an integrity error (likely due to violating UNIQUE constraint), just continue to the next entry
+                        continue
             try:
                 cursor.execute(
                     INSERT_ACCOUNTS,
