@@ -34,11 +34,19 @@ class Metacheck(ContextBase):
         self.account = finding["AwsAccountId"]
         self.partition = finding["Resources"][0]["Id"].split(":")[1]
         self.resource_type = finding["Resources"][0]["Type"]
-        self.resource_id = (
-            finding["Resources"][0]["Id"].split("/")[-1]
-            if not drilled
-            else drilled.split("/")[-11]
-        )
+        if not drilled:
+            if (
+                "app" in finding["Resources"][0]["Id"]
+                or "net" in finding["Resources"][0]["Id"]
+            ):
+                self.resource_id = finding["Resources"][0]["Id"].split("/")[-2]
+            else:
+                self.resource_id = finding["Resources"][0]["Id"].split("/")[-1]
+        else:
+            if "app" in drilled or "net" in drilled:
+                self.resource_id = drilled.split("/")[-2]
+            else:
+                self.resource_id = drilled.split("/")[-1]
         self.resource_arn = finding["Resources"][0]["Id"] if not drilled else drilled
 
     # Describe function

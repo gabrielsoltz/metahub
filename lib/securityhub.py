@@ -189,17 +189,33 @@ class SecurityHub:
 
 def parse_finding(finding):
     """Returns resource ARN and finding parsed for it"""
-    findings = {
-        finding["Title"]: {
-            "SeverityLabel": finding.get("Severity").get("Label", "Unknown"),
-            "Workflow": finding.get("Workflow", {"Status": "Unknown"}),
-            "RecordState": finding.get("RecordState", "Unknown"),
-            "Compliance": finding.get("Compliance", {"Status": "Unknown"}),
-            "Id": finding.get("Id", "Unknown"),
-            "ProductArn": finding.get("ProductArn", "Unknown"),
-        },
-    }
-    return finding["Resources"][0]["Id"], findings
+    # ASFF Finding:
+    if "Title" in finding:
+        resource_arn = finding["Resources"][0]["Id"]
+        findings = {
+            finding["Title"]: {
+                "SeverityLabel": finding.get("Severity").get("Label", "Unknown"),
+                "Workflow": finding.get("Workflow", {"Status": "Unknown"}),
+                "RecordState": finding.get("RecordState", "Unknown"),
+                "Compliance": finding.get("Compliance", {"Status": "Unknown"}),
+                "Id": finding.get("Id", "Unknown"),
+                "ProductArn": finding.get("ProductArn", "Unknown"),
+            },
+        }
+    # OSCF Finding:
+    if "metadata" in finding:
+        resource_arn = finding.get("resources", {})[0].get("uid")
+        findings = {
+            finding.get("finding_info").get("title"): {
+                "SeverityLabel": finding.get("severity", "Unknown"),
+                "Workflow": {"Status": finding.get("status", "Unknown")},
+                "RecordState": "Unknown",
+                "Compliance": {"Status": finding.get("status_code", "Unknown")},
+                "Id": finding.get("finding_info").get("uid", "Unknown"),
+                "ProductArn": finding.get("finding_info").get("product_uid", "Unknown"),
+            },
+        }
+    return resource_arn, findings
 
 
 def parse_region(resource_arn, finding):

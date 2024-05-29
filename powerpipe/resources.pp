@@ -1,6 +1,10 @@
 dashboard "resources" {
   text {
+<<<<<<< Updated upstream
     value = "## MetaHub: Resources | [Findings](${var.host}/metahub.dashboard.findings) | [Accounts](${var.host}/metahub.dashboard.accounts)"
+=======
+    value = "## MetaHub: Resources | [Findings](${var.host}/metahub.dashboard.findings) | [Accounts](${var.host}/metahub.dashboard.accounts) | [Access](${var.host}/metahub.dashboard.access) | [Exposure](${var.host}/metahub.dashboard.exposure)"
+>>>>>>> Stashed changes
   }
 
   container {
@@ -190,26 +194,26 @@ dashboard "resources" {
 query "resources" {
   sql = <<-EOQ
     select
-      resource_arn,
+      resource_arn as arn,
       resource_tags ->> 'Name' as name,
-      resource_type,
-      resource_region,
-      resource_account_id,
-      resource_account_alias,
-      resource_exposure,
-      resource_access,
-      resource_encryption,
-      resource_status,
-      resource_application,
-      resource_environment,
-      resource_owner,
-      resource_findings_critical,
-      resource_findings_high,
-      resource_findings_medium,
-      resource_findings_low,
-      resource_findings_informational
-      resource_score,
-      resource_tags
+      resource_type as type,
+      resource_region as region,
+      resource_account_id as account_id,
+      resource_account_alias as account_alias,
+      resource_exposure as exposure,
+      resource_access as access,
+      resource_encryption as encryption,
+      resource_status as status,
+      resource_application as application,
+      resource_environment as environment,
+      resource_owner as owner,
+      resource_findings_critical as findings_critical,
+      resource_findings_high as findings_high,
+      resource_findings_medium as findings_medium,
+      resource_findings_low as findings_low,
+      resource_findings_informational as findings_informational,
+      resource_score as score,
+      resource_tags as tags
     from
       resources
     where
@@ -254,6 +258,8 @@ query "count_exposure" {
       $1 as label,
       count(*) as value,
       case
+        when $1 = 'unknown' then 'info'
+        when $1 = 'restricted' then 'ok'
         when count(*) > 0 then 'alert'
         else 'ok'
       end as type
@@ -272,6 +278,8 @@ query "count_access" {
       $1 as label,
       count(*) as value,
       case
+        when $1 = 'unknown' then 'info'
+        when $1 = 'restricted' then 'ok'
         when count(*) > 0 then 'alert'
         else 'ok'
       end as type
@@ -289,6 +297,7 @@ query "count_encryption" {
       $1 as label,
       count(*) as value,
       case
+        when $1 = 'unknown' then 'info'
         when count(*) > 0 then 'alert'
         else 'ok'
       end as type
@@ -306,6 +315,7 @@ query "count_status" {
       $1 as label,
       count(*) as value,
       case
+        when $1 = 'unknown' then 'info'
         when count(*) > 0 then 'alert'
         else 'ok'
       end as type
@@ -323,6 +333,7 @@ query "count_environment" {
       $1 as label,
       count(*) as value,
       case
+        when $1 = 'unknown' then 'info'
         when count(*) > 0 then 'alert'
         else 'ok'
       end as type

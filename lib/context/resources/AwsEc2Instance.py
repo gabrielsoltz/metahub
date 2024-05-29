@@ -112,7 +112,7 @@ class Metacheck(ContextBase):
     def _describe_instance_autoscaling_group(self):
         autoscaling_group = {}
         if self.instance:
-            tags = self.instance.get("Tags")
+            tags = self.instance.get("Tags", [])
             for tag in tags:
                 if tag.get("Key") == "aws:autoscaling:groupName":
                     asg_name = tag.get("Value")
