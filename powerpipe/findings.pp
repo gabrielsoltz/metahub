@@ -1,6 +1,6 @@
 dashboard "findings" {
   text {
-    value = "## MetaHub: [Resources](${var.host}/metahub.dashboard.resources) | Findings | [Accounts](${var.host}/metahub.dashboard.accounts)"
+    value = "## MetaHub: [Resources](${var.host}/metahub.dashboard.resources) | Findings | [Accounts](${var.host}/metahub.dashboard.accounts) | [Access](${var.host}/metahub.dashboard.access) | [Exposure](${var.host}/metahub.dashboard.exposure)"
   }
 
 

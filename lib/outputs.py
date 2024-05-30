@@ -109,21 +109,27 @@ class Outputs:
                 for finding in values["findings"]:
                     for f, v in finding.items():
                         tag_column_values = [
-                            values.get("tags", {}).get(column, "")
-                            if values.get("tags")
-                            else ""
+                            (
+                                values.get("tags", {}).get(column, "")
+                                if values.get("tags")
+                                else ""
+                            )
                             for column in self.__tag_columns
                         ]
                         config_column_values = [
-                            values.get("config", {}).get(column, "")
-                            if values.get("config")
-                            else ""
+                            (
+                                values.get("config", {}).get(column, "")
+                                if values.get("config")
+                                else ""
+                            )
                             for column in self.__config_columns
                         ]
                         account_column_values = [
-                            values.get("account", {}).get(column, "")
-                            if values.get("account")
-                            else ""
+                            (
+                                values.get("account", {}).get(column, "")
+                                if values.get("account")
+                                else ""
+                            )
                             for column in self.__account_columns
                         ]
                         impact_column_values = [
@@ -206,21 +212,27 @@ class Outputs:
                     else:
                         worksheet.write(current_line, 1, severity, low_format)
                     tag_column_values = [
-                        values.get("tags", {}).get(column, "")
-                        if values.get("tags")
-                        else ""
+                        (
+                            values.get("tags", {}).get(column, "")
+                            if values.get("tags")
+                            else ""
+                        )
                         for column in self.__tag_columns
                     ]
                     config_column_values = [
-                        values.get("config", {}).get(column, "")
-                        if values.get("config")
-                        else ""
+                        (
+                            values.get("config", {}).get(column, "")
+                            if values.get("config")
+                            else ""
+                        )
                         for column in self.__config_columns
                     ]
                     account_column_values = [
-                        values.get("account", {}).get(column, "")
-                        if values.get("account")
-                        else ""
+                        (
+                            values.get("account", {}).get(column, "")
+                            if values.get("account")
+                            else ""
+                        )
                         for column in self.__account_columns
                     ]
                     impact_column_values = [
@@ -444,37 +456,55 @@ class Outputs:
                 resource_findings_medium = findings["findings"]["MEDIUM"]
                 resource_findings_low = findings["findings"]["LOW"]
                 resource_findings_informational = findings["findings"]["INFORMATIONAL"]
-            account_alias = data.get("account", {})["Alias"]
-            account_organization = data.get("account", {}).get("Organizations", {})
-            if account_organization:
-                account_organization_id = account_organization.get("Id")
-                account_organization_arn = account_organization.get("Arn")
-                account_master_account_id = account_organization.get("MasterAccountId")
-                account_master_account_email = account_organization.get(
-                    "MasterAccountEmail"
+            if data.get("account", {}):
+                account_alias = data.get("account", {})["Alias"]
+                account_organization = data.get("account", {}).get("Organizations", {})
+                if account_organization:
+                    account_organization_id = account_organization.get("Id")
+                    account_organization_arn = account_organization.get("Arn")
+                    account_master_account_id = account_organization.get(
+                        "MasterAccountId"
+                    )
+                    account_master_account_email = account_organization.get(
+                        "MasterAccountEmail"
+                    )
+                else:
+                    account_organization_id = ""
+                    account_organization_arn = ""
+                    account_master_account_id = ""
+                    account_master_account_email = ""
+                account_alternate_contact_type = (
+                    data.get("account", {})
+                    .get("AlternateContact", {})
+                    .get("AlternateContactType")
+                )
+                account_alternate_contact_name = (
+                    data.get("account", {}).get("AlternateContact", {}).get("Name")
+                )
+                account_alternate_contact_email = (
+                    data.get("account", {})
+                    .get("AlternateContact", {})
+                    .get("EmailAddress")
+                )
+                account_alternate_contact_phone = (
+                    data.get("account", {})
+                    .get("AlternateContact", {})
+                    .get("PhoneNumber")
+                )
+                account_alternate_contact_title = (
+                    data.get("account", {}).get("AlternateContact", {}).get("Title")
                 )
             else:
+                account_alias = ""
                 account_organization_id = ""
                 account_organization_arn = ""
                 account_master_account_id = ""
                 account_master_account_email = ""
-            account_alternate_contact_type = (
-                data.get("account", {})
-                .get("AlternateContact", {})
-                .get("AlternateContactType")
-            )
-            account_alternate_contact_name = (
-                data.get("account", {}).get("AlternateContact", {}).get("Name")
-            )
-            account_alternate_contact_email = (
-                data.get("account", {}).get("AlternateContact", {}).get("EmailAddress")
-            )
-            account_alternate_contact_phone = (
-                data.get("account", {}).get("AlternateContact", {}).get("PhoneNumber")
-            )
-            account_alternate_contact_title = (
-                data.get("account", {}).get("AlternateContact", {}).get("Title")
-            )
+                account_alternate_contact_type = ""
+                account_alternate_contact_name = ""
+                account_alternate_contact_email = ""
+                account_alternate_contact_phone = ""
+                account_alternate_contact_title = ""
             cursor.execute(
                 INSERT_RESOURCES,
                 (
