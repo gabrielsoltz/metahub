@@ -1,6 +1,6 @@
 bandit==1.8.0
 black==25.1.0
 flake8==7.1.1
-isort==5.13.2
+isort==6.0.1
 safety==3.2.13
 vulture==2.14
