@@ -28,4 +28,4 @@ updates:
     target-branch: main
     labels:
       - "dependencies"
-      - "docker"
+      - "github-actions"
