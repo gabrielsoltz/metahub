@@ -13,3 +13,19 @@ updates:
     labels:
       - "dependencies"
       - "pip"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: main
+    labels:
+      - "dependencies"
+      - "docker"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: main
+    labels:
+      - "dependencies"
+      - "docker"
