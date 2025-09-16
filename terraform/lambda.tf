@@ -31,7 +31,7 @@ resource "aws_lambda_function" "lambda_zip" {
   depends_on = [null_resource.create_lambda]
 
   function_name    = "${local.prefix}-lambda"
-  runtime          = "python3.13"
+  runtime          = "python3.12"
   handler          = "lib.lambda.lambda_handler"
   filename         = "zip/lambda_code.zip"
   role             = aws_iam_role.lambda_role.arn
