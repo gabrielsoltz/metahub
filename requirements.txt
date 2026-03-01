@@ -2,6 +2,6 @@ alive_progress==3.3.0
 boto3==1.40.60
 aws-arn==0.0.19
 jinja2==3.1.6
-pyyaml==6.0.2
+pyyaml==6.0.3
 rich==14.1.0
 xlsxwriter==3.2.8
